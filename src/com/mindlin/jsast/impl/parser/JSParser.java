@@ -18,13 +18,34 @@ import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
+import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.GotoTree;
+import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.LoopTree;
 import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
+import com.mindlin.jsast.tree.WithTree;
 
 public class JSParser {
+	private static Token ensureToken(JSLexer src, Object value) {
+		Token token = src.nextToken();
+		ensureToken(token, value);
+		return token;
+	}
+	private static void ensureTokenKind(Token token, TokenKind value) {
+		if (token.getKind() != value)
+			throw new JSSyntaxException("Illegal token " + token + ": expected kind " + value, token.getStart());
+	}
+	private static void ensureToken(Token token, Object value) {
+		if (token.getValue() != value)
+			throw new JSSyntaxException("Illegal token " + token + ": expected " + value, token.getStart());
+	}
+	
 	public CompilationUnitTree apply(String unitName, String src) {
 		return apply(unitName, new JSLexer(src));
 	}
@@ -48,22 +69,31 @@ public class JSParser {
 			case KEYWORD:
 				switch((JSKeyword)t.getValue()) {
 					case WHILE:
-						return parseWhileLoop(t, src, isStrict);
+						return this.parseWhileLoop(t, src, isStrict);
 					case DO:
-						return parseDoWhileLoop(t, src, isStrict);
+						return this.parseDoWhileLoop(t, src, isStrict);
 					case FOR:
-						return parseUnknownForLoop(t, src, isStrict);
+						return this.parseUnknownForLoop(t, src, isStrict);
 					case IF:
+						return this.parseIfStatement(t, src, isStrict);
 					case SWITCH:
+						return this.parseSwitchStatement(t, src, isStrict);
 					case TRY:
+						return this.parseTryStatement(t, src, isStrict);
 					case FUNCTION:
+						return this.parseFunctionKeyword(t, src, isStrict);
 					case WITH:
+						return this.parseWithStatement(t, src, isStrict);
 					case CONST:
 					case VAR:
 					case LET:
+						return this.parseVariableDeclaration(t, src, isStrict);
 					case CLASS:
-						//TODO finish
-						break;
+						return this.parseClassUnknown(t, src, isStrict);
+					case TYPEOF:
+						return this.parseUnaryExpression(t, src, isStrict);
+					case VOID:
+						return this.parseVoid(t, src, isStrict);
 					case CASE:
 					case BREAK:
 					case CONTINUE:
@@ -77,28 +107,56 @@ public class JSParser {
 					case RETURN:
 					case SUPER:
 					case THIS:
-					case TYPEOF:
 					case YIELD:
 					default:
 						throw new JSSyntaxException("Unexpected keyword " + t.getValue(), t.getStart());
 				}
+			case IDENTIFIER:
+				
 			default:
 				break;
 		}
 		return null;
 	}
-	private Token ensureToken(JSLexer src, Object value) {
-		Token token = src.nextToken();
-		ensureToken(token, value);
-		return token;
+	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer lexer, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
 	}
-	private void ensureTokenKind(Token token, TokenKind value) {
-		if (token.getKind() != value)
-			throw new JSSyntaxException("Illegal token " + token + ": expected kind " + value, token.getStart());
+	protected StatementTree parseClassUnknown(Token classKeywordToken, JSLexer lexer, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
 	}
-	private void ensureToken(Token token, Object value) {
-		if (token.getValue() != value)
-			throw new JSSyntaxException("Illegal token " + token + ": expected " + value, token.getStart());
+	protected StatementTree parseFunctionKeyword(Token functionKeywordToken, JSLexer lexer, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected IfTree parseIfStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected SwitchTree parseSwitchStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected TryTree parseTryStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected IfTree parseFunctionStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected WithTree parseWithStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected UnaryTree parseUnaryExpression(Token operatorToken, JSLexer src, boolean isStrict) {
+		//TODO finish
+		throw new UnsupportedOperationException();
 	}
 	protected WhileLoopTree parseWhileLoop(Token whileKeywordToken, JSLexer src, boolean isStrict) {
 		if (whileKeywordToken == null)
@@ -116,6 +174,7 @@ public class JSParser {
 		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree condition = parseNextExpression(src, isStrict);
 		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
+		ensureToken(src, JSSpecialGroup.EOL);//The do/while loop should be ended with a EOL (hopefully a semicolon)
 		return new DoWhileLoopTreeImpl(doKeywordToken.getStart(), src.getPosition(), statement, condition);
 	}
 	
@@ -193,6 +252,46 @@ public class JSParser {
 		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
 		StatementTree statement = this.parseStatement(src, isStrict);
 		return new ForEachLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), isForEach, variable, expression, statement);
+	}
+	protected ExpressionTree parseIncompleteExpression(Token t, JSLexer src, boolean isStrict) {
+		if (t == null)
+			t = src.nextToken();
+		ExpressionTree expr = this.parseNextExpression(t, src, isStrict);
+		Token next = src.peekNextToken();
+		switch (next.getKind()) {
+			case OPERATOR: {
+			}
+			case KEYWORD:
+				switch ((JSKeyword) t.getValue()) {
+					case VAR:
+						
+				}
+		}
+		//TODO finish
+		throw new UnsupportedOperationException();
+	}
+	protected ExpressionTree parseNextExpression(Token t, JSLexer src, boolean isStrict) {
+		//TODO finish
+				return null;
+	}
+	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken, JSLexer src, boolean isStrict) {
+		if (openParenToken == null)
+			openParenToken = src.nextToken();
+		ensureTokenKind(openParenToken, TokenKind.OPERATOR);
+		ensureToken(openParenToken, JSOperator.LEFT_PARENTHESIS);
+		throw new UnsupportedOperationException();
+	}
+	protected List<? extends ExpressionTree> parseParentheticalSeries(Token openParenToken, JSLexer src, boolean isStrict) {
+		if (openParenToken == null)
+			openParenToken = src.nextToken();
+		ensureToken(openParenToken, JSOperator.LEFT_PARENTHESIS);
+		List<? extends ExpressionTree> result = new LinkedList<>();
+		Token next = src.nextToken();
+		do {
+			
+		} while ((next = src.nextToken()).getValue() == JSOperator.COMMA);
+		ensureToken(next, JSOperator.RIGHT_PARENTHESIS);
+		throw new UnsupportedOperationException();
 	}
 	protected StatementTree parseStatement(JSLexer src, boolean isStrict) {
 		return this.parseStatement(src.nextToken(), src, isStrict);
