@@ -106,7 +106,6 @@ public interface Tree {
 		RETURN,
 		THROW,
 		IF,
-		@Deprecated
 		WITH,
 		
 		//GOTO stuff
