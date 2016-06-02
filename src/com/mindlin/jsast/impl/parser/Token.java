@@ -129,6 +129,10 @@ public class Token {
 		return getKind() == TokenKind.IDENTIFIER;
 	}
 	
+	public boolean isLiteral() {
+		return getKind() == TokenKind.LITERAL;
+	}
+	
 	@Override
 	public String toString() {
 		return new StringBuilder()
