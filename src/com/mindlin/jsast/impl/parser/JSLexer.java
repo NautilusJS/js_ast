@@ -4,8 +4,8 @@ public class JSLexer {
 	public static final char[] JS_WHITESPACE = new char[] {
 			'\r',
 			'\n',
-			'\u000b', // tabulation line
-			'\u000c', // ff (ctrl-l)
+			Characters.VT, // tabulation line
+			Characters.FF, // ff (ctrl-l)
 			'\u00a0', // Latin-1 space
 			'\u1680', // Ogham space mark
 			'\u180e', // separator, Mongolian vowel
@@ -65,25 +65,38 @@ public class JSLexer {
 		this(src.toCharArray());
 	}
 	
+	public char current() {
+		if (isEOF())
+			return Characters.EOT;
+		return chars[(int) position];
+	}
+	
 	public char peekNext() {
-		return chars[(int) (position + 1)];
+		return peek(1);
 	}
 	
 	public char next() {
-		return chars[(int) (++position)];
+		++position;
+		return current();
 	}
 	
 	public char peekPrev() {
-		return chars[(int) (position - 1)];
+		return peek(-1);
 	}
 	
 	public char prev() {
-		return chars[(int) (--position)];
+		--position;
+		return current();
 	}
+	
 	public char peek(long offset) {
 		if (position + offset > chars.length)
-			return '\0';//return null
+			return Characters.EOT;//return null
 		return chars[(int)(position + offset)];
+	}
+	public char skipAndGet(long offset) {
+		position += offset;
+		return current();
 	}
 	public char peekLowerCase(long offset) {
 		return Character.toLowerCase(peek(offset));
@@ -111,7 +124,8 @@ public class JSLexer {
 	public long skipWhitespace() {
 		long startPos = getPosition();
 		seek(-1);
-		while (isJSWhitespace(next()));
+		while (isJSWhitespace(next()))
+			;
 		return getPosition() - startPos;
 	}
 	public String parseStringLiteral() {
@@ -144,10 +158,10 @@ public class JSLexer {
 						sb.append('\f');
 						break;
 					case 'v':
-						sb.append('\u000b');//vertical tab
+						sb.append(Characters.VT);//vertical tab
 						break;
 					case '0':
-						sb.append('\0');
+						sb.append(Characters.NULL);
 						break;
 					case '\n':
 						if (peekNext() == '\r')
@@ -177,7 +191,7 @@ public class JSLexer {
 	}
 	
 	public boolean isEOF() {
-		return position == chars.length - 1;
+		return position >= chars.length - 1;
 	}
 	
 	public Number parseNumberLiteral() {
@@ -190,7 +204,7 @@ public class JSLexer {
 		}
 		NumericBase base = NumericBase.DECIMAL;
 		if (c == '0')
-			switch (Character.toLowerCase(peek(2))) {
+			switch (Character.toLowerCase(skipAndGet(2))) {
 				case 'x':
 					base = NumericBase.HEXDECIMAL;
 					skip(2);
@@ -205,7 +219,9 @@ public class JSLexer {
 			}
 		long startPos = getPosition();
 		long decimalPos = -1;
-		while (!JSLexer.isJSWhitespace(c = Character.toLowerCase(next()))) {
+		while ((c = Character.toLowerCase(next())) != Characters.EOT) {
+			if (c == Characters.EOT || JSLexer.isJSWhitespace(c))
+				break;
 			if (c < '0' || c > 'f')
 				throw new JSSyntaxException("Illegal identifier in number literal: '" + c + "'", getPosition());
 			if (c == '.') {
@@ -240,6 +256,7 @@ public class JSLexer {
 		}
 		prev();
 		String s = new String(chars, (int)startPos, (int)(getPosition() - startPos));
+		System.out.println("S: " + s + " B:" + base);
 		if (decimalPos < 0) {
 			long value = Long.parseUnsignedLong(s, base.getExponent());
 			if (isNegative)
@@ -356,7 +373,8 @@ public class JSLexer {
 	}
 	public JSOperator parseOperator() {
 		JSOperator result = peekOperator();
-		this.skip(result.length());
+		if (result != null)
+			this.skip(result.length());
 		return result;
 	}
 	
