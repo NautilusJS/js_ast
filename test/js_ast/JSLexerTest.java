@@ -4,8 +4,12 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSLexer;
+import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 import com.mindlin.jsast.impl.parser.JSSyntaxException;
+import com.mindlin.jsast.impl.parser.Token;
+import com.mindlin.jsast.impl.parser.TokenKind;
 
 public class JSLexerTest {
 	
@@ -44,10 +48,10 @@ public class JSLexerTest {
 				.append('"').append('\\').append('\r').append('\n').append('"')
 				.append('"').append('\\').append('\n').append('\r').append('"')
 				.toString());
-		assertTrue(lexer.parseStringLiteral().isEmpty());
-		assertTrue(lexer.parseStringLiteral().isEmpty());
-		assertTrue(lexer.parseStringLiteral().isEmpty());
-		assertTrue(lexer.parseStringLiteral().isEmpty());
+		assertEquals("", lexer.parseStringLiteral());
+		assertEquals("", lexer.parseStringLiteral());
+		assertEquals("", lexer.parseStringLiteral());
+		assertEquals("", lexer.parseStringLiteral());
 	}
 	@Test
 	public void parseStringLiteralComplexQuotes() {
@@ -55,8 +59,16 @@ public class JSLexerTest {
 				.append('"').append('\'').append('f').append('\'').append('"')
 				.append('\'').append('"').append('g').append('"').append('\'')
 				.toString());
-		assertEquals(lexer.parseStringLiteral(), "'f'");
-		assertEquals(lexer.parseStringLiteral(), "\"g\"");
+		assertEquals("'f'", lexer.parseStringLiteral());
+		assertEquals("\"g\"", lexer.parseStringLiteral());
+	}
+	
+	@Test
+	public void testSkipAndGet() {
+		JSLexer lexer = new JSLexer("abcde");
+		assertEquals('a', lexer.next());
+		assertEquals('b', lexer.skipAndGet(1));
+		assertEquals('c', lexer.next());
 	}
 	
 	@Test
@@ -64,12 +76,13 @@ public class JSLexerTest {
 		{
 			JSLexer lexer = new JSLexer("0b1010");
 			Number n = lexer.parseNumberLiteral();
-			assertEquals(n.intValue(), 0b1010);
+			System.out.println(n);
+			assertEquals(0b1010, n.intValue());
 		}
 		{
 			JSLexer lexer = new JSLexer("0B1010");
 			Number n = lexer.parseNumberLiteral();
-			assertEquals(n.intValue(), 0b1010);
+			assertEquals(0b1010, n.intValue());
 		}
 		{
 			//Check higher numbers
@@ -94,13 +107,42 @@ public class JSLexerTest {
 		{
 			//Check termination
 			JSLexer lexer = new JSLexer("0b0001 0b0010;0b0011\n0b0100\r0b0101\r0b0110");
-			assertEquals(lexer.parseNumberLiteral().intValue(), 0b0001);
-			assertEquals(lexer.parseNumberLiteral().intValue(), 0b0010);
-			assertEquals(lexer.parseNumberLiteral().intValue(), 0b0011);
-			assertEquals(lexer.parseNumberLiteral().intValue(), 0b0100);
-			assertEquals(lexer.parseNumberLiteral().intValue(), 0b0101);
-			assertEquals(lexer.parseNumberLiteral().intValue(), 0b0110);
+			assertEquals(0b0001, lexer.parseNumberLiteral().intValue());
+			assertEquals(0b0010, lexer.parseNumberLiteral().intValue());
+			assertEquals(0b0011, lexer.parseNumberLiteral().intValue());
+			assertEquals(0b0100, lexer.parseNumberLiteral().intValue());
+			assertEquals(0b0101, lexer.parseNumberLiteral().intValue());
+			assertEquals(0b0110, lexer.parseNumberLiteral().intValue());
 		}
 	}
-	
+	@Test
+	public void testEOF() {
+		JSLexer lexer = new JSLexer("\"foo\"");
+		//Skip string literal
+		lexer.parseStringLiteral();
+		assertTrue(lexer.isEOF());
+		Token eofToken = lexer.nextToken();
+		assertTrue(eofToken.isSpecial());
+		assertEquals(JSSpecialGroup.EOF, eofToken.getValue());
+	}
+	@Test
+	public void testTokenize() {
+		JSLexer lexer = new JSLexer("\"foo\" for asdd 0xFF");
+		Token fooStringToken = lexer.nextToken();
+		System.out.println(fooStringToken);
+		assertEquals(TokenKind.LITERAL, fooStringToken.getKind());
+		assertEquals(fooStringToken.getValue(),"foo");
+		
+		Token forKeywordToken = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, forKeywordToken.getKind());
+		assertEquals(forKeywordToken.getValue(), JSKeyword.FOR);
+		
+		Token asddIdentifierToken = lexer.nextToken();
+		assertEquals(TokenKind.IDENTIFIER, asddIdentifierToken.getKind());
+		assertEquals("asdd", asddIdentifierToken.getValue());
+		
+		Token FFNumberToken = lexer.nextToken();
+		assertEquals(TokenKind.LITERAL, FFNumberToken.getKind());
+		assertEquals(((Number)FFNumberToken.getValue()).intValue(), 0xFF);
+	}
 }
