@@ -1,6 +1,25 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.jsast.impl.lexer;
+
+import com.mindlin.jsast.exception.JSUnexpectedTokenException;
+import com.sun.istack.internal.NotNull;
 
 public class Token {
+	public static Token expect(Token t, TokenKind kind, @NotNull Object o, JSLexer src) {
+		if (t == null)
+			t = src.nextToken();
+		if (t.getKind() != kind)
+			throw new JSUnexpectedTokenException(t, kind);
+		if (t.getValue() != o && (!o.equals(t.getValue())))
+			throw new JSUnexpectedTokenException(t, o);
+		return t;
+	}
+	public static Token expectKind(Token t, TokenKind kind, JSLexer src) {
+		if (t == null)
+			t = src.nextToken();
+		if (t.getKind() != kind)
+			throw new JSUnexpectedTokenException(t, kind);
+		return t;
+	}
 	public static boolean isKeyword(char[] chars, boolean isStrict) {
 		final int SQ_TH = ((('t' & 0xFF) << 8) | ('h' & 0xFF));
 		int[] wide = new int[chars.length / 2];

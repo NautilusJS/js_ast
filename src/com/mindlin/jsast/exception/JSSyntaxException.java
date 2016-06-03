@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.jsast.exception;
 
 public class JSSyntaxException extends RuntimeException {
 

@@ -1,139 +1,43 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.jsast.impl.lexer;
+
+import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.impl.parser.JSKeyword;
+import com.mindlin.jsast.impl.parser.JSOperator;
+import com.mindlin.jsast.impl.parser.JSSpecialGroup;
+import com.mindlin.jsast.impl.parser.NumericBase;
+import com.mindlin.jsast.impl.util.CharacterStream;
+import com.mindlin.jsast.impl.util.Characters;
 
 public class JSLexer {
-	public static final char[] JS_WHITESPACE = new char[] {
-			'\r',
-			'\n',
-			Characters.VT, // tabulation line
-			Characters.FF, // ff (ctrl-l)
-			'\u00a0', // Latin-1 space
-			'\u1680', // Ogham space mark
-			'\u180e', // separator, Mongolian vowel
-			'\u2000', // en quad
-			'\u2001', // em quad
-			'\u2002', // en space
-			'\u2003', // em space
-			'\u2004', // three-per-em space
-			'\u2005', // four-per-em space
-			'\u2006', // six-per-em space
-			'\u2007', // figure space
-			'\u2008', // punctuation space
-			'\u2009', // thin space
-			'\u200a', // hair space
-			'\u202f', // narrow no-break space
-			'\u205f', // medium mathematical space
-			'\u3000', // ideographic space
-			'\ufeff' // byte order mark
-	};
-	public static boolean isJSWhitespace(final char c) {
-		//binary search
-		int lo = 0;
-        int hi = JS_WHITESPACE.length - 1;
-        while (lo <= hi) {
-            // Key is in a[lo..hi] or not present.
-            int mid = lo + (hi - lo) / 2;
-			if (c < JS_WHITESPACE[mid])
-				hi = mid - 1;
-			else if (c > JS_WHITESPACE[mid])
-				lo = mid + 1;
-			else
-				return true;
-        }
-        return false;
-	}
-	public static boolean canStartIdentifier(final char c) {
-		return Character.isJavaIdentifierStart(c);
-	}
-	protected long position;
-	protected final char[] chars;
+	protected final CharacterStream chars;
 	
 	public JSLexer(char[] chars) {
-		this(chars, -1);
+		this(new CharacterStream.CharacterArrayStream(chars));
 	}
 	
-	public JSLexer(char[] chars, long position) {
+	public JSLexer(CharacterStream chars) {
 		this.chars = chars;
-		this.position = position;
 	}
 	
 	public JSLexer(JSLexer origin) {
 		this.chars = origin.chars;
-		this.position = origin.position;
 	}
 	
 	public JSLexer(String src) {
 		this(src.toCharArray());
 	}
 	
-	public char current() {
-		if (isEOF())
-			return Characters.EOT;
-		return chars[(int) position];
-	}
-	
-	public char peekNext() {
-		return peek(1);
-	}
-	
-	public char next() {
-		++position;
-		return current();
-	}
-	
-	public char peekPrev() {
-		return peek(-1);
-	}
-	
-	public char prev() {
-		--position;
-		return current();
-	}
-	
-	public char peek(long offset) {
-		if (position + offset > chars.length)
-			return Characters.EOT;//return null
-		return chars[(int)(position + offset)];
-	}
-	public char skipAndGet(long offset) {
-		position += offset;
-		return current();
-	}
-	public char peekLowerCase(long offset) {
-		return Character.toLowerCase(peek(offset));
-	}
-	public void skip(long points) {
-		this.position += points;
-	}
-	
-	public void seek(long position) {
-		this.position = position;
-	}
-	
 	public long getPosition() {
-		return this.position;
-	}
-	
-	public long skipToNext(char c) {
-		long startPos = getPosition();
-		skip(-1);
-		while (next() != c)
-			;
-		return getPosition() - startPos;
-	}
-	
-	public long skipWhitespace() {
-		long startPos = getPosition();
-		seek(-1);
-		while (isJSWhitespace(next()))
-			;
-		return getPosition() - startPos;
+		return this.chars.position();
 	}
 	public String parseStringLiteral() {
-		char startChar = next();
+		return parseStringLiteral(chars.next());
+	}
+	public String parseStringLiteral(final char startChar) {
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
-		while (getPosition() < chars.length) {
-			char c = next();
+		while (chars.hasNext()) {
+			char c = chars.next();
 			if (isEscaped) {
 				isEscaped = false;
 				switch (c) {
@@ -164,12 +68,12 @@ public class JSLexer {
 						sb.append(Characters.NULL);
 						break;
 					case '\n':
-						if (peekNext() == '\r')
-							skip(1);
+						if (chars.peekNext() == '\r')
+							chars.skip(1);
 						break;
 					case '\r':
-						if (peekNext() == '\n')
-							skip(1);
+						if (chars.peekNext() == '\n')
+							chars.skip(1);
 						break;
 						//TODO support unicode/octal escape sequences (see https://mathiasbynens.be/notes/javascript-escapes)
 					default:
@@ -191,37 +95,35 @@ public class JSLexer {
 	}
 	
 	public boolean isEOF() {
-		return position >= chars.length - 1;
+		return chars.isEOF();
 	}
 	
 	public Number parseNumberLiteral() {
-		char c = Character.toLowerCase(peekNext());
+		char c = Character.toLowerCase(chars.peekNext());
 		boolean isNegative = false;
 		if (c == '-') {
 			isNegative = true;
-			skip(1);
-			c = peekNext();
+			chars.skip(1);
+			c = chars.peekNext();
 		}
 		NumericBase base = NumericBase.DECIMAL;
 		if (c == '0')
-			switch (Character.toLowerCase(skipAndGet(2))) {
+			switch (Character.toLowerCase(chars.next(2))) {
 				case 'x':
 					base = NumericBase.HEXDECIMAL;
-					skip(2);
+					chars.skip(2);
 					break;
 				case 'b':
 					base = NumericBase.BINARY;
-					skip(2);
+					chars.skip(2);
 					break;
 				default:
 					base = NumericBase.OCTAL;
-					skip(1);
+					chars.skip(1);
 			}
 		long startPos = getPosition();
 		long decimalPos = -1;
-		while ((c = Character.toLowerCase(next())) != Characters.EOT) {
-			if (c == Characters.EOT || JSLexer.isJSWhitespace(c))
-				break;
+		while (chars.hasNext() && !(Characters.isJsWhitespace(c = Character.toLowerCase(chars.next())) || chars.isEOL())) {
 			if (c < '0' || c > 'f')
 				throw new JSSyntaxException("Illegal identifier in number literal: '" + c + "'", getPosition());
 			if (c == '.') {
@@ -254,8 +156,8 @@ public class JSLexer {
 			if (!isValid)
 				throw new IllegalArgumentException("Illegal identifier in (" + base + ") number literal: '" + c + "' at " + (getPosition() - 1));
 		}
-		prev();
-		String s = new String(chars, (int)startPos, (int)(getPosition() - startPos));
+		chars.prev();
+		String s = chars.copy(startPos, chars.position() - startPos);
 		System.out.println("S: " + s + " B:" + base);
 		if (decimalPos < 0) {
 			long value = Long.parseUnsignedLong(s, base.getExponent());
@@ -270,7 +172,7 @@ public class JSLexer {
 	}
 	
 	public JSOperator peekOperator() {
-		char c = peekNext(), d = peek(2), e = peek(3);
+		char c = chars.peekNext(), d = chars.peek(2), e = chars.peek(3);
 		if (d == '=') {
 			switch (c) {
 				case '+':
@@ -311,7 +213,7 @@ public class JSLexer {
 			case '-':
 				if (d == '-')
 					return JSOperator.DECREMENT;
-				return JSOperator.SUBTRACTION;
+				return JSOperator.MINUS;
 			case '*':
 				if (d == '*') {
 					if (e == '=')
@@ -331,7 +233,7 @@ public class JSLexer {
 			case '>':
 				if (d == '>') {
 					if (e == '>') {
-						if (peek(4) == '=')
+						if (chars.peek(4) == '=')
 							return JSOperator.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
 						return JSOperator.UNSIGNED_RIGHT_SHIFT;
 					} else if (e == '=') {
@@ -371,29 +273,33 @@ public class JSLexer {
 		}
 		return null;
 	}
+	
+	public long getCharIndex() {
+		return chars.position();
+	}
 	public JSOperator parseOperator() {
 		JSOperator result = peekOperator();
 		if (result != null)
-			this.skip(result.length());
+			chars.skip(result.length());
 		return result;
 	}
 	
 	public String parseNextIdentifier() {
 		StringBuilder sb = new StringBuilder();
-		char c = next();
+		char c = chars.next();
 		if (!Character.isJavaIdentifierStart(c))
 			return null;
 		do {
 			sb.append(c);
-		} while (Character.isJavaIdentifierPart(c = next()));
-		skip(-1);
+		} while (Character.isJavaIdentifierPart(c = chars.next()));
+		chars.skip(-1);
 		return sb.toString();
 	}
 	
 	public Token nextToken() {
-		skipWhitespace();
-		long start = Math.max(getPosition(), 0);
-		char c = peekNext();
+		chars.skipWhitespace();
+		long start = Math.max(chars.position(), 0);
+		char c = chars.peekNext();
 		Object value = null;
 		TokenKind kind = null;
 		if (c == '"' || c == '\'') {
@@ -406,9 +312,11 @@ public class JSLexer {
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
 			value = c;
 			kind = TokenKind.BRACKET;
-			skip(1);
-		} else if (c == ';' || c == '\r' || c == '\n') {
-			
+			chars.skip(1);
+		} else if (c == ';') {
+			kind = TokenKind.SPECIAL;
+			value = JSSpecialGroup.SEMICOLON;
+			chars.skip(1);
 		} else if ((value = this.parseOperator()) != null) {
 			kind = TokenKind.OPERATOR;
 		} else {
@@ -424,16 +332,15 @@ public class JSLexer {
 				}
 			}
 		}
-		String literal = new String(chars, (int)start, (int)(getPosition() - start));
-		return new Token(start, kind, literal, value);
+		return new Token(start, kind, chars.copy(start, chars.position() - start), value);
 	}
 	public Token peekNextToken() {
-		long startPos = getPosition();
+		chars.mark();
 		Token result = nextToken();
-		this.seek(startPos);
+		chars.resetToMark();
 		return result;
 	}
 	public void skipToken(Token token) {
-		this.skip(token.getLength());
+		chars.skip(token.getLength());
 	}
 }

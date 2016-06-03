@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.jsast.impl.lexer;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,13 +14,13 @@ public class TokenStream {
 		this.iterator = tokens.listIterator();
 	}
 	public Token current() {
-		iterator.
+		throw new UnsupportedOperationException();
 	}
 	public Token next() {
-		
+		throw new UnsupportedOperationException();
 	}
 	public Token prev() {
-		
+		throw new UnsupportedOperationException();
 	}
 	public void skip(int offset) {
 		this.index += index;
