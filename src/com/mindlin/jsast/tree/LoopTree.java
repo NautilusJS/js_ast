@@ -1,4 +1,3 @@
 package com.mindlin.jsast.tree;
-public interface LoopTree extends StatementTree {
-	StatementTree getStatement();
+public interface LoopTree extends ControlStatementTree, StatementTree {
 }

@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.impl.parser.LineMap;
+import com.mindlin.jsast.impl.tree.LineMap;
 
 public interface CompilationUnitTree extends Tree {
         LineMap getLineMap();

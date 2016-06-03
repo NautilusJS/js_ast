@@ -121,6 +121,7 @@ public interface Tree {
 		//Class stuff
 		CLASS_EXPRESSION,
 		CLASS_DECLARATION,
+		INTERFACE_DECLARATION,//Support some typescript
 		
 		//Array stuff
 		IN,
@@ -130,10 +131,10 @@ public interface Tree {
 		//Method invocation
 		NEW,
 		FUNCTION_INVOCATION,
+		PARAMETER,
 		
 		//Variable stuff
 		VARIABLE,
-		SCOPED_VARIABLE,
 		SCOPED_FUNCTION,
 		IDENTIFIER,
 		
