@@ -4,12 +4,12 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.impl.lexer.JSLexer;
+import com.mindlin.jsast.impl.lexer.Token;
+import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.parser.JSKeyword;
-import com.mindlin.jsast.impl.parser.JSLexer;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
-import com.mindlin.jsast.impl.parser.JSSyntaxException;
-import com.mindlin.jsast.impl.parser.Token;
-import com.mindlin.jsast.impl.parser.TokenKind;
 
 public class JSLexerTest {
 	
