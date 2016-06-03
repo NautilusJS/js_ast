@@ -2,7 +2,6 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.impl.parser.LineMap;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.Tree;
 
