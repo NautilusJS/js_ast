@@ -1,7 +1,6 @@
 package com.mindlin.jsast.impl.parser;
 
 public enum JSSpecialGroup {
-	@Deprecated
 	SEMICOLON,
 	/**
 	 * Denotes the end of a line. This is a semicolon in an ideal world,

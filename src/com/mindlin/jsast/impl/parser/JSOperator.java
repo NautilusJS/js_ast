@@ -14,8 +14,8 @@ public enum JSOperator {
 	INCREMENT("++"),
 	DECREMENT("--"),
 	
-	ADDITION("+","A+B"),
-	SUBTRACTION("-","-A","A-B"),
+	PLUS("+","A+B"),
+	MINUS("-","-A","A-B"),
 	MULTIPLICATION("*","A*B"),
 	DIVISION("/","A/B"),
 	REMAINDER("%","A%B"),
