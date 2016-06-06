@@ -29,7 +29,7 @@ public class Promise {
 	@JSExtern
 	public Promise(JSFunction executor) {
 		this.executor = executor;
-		
+		executor.invoke((JSFunction)this::doResolve, (JSFunction)this::doReject);
 	}
 	
 	@JSExtern(name="catch")
