@@ -4,10 +4,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
+import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
@@ -17,6 +19,7 @@ import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.tree.BlockTree;
+import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
@@ -174,11 +177,11 @@ public class JSParser {
 	
 	protected SwitchTree parseSwitchStatement(Token switchKeywordToken, JSLexer src, boolean isStrict) {
 		switchKeywordToken = Token.expect(switchKeywordToken, TokenKind.KEYWORD, JSKeyword.SWITCH, src);
-		Token.expectLeftParen(src);
+		src.expectToken(JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		Token.expectRightParen(src);
-		Token.expect(TokenKind.BRACKET, '{', src);
-		List<? extends CaseTree> cases = new LinkedList<>();
+		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
+		src.expectToken(TokenKind.BRACKET, '{');
+		List<CaseTree> cases = new LinkedList<>();
 		Token next = src.nextToken();
 		while (next.getKind() == TokenKind.KEYWORD) {
 			ExpressionTree caseExpr;
@@ -189,10 +192,9 @@ public class JSParser {
 				caseExpr = null;
 			else
 				throw new JSUnexpectedTokenException(next);
-			
-			Token.expect(TokenKind.OPERATOR, JSOperator.COLON, src);
+			src.expectToken(JSOperator.COLON);
 			//TODO parse statements
-			cases.add(new CaseTree(next.getStart(), src.getPosition(), caseExpr, statements);
+			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements);
 		}
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
 	}

@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.lexer;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
@@ -30,9 +31,11 @@ public class JSLexer {
 	public long getPosition() {
 		return this.chars.position();
 	}
+	
 	public String parseStringLiteral() {
 		return parseStringLiteral(chars.next());
 	}
+	
 	public String parseStringLiteral(final char startChar) {
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
@@ -62,7 +65,7 @@ public class JSLexer {
 						sb.append('\f');
 						break;
 					case 'v':
-						sb.append(Characters.VT);//vertical tab
+						sb.append(Characters.VT);// vertical tab
 						break;
 					case '0':
 						sb.append(Characters.NULL);
@@ -75,7 +78,8 @@ public class JSLexer {
 						if (chars.peekNext() == '\n')
 							chars.skip(1);
 						break;
-						//TODO support unicode/octal escape sequences (see https://mathiasbynens.be/notes/javascript-escapes)
+					// TODO support unicode/octal escape sequences (see
+					// https://mathiasbynens.be/notes/javascript-escapes)
 					default:
 						throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition());
 				}
@@ -123,7 +127,8 @@ public class JSLexer {
 			}
 		long startPos = getPosition();
 		long decimalPos = -1;
-		while (chars.hasNext() && !(Characters.isJsWhitespace(c = Character.toLowerCase(chars.next())) || chars.isEOL())) {
+		while (chars.hasNext()
+				&& !(Characters.isJsWhitespace(c = Character.toLowerCase(chars.next())) || chars.isEOL())) {
 			if (c < '0' || c > 'f')
 				throw new JSSyntaxException("Illegal identifier in number literal: '" + c + "'", getPosition());
 			if (c == '.') {
@@ -154,7 +159,8 @@ public class JSLexer {
 					throw new RuntimeException("Unknown base :" + base);
 			}
 			if (!isValid)
-				throw new IllegalArgumentException("Illegal identifier in (" + base + ") number literal: '" + c + "' at " + (getPosition() - 1));
+				throw new IllegalArgumentException(
+						"Illegal identifier in (" + base + ") number literal: '" + c + "' at " + (getPosition() - 1));
 		}
 		chars.prev();
 		String s = chars.copy(startPos, chars.position() - startPos);
@@ -267,16 +273,38 @@ public class JSLexer {
 			case ',':
 				return JSOperator.COMMA;
 			case '?':
-				return JSOperator.CONDITIONAL_QUESTION_MARK;
+				return JSOperator.QUESTION_MARK;
 			case ':':
-				return JSOperator.CONDITIONAL_COLON;
+				return JSOperator.COLON;
 		}
 		return null;
+	}
+	
+	public Token expectTokenKind(TokenKind kind) {
+		Token t = this.nextToken();
+		if (t.getKind() != kind)
+			throw new JSUnexpectedTokenException(t, kind);
+		return t;
+	}
+	public Token expectToken(TokenKind kind, Object value) {
+		Token t = this.nextToken();
+		if (t.getKind() != kind)
+			throw new JSUnexpectedTokenException(t, kind);
+		if (t.getValue() != value)
+			throw new JSUnexpectedTokenException(t, value);
+		return t;
+	}
+	public Token expectToken(Object value) {
+		Token t = this.nextToken();
+		if (t.getValue() != value)
+			throw new JSUnexpectedTokenException(t, value);
+		return t;
 	}
 	
 	public long getCharIndex() {
 		return chars.position();
 	}
+	
 	public JSOperator parseOperator() {
 		JSOperator result = peekOperator();
 		if (result != null)
@@ -303,7 +331,7 @@ public class JSLexer {
 		Object value = null;
 		TokenKind kind = null;
 		if (c == '"' || c == '\'') {
-			//TODO add support for template literals
+			// TODO add support for template literals
 			value = parseStringLiteral();
 			kind = TokenKind.LITERAL;
 		} else if (c > '0' && c < '9') {
@@ -334,12 +362,14 @@ public class JSLexer {
 		}
 		return new Token(start, kind, chars.copy(start, chars.position() - start), value);
 	}
+	
 	public Token peekNextToken() {
 		chars.mark();
 		Token result = nextToken();
 		chars.resetToMark();
 		return result;
 	}
+	
 	public void skipToken(Token token) {
 		chars.skip(token.getLength());
 	}
