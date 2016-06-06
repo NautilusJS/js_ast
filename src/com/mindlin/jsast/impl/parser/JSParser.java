@@ -164,16 +164,43 @@ public class JSParser {
 	}
 	
 	protected IfTree parseIfStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
-		// TODO finish
-		throw new UnsupportedOperationException();
+		ifKeywordToken = Token.expect(ifKeywordToken, TokenKind.KEYWORD, JSKeyword.IF, src);
+		Token.expectLeftParen(src);
+		ExpressionTree expression = this.parseNextExpression(src, isStrict);
+		Token.expectRightParen(src);
+		StatementTree statement = this.parseStatement(null, src, isStrict);
+		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, statement);
 	}
 	
-	protected SwitchTree parseSwitchStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
-		// TODO finish
-		throw new UnsupportedOperationException();
+	protected SwitchTree parseSwitchStatement(Token switchKeywordToken, JSLexer src, boolean isStrict) {
+		switchKeywordToken = Token.expect(switchKeywordToken, TokenKind.KEYWORD, JSKeyword.SWITCH, src);
+		Token.expectLeftParen(src);
+		ExpressionTree expression = this.parseNextExpression(src, isStrict);
+		Token.expectRightParen(src);
+		Token.expect(TokenKind.BRACKET, '{', src);
+		List<? extends CaseTree> cases = new LinkedList<>();
+		Token next = src.nextToken();
+		while (next.getKind() == TokenKind.KEYWORD) {
+			ExpressionTree caseExpr;
+			List<? extends StatementTree> statements = new LinkedList<>();
+			if (next.getValue() == JSKeyword.CASE)
+				caseExpr = this.parseNextExpression(src, isStrict);
+			else if (next.getValue() == JSKeyword.DEFAULT)
+				caseExpr = null;
+			else
+				throw new JSUnexpectedTokenException(next);
+			
+			Token.expect(TokenKind.OPERATOR, JSOperator.COLON, src);
+			//TODO parse statements
+			cases.add(new CaseTree(next.getStart(), src.getPosition(), caseExpr, statements);
+		}
+		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
 	}
 	
-	protected TryTree parseTryStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
+	protected TryTree parseTryStatement(Token tryKeywordToken, JSLexer src, boolean isStrict) {
+		tryKeywordToken = Token.expect(tryKeywordToken, TokenKind.KEYWORD, JSKeyword.TRY, src);
+		BlockTree tryBlock = this.parseBlock(null, src, isStrict);
+		
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
