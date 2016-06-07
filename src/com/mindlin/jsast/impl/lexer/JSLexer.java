@@ -371,6 +371,7 @@ public class JSLexer {
 	}
 	
 	public void skipToken(Token token) {
-		chars.skip(token.getLength());
+		//chars.skip(token.getLength());
+		chars.position(token.getEnd());
 	}
 }
