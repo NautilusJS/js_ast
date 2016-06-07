@@ -10,7 +10,7 @@ import com.mindlin.jsast.tree.TreeVisitor;
 
 public abstract class AbstractTree implements Tree {
 	protected final long start, end;
-	protected AbstractTree(long start, long end) {
+	public AbstractTree(long start, long end) {
 		this.start = start;
 		this.end = end;
 	}
