@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.parser;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
@@ -9,14 +10,18 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
+import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementImpl;
+import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
+import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
+import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
@@ -36,9 +41,9 @@ import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.UnaryTree;
-import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.Tree.Kind;
 
 public class JSParser {
 	private static Token ensureToken(JSLexer src, Object value) {
@@ -168,9 +173,9 @@ public class JSParser {
 	
 	protected IfTree parseIfStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
 		ifKeywordToken = Token.expect(ifKeywordToken, TokenKind.KEYWORD, JSKeyword.IF, src);
-		Token.expectLeftParen(src);
+		src.expectToken(JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		Token.expectRightParen(src);
+		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
 		StatementTree statement = this.parseStatement(null, src, isStrict);
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, statement);
 	}
@@ -194,7 +199,7 @@ public class JSParser {
 				throw new JSUnexpectedTokenException(next);
 			src.expectToken(JSOperator.COLON);
 			//TODO parse statements
-			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements);
+			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
 	}
@@ -207,19 +212,21 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected IfTree parseFunctionStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
-		// TODO finish
+	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, boolean isStrict) {
+		functionKeywordToken = Token.expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src);
 		throw new UnsupportedOperationException();
 	}
 	
-	protected WithTree parseWithStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
-		// TODO finish
+	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, boolean isStrict) {
+		withKeywordToken = Token.expect(withKeywordToken, TokenKind.KEYWORD, JSKeyword.WITH, src);
 		throw new UnsupportedOperationException();
 	}
 	
-	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, boolean isStrict) {
-		// TODO finish
-		throw new UnsupportedOperationException();
+	@Deprecated()//See parseUnaryExpression
+	protected UnaryTree parseVoid(Token voidKeywordToken, JSLexer src, boolean isStrict) {
+		voidKeywordToken = Token.expect(voidKeywordToken, TokenKind.KEYWORD, JSKeyword.VOID, src);
+		ExpressionTree expr = this.parseNextExpression(src, isStrict);
+		return new UnaryTreeImpl(voidKeywordToken.getStart(), src.getPosition(), expr, Tree.Kind.VOID);
 	}
 	
 	protected UnaryTree parseUnaryExpression(Token operatorToken, JSLexer src, boolean isStrict) {
@@ -399,6 +406,7 @@ public class JSParser {
 					case DELETE:
 					case THROW:
 					case VOID:
+					case TYPEOF:
 						return this.parsePrefixUnary(token, src, isStrict);
 					case DO:
 						return this.parseDoWhileLoop(token, src, isStrict);
@@ -451,10 +459,6 @@ public class JSParser {
 					case THIS:
 					case YIELD:
 						break;
-					case TYPEOF:
-						// TODO fix for wierd expressions like '[unary operator]
-						// [expr] [logical operator] [statement]'
-						break;
 				}
 				break;
 			case IDENTIFIER:
@@ -473,7 +477,7 @@ public class JSParser {
 	}
 	
 	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, boolean isStrict) {
-		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, isStrict);
+		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, src);
 		String label = null;
 		Token next = src.nextToken();
 		if (next.isIdentifier()) {
@@ -491,32 +495,69 @@ public class JSParser {
 	}
 	
 	protected UnaryTree parsePrefixUnary(Token keywordToken, JSLexer src, boolean isStrict) {
-		// TODO ensure keywordToken != null
-		ExpressionTree expression = this.nextExpression(src, isStrict);
+		if (keywordToken == null)
+			keywordToken = src.nextToken();
+		Tree.Kind kind = null;
 		switch (keywordToken.getKind()) {
 			case KEYWORD:
 				switch ((JSKeyword) keywordToken.getValue()) {
 					case VOID:
+						{
+							Token next = src.peekNextToken();
+							if ((next = src.nextToken()).getKind() == TokenKind.SPECIAL && next.getValue() == JSSpecialGroup.SEMICOLON) {
+								src.skipToken(next);
+								return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
+							}
+						}
+						kind = Tree.Kind.VOID;
+						break;
 					case RETURN:
+						kind = Tree.Kind.RETURN;
+						break;
 					case THROW:
+						kind = Tree.Kind.THROW;
+						break;
 					case TYPEOF:
+						kind = Tree.Kind.TYPEOF;
+						break;
 					case DELETE:
-						return AbstractUnaryTree.make(keywordToken.getValue(), expression);
+						kind = Tree.Kind.DELETE;
+						break;
+					default:
+						break;
 				}
 				break;
 			case OPERATOR:
 				switch ((JSOperator) keywordToken.getValue()) {
 					case INCREMENT:
+						kind = Tree.Kind.PREFIX_INCREMENT;
+						break;
 					case DECREMENT:
+						kind = Tree.Kind.PREFIX_DECREMENT;
+						break;
 					case PLUS:
+						kind = Tree.Kind.UNARY_PLUS;
+						break;
 					case MINUS:
+						kind = Tree.Kind.UNARY_MINUS;
+						break;
 					case BITWISE_NOT:
+						kind = Tree.Kind.BITWISE_NOT;
+						break;
 					case LOGICAL_NOT:
-						return AbstractUnaryTree.make(keywordToken.getValue(), expression);
+						kind = Tree.Kind.LOGICAL_NOT;
+						break;
+					default:
+						break;
 				}
 				break;
+			default:
+				break;
 		}
-		throw new JSSyntaxException(keywordToken, getPosition());
+		if (kind == null)
+			throw new JSUnexpectedTokenException(keywordToken);
+		ExpressionTree expression = this.parseNextExpression(src, isStrict);
+		return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), expression, kind);
 	}
 	
 	protected DebuggerTree parseDebugger(Token debuggerKeywordToken, JSLexer src, boolean isStrict) {
@@ -525,12 +566,11 @@ public class JSParser {
 	
 	protected BlockTree parseBlock(Token openBraceToken, JSLexer src, boolean isStrict) {
 		openBraceToken = expect(openBraceToken, TokenKind.BRACKET, '{', src, isStrict);
-		List<? extends StatementTree> statements = new LinkedList<>();
+		List<StatementTree> statements = new LinkedList<>();
 		Token t;
 		while ((t = src.nextToken()).getKind() != TokenKind.BRACKET)
-			statements.add(parseStatement(t));
-		return new BlockTreeImpl(openBraceToken.getStart(), getPosition(), statements);
-		// Token t = src.peekNextToken();
-		// TODO finish
+			statements.add(parseStatement(t, src, isStrict));
+		this.ensureToken(t, '}');
+		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
 	}
 }
