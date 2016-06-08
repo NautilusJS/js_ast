@@ -22,25 +22,6 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 		return data[--position];
 	}
 	@Override
-	public boolean isEOF() {
-		return position >= data.length;
-	}
-	@Override
-	public char first() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	@Override
-	public char next(long offset) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	@Override
-	public char prev(long offset) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	@Override
 	public CharacterStream skip(long offset) {
 		position += offset;
 		return this;
@@ -56,42 +37,29 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	}
 	@Override
 	public boolean hasNext() {
-		// TODO Auto-generated method stub
-		return false;
+		return position < data.length - 1;
 	}
 	@Override
 	public boolean isEOL() {
-		// TODO Auto-generated method stub
-		return false;
+		final char c = current();
+		return c == '\r' || c == '\n';
 	}
 	@Override
 	public boolean isWhitespace() {
-		// TODO Auto-generated method stub
-		return false;
+		throw new UnsupportedOperationException();
 	}
 	@Override
 	public CharacterStream skipNewline() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 	@Override
 	public CharacterStream skipWhitespace() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
-	public char peekNext() {
-		// TODO Auto-generated method stub
-		return 0;
+		while(Characters.isJsWhitespace(data[1 + position]))
+			position++;
+		return this;
 	}
 	@Override
 	public char peek(long offset) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	@Override
-	public CharacterStream skipTo(char c) {
-		// TODO Auto-generated method stub
-		return null;
+		return data[(int) (position + offset)];
 	}
 }
