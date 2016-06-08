@@ -38,12 +38,10 @@ public class JSLexer {
 	}
 	
 	public String parseStringLiteral(final char startChar) {
-		System.out.println("Opening char: " + startChar);
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
 		while (chars.hasNext()) {
 			char c = chars.next();
-			System.out.println("Read: " + c);
 			if (isEscaped) {
 				isEscaped = false;
 				switch (c) {
@@ -98,12 +96,12 @@ public class JSLexer {
 				break;
 			sb.append(c);
 		}
-		System.out.println("Result: " + sb.toString());
+		chars.skip(1);
 		return sb.toString();
 	}
 	
 	public boolean isEOF() {
-		return chars.isEOF();
+		return !chars.hasNext();
 	}
 	
 	public Number parseNumberLiteral() {
@@ -132,7 +130,7 @@ public class JSLexer {
 		long startPos = getPosition();
 		long decimalPos = -1;
 		while (chars.hasNext()
-				&& !(Characters.isJsWhitespace(c = Character.toLowerCase(chars.next())) || chars.isEOL())) {
+				&& (!Characters.isJsWhitespace(c = Character.toLowerCase(chars.next())) || chars.isEOL())) {
 			if (c < '0' || c > 'f')
 				throw new JSSyntaxException("Illegal identifier in number literal: '" + c + "'", getPosition());
 			if (c == '.') {
