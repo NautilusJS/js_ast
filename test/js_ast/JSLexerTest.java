@@ -13,23 +13,12 @@ import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 
 public class JSLexerTest {
 	
-	@Test
-	public void testNextPrev() {
-		JSLexer lexer = new JSLexer("123456789");
-		assertEquals(lexer.next(), '1');
-		System.out.println(lexer.getPosition());
-		assertEquals(lexer.next(), '2');
-		System.out.println(lexer.getPosition());
-		assertEquals(lexer.prev(), '1');
-		System.out.println(lexer.getPosition());
-		assertEquals(lexer.next(), '2');
-		System.out.println(lexer.getPosition());
-	}
+	
 	@Test
 	public void testParseSimpleStringLiteral() {
 		JSLexer lexer = new JSLexer("\"Hello, world\"");
 		String parsed = lexer.parseStringLiteral();
-		assertEquals(parsed, "Hello, world");
+		assertEquals("Hello, world", parsed);
 //		fail("Not yet implemented");
 	}
 	
@@ -37,7 +26,7 @@ public class JSLexerTest {
 	public void parseStringLiteralEscapeSequence() {
 		JSLexer lexer = new JSLexer("\"\\r\\n\\\\\\\nf\"");
 		String parsed = lexer.parseStringLiteral();
-		assertEquals(parsed, "\r\n\\f");
+		assertEquals("\r\n\\f", parsed);
 	}
 	
 	@Test
@@ -63,13 +52,7 @@ public class JSLexerTest {
 		assertEquals("\"g\"", lexer.parseStringLiteral());
 	}
 	
-	@Test
-	public void testSkipAndGet() {
-		JSLexer lexer = new JSLexer("abcde");
-		assertEquals('a', lexer.next());
-		assertEquals('b', lexer.skipAndGet(1));
-		assertEquals('c', lexer.next());
-	}
+	
 	
 	@Test
 	public void parseNumberLiteralBinary() {
@@ -119,7 +102,7 @@ public class JSLexerTest {
 	public void testEOF() {
 		JSLexer lexer = new JSLexer("\"foo\"");
 		//Skip string literal
-		lexer.parseStringLiteral();
+		System.out.println(lexer.parseStringLiteral());
 		assertTrue(lexer.isEOF());
 		Token eofToken = lexer.nextToken();
 		assertTrue(eofToken.isSpecial());
