@@ -109,7 +109,7 @@ public class Token {
 	}
 	
 	public long getLength() {
-		return text.length();
+		return text == null ? 0 : text.length();
 	}
 	
 	public long getEnd() {
