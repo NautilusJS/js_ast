@@ -28,7 +28,7 @@ public class LongStack implements RandomAccess, Cloneable, Serializable {
 		return size;
 	}
 	public void ensureSpace(int space) {
-		ensureCapacity(size + 1);
+		ensureCapacity(size + space);
 	}
 	public void ensureCapacity(int capacity) {
 		if (capacity < 0)
@@ -51,6 +51,6 @@ public class LongStack implements RandomAccess, Cloneable, Serializable {
 		return elements[size];
 	}
 	public long pop() {
-		return elements[size--];
+		return elements[--size];
 	}
 }
