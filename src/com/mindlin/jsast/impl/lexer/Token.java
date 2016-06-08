@@ -21,6 +21,7 @@ public class Token {
 		return t;
 	}
 	public static boolean isKeyword(char[] chars, boolean isStrict) {
+		//TODO finish
 		final int SQ_TH = ((('t' & 0xFF) << 8) | ('h' & 0xFF));
 		int[] wide = new int[chars.length / 2];
 		for (int i = 0; i < chars.length / 2; i++)
@@ -91,10 +92,10 @@ public class Token {
 		return true;
 	}
 	
-	final TokenKind kind;
-	final long position;
-	final String text;
-	final Object value;
+	protected final TokenKind kind;
+	protected final long position;
+	protected final String text;
+	protected final Object value;
 	
 	public Token(long position, TokenKind kind, String text, Object value) {
 		this.position = position;
@@ -159,7 +160,8 @@ public class Token {
 				.append(",value=").append(value)
 				.append(",start=").append(getStart())
 				.append(",end=").append(getEnd())
-				.append(",text=").append(getText())
+				.append(",text=\"").append(getText())
+				.append("\"}")
 				.toString();
 	}
 }
