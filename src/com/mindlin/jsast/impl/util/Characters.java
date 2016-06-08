@@ -23,6 +23,7 @@ public final class Characters {
 	public static final char[] JS_WHITESPACE = new char[] {
 			'\r',
 			'\n',
+			' ',
 			VT, // tabulation line
 			FF, // ff (ctrl-l)
 			'\u00a0', // Latin-1 space
