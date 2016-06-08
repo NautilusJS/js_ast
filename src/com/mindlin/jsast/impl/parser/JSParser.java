@@ -2,7 +2,6 @@ package com.mindlin.jsast.impl.parser;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.UnaryOperator;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
@@ -29,6 +28,7 @@ import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
+import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
@@ -36,6 +36,8 @@ import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.GotoTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
+import com.mindlin.jsast.tree.ImportTree;
+import com.mindlin.jsast.tree.InterfaceTree;
 import com.mindlin.jsast.tree.LoopTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.SwitchTree;
@@ -143,6 +145,7 @@ public class JSParser {
 		}
 		return null;
 	}
+	
 	protected StatementTree parseStatement(JSLexer src, boolean isStrict) {
 		return this.parseStatement(src.nextToken(), src, isStrict);
 	}
@@ -166,6 +169,7 @@ public class JSParser {
 					case RETURN:
 					case DELETE:
 					case THROW:
+					case NEW:
 					case TYPEOF: {
 						ExpressionTree expr = this.parsePrefixUnary(token, src, isStrict);
 						if (expr instanceof StatementTree)
@@ -173,7 +177,7 @@ public class JSParser {
 						return new UnaryTreeImpl.VoidTreeImpl(expr);
 					}
 					case AWAIT:
-						//TODO impl
+						// TODO impl
 						break;
 					case VOID:
 						return this.parseVoid(token, src, isStrict);
@@ -199,9 +203,6 @@ public class JSParser {
 						return this.parseFunctionKeyword(token, src, isStrict);
 					case INTERFACE:
 						return this.parseInterface(token, src, isStrict);
-					case NEW:
-						// Insert 'void' to make this a statement
-						return UnaryOperator.make(JSKeyword.VOID, this.parseNextExpression(token, src, isStrict));
 					case SWITCH:
 						return this.parseSwitchStatement(token, src, isStrict);
 					case TRY:
@@ -245,7 +246,17 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	@JSKeywordParser({JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR})
+	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer lexer, boolean isStrict) {
+		// TODO finish
+		throw new UnsupportedOperationException();
+	}
+	
+	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer lexer, boolean isStrict) {
+		// TODO finish
+		throw new UnsupportedOperationException();
+	}
+	
+	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
 	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer lexer, boolean isStrict) {
 		// TODO finish
 		throw new UnsupportedOperationException();
@@ -263,9 +274,12 @@ public class JSParser {
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
-	protected IterfaceTree parseInterface(Token interfaceKeywordToken, JSLexer src, boolean isStrict) {
-		
+	
+	protected InterfaceTree parseInterface(Token interfaceKeywordToken, JSLexer src, boolean isStrict) {
+		// TODO finish
+		throw new UnsupportedOperationException();
 	}
+	
 	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, boolean isStrict) {
 		identifierToken = Token.expectKind(identifierToken, TokenKind.IDENTIFIER, src);
 		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), identifierToken.getValue());
@@ -287,15 +301,17 @@ public class JSParser {
 		if (next.getKind() == TokenKind.KEYWORD && next.getValue() == JSKeyword.ELSE) {
 			src.skipToken(next);
 			next = src.nextToken();
-			//This if statement isn't really needed, but it speeds up 'else if' statements
-			//by a bit, and else if statements are actually more common than else statements
+			// This if statement isn't really needed, but it speeds up 'else if'
+			// statements
+			// by a bit, and else if statements are actually more common than
+			// else statements
 			if (next.getKind() == TokenKind.KEYWORD && next.getValue() == JSKeyword.IF)
 				elseStatement = parseIfStatement(next, src, isStrict);
 			else
 				elseStatement = this.parseStatement(next, src, isStrict);
 		}
 		if (elseStatement == null)
-			elseStatement = new EmptyStatementImpl(src.getPosition(), src.getPosition()); 
+			elseStatement = new EmptyStatementImpl(src.getPosition(), src.getPosition());
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
 	
@@ -317,7 +333,7 @@ public class JSParser {
 			else
 				throw new JSUnexpectedTokenException(next);
 			src.expectToken(JSOperator.COLON);
-			//TODO parse statements
+			// TODO parse statements
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
@@ -498,7 +514,7 @@ public class JSParser {
 		List<? extends ExpressionTree> result = new LinkedList<>();
 		Token next = src.nextToken();
 		do {
-			
+			//TODO finish
 		} while ((next = src.nextToken()).getValue() == JSOperator.COMMA);
 		ensureToken(next, JSOperator.RIGHT_PARENTHESIS);
 		throw new UnsupportedOperationException();
@@ -529,14 +545,14 @@ public class JSParser {
 		switch (keywordToken.getKind()) {
 			case KEYWORD:
 				switch ((JSKeyword) keywordToken.getValue()) {
-					case VOID:
-						{
-							Token next = src.peekNextToken();
-							if ((next = src.nextToken()).getKind() == TokenKind.SPECIAL && next.getValue() == JSSpecialGroup.SEMICOLON) {
-								src.skipToken(next);
-								return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
-							}
+					case VOID: {
+						Token next = src.peekNextToken();
+						if ((next = src.nextToken()).getKind() == TokenKind.SPECIAL
+								&& next.getValue() == JSSpecialGroup.SEMICOLON) {
+							src.skipToken(next);
+							return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
 						}
+					}
 						kind = Tree.Kind.VOID;
 						break;
 					case RETURN:
@@ -600,7 +616,7 @@ public class JSParser {
 		Token t;
 		while ((t = src.nextToken()).getKind() != TokenKind.BRACKET)
 			statements.add(parseStatement(t, src, isStrict));
-		this.ensureToken(t, '}');
+		ensureToken(t, '}');
 		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
 	}
 }

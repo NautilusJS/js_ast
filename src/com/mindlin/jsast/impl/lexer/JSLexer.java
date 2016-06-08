@@ -6,6 +6,7 @@ import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 import com.mindlin.jsast.impl.parser.NumericBase;
+import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.impl.util.Characters;
 
@@ -13,7 +14,7 @@ public class JSLexer {
 	protected final CharacterStream chars;
 	
 	public JSLexer(char[] chars) {
-		this(new CharacterStream.CharacterArrayStream(chars));
+		this(new CharacterArrayStream(chars));
 	}
 	
 	public JSLexer(CharacterStream chars) {
@@ -25,7 +26,7 @@ public class JSLexer {
 	}
 	
 	public JSLexer(String src) {
-		this(src.toCharArray());
+		this(new CharacterArrayStream(src));
 	}
 	
 	public long getPosition() {
@@ -37,10 +38,12 @@ public class JSLexer {
 	}
 	
 	public String parseStringLiteral(final char startChar) {
+		System.out.println("Opening char: " + startChar);
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
 		while (chars.hasNext()) {
 			char c = chars.next();
+			System.out.println("Read: " + c);
 			if (isEscaped) {
 				isEscaped = false;
 				switch (c) {
@@ -79,7 +82,7 @@ public class JSLexer {
 							chars.skip(1);
 						break;
 					// TODO support unicode/octal escape sequences (see
-					// https://mathiasbynens.be/notes/javascript-escapes)
+					// mathiasbynens.be/notes/javascript-escapes)
 					default:
 						throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition());
 				}
@@ -95,6 +98,7 @@ public class JSLexer {
 				break;
 			sb.append(c);
 		}
+		System.out.println("Result: " + sb.toString());
 		return sb.toString();
 	}
 	
@@ -162,7 +166,7 @@ public class JSLexer {
 				throw new IllegalArgumentException(
 						"Illegal identifier in (" + base + ") number literal: '" + c + "' at " + (getPosition() - 1));
 		}
-		chars.prev();
+		chars.skip(-1);
 		String s = chars.copy(startPos, chars.position() - startPos);
 		System.out.println("S: " + s + " B:" + base);
 		if (decimalPos < 0) {
