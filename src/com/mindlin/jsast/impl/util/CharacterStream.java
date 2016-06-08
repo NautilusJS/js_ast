@@ -1,26 +1,36 @@
 package com.mindlin.jsast.impl.util;
 
 public interface CharacterStream {
-	char first();
 	char current();
 	char next();
-	char next(long offset);
+	default char next(long offset) {
+		skip(offset);
+		return current();
+	}
 	char prev();
-	char prev(long offset);
-	char peekNext();
+	default char prev(long offset) {
+		skip(-offset);
+		return current();
+	}
+	default char peekNext() {
+		return peek(1);
+	}
 	char peek(long offset);
 	CharacterStream skip(long offset);
 	long position();
 	CharacterStream position(long pos);
 	boolean hasNext();
-	boolean isEOF();
 	boolean isEOL();
 	boolean isWhitespace();
 	CharacterStream skipNewline();
 	CharacterStream skipWhitespace();
 	CharacterStream mark();
 	CharacterStream resetToMark();
-	CharacterStream skipTo(final char c);
+	default CharacterStream skipTo(final char c) {
+		while (next() != c)
+			;
+		return this;
+	}
 	String copyNext(long len);
 	String copy(long start, long len);
 }
