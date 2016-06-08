@@ -1,5 +1,8 @@
 package com.mindlin.jsast.impl.runtime.objects;
 
+import com.mindlin.jsast.impl.runtime.annotations.JSExtern;
+import com.mindlin.jsast.impl.runtime.annotations.JSParam;
+
 public class Promise {
 	@JSExtern
 	public static Promise all(Object...iterable) {
@@ -34,19 +37,19 @@ public class Promise {
 	
 	@JSExtern(name="catch")
 	public Promise _catch(JSFunction onRejected) {
-		
+		throw new UnsupportedOperationException();
 	}
 	
-	public void doResolve(Object...value) {
-		
+	public Object doResolve(Object...value) {
+		throw new UnsupportedOperationException();
 	}
 	
-	public void doReject(Object...value) {
-		
+	public Object doReject(Object...value) {
+		throw new UnsupportedOperationException();
 	}
 	
 	@JSExtern
 	public Promise then(JSFunction onFufilled, @JSParam(optional=true) JSFunction onRejected) {
-		
+		throw new UnsupportedOperationException();
 	}
 }

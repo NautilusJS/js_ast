@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.runtime.objects;
 
-public interface JSIterable<T> extends Colection<T> {
+import java.util.Collection;
+
+public interface JSIterable<T> extends Collection<T> {
 	
 }
