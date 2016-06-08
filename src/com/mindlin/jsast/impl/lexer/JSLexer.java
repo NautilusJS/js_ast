@@ -328,6 +328,8 @@ public class JSLexer {
 	
 	public Token nextToken() {
 		chars.skipWhitespace();
+		if (isEOF())
+			return new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
 		long start = Math.max(chars.position(), 0);
 		char c = chars.peekNext();
 		Object value = null;
