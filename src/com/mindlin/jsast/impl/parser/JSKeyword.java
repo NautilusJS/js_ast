@@ -19,6 +19,7 @@ public enum JSKeyword {
 	FINALLY,
 	FOR,
 	FUNCTION,
+	FUNCTION_GENERATOR,
 	IF,
 	IMPLEMENTS(true),
 	IMPORT,
