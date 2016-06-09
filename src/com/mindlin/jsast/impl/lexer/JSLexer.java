@@ -145,7 +145,7 @@ public class JSLexer {
 		chars.skip(-1);
 		while (chars.hasNext()) {
 			c = chars.next();
-			System.out.println("C: " + Character.getName(c));
+//			System.out.println("C: " + Character.getName(c));
 			if (c == '.') {
 				if (base == NumericBase.DECIMAL && !hasDecimal) {
 					hasDecimal = true;
@@ -156,7 +156,7 @@ public class JSLexer {
 			
 			if (c == ';' || !Character.isJavaIdentifierPart(c)) {
 				chars.skip(-1);
-				System.out.println("BRK");
+//				System.out.println("BRK");
 				break;
 			}
 			
@@ -182,12 +182,12 @@ public class JSLexer {
 							break;
 				}
 			}
-			System.out.println("VALID: " + isValid);
+//			System.out.println("VALID: " + isValid);
 			if (!isValid)
 				throw new JSSyntaxException("Unexpected identifier in numeric literal: " + Character.getName(c), chars.position());
 		}
 		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
-		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + base + " " + nmb);
+//		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + base + " " + nmb);
 		if (hasDecimal)
 			return Double.parseDouble(nmb);
 		return Long.parseLong(nmb, base.getExponent());
@@ -255,7 +255,7 @@ public class JSLexer {
 		}
 		chars.skip(-1);
 		String s = chars.copy(startPos, chars.position() - startPos);
-		System.out.println("S: " + s + " B:" + base);
+//		System.out.println("S: " + s + " B:" + base);
 		if (decimalPos < 0) {
 			long value = Long.parseLong(s, base.getExponent());
 			if (isNegative)
@@ -419,7 +419,7 @@ public class JSLexer {
 		chars.skipWhitespace();
 		if (isEOF())
 			return new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
-		long start = Math.max(chars.position(), 0);
+		final long start = Math.max(chars.position(), 0);
 		char c = chars.peekNext();
 		Object value = null;
 		TokenKind kind = null;
@@ -427,7 +427,7 @@ public class JSLexer {
 			// TODO add support for template literals
 			value = parseStringLiteral();
 			kind = TokenKind.LITERAL;
-		} else if (c > '0' && c < '9') {
+		} else if (c >= '0' && c <= '9') {
 			value = parseNumberLiteral();
 			kind = TokenKind.LITERAL;
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
@@ -441,10 +441,17 @@ public class JSLexer {
 		} else if ((value = this.parseOperator()) != null) {
 			kind = TokenKind.OPERATOR;
 		} else {
+			//It's probably an identifier
 			String identifierName = this.parseNextIdentifier();
 			if (identifierName != null) {
 				JSKeyword keyword = JSKeyword.lookup(identifierName);
 				if (keyword != null) {
+					//Because the '*' in function* is not normally considered part of an
+					//identifier, we have to check for it here
+					if (keyword == JSKeyword.FUNCTION && chars.hasNext() && chars.peekNext() == '*') {
+						keyword = JSKeyword.FUNCTION_GENERATOR;
+						chars.skip(1);
+					}
 					value = keyword;
 					kind = TokenKind.KEYWORD;
 				} else {
@@ -453,7 +460,7 @@ public class JSLexer {
 				}
 			}
 		}
-		return new Token(start, kind, chars.copy(start, chars.position() - start), value);
+		return new Token(start, kind, chars.copy(start, chars.position() - start + 1), value);
 	}
 	
 	public Token peekNextToken() {
