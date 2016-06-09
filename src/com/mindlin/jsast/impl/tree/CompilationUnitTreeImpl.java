@@ -38,8 +38,8 @@ public class CompilationUnitTreeImpl extends AbstractTree implements Compilation
 		return new StringBuilder()
 				.append("CompilationUnitTree{name: \"").append(unitName)
 				.append("\", strict: ").append(isStrict)
-				.append(",lineMap:").append(lineMap)
-				.append(",sourceElements:").append(sourceElements)
+				.append(",lineMap: ").append(lineMap)
+				.append(",sourceElements: ").append(sourceElements)
 				.append("}")
 				.toString();
 	}
