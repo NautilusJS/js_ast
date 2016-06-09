@@ -46,10 +46,11 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	}
 	@Override
 	public boolean isWhitespace() {
-		throw new UnsupportedOperationException();
+		return Characters.isJsWhitespace(current());
 	}
 	@Override
 	public CharacterStream skipNewline() {
+		//TODO finish
 		throw new UnsupportedOperationException();
 	}
 	@Override
