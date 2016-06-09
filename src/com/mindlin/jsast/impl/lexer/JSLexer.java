@@ -1,5 +1,6 @@
 package com.mindlin.jsast.impl.lexer;
 
+import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
@@ -37,11 +38,17 @@ public class JSLexer {
 		return parseStringLiteral(chars.next());
 	}
 	
+	public CharacterStream getCharacters() {
+		return this.chars;
+	}
+	
 	public String parseStringLiteral(final char startChar) {
+//		System.out.println("BG " + Character.getName(startChar));
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
 		while (chars.hasNext()) {
 			char c = chars.next();
+//			System.out.println("Char " + Character.getName(c));
 			if (isEscaped) {
 				isEscaped = false;
 				switch (c) {
@@ -96,7 +103,6 @@ public class JSLexer {
 				break;
 			sb.append(c);
 		}
-		chars.skip(1);
 		return sb.toString();
 	}
 	
@@ -104,7 +110,90 @@ public class JSLexer {
 		return !chars.hasNext();
 	}
 	
-	public Number parseNumberLiteral() {
+	public Number parseNumberLiteral() throws JSSyntaxException {
+		NumericBase base = NumericBase.DECIMAL;
+		boolean isPositive = true;
+		if (!chars.hasNext())
+			throw new JSEOFException(chars.position());
+		char c = chars.next();
+		//skip non-number stuff
+		//TODO check if this is correct
+		while (c == ';' || !Character.isJavaIdentifierPart(c))
+			c = chars.next();
+		if (c == '-') {
+			isPositive = false;
+			c = chars.next();
+		}
+		if (c == '0') {
+			switch (c = chars.next()) {
+				case 'X':
+				case 'x':
+					base = NumericBase.HEXDECIMAL;
+					c = chars.next();
+					break;
+				case 'b':
+				case 'B':
+					base = NumericBase.BINARY;
+					c = chars.next();
+					break;
+				default:
+					base = NumericBase.OCTAL;
+			}
+		}
+		final long startNmbPos = chars.position();
+		boolean hasDecimal = false;
+		chars.skip(-1);
+		while (chars.hasNext()) {
+			c = chars.next();
+			System.out.println("C: " + Character.getName(c));
+			if (c == '.') {
+				if (base == NumericBase.DECIMAL && !hasDecimal) {
+					hasDecimal = true;
+					continue;
+				}
+				throw new JSSyntaxException("Unexpected number", chars.position());
+			}
+			
+			if (c == ';' || !Character.isJavaIdentifierPart(c)) {
+				chars.skip(-1);
+				System.out.println("BRK");
+				break;
+			}
+			
+			boolean isValid = false;
+			if (c >= '0') {
+				switch (base) {
+					case BINARY:
+						isValid = c <= '1';
+						break;
+					case OCTAL:
+						isValid = c <= '9';
+						if (c > '7')
+							//Upgrade to decimal
+							base = NumericBase.DECIMAL;
+						break;
+					case HEXDECIMAL:
+						if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+							isValid = true;
+							break;
+						}
+					case DECIMAL:
+						isValid = c <= '9';
+							break;
+				}
+			}
+			System.out.println("VALID: " + isValid);
+			if (!isValid)
+				throw new JSSyntaxException("Unexpected identifier in numeric literal: " + Character.getName(c), chars.position());
+		}
+		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
+		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + base + " " + nmb);
+		if (hasDecimal)
+			return Double.parseDouble(nmb);
+		return Long.parseLong(nmb, base.getExponent());
+	}
+	@Deprecated
+	public Number _parseNumberLiteral() {
 		char c = Character.toLowerCase(chars.peekNext());
 		boolean isNegative = false;
 		if (c == '-') {
@@ -168,7 +257,7 @@ public class JSLexer {
 		String s = chars.copy(startPos, chars.position() - startPos);
 		System.out.println("S: " + s + " B:" + base);
 		if (decimalPos < 0) {
-			long value = Long.parseUnsignedLong(s, base.getExponent());
+			long value = Long.parseLong(s, base.getExponent());
 			if (isNegative)
 				value = -value;
 			return value;
