@@ -1,5 +1,6 @@
 package com.mindlin.jsast.impl.parser;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,11 +21,13 @@ import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
+import com.mindlin.jsast.impl.tree.TryTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
+import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
@@ -139,11 +142,20 @@ public class JSParser {
 						throw new JSSyntaxException("Unexpected keyword " + t.getValue(), t.getStart());
 				}
 			case IDENTIFIER:
-			
-			default:
+				return this.parseIncompleteExpression(t, src, isStrict);
+			case BRACKET:
+				return this.parseBlock(t, src, isStrict);
+			case LITERAL:
+				throw new UnsupportedOperationException();
+			case FUTURE:
+			case FUTURESTRICT:
 				break;
+			case OPERATOR:
+				throw new UnsupportedOperationException();
+			case SPECIAL:
+				throw new UnsupportedOperationException();
 		}
-		return null;
+		throw new JSUnexpectedTokenException(t);
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, boolean isStrict) {
@@ -201,6 +213,8 @@ public class JSParser {
 						return this.parseVariableDeclaration(token, src, isStrict);
 					case FUNCTION:
 						return this.parseFunctionKeyword(token, src, isStrict);
+					case FUNCTION_GENERATOR:
+						return this.parseGeneratorKeyword(token, src, isStrict);
 					case INTERFACE:
 						return this.parseInterface(token, src, isStrict);
 					case SWITCH:
@@ -209,6 +223,7 @@ public class JSParser {
 						return this.parseTryStatement(token, src, isStrict);
 					case WITH:
 						return this.parseWithStatement(token, src, isStrict);
+					//These are all invalid
 					case ELSE:
 					case ENUM:
 					case EXTENDS:
@@ -228,9 +243,9 @@ public class JSParser {
 					case SUPER:
 					case THIS:
 					case YIELD:
-						break;
+					default:
+						throw new JSUnexpectedTokenException(token);
 				}
-				break;
 			case IDENTIFIER:
 				break;
 			case LITERAL:
@@ -239,7 +254,6 @@ public class JSParser {
 				break;
 			case FUTURE:
 			case FUTURESTRICT:
-			case IR:
 			default:
 				break;
 		}
@@ -286,6 +300,11 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseFunctionKeyword(Token functionKeywordToken, JSLexer lexer, boolean isStrict) {
+		// TODO finish
+		throw new UnsupportedOperationException();
+	}
+	
+	protected StatementTree parseGeneratorKeyword(Token generatorKeywordToken, JSLexer src, boolean isStrict) {
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
@@ -341,10 +360,19 @@ public class JSParser {
 	
 	protected TryTree parseTryStatement(Token tryKeywordToken, JSLexer src, boolean isStrict) {
 		tryKeywordToken = Token.expect(tryKeywordToken, TokenKind.KEYWORD, JSKeyword.TRY, src);
+		//TODO support try-with-resources?
 		BlockTree tryBlock = this.parseBlock(null, src, isStrict);
+		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
+		BlockTree finallyBlock = null;
 		
+		Token next = src.peekNextToken();
+		while (next.getKind() != TokenKind.SPECIAL && next.getValue() != JSSpecialGroup.EOF) {
+			
+		}
+		if (finallyBlock == null && catchBlocks.isEmpty())
+			throw new JSSyntaxException("Incomplete try statement", src.getPosition());
 		// TODO finish
-		throw new UnsupportedOperationException();
+		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
 	}
 	
 	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, boolean isStrict) {
@@ -511,13 +539,13 @@ public class JSParser {
 			boolean isStrict) {
 		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, isStrict);
 		ensureToken(openParenToken, JSOperator.LEFT_PARENTHESIS);
-		List<? extends ExpressionTree> result = new LinkedList<>();
+		List<ExpressionTree> result = new LinkedList<>();
 		Token next = src.nextToken();
 		do {
-			//TODO finish
+			result.add(this.parseNextExpression(src, isStrict));
 		} while ((next = src.nextToken()).getValue() == JSOperator.COMMA);
 		ensureToken(next, JSOperator.RIGHT_PARENTHESIS);
-		throw new UnsupportedOperationException();
+		return result;
 	}
 	
 	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, boolean isStrict) {
