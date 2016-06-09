@@ -20,5 +20,5 @@ public enum TokenKind {
 	/**
 	 * A JS literal value
 	 */
-	LITERAL, IDENTIFIER, IR, FUTURE, FUTURESTRICT
+	LITERAL, IDENTIFIER, FUTURE, FUTURESTRICT
 }
