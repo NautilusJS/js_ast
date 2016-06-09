@@ -38,13 +38,15 @@ public class JSLexerTest {
 				.append('"').append('\\').append('\n').append('\r').append('"')
 				.toString());
 		assertEquals("", lexer.parseStringLiteral());
+//		String s = lexer.getCharacters().copy(lexer.getCharacters().position(), 4);
+//		System.out.println(s);
 		assertEquals("", lexer.parseStringLiteral());
 		assertEquals("", lexer.parseStringLiteral());
 		assertEquals("", lexer.parseStringLiteral());
 	}
 	@Test
 	public void parseStringLiteralComplexQuotes() {
-		JSLexer lexer = new JSLexer(new StringBuilder()
+		JSLexer lexer = new JSLexer(new StringBuilder(10)
 				.append('"').append('\'').append('f').append('\'').append('"')
 				.append('\'').append('"').append('g').append('"').append('\'')
 				.toString());
@@ -78,7 +80,7 @@ public class JSLexerTest {
 			}
 		}
 		{
-			//Check decimals
+			//Check decimals (unsupported in binary numbers)
 			JSLexer lexer = new JSLexer("0b1010.0");
 			try {
 				lexer.parseNumberLiteral();
@@ -98,6 +100,51 @@ public class JSLexerTest {
 			assertEquals(0b0110, lexer.parseNumberLiteral().intValue());
 		}
 	}
+	
+	@Test
+	public void parseNumberLiteralDecimal() {
+		{
+			JSLexer lexer = new JSLexer("1010");
+			Number n = lexer.parseNumberLiteral();
+			System.out.println(n);
+			assertEquals(1010, n.intValue());
+		}
+		{
+			//Check higher numbers
+			JSLexer lexer = new JSLexer("10A");
+			try {
+				lexer.parseNumberLiteral();
+				fail("Failed to throw exception on invalid syntax");
+			} catch (JSSyntaxException e) {
+				//Expected
+			}
+		}
+		{
+			//Check decimals (unsupported in binary numbers)
+			JSLexer lexer = new JSLexer("1010.0");
+			assertEquals(1010.0, lexer.parseNumberLiteral());
+		}
+		{
+			//Check octal upgrade
+			JSLexer lexer = new JSLexer("01019");
+			assertEquals(1019L, lexer.parseNumberLiteral());
+		}
+		{
+			//Check decimals
+			JSLexer lexer = new JSLexer("32.5");
+			assertEquals(32.5, lexer.parseNumberLiteral());
+		}
+		{
+			//Check termination
+			JSLexer lexer = new JSLexer("1 10;11\n100\r101\r110");
+			assertEquals(1, lexer.parseNumberLiteral().intValue());
+			assertEquals(10, lexer.parseNumberLiteral().intValue());
+			assertEquals(11, lexer.parseNumberLiteral().intValue());
+			assertEquals(100, lexer.parseNumberLiteral().intValue());
+			assertEquals(101, lexer.parseNumberLiteral().intValue());
+			assertEquals(110, lexer.parseNumberLiteral().intValue());
+		}
+	}
 	@Test
 	public void testEOF() {
 		JSLexer lexer = new JSLexer("\"foo\"");
@@ -106,7 +153,7 @@ public class JSLexerTest {
 		assertTrue(lexer.isEOF());
 		Token eofToken = lexer.nextToken();
 		System.out.println(eofToken);
-		assertTrue(eofToken.isSpecial());
+		assertEquals(TokenKind.SPECIAL, eofToken.getKind());
 		assertEquals(JSSpecialGroup.EOF, eofToken.getValue());
 	}
 	@Test
