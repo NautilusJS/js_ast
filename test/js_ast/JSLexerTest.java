@@ -60,9 +60,7 @@ public class JSLexerTest {
 	public void parseNumberLiteralBinary() {
 		{
 			JSLexer lexer = new JSLexer("0b1010");
-			Number n = lexer.parseNumberLiteral();
-			System.out.println(n);
-			assertEquals(0b1010, n.intValue());
+			assertEquals(0b1010, lexer.parseNumberLiteral().intValue());
 		}
 		{
 			JSLexer lexer = new JSLexer("0B1010");
@@ -105,12 +103,10 @@ public class JSLexerTest {
 	public void parseNumberLiteralDecimal() {
 		{
 			JSLexer lexer = new JSLexer("1010");
-			Number n = lexer.parseNumberLiteral();
-			System.out.println(n);
-			assertEquals(1010, n.intValue());
+			assertEquals(1010, lexer.parseNumberLiteral().intValue());
 		}
 		{
-			//Check higher numbers
+			//Check invalid other characters numbers
 			JSLexer lexer = new JSLexer("10A");
 			try {
 				lexer.parseNumberLiteral();
@@ -120,14 +116,24 @@ public class JSLexerTest {
 			}
 		}
 		{
-			//Check decimals (unsupported in binary numbers)
-			JSLexer lexer = new JSLexer("1010.0");
-			assertEquals(1010.0, lexer.parseNumberLiteral());
+			//Check multiple decimals
+			JSLexer lexer = new JSLexer("10.0.0");
+			try {
+				lexer.parseNumberLiteral();
+				fail("Failed to throw exception on invalid syntax");
+			} catch (JSSyntaxException e) {
+				//Expected
+			}
 		}
 		{
 			//Check octal upgrade
 			JSLexer lexer = new JSLexer("01019");
 			assertEquals(1019L, lexer.parseNumberLiteral());
+		}
+		{
+			//Check all digits are supported
+			JSLexer lexer = new JSLexer("1234567890");
+			assertEquals(1234567890L, lexer.parseNumberLiteral());
 		}
 		{
 			//Check decimals
@@ -143,6 +149,48 @@ public class JSLexerTest {
 			assertEquals(100, lexer.parseNumberLiteral().intValue());
 			assertEquals(101, lexer.parseNumberLiteral().intValue());
 			assertEquals(110, lexer.parseNumberLiteral().intValue());
+		}
+	}
+	@Test
+	public void parseNumberLiteralHexdecimal() {
+		{
+			JSLexer lexer = new JSLexer("0x0123456789ABCDEF");
+			assertEquals(0x0123456789ABCDEFL, lexer.parseNumberLiteral());
+		}
+		{
+			//Check case insensitivity
+			JSLexer lexer = new JSLexer("0xabcdefABCDEF");
+			assertEquals(0xABCDEFABCDEFL, lexer.parseNumberLiteral());
+		}
+		{
+			//Check invalid other characters numbers
+			JSLexer lexer = new JSLexer("0x10AG");
+			try {
+				lexer.parseNumberLiteral();
+				fail("Failed to throw exception on invalid syntax");
+			} catch (JSSyntaxException e) {
+				//Expected
+			}
+		}
+		{
+			//Check decimals (unsupported in hex numbers)
+			JSLexer lexer = new JSLexer("0x1010.0");
+			try {
+				lexer.parseNumberLiteral();
+				fail("Failed to throw exception on invalid syntax");
+			} catch (JSSyntaxException e) {
+				//Expected
+			}
+		}
+		{
+			//Check termination
+			JSLexer lexer = new JSLexer("0x1 0x10;0x11\n0x100\r0x101\r0x110");
+			assertEquals(0x1, lexer.parseNumberLiteral().intValue());
+			assertEquals(0x10, lexer.parseNumberLiteral().intValue());
+			assertEquals(0x11, lexer.parseNumberLiteral().intValue());
+			assertEquals(0x100, lexer.parseNumberLiteral().intValue());
+			assertEquals(0x101, lexer.parseNumberLiteral().intValue());
+			assertEquals(0x110, lexer.parseNumberLiteral().intValue());
 		}
 	}
 	@Test
