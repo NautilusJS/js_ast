@@ -45,12 +45,17 @@ public enum JSKeyword {
 	VOID,
 	WHILE,
 	WITH,
-	YIELD;
+	YIELD,
+	YIELD_GENERATOR;
 	public static JSKeyword lookup(String identifier) {
 		//TODO optimize
 		for (JSKeyword keyword : JSKeyword.values())
 			if (identifier.equalsIgnoreCase(keyword.name()))
 				return keyword;
+		if (identifier.equalsIgnoreCase("function*"))
+			return FUNCTION_GENERATOR;
+		if (identifier.equalsIgnoreCase("yield*"))
+			return YIELD_GENERATOR;
 		return null;
 	}
 	private final boolean requiresStrict;
