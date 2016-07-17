@@ -423,13 +423,17 @@ public class JSLexer {
 		char c = chars.peekNext();
 		Object value = null;
 		TokenKind kind = null;
-		if (c == '"' || c == '\'') {
+		//Drop through a various selection of possible results
+		//Check if it's a string literal
+		if (c == '"' || c == '\'' || c == '`') {
 			// TODO add support for template literals
 			value = parseStringLiteral();
 			kind = TokenKind.LITERAL;
+		//Check if it's a numeric literal (the first letter of all numbers must be /[0-9]/)
 		} else if (c >= '0' && c <= '9') {
 			value = parseNumberLiteral();
 			kind = TokenKind.LITERAL;
+		//Check if it's a bracket
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
 			value = c;
 			kind = TokenKind.BRACKET;
@@ -441,16 +445,26 @@ public class JSLexer {
 		} else if ((value = this.parseOperator()) != null) {
 			kind = TokenKind.OPERATOR;
 		} else {
+			//TODO simplify logic (if possible)
 			//It's probably an identifier
 			String identifierName = this.parseNextIdentifier();
-			if (identifierName != null) {
+			if (identifierName == null) {
+				//Couldn't even parse an identifier
+				throw new JSSyntaxException("Illegal syntax at " + start);
+			} else if (identifierName.equals("true") || identifierName.equals("false")) {
+				//Boolean literal
+			} else {
+				//An identifier was parsed, and it wasn't a boolean literal
+				//Check if it's a keyword
 				JSKeyword keyword = JSKeyword.lookup(identifierName);
 				if (keyword != null) {
-					//Because the '*' in function* is not normally considered part of an
-					//identifier, we have to check for it here
-					if (keyword == JSKeyword.FUNCTION && chars.hasNext() && chars.peekNext() == '*') {
-						keyword = JSKeyword.FUNCTION_GENERATOR;
-						chars.skip(1);
+					//Because the '*' in function* and yield* is not normally considered part of an
+					//identifier sequence, we have to check for it here
+					if (chars.hasNext() && chars.peekNext() == '*' && (keyword == JSKeyword.FUNCTION || keyword == JSKeyword.YIELD)) {
+						if (keyword == JSKeyword.FUNCTION)
+							keyword = JSKeyword.FUNCTION_GENERATOR;
+						else if (keyword == JSKeyword.YIELD)
+							keyword = JSKeyword.YIELD_GENERATOR;
 					}
 					value = keyword;
 					kind = TokenKind.KEYWORD;
