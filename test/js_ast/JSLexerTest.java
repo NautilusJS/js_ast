@@ -206,7 +206,8 @@ public class JSLexerTest {
 	}
 	@Test
 	public void testTokenize() {
-		JSLexer lexer = new JSLexer("\"bar\" for asdd 0xFF");
+		JSLexer lexer = new JSLexer("'bar' for asdd 0xFF");
+		
 		Token fooStringToken = lexer.nextToken();
 		System.out.println(fooStringToken);
 		assertEquals(TokenKind.LITERAL, fooStringToken.getKind());
@@ -226,5 +227,10 @@ public class JSLexerTest {
 		System.out.println(FFNumberToken);
 		assertEquals(TokenKind.LITERAL, FFNumberToken.getKind());
 		assertEquals(0xFF, ((Number)FFNumberToken.getValue()).intValue());
+		
+		Token EofNumberToken = lexer.nextToken();
+		System.out.println(EofNumberToken);
+		assertEquals(TokenKind.SPECIAL, EofNumberToken.getKind());
+		assertEquals(JSSpecialGroup.EOF, EofNumberToken.getValue());
 	}
 }
