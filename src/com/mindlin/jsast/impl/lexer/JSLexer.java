@@ -6,7 +6,7 @@ import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
-import com.mindlin.jsast.impl.parser.NumericBase;
+import com.mindlin.jsast.impl.parser.NumericLiteralType;
 import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.impl.util.Characters;
@@ -111,7 +111,7 @@ public class JSLexer {
 	}
 	
 	public Number parseNumberLiteral() throws JSSyntaxException {
-		NumericBase base = NumericBase.DECIMAL;
+		NumericLiteralType type = NumericLiteralType.DECIMAL;
 		boolean isPositive = true;
 		if (!chars.hasNext())
 			throw new JSEOFException(chars.position());
@@ -128,16 +128,24 @@ public class JSLexer {
 			switch (c = chars.next()) {
 				case 'X':
 				case 'x':
-					base = NumericBase.HEXDECIMAL;
+					type = NumericLiteralType.HEXDECIMAL;
 					c = chars.next();
 					break;
 				case 'b':
 				case 'B':
-					base = NumericBase.BINARY;
+					type = NumericLiteralType.BINARY;
+					c = chars.next();
+					break;
+				case 'o':
+				case 'O':
+					type = NumericLiteralType.OCTAL;
 					c = chars.next();
 					break;
 				default:
-					base = NumericBase.OCTAL;
+					//Number starts with a '0', but can be upgraded to a DECIMAL type
+					chars.skip(-1);
+					type = NumericLiteralType.OCTAL_IMPLICIT;
+					break;
 			}
 		}
 		final long startNmbPos = chars.position();
@@ -147,7 +155,7 @@ public class JSLexer {
 			c = chars.next();
 //			System.out.println("C: " + Character.getName(c));
 			if (c == '.') {
-				if (base == NumericBase.DECIMAL && !hasDecimal) {
+				if (type == NumericLiteralType.DECIMAL && !hasDecimal) {
 					hasDecimal = true;
 					continue;
 				}
@@ -162,35 +170,42 @@ public class JSLexer {
 			
 			boolean isValid = false;
 			if (c >= '0') {
-				switch (base) {
+				switch (type) {
 					case BINARY:
 						isValid = c <= '1';
 						break;
+					case OCTAL_IMPLICIT:
+						if (c > '7' && c <= '9') {
+							//Upgrade to decimal if possible
+							type = NumericLiteralType.DECIMAL;
+							break;
+						}
+						//Fallthrough intentional
 					case OCTAL:
 						isValid = c <= '9';
-						if (c > '7')
-							//Upgrade to decimal
-							base = NumericBase.DECIMAL;
 						break;
 					case HEXDECIMAL:
 						if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
 							isValid = true;
 							break;
 						}
+						//Fallthrough intentional
 					case DECIMAL:
 						isValid = c <= '9';
-							break;
+						break;
 				}
 			}
 //			System.out.println("VALID: " + isValid);
 			if (!isValid)
 				throw new JSSyntaxException("Unexpected identifier in numeric literal: " + Character.getName(c), chars.position());
 		}
+		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
+		//but it causes problems with OCTAL_IMPLICIT upgrades.
 		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
-//		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + base + " " + nmb);
+//		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + type + "|" + nmb);
 		if (hasDecimal)
 			return Double.parseDouble(nmb);
-		return Long.parseLong(nmb, base.getExponent());
+		return Long.parseLong(nmb, type.getExponent());
 	}
 	@Deprecated
 	public Number _parseNumberLiteral() {
@@ -201,19 +216,19 @@ public class JSLexer {
 			chars.skip(1);
 			c = chars.peekNext();
 		}
-		NumericBase base = NumericBase.DECIMAL;
+		NumericLiteralType base = NumericLiteralType.DECIMAL;
 		if (c == '0')
 			switch (Character.toLowerCase(chars.next(2))) {
 				case 'x':
-					base = NumericBase.HEXDECIMAL;
+					base = NumericLiteralType.HEXDECIMAL;
 					chars.skip(2);
 					break;
 				case 'b':
-					base = NumericBase.BINARY;
+					base = NumericLiteralType.BINARY;
 					chars.skip(2);
 					break;
 				default:
-					base = NumericBase.OCTAL;
+					base = NumericLiteralType.OCTAL;
 					chars.skip(1);
 			}
 		long startPos = getPosition();
@@ -223,7 +238,7 @@ public class JSLexer {
 			if (c < '0' || c > 'f')
 				throw new JSSyntaxException("Illegal identifier in number literal: '" + c + "'", getPosition());
 			if (c == '.') {
-				if (base != NumericBase.DECIMAL)
+				if (base != NumericLiteralType.DECIMAL)
 					break;
 				decimalPos = getPosition() - 1;
 				continue;
@@ -238,7 +253,7 @@ public class JSLexer {
 						isValid = false;
 						break;
 					} else if (c > '7') {
-						base = NumericBase.DECIMAL;
+						base = NumericLiteralType.DECIMAL;
 					}
 				case DECIMAL:
 					isValid = c <= '9';
