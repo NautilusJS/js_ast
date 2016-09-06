@@ -62,14 +62,24 @@ public class JSParser {
 		return token;
 	}
 	
+	/**
+	 * A convenience method, to assert a token's kind
+	 * @param token
+	 * @param value
+	 */
 	private static void ensureTokenKind(Token token, TokenKind value) {
 		if (token.getKind() != value)
-			throw new JSSyntaxException("Illegal token " + token + ": expected kind " + value, token.getStart());
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + value, token.getStart());
 	}
 	
+	/**
+	 * A convenience method, to assert a token's value
+	 * @param token
+	 * @param value
+	 */
 	private static void ensureToken(Token token, Object value) {
 		if (token.getValue() != value)
-			throw new JSSyntaxException("Illegal token " + token + ": expected " + value, token.getStart());
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
 	}
 	
 	private static Token expect(Token t, TokenKind kind, Object value, JSLexer lexer, boolean isStrict) {
@@ -153,10 +163,21 @@ public class JSParser {
 				throw new UnsupportedOperationException();
 			case FUTURE:
 			case FUTURESTRICT:
+				//TODO remove?
 				break;
 			case OPERATOR:
 				throw new UnsupportedOperationException();
 			case SPECIAL:
+				switch ((JSSpecialGroup) t.getValue()) {
+					case EOF:
+						break;
+					case EOL:
+						break;
+					case SEMICOLON:
+						break;
+					default:
+						break;
+				}
 				throw new UnsupportedOperationException();
 		}
 		throw new JSUnexpectedTokenException(t);
