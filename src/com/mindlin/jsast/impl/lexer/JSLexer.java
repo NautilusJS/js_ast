@@ -286,6 +286,7 @@ public class JSLexer {
 	public JSOperator peekOperator() {
 		char c = chars.peekNext(), d = chars.peek(2), e = chars.peek(3);
 		if (d == '=') {
+			//Switch through assignment types
 			switch (c) {
 				case '+':
 					return JSOperator.ADDITION_ASSIGNMENT;
@@ -382,6 +383,10 @@ public class JSLexer {
 				return JSOperator.QUESTION_MARK;
 			case ':':
 				return JSOperator.COLON;
+			case '.':
+				if (d == '.' && e == '.')
+					return JSOperator.ELLIPSIS;
+				return JSOperator.PERIOD;
 		}
 		return null;
 	}

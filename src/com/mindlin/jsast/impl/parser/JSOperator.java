@@ -52,7 +52,10 @@ public enum JSOperator {
 	LEFT_PARENTHESIS(0, "("),
 	RIGHT_PARENTHESIS(0, ")"),
 	COMMA(2, ",","A,B"),
-	LAMBDA(2, "=>")
+	LAMBDA(2, "=>"),
+	
+	PERIOD(1, "."),
+	ELLIPSIS(3, "..."),
 	;
 	final String operator;
 	final int arity;
