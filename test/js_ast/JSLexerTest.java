@@ -210,12 +210,12 @@ public class JSLexerTest {
 		Token fooStringToken = lexer.nextToken();
 		System.out.println(fooStringToken);
 		assertEquals(TokenKind.LITERAL, fooStringToken.getKind());
-		assertEquals(fooStringToken.getValue(),"bar");
+		assertEquals("bar", fooStringToken.getValue());
 		
 		Token forKeywordToken = lexer.nextToken();
 		System.out.println(forKeywordToken);
 		assertEquals(TokenKind.KEYWORD, forKeywordToken.getKind());
-		assertEquals(forKeywordToken.getValue(), JSKeyword.FOR);
+		assertEquals(JSKeyword.FOR, forKeywordToken.getValue());
 		
 		Token asddIdentifierToken = lexer.nextToken();
 		System.out.println(asddIdentifierToken);
@@ -225,6 +225,6 @@ public class JSLexerTest {
 		Token FFNumberToken = lexer.nextToken();
 		System.out.println(FFNumberToken);
 		assertEquals(TokenKind.LITERAL, FFNumberToken.getKind());
-		assertEquals(((Number)FFNumberToken.getValue()).intValue(), 0xFF);
+		assertEquals(0xFF, ((Number)FFNumberToken.getValue()).intValue());
 	}
 }
