@@ -439,7 +439,7 @@ public class JSLexer {
 		chars.skipWhitespace();
 		if (isEOF())
 			return new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
-		final long start = Math.max(chars.position(), 0);
+		final long start = Math.max(chars.position(), -1);
 		char c = chars.peekNext();
 		Object value = null;
 		TokenKind kind = null;
@@ -494,7 +494,7 @@ public class JSLexer {
 				}
 			}
 		}
-		return new Token(start, kind, chars.copy(start, chars.position() - start + 1), value);
+		return new Token(start, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
 	public Token peekNextToken() {
