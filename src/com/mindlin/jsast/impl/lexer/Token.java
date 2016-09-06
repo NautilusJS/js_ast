@@ -155,13 +155,18 @@ public class Token {
 	
 	@Override
 	public String toString() {
-		return new StringBuilder()
+		StringBuilder sb = new StringBuilder(70)//High end of expected outputs
 				.append("Token{kind=").append(getKind())
 				.append(",value=").append(value)
 				.append(",start=").append(getStart())
-				.append(",end=").append(getEnd())
-				.append(",text=\"").append(getText())
-				.append("\"}")
-				.toString();
+				.append(",end=").append(getEnd());
+		
+		if (getText() == null)
+			sb.append(",text=null");
+		else
+			sb.append(",text=\"").append(getText()).append('"');
+		
+		sb.append('}');
+		return sb.toString();
 	}
 }
