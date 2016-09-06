@@ -9,6 +9,7 @@ public class TokenStream {
 	ListIterator<Token> iterator;
 	JSLexer lexer;
 	boolean isEOF = false;
+	int index;
 	public TokenStream(JSLexer lexer) {
 		this.lexer = lexer;
 		this.iterator = tokens.listIterator();
@@ -23,7 +24,7 @@ public class TokenStream {
 		throw new UnsupportedOperationException();
 	}
 	public void skip(int offset) {
-		this.index += index;
+		this.index += offset;
 	}
 	public void seek(int position) {
 		this.index = position;

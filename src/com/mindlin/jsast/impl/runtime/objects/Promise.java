@@ -17,11 +17,15 @@ public class Promise {
 	}
 	@JSExtern
 	public static Promise reject(Object reason) {
-		throw new UnsupportedOperationException();
+		Promise result = new Promise();
+		result.doReject(reason);
+		return result;
 	}
 	@JSExtern
 	public static Promise resolve(Object reason) {
-		throw new UnsupportedOperationException();
+		Promise result = new Promise();
+		result.doResolve(reason);
+		return result;
 	}
 	protected enum PromiseState {
 		PENDING,
@@ -29,6 +33,9 @@ public class Promise {
 		REJECTED;
 	}
 	protected JSFunction executor;
+	protected Promise() {
+		
+	}
 	@JSExtern
 	public Promise(JSFunction executor) {
 		this.executor = executor;
