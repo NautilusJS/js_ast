@@ -95,7 +95,7 @@ public class JSParser {
 	}
 	
 	public CompilationUnitTree apply(String unitName, JSLexer src) {
-		LinkedList<Tree> elements = new LinkedList<>();
+		List<Tree> elements = new ArrayList<>();
 		Tree value;
 		while ((value = parseNext(src, false)) != null)
 			elements.add(value);
