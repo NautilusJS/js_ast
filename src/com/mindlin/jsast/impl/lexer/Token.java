@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.lexer;
 
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
+import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 import com.sun.istack.internal.NotNull;
 
 public class Token {
@@ -151,6 +152,18 @@ public class Token {
 	
 	public boolean isLiteral() {
 		return getKind() == TokenKind.LITERAL;
+	}
+	
+	/**
+	 * Is end of statement. EOL or EOF
+	 * @return
+	 */
+	public boolean isEOS() {
+		return getKind() == TokenKind.SPECIAL && (getValue() == JSSpecialGroup.EOF || getValue() == JSSpecialGroup.EOL || getValue() == JSSpecialGroup.SEMICOLON);
+	}
+	
+	public boolean matches(TokenKind kind, Object value) {
+		return getKind() == kind && getValue() == value;
 	}
 	
 	@Override
