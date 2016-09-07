@@ -50,8 +50,10 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	}
 	@Override
 	public CharacterStream skipNewline() {
-		//TODO finish
-		throw new UnsupportedOperationException();
+		char c;
+		while ((c = current()) == '\r' || c == '\n')
+			skip(1);
+		return this;
 	}
 	@Override
 	public CharacterStream skipWhitespace() {
