@@ -340,18 +340,19 @@ public class JSParser {
 	
 	@JSKeywordParser(JSKeyword.CLASS)
 	protected StatementTree parseClassUnknown(Token classKeywordToken, JSLexer src, boolean isStrict) {
-		classKeywordToken = Token.expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src);
-		IdentifierTree classIdentifier;
+		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, isStrict);
+		IdentifierTree classIdentifier = null;
 		
 		Token next = src.nextToken();
-		if (next.isIdentifier()) {
+		if (next.isIdentifier())
 			classIdentifier = this.parseIdentifier(next, src, isStrict);
-		}
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
 	protected InterfaceTree parseInterface(Token interfaceKeywordToken, JSLexer src, boolean isStrict) {
+		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, isStrict);
+		
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
@@ -379,7 +380,7 @@ public class JSParser {
 		StatementTree thenStatement = this.parseStatement(null, src, isStrict);
 		StatementTree elseStatement = null;
 		Token next = src.peekNextToken();
-		if (next.getKind() == TokenKind.KEYWORD && next.getValue() == JSKeyword.ELSE) {
+		if (next.matches(TokenKind.KEYWORD, JSKeyword.ELSE)) {
 			src.skipToken(next);
 			next = src.nextToken();
 			// This if statement isn't really needed, but it speeds up 'else if'
@@ -439,7 +440,7 @@ public class JSParser {
 	
 	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, boolean isStrict) {
 		functionKeywordToken = Token.expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src);
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("Type support is (currently) not supported");
 	}
 	
 	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, boolean isStrict) {
@@ -495,14 +496,15 @@ public class JSParser {
 	protected LoopTree parseUnknownForLoop(Token forKeywordToken, JSLexer src, boolean isStrict) {
 		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, isStrict);
 		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree expression0 = parseNextExpression(src, isStrict);
+		//TODO fix
+		StatementTree statement0 = this.parseStatement(src, isStrict);
 		Token separator = src.nextToken();
 		if (separator.isSpecial()) {
 			ensureToken(separator, JSSpecialGroup.SEMICOLON);
-			return parsePartialForLoopTree(forKeywordToken, expression0, src, isStrict);
+			return parsePartialForLoopTree(forKeywordToken, statement0, src, isStrict);
 		} else if (separator.isKeyword()
 				&& (separator.getValue() == JSKeyword.IN || separator.getValue() == JSKeyword.OF)) {
-			return this.parsePartialForEachLoopTree(forKeywordToken, separator.getValue() == JSKeyword.OF, expression0,
+			return this.parsePartialForEachLoopTree(forKeywordToken, separator.getValue() == JSKeyword.OF, statement0,
 					src, isStrict);
 		}
 		throw new JSSyntaxException("Invalid 'for' loop", src.getPosition());
@@ -997,17 +999,15 @@ public class JSParser {
 	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken,
 			JSLexer src, boolean isStrict) {
 		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, isStrict);
-		ensureTokenKind(openParenToken, TokenKind.OPERATOR);
-		ensureToken(openParenToken, JSOperator.LEFT_PARENTHESIS);
-		throw new UnsupportedOperationException();
+		List<? extends ExpressionTree> arguments = parseParentheticalSeries(openParenToken, src, isStrict);
+		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), arguments, functionSelectExpression);
 	}
 	
-	protected List<? extends ExpressionTree> parseParentheticalSeries(Token openParenToken, JSLexer src,
-			boolean isStrict) {
+	protected List<? extends ExpressionTree> parseParentheticalSeries(Token openParenToken, JSLexer src, boolean isStrict) {
 		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, isStrict);
 		ensureToken(openParenToken, JSOperator.LEFT_PARENTHESIS);
 		List<ExpressionTree> result = new LinkedList<>();
-		Token next = src.nextToken();
+		Token next;
 		do {
 			result.add(this.parseNextExpression(src, isStrict));
 		} while ((next = src.nextToken()).getValue() == JSOperator.COMMA);
