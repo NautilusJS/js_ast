@@ -65,4 +65,21 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	public char peek(long offset) {
 		return data[(int) (position + offset)];
 	}
+	@Override
+	public CharacterStream skipComments() {
+		while (true) {
+			skipWhitespace();
+			if (peek(1) != '/')
+				break;
+			if (peek(2) == '/') {
+				skip(2);
+				while (hasNext() && peek(1) != '\r' && peek(1) != '\n')
+					skip(1);
+				if (hasNext())
+					skipNewline();
+			} else
+				break;
+		}
+		return this;
+	}
 }

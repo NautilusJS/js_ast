@@ -24,6 +24,7 @@ public interface CharacterStream {
 	boolean isWhitespace();
 	CharacterStream skipNewline();
 	CharacterStream skipWhitespace();
+	CharacterStream skipComments();
 	CharacterStream mark();
 	CharacterStream resetToMark();
 	default CharacterStream skipTo(final char c) {
