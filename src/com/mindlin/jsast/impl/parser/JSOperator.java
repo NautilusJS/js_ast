@@ -55,7 +55,7 @@ public enum JSOperator {
 	LAMBDA(2, "=>"),
 	
 	PERIOD(1, "."),
-	ELLIPSIS(3, "..."),
+	SPREAD(3, "..."),
 	;
 	final String operator;
 	final int arity;

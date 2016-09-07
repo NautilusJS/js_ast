@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
+import com.mindlin.jsast.impl.lexer.JSDialect;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
@@ -16,16 +17,18 @@ import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
-import com.mindlin.jsast.impl.tree.EmptyStatementImpl;
+import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
+import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
 import com.mindlin.jsast.impl.tree.TryTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
+import com.mindlin.jsast.impl.tree.VariableTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.BlockTree;
@@ -46,12 +49,15 @@ import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceTree;
 import com.mindlin.jsast.tree.LoopTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
+import com.mindlin.jsast.tree.SpreadTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
+import com.mindlin.jsast.tree.VariableTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 
@@ -89,6 +95,10 @@ public class JSParser {
 		ensureToken(t, value);
 		return t;
 	}
+	
+	//Parser properties
+	protected JSDialect dialect;
+	protected boolean allowYield;
 	
 	public CompilationUnitTree apply(String unitName, String src) {
 		return apply(unitName, new JSLexer(src));
@@ -192,7 +202,7 @@ public class JSParser {
 		switch (token.getKind()) {
 			case SPECIAL:
 				ensureToken(token, JSSpecialGroup.SEMICOLON);
-				return new EmptyStatementImpl(token.getStart(), token.getEnd());
+				return new EmptyStatementTreeImpl(token.getStart(), token.getEnd());
 			case BRACKET:
 				ensureToken(token, '{');
 				return this.parseBlock(token, src, isStrict);
@@ -393,7 +403,7 @@ public class JSParser {
 				elseStatement = this.parseStatement(next, src, isStrict);
 		}
 		if (elseStatement == null)
-			elseStatement = new EmptyStatementImpl(src.getPosition(), src.getPosition());
+			elseStatement = new EmptyStatementTreeImpl(src.getPosition(), src.getPosition());
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
 	
@@ -450,6 +460,12 @@ public class JSParser {
 		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
 		StatementTree statement = this.parseStatement(src, isStrict);
 		return new WithTreeImpl(withKeywordToken.getStart(), src.getPosition(), expression, statement);
+	}
+	
+	protected SpreadTree parseSpread(Token spreadToken, JSLexer src, boolean isStrict) {
+		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, isStrict);
+		
+		return null;
 	}
 	
 	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, boolean isStrict) {
@@ -955,8 +971,6 @@ public class JSParser {
 			case UNARY_MINUS:
 				break;
 			case UNARY_PLUS:
-				break;
-			case UNARY_SPREAD:
 				break;
 			case UNSIGNED_RIGHT_SHIFT:
 				break;

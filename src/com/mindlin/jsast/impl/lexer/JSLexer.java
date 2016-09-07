@@ -385,7 +385,7 @@ public class JSLexer {
 				return JSOperator.COLON;
 			case '.':
 				if (d == '.' && e == '.')
-					return JSOperator.ELLIPSIS;
+					return JSOperator.SPREAD;
 				return JSOperator.PERIOD;
 		}
 		return null;
