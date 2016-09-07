@@ -294,11 +294,48 @@ public class JSParser {
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
+	protected TypeTree parseTypeStatement(Token typeToken, JSLexer lexer, boolean isStrict) {
+		if (typeToken == null)
+			typeToken = lexer.nextToken();
+		throw new UnsupportedOperationException();
+	}
 	
 	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
 	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer lexer, boolean isStrict) {
-		// TODO finish
-		throw new UnsupportedOperationException();
+		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, lexer);
+		boolean isConst = keywordToken.getValue() == JSKeyword.CONST;
+		boolean isScoped = keywordToken.getValue() == JSKeyword.LET;
+		//Check that the token is 'var', 'let', or 'const'.
+		if (keywordToken.getValue() != JSKeyword.VAR && !(isConst || isScoped))
+			throw new JSUnexpectedTokenException(keywordToken);
+		List<VariableTree> declarations = new ArrayList<>();
+		//Parse identifier(s)
+		do {
+			Token identifier = lexer.nextToken();
+			TypeTree type = null;
+			ExpressionTree initializer = null;
+			if (!identifier.isIdentifier())
+				throw new JSUnexpectedTokenException(identifier);
+			Token peek = lexer.peekNextToken();
+			//Check if a type is available
+			if (peek.matches(TokenKind.OPERATOR, JSOperator.COLON)) {
+				lexer.skipToken(peek);
+				type = parseTypeStatement(lexer.nextToken(), lexer, isStrict);
+				
+				peek = lexer.peekNextToken();
+			}
+			//Check if an initializer is available
+			if (peek.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
+				lexer.skipToken(peek);
+				initializer = parseExpression(null, lexer, isStrict);
+			}
+			declarations.add(new VariableTreeImpl(declarations.isEmpty() ? keywordToken.getStart() : identifier.getStart(), lexer.getPosition(), isScoped, isConst, new IdentifierTreeImpl(identifier), type, initializer));
+		} while (lexer.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
+		
+		if (declarations.size() == 1)
+			return declarations.get(0);
+		//Return as an unscoped block
+		return new BlockTreeImpl(keywordToken.getStart(), lexer.getPosition(), declarations, false);
 	}
 	
 	@JSKeywordParser(JSKeyword.CLASS)
