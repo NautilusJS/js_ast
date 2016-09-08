@@ -82,11 +82,11 @@ public class JSLexer {
 						sb.append(Characters.NULL);
 						break;
 					case '\n':
-						if (chars.peekNext() == '\r')
+						if (chars.hasNext() && chars.peekNext() == '\r')
 							chars.skip(1);
 						break;
 					case '\r':
-						if (chars.peekNext() == '\n')
+						if (chars.hasNext() && chars.peekNext() == '\n')
 							chars.skip(1);
 						break;
 					case 'u':
@@ -222,81 +222,6 @@ public class JSLexer {
 		if (hasDecimal)
 			return Double.parseDouble(nmb);
 		return Long.parseLong(nmb, type.getExponent());
-	}
-	@Deprecated
-	public Number _parseNumberLiteral() {
-		char c = Character.toLowerCase(chars.peekNext());
-		boolean isNegative = false;
-		if (c == '-') {
-			isNegative = true;
-			chars.skip(1);
-			c = chars.peekNext();
-		}
-		NumericLiteralType base = NumericLiteralType.DECIMAL;
-		if (c == '0')
-			switch (Character.toLowerCase(chars.next(2))) {
-				case 'x':
-					base = NumericLiteralType.HEXDECIMAL;
-					chars.skip(2);
-					break;
-				case 'b':
-					base = NumericLiteralType.BINARY;
-					chars.skip(2);
-					break;
-				default:
-					base = NumericLiteralType.OCTAL;
-					chars.skip(1);
-			}
-		long startPos = getPosition();
-		long decimalPos = -1;
-		while (chars.hasNext()
-				&& (!Characters.isJsWhitespace(c = Character.toLowerCase(chars.next())) || chars.isEOL())) {
-			if (c < '0' || c > 'f')
-				throw new JSSyntaxException("Illegal identifier in number literal: '" + c + "'", getPosition());
-			if (c == '.') {
-				if (base != NumericLiteralType.DECIMAL)
-					break;
-				decimalPos = getPosition() - 1;
-				continue;
-			}
-			boolean isValid;
-			switch (base) {
-				case BINARY:
-					isValid = c <= '1';
-					break;
-				case OCTAL:
-					if (c > '9') {
-						isValid = false;
-						break;
-					} else if (c > '7') {
-						base = NumericLiteralType.DECIMAL;
-					}
-				case DECIMAL:
-					isValid = c <= '9';
-					break;
-				case HEXDECIMAL:
-					isValid = c <= '9' || (c >= 'a');
-					break;
-				default:
-					throw new RuntimeException("Unknown base :" + base);
-			}
-			if (!isValid)
-				throw new IllegalArgumentException(
-						"Illegal identifier in (" + base + ") number literal: '" + c + "' at " + (getPosition() - 1));
-		}
-		chars.skip(-1);
-		String s = chars.copy(startPos, chars.position() - startPos);
-//		System.out.println("S: " + s + " B:" + base);
-		if (decimalPos < 0) {
-			long value = Long.parseLong(s, base.getExponent());
-			if (isNegative)
-				value = -value;
-			return value;
-		}
-		double value = Double.parseDouble(s);
-		if (isNegative)
-			value = -value;
-		return value;
 	}
 	
 	public JSOperator peekOperator() {
