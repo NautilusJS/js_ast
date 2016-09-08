@@ -24,9 +24,9 @@ public class JSLexerTest {
 	
 	@Test
 	public void parseStringLiteralEscapeSequence() {
-		JSLexer lexer = new JSLexer("\"\\r\\n\\\\\\\nf\"");
+		JSLexer lexer = new JSLexer("'\\r\\n\\\\\\\nf\\'\\\"\\``'");
 		String parsed = lexer.parseStringLiteral();
-		assertEquals("\r\n\\f", parsed);
+		assertEquals("\r\n\\f'\"``", parsed);
 	}
 	
 	@Test
@@ -151,6 +151,22 @@ public class JSLexerTest {
 			assertEquals(110, lexer.parseNumberLiteral().intValue());
 		}
 	}
+	
+	@Test
+	public void testOctalUpgrade() {
+		//Test implicit octal
+		assertEquals("Incorrectly parsed implicit octal", 076543210, new JSLexer("076543210").parseNumberLiteral().intValue());
+		//Test implicit upgrade
+		assertEquals("Failed to upgrade implicit octal", 876543210, new JSLexer("0876543210").parseNumberLiteral().intValue());
+		//Test explicit octal
+		assertEquals("Incorrectly parsed explicit octal", 076543210, new JSLexer("0o76543210").parseNumberLiteral().intValue());
+		//Test explicit upgrade fail
+		try {
+			if (new JSLexer("0o876543210").parseNumberLiteral().intValue() == 876543210)
+				fail("Incorrectly upgraded explicit octal literal");
+			fail("Failed to throw exception upon illegal explicit octal upgrade");
+		} catch (JSSyntaxException e){}
+	}
 	@Test
 	public void parseNumberLiteralHexdecimal() {
 		{
@@ -233,4 +249,26 @@ public class JSLexerTest {
 		assertEquals(TokenKind.SPECIAL, EofNumberToken.getKind());
 		assertEquals(JSSpecialGroup.EOF, EofNumberToken.getValue());
 	}
+	
+	@Test
+	public void testTemplateLiteralNewline() {
+		assertEquals("foo\nbar", new JSLexer("`foo\nbar`").parseStringLiteral());
+	}
+	
+	/**
+	 * Test that the lexer correctly throws an exception upon an EOF in the
+	 * middle of the string literal
+	 */
+	@Test
+	public void testStringLiteralEOF() {
+		try {
+			new JSLexer("'foo").parseStringLiteral();
+			fail("Failed to throw exception upon unexpected EOF");
+		} catch (JSSyntaxException e) {}
+		try {
+			new JSLexer("'foo\\'").parseStringLiteral();
+			fail("Failed to throw exception upon unexpected EOF");
+		} catch (JSSyntaxException e) {}
+	}
+	
 }
