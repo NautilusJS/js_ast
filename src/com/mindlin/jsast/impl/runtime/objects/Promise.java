@@ -1,13 +1,16 @@
 package com.mindlin.jsast.impl.runtime.objects;
 
+import java.util.List;
+
 import com.mindlin.jsast.impl.runtime.annotations.JSExtern;
 import com.mindlin.jsast.impl.runtime.annotations.JSParam;
 
 public class Promise {
 	@JSExtern
-	public static Promise all(Object...iterable) {
-		for (Object o : iterable) {
-			
+	public static Promise all(Promise...promises) {
+		Promise result = new Promise();
+		for (Promise promise : promises) {
+			promise._catch(result::doReject);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -33,6 +36,10 @@ public class Promise {
 		REJECTED;
 	}
 	protected JSFunction executor;
+	protected Object[] result;
+	protected PromiseState state = PromiseState.PENDING;
+	protected List<JSFunction> resolutionHandlers = null;
+	protected List<JSFunction> errorHandlers = null;
 	protected Promise() {
 		
 	}
@@ -48,15 +55,38 @@ public class Promise {
 	}
 	
 	public Object doResolve(Object...value) {
-		throw new UnsupportedOperationException();
+		if (this.state != PromiseState.PENDING)
+			return null;
+		this.state = PromiseState.FUFILLED;
+		this.result = value;
+		this.errorHandlers = null;
+		for (JSFunction handler : this.resolutionHandlers)
+			handler.invoke(this.result);
+		this.resolutionHandlers = null;
+		return null;
 	}
 	
 	public Object doReject(Object...value) {
-		throw new UnsupportedOperationException();
+		if (this.state != PromiseState.PENDING)
+			return null;
+		this.state = PromiseState.REJECTED;
+		this.result = value;
+		this.resolutionHandlers = null;
+		for (JSFunction handler : this.errorHandlers)
+			handler.invoke(this.result);
+		this.errorHandlers = null;
+		return null;
 	}
 	
 	@JSExtern
 	public Promise then(JSFunction onFufilled, @JSParam(optional=true) JSFunction onRejected) {
+		if (this.state == PromiseState.FUFILLED) {
+			onFufilled.invoke(this.result);
+		} else if (this.state == PromiseState.REJECTED) {
+			onRejected.invoke(this.result);
+		} else {
+			//TODO finish
+		}
 		throw new UnsupportedOperationException();
 	}
 }
