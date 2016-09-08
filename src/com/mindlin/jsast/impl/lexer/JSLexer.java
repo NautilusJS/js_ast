@@ -48,7 +48,9 @@ public class JSLexer {
 //		System.out.println("BG " + Character.getName(startChar));
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
-		while (chars.hasNext()) {
+		while (true) {
+			if (!chars.hasNext())
+				throw new JSSyntaxException("Unexpected EOF while parsing a string literal", getPosition());
 			char c = chars.next();
 //			System.out.println("Char " + Character.getName(c));
 			if (isEscaped) {
@@ -113,8 +115,16 @@ public class JSLexer {
 				isEscaped = true;
 				continue;
 			}
-			if (c == '\r' || c == '\n')
+			if (c == '\r' || c == '\n') {
+				if (startChar == '`') {
+					//Newlines are allowed as part of a template literal
+					if (chars.hasNext() && ((c == '\r' && chars.peekNext() == '\n') || chars.peekNext() == '\r'))
+						chars.skip(1);
+					sb.append('\n');
+					continue;
+				}
 				throw new JSSyntaxException("Illegal newline in the middle of a string literal", getPosition());
+			}
 			if (c == startChar)
 				break;
 			sb.append(c);
@@ -194,11 +204,12 @@ public class JSLexer {
 						if (c > '7' && c <= '9') {
 							//Upgrade to decimal if possible
 							type = NumericLiteralType.DECIMAL;
+							isValid = true;
 							break;
 						}
 						//Fallthrough intentional
 					case OCTAL:
-						isValid = c <= '9';
+						isValid = c <= '7';
 						break;
 					case HEXDECIMAL:
 						if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
@@ -213,7 +224,7 @@ public class JSLexer {
 			}
 //			System.out.println("VALID: " + isValid);
 			if (!isValid)
-				throw new JSSyntaxException("Unexpected identifier in numeric literal: " + Character.getName(c), chars.position());
+				throw new JSSyntaxException("Unexpected identifier in numeric literal (" + type + "): " + Character.getName(c), chars.position());
 		}
 		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
 		//but it causes problems with OCTAL_IMPLICIT upgrades.
@@ -398,12 +409,12 @@ public class JSLexer {
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
 			value = c;
 			kind = TokenKind.BRACKET;
-			chars.skip(1);
+			chars.next();
 		} else if (c == ';') {
 			kind = TokenKind.SPECIAL;
 			value = JSSpecialGroup.SEMICOLON;
-			chars.skip(1);
-		} else if ((value = this.parseOperator()) != null) {
+			chars.next();
+		} else if ((value = parseOperator()) != null) {
 			kind = TokenKind.OPERATOR;
 		} else {
 			//TODO simplify logic (if possible)
