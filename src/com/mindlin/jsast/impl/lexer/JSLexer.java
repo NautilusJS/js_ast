@@ -55,6 +55,7 @@ public class JSLexer {
 					case '\'':
 					case '"':
 					case '\\':
+					case '`':
 						sb.append(c);
 						break;
 					case 'n':
