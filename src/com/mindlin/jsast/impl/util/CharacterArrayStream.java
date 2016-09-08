@@ -82,4 +82,8 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 		}
 		return this;
 	}
+	@Override
+	public boolean hasNext(long num) {
+		return position < data.length - num;
+	}
 }
