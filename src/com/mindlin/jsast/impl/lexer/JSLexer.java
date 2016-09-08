@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.lexer;
 
+import java.nio.charset.StandardCharsets;
+
 import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
@@ -64,6 +66,9 @@ public class JSLexer {
 					case 'r':
 						sb.append('\r');
 						break;
+					case 'v':
+						sb.append(Characters.VT);// vertical tab
+						break;
 					case 't':
 						sb.append('\t');
 						break;
@@ -72,9 +77,6 @@ public class JSLexer {
 						break;
 					case 'f':
 						sb.append('\f');
-						break;
-					case 'v':
-						sb.append(Characters.VT);// vertical tab
 						break;
 					case '0':
 						sb.append(Characters.NULL);
@@ -87,10 +89,23 @@ public class JSLexer {
 						if (chars.peekNext() == '\n')
 							chars.skip(1);
 						break;
-					// TODO support unicode/octal escape sequences (see
-					// mathiasbynens.be/notes/javascript-escapes)
+					case 'u':
+						//Unicode escape
+						//TODO finish
+						//See mathiasbynens.be/notes/javascript-escapes
+						throw new UnsupportedOperationException("Unicode escape sequences aren't supported yet.");
+					case 'x':
+						//Latin-1 character escape
+						if (!chars.hasNext(2))
+							throw new JSSyntaxException("Invalid Latin-1 escape sequence (EOF)", getPosition() - 2);
+						try {
+							sb.append(new String(new byte[]{(byte)Integer.parseInt(chars.copyNext(2), 16)}, 0, 1, StandardCharsets.ISO_8859_1));
+						} catch (NumberFormatException e) {
+							throw new JSSyntaxException("Invalid Latin-1 escape sequence (\\x" + chars.copy(chars.position() - 2, 2) + ")", getPosition() - 4);
+						}
+						break;
 					default:
-						throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition());
+						throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition() - 2);
 				}
 				continue;
 			}
