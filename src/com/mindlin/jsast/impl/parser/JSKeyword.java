@@ -13,13 +13,13 @@ public enum JSKeyword {
 	DELETE,
 	DO,
 	ELSE,
-	ENUM,//Doesn't do anything, but can't be used as an identifier
+	ENUM,
 	EXPORT,
 	EXTENDS,
 	FINALLY,
 	FOR,
 	FUNCTION,
-	FUNCTION_GENERATOR,
+	FUNCTION_GENERATOR(false, "function*"),
 	IF,
 	IMPLEMENTS(true),
 	IMPORT,
@@ -46,26 +46,34 @@ public enum JSKeyword {
 	WHILE,
 	WITH,
 	YIELD,
-	YIELD_GENERATOR;
+	YIELD_GENERATOR(false, "yield*");
 	public static JSKeyword lookup(String identifier) {
-		//TODO optimize
+		//Check if identifier can even be an identifier (i.e., is all lower case)
+		if (!identifier.equals(identifier.toLowerCase()))
+			return null;
 		for (JSKeyword keyword : JSKeyword.values())
-			if (identifier.equalsIgnoreCase(keyword.name()))
+			if (identifier.equals(keyword.toString()))
 				return keyword;
-		if (identifier.equalsIgnoreCase("function*"))
-			return FUNCTION_GENERATOR;
-		if (identifier.equalsIgnoreCase("yield*"))
-			return YIELD_GENERATOR;
 		return null;
 	}
 	private final boolean requiresStrict;
+	private final String stringValue;
 	JSKeyword() {
 		this(false);
 	}
 	JSKeyword(boolean requiresStrict) {
 		this.requiresStrict = requiresStrict;
+		this.stringValue = name().toLowerCase();
+	}
+	JSKeyword(boolean requiresStrict, String stringValue) {
+		this.requiresStrict = requiresStrict;
+		this.stringValue = stringValue;
 	}
 	public boolean isStrictOnly() {
 		return this.requiresStrict;
+	}
+	@Override
+	public String toString() {
+		return stringValue;
 	}
 }
