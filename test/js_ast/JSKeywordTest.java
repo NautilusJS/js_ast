@@ -10,12 +10,19 @@ public class JSKeywordTest {
 	
 	@Test
 	public void testLookup() {
-		assertEquals(JSKeyword.lookup("if"), JSKeyword.IF);
-		//TODO add more
+		assertEquals(JSKeyword.IF, JSKeyword.lookup("if"));
+		
+		assertEquals(JSKeyword.FUNCTION, JSKeyword.lookup("function"));
+		assertEquals(JSKeyword.FUNCTION_GENERATOR, JSKeyword.lookup("function*"));
+		
+		assertEquals(JSKeyword.YIELD, JSKeyword.lookup("yield"));
+		assertEquals(JSKeyword.YIELD_GENERATOR, JSKeyword.lookup("yield*"));
 	}
 	
 	@Test
-	public void testLookupUpperCase() {
-		assertEquals(JSKeyword.lookup("IF"), JSKeyword.IF);
+	public void testLookupMixedCase() {
+		assertEquals(null, JSKeyword.lookup("IF"));
+		assertEquals(null, JSKeyword.lookup("If"));
+		assertEquals(null, JSKeyword.lookup("If"));
 	}
 }
