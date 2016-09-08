@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
-import com.mindlin.jsast.impl.lexer.JSDialect;
+import com.mindlin.jsast.exception.JSUnsupportedException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
@@ -98,7 +98,13 @@ public class JSParser {
 	
 	//Parser properties
 	protected JSDialect dialect;
-	protected boolean allowYield;
+	
+	public JSParser() {
+		this(JSDialect.JSStandardDialect.TYPESCRIPT);
+	}
+	public JSParser(JSDialect dialect) {
+		this.dialect = dialect;
+	}
 	
 	public CompilationUnitTree apply(String unitName, String src) {
 		return apply(unitName, new JSLexer(src));
@@ -121,7 +127,7 @@ public class JSParser {
 		Token t = src.nextToken();
 		switch (t.getKind()) {
 			case KEYWORD:
-				switch ((JSKeyword) t.getValue()) {
+				switch (t.<JSKeyword>getValue()) {
 					case WHILE:
 						return this.parseWhileLoop(t, src, isStrict);
 					case DO:
@@ -178,7 +184,7 @@ public class JSParser {
 			case OPERATOR:
 				throw new UnsupportedOperationException();
 			case SPECIAL:
-				switch ((JSSpecialGroup) t.getValue()) {
+				switch (t.<JSSpecialGroup>getValue()) {
 					case EOF:
 						break;
 					case EOL:
@@ -202,12 +208,12 @@ public class JSParser {
 		switch (token.getKind()) {
 			case SPECIAL:
 				ensureToken(token, JSSpecialGroup.SEMICOLON);
-				return new EmptyStatementTreeImpl(token.getStart(), token.getEnd());
+				return new EmptyStatementTreeImpl(token);
 			case BRACKET:
 				ensureToken(token, '{');
 				return this.parseBlock(token, src, isStrict);
 			case KEYWORD:
-				switch ((JSKeyword) token.getValue()) {
+				switch (token.<JSKeyword>getValue()) {
 					case BREAK:
 					case CONTINUE:
 						return this.parseGotoStatement(token, src, isStrict);
@@ -286,13 +292,35 @@ public class JSParser {
 			case LITERAL:
 				break;
 			case OPERATOR:
-				break;
+				throw new JSUnexpectedTokenException(token);
 			case FUTURE:
 			case FUTURESTRICT:
 			default:
-				break;
+				throw new UnsupportedOperationException("Unknown kind: " + token.getKind());
 		}
 		throw new UnsupportedOperationException();
+	}
+	
+	protected Tree parseGroupExpression(Token leftParenToken, JSLexer lexer, boolean isStrict) {
+		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, lexer, isStrict);
+		Token next = lexer.nextToken();
+		if (next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
+			//Is lambda w/ no args ("()=>???")
+			dialect.require("js.function.lambda", leftParenToken.getStart());
+			lexer.expectToken(TokenKind.OPERATOR, JSOperator.LAMBDA);
+			//TODO finish
+			return null;
+		} else if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+			dialect.require("js.function.lambda", leftParenToken.getStart());
+			ExpressionTree expr = parseSpread(next, lexer, isStrict);
+			lexer.expectToken(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+			lexer.expectToken(TokenKind.OPERATOR, JSOperator.LAMBDA);
+			//TODO finish
+			return null;
+		} else {
+			boolean arrow = false;
+			
+		}
 	}
 	
 	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer lexer, boolean isStrict) {
@@ -318,6 +346,13 @@ public class JSParser {
 		//Check that the token is 'var', 'let', or 'const'.
 		if (keywordToken.getValue() != JSKeyword.VAR && !(isConst || isScoped))
 			throw new JSUnexpectedTokenException(keywordToken);
+		//Check if allowed
+		if (isScoped && !dialect.supports("js.variable.scoped"))
+			throw new JSUnsupportedException("js.variable.scoped", keywordToken.getStart());
+		if (isConst && !dialect.supports("js.variable.const"))
+			throw new JSUnsupportedException("js.variable.const", keywordToken.getStart());
+		
+		//Build list of declarations
 		List<VariableTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
@@ -465,7 +500,7 @@ public class JSParser {
 	protected SpreadTree parseSpread(Token spreadToken, JSLexer src, boolean isStrict) {
 		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, isStrict);
 		
-		return null;
+		throw new UnsupportedOperationException();
 	}
 	
 	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, boolean isStrict) {
@@ -1127,5 +1162,8 @@ public class JSParser {
 			statements.add(parseStatement(t, src, isStrict));
 		ensureToken(t, '}');
 		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
+	}
+	protected static class Context {
+		boolean isStrict = false;
 	}
 }

@@ -12,7 +12,7 @@ public class JSParserTest {
 	@Test
 	public void testForLoop() {
 		JSParser parser = new JSParser();
-		CompilationUnitTree result = parser.apply("foo", "for(var i = 0; i < 100; i++){}");
+		CompilationUnitTree result = parser.apply("foo.js", "for(var i = 0; i < 100; i++){}");
 		System.out.println(result);
 		fail("Not yet implemented");
 	}

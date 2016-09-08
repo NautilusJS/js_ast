@@ -399,10 +399,10 @@ public class JSLexer {
 	}
 	public Token expectToken(TokenKind kind, Object value) {
 		Token t = this.nextToken();
-		if (t.getKind() != kind)
-			throw new JSUnexpectedTokenException(t, kind);
 		if (t.getValue() != value)
 			throw new JSUnexpectedTokenException(t, value);
+		if (t.getKind() != kind)
+			throw new JSUnexpectedTokenException(t, kind);
 		return t;
 	}
 	public Token expectToken(Object value) {

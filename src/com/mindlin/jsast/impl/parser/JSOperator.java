@@ -58,12 +58,20 @@ public enum JSOperator {
 	SPREAD(3, "..."),
 	;
 	final String operator;
+	final int precedence;
 	final int arity;
 	final boolean assignment;
-	JSOperator(boolean assignment, int arity, String operator, String...allotropes) {
+	JSOperator(boolean assignment, int precedence, int arity, String operator, String...allotropes) {
 		this.assignment = assignment;
 		this.operator = operator;
 		this.arity = arity;
+		this.precedence = precedence;
+	}
+	JSOperator(boolean assignment, int arity, String operator, String...allotropes) {
+		this(assignment, -1, arity, operator, allotropes);
+	}
+	JSOperator(int precedence, int arity, String operator, String...allotropes) {
+		this(false, precedence, arity, operator, allotropes);
 	}
 	JSOperator(int arity, String operator, String...allotropes) {
 		this(false, arity, operator, allotropes);
