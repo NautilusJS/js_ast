@@ -118,7 +118,7 @@ public class JSParser {
 		Context context = new Context();
 		while ((value = parseNext(src, context)) != null)
 			elements.add(value);
-		return new CompilationUnitTreeImpl(0, src.getCharIndex(), unitName, null, elements, false);
+		return new CompilationUnitTreeImpl(0, src.getPosition(), unitName, null, elements, false);
 	}
 	
 	protected ExpressionTree parseNextExpression(JSLexer src, Context context) {
@@ -311,11 +311,11 @@ public class JSParser {
 	 */
 	protected void expectCommaSeparator(JSLexer src, Context ctx) {
 		if (dialect.supports("extension.tolerance")) {
-			Token commaToken = src.peekNextToken();
+			Token commaToken = src.peek();
 			if (commaToken.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
-				src.skipToken(commaToken);	
+				src.skip(commaToken);	
 			} else if (commaToken.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
-				src.skipToken(commaToken);
+				src.skip(commaToken);
 				//TODO tolerate
 				throw new JSUnexpectedTokenException(commaToken);
 			} else {
@@ -460,14 +460,14 @@ public class JSParser {
 		if (next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
 			//Is lambda w/ no args ("()=>???")
 			dialect.require("js.function.lambda", leftParenToken.getStart());
-			lexer.expectToken(TokenKind.OPERATOR, JSOperator.LAMBDA);
+			lexer.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
 			//TODO finish
 			return null;
 		} else if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 			dialect.require("js.function.lambda", leftParenToken.getStart());
 			ExpressionTree expr = parseSpread(next, lexer, context);
-			lexer.expectToken(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
-			lexer.expectToken(TokenKind.OPERATOR, JSOperator.LAMBDA);
+			lexer.expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+			lexer.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
 			//TODO finish
 			return null;
 		} else {
@@ -569,17 +569,17 @@ public class JSParser {
 			ExpressionTree initializer = null;
 			if (!identifier.isIdentifier())
 				throw new JSUnexpectedTokenException(identifier);
-			Token peek = lexer.peekNextToken();
+			Token peek = lexer.peek();
 			//Check if a type is available
 			if (peek.matches(TokenKind.OPERATOR, JSOperator.COLON)) {
-				lexer.skipToken(peek);
+				lexer.skip(peek);
 				type = parseTypeStatement(lexer.nextToken(), lexer, context);
 				
-				peek = lexer.peekNextToken();
+				peek = lexer.peek();
 			}
 			//Check if an initializer is available
 			if (peek.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-				lexer.skipToken(peek);
+				lexer.skip(peek);
 				initializer = parseExpression(null, lexer, context);
 			}
 			declarations.add(new VariableTreeImpl(declarations.isEmpty() ? keywordToken.getStart() : identifier.getStart(), lexer.getPosition(), isScoped, isConst, new IdentifierTreeImpl(identifier), type, initializer));
@@ -627,14 +627,14 @@ public class JSParser {
 	
 	protected IfTree parseIfStatement(Token ifKeywordToken, JSLexer src, Context context) {
 		ifKeywordToken = Token.expect(ifKeywordToken, TokenKind.KEYWORD, JSKeyword.IF, src);
-		src.expectToken(JSOperator.LEFT_PARENTHESIS);
+		src.expect(JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree expression = this.parseNextExpression(src, context);
-		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
+		src.expect(JSOperator.RIGHT_PARENTHESIS);
 		StatementTree thenStatement = this.parseStatement(null, src, context);
 		StatementTree elseStatement = null;
-		Token next = src.peekNextToken();
+		Token next = src.peek();
 		if (next.matches(TokenKind.KEYWORD, JSKeyword.ELSE)) {
-			src.skipToken(next);
+			src.skip(next);
 			next = src.nextToken();
 			// This if statement isn't really needed, but it speeds up 'else if'
 			// statements
@@ -652,10 +652,10 @@ public class JSParser {
 	
 	protected SwitchTree parseSwitchStatement(Token switchKeywordToken, JSLexer src, Context context) {
 		switchKeywordToken = Token.expect(switchKeywordToken, TokenKind.KEYWORD, JSKeyword.SWITCH, src);
-		src.expectToken(JSOperator.LEFT_PARENTHESIS);
+		src.expect(JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree expression = this.parseNextExpression(src, context);
-		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
-		src.expectToken(TokenKind.BRACKET, '{');
+		src.expect(JSOperator.RIGHT_PARENTHESIS);
+		src.expect(TokenKind.BRACKET, '{');
 		List<CaseTree> cases = new LinkedList<>();
 		Token next = src.nextToken();
 		while (next.getKind() == TokenKind.KEYWORD) {
@@ -667,7 +667,7 @@ public class JSParser {
 				caseExpr = null;
 			else
 				throw new JSUnexpectedTokenException(next);
-			src.expectToken(JSOperator.COLON);
+			src.expect(JSOperator.COLON);
 			// TODO parse statements
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
@@ -681,7 +681,7 @@ public class JSParser {
 		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
 		BlockTree finallyBlock = null;
 		
-		Token next = src.peekNextToken();
+		Token next = src.peek();
 		while (next.getKind() != TokenKind.SPECIAL && next.getValue() != JSSpecialGroup.EOF) {
 			
 		}
@@ -698,9 +698,9 @@ public class JSParser {
 	
 	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, Context context) {
 		withKeywordToken = Token.expect(withKeywordToken, TokenKind.KEYWORD, JSKeyword.WITH, src);
-		src.expectToken(JSOperator.LEFT_PARENTHESIS);
+		src.expect(JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree expression = this.parseNextExpression(src, context);
-		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
+		src.expect(JSOperator.RIGHT_PARENTHESIS);
 		StatementTree statement = this.parseStatement(src, context);
 		return new WithTreeImpl(withKeywordToken.getStart(), src.getPosition(), expression, statement);
 	}
@@ -1293,10 +1293,10 @@ public class JSParser {
 			case KEYWORD:
 				switch ((JSKeyword) keywordToken.getValue()) {
 					case VOID: {
-						Token next = src.peekNextToken();
+						Token next = src.peek();
 						if ((next = src.nextToken()).getKind() == TokenKind.SPECIAL
 								&& next.getValue() == JSSpecialGroup.SEMICOLON) {
-							src.skipToken(next);
+							src.skip(next);
 							return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
 						}
 					}

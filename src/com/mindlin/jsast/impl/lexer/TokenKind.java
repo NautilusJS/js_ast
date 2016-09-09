@@ -18,15 +18,23 @@ public enum TokenKind {
 	 */
 	KEYWORD,
 	/**
-	 * A JS literal value
+	 * A JS boolean literal value
 	 */
 	BOOLEAN_LITERAL,
 	NUMERIC_LITERAL,
 	STRING_LITERAL,
 	TEMPLATE_LITERAL,
+	/**
+	 * A js null literal. Literally <code>null</code>.
+	 */
 	NULL_LITERAL,
+	/**
+	 * A js regular expression literal
+	 */
+	REGEX_LITERAL,
 	/**
 	 * An identifier (variable/function/object).
 	 */
-	IDENTIFIER, FUTURE, FUTURESTRICT
+	IDENTIFIER,
+	COMMENT;
 }
