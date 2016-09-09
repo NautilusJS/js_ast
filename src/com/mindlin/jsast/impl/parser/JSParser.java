@@ -301,6 +301,29 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * 
+	 * @param commaToken
+	 * @param src
+	 * @param ctx
+	 */
+	protected void expectCommaSeparator(JSLexer src, Context ctx) {
+		if (dialect.supports("extension.tolerance")) {
+			Token commaToken = src.peekNextToken();
+			if (commaToken.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+				src.skipToken(commaToken);	
+			} else if (commaToken.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
+				src.skipToken(commaToken);
+				//TODO tolerate
+				throw new JSUnexpectedTokenException(commaToken);
+			} else {
+				throw new JSUnexpectedTokenException(commaToken);
+			}
+		} else {
+			expect(null, TokenKind.OPERATOR, JSOperator.COMMA, src, ctx);
+		}
+	}
+	
 	protected Tree parseGroupExpression(Token leftParenToken, JSLexer lexer, Context context) {
 		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, lexer, context);
 		Token next = lexer.nextToken();
