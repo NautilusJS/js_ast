@@ -1,5 +1,5 @@
 package com.mindlin.jsast.tree;
 
-public interface LiteralTree extends Tree {
-
+public interface LiteralTree<T> extends ExpressionTree {
+	T getValue();
 }
