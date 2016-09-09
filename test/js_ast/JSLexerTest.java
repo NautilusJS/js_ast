@@ -226,7 +226,7 @@ public class JSLexerTest {
 		
 		Token fooStringToken = lexer.nextToken();
 		System.out.println(fooStringToken);
-		assertEquals(TokenKind.LITERAL, fooStringToken.getKind());
+		assertEquals(TokenKind.STRING_LITERAL, fooStringToken.getKind());
 		assertEquals("bar", fooStringToken.getValue());
 		
 		Token forKeywordToken = lexer.nextToken();
@@ -241,7 +241,7 @@ public class JSLexerTest {
 		
 		Token FFNumberToken = lexer.nextToken();
 		System.out.println(FFNumberToken);
-		assertEquals(TokenKind.LITERAL, FFNumberToken.getKind());
+		assertEquals(TokenKind.NUMERIC_LITERAL, FFNumberToken.getKind());
 		assertEquals(0xFF, ((Number)FFNumberToken.getValue()).intValue());
 		
 		Token EofNumberToken = lexer.nextToken();
@@ -271,4 +271,17 @@ public class JSLexerTest {
 		} catch (JSSyntaxException e) {}
 	}
 	
+	@Test
+	public void testBooleanLiteral() {
+		JSLexer lexer = new JSLexer("true false");
+		Token trueToken = lexer.nextToken();
+		assertEquals(TokenKind.BOOLEAN_LITERAL, trueToken.getKind());
+		assertEquals(true, trueToken.getValue());
+		assertEquals("true", trueToken.getText());
+		
+		Token falseToken = lexer.nextToken();
+		assertEquals(TokenKind.BOOLEAN_LITERAL, falseToken.getKind());
+		assertEquals(false, falseToken.getValue());
+		assertEquals("false", falseToken.getText());
+	}
 }
