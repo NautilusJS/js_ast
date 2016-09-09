@@ -236,7 +236,9 @@ public class JSLexer {
 	}
 	
 	public JSOperator peekOperator() {
-		char c = chars.peekNext(), d = chars.peek(2), e = chars.peek(3);
+		char c = chars.peekNext(),
+				d = chars.hasNext(2) ? chars.peek(2) : '\0',
+				e = chars.hasNext(3) ? chars.peek(3) : '\0';
 		if (d == '=') {
 			//Switch through assignment types
 			switch (c) {
@@ -382,6 +384,8 @@ public class JSLexer {
 			return null;
 		do {
 			sb.append(c);
+			if (!chars.hasNext())
+				return sb.toString();
 		} while (Character.isJavaIdentifierPart(c = chars.next()));
 		chars.skip(-1);
 		return sb.toString();
@@ -397,14 +401,16 @@ public class JSLexer {
 		TokenKind kind = null;
 		//Drop through a various selection of possible results
 		//Check if it's a string literal
-		if (c == '"' || c == '\'' || c == '`') {
-			// TODO add support for template literals
+		if (c == '"' || c == '\'') {
 			value = parseStringLiteral();
-			kind = TokenKind.LITERAL;
+			kind = TokenKind.STRING_LITERAL;
+		} else if (c == '`') {
+			value = parseStringLiteral();
+			kind = TokenKind.TEMPLATE_LITERAL;
 		//Check if it's a numeric literal (the first letter of all numbers must be /[0-9]/)
 		} else if (c >= '0' && c <= '9') {
 			value = parseNumberLiteral();
-			kind = TokenKind.LITERAL;
+			kind = TokenKind.NUMERIC_LITERAL;
 		//Check if it's a bracket
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
 			value = c;
@@ -425,6 +431,12 @@ public class JSLexer {
 				throw new JSSyntaxException("Illegal syntax at " + start);
 			} else if (identifierName.equals("true") || identifierName.equals("false")) {
 				//Boolean literal
+				kind = TokenKind.BOOLEAN_LITERAL;
+				value = identifierName.equals("true");
+			} else if (identifierName.equals("null")) {
+				//Null literal
+				kind = TokenKind.NULL_LITERAL;
+				value = null;
 			} else {
 				//An identifier was parsed, and it wasn't a boolean literal
 				//Check if it's a keyword

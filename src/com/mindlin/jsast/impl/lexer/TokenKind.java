@@ -20,7 +20,11 @@ public enum TokenKind {
 	/**
 	 * A JS literal value
 	 */
-	LITERAL,
+	BOOLEAN_LITERAL,
+	NUMERIC_LITERAL,
+	STRING_LITERAL,
+	TEMPLATE_LITERAL,
+	NULL_LITERAL,
 	/**
 	 * An identifier (variable/function/object).
 	 */
