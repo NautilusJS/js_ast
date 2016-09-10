@@ -106,6 +106,7 @@ public interface Tree {
 		THROW,
 		IF,
 		WITH,
+		CONDITIONAL,
 		
 		//GOTO stuff
 		LABELED_STATEMENT,
@@ -121,6 +122,12 @@ public interface Tree {
 		CLASS_EXPRESSION,
 		CLASS_DECLARATION,
 		INTERFACE_DECLARATION,//Support some typescript
+		PROPERTY,
+		
+		//Type stuff
+		ENUM,
+		UNION,
+		GENERIC_PARAM,
 		
 		//Array stuff
 		IN,
@@ -136,6 +143,8 @@ public interface Tree {
 		VARIABLE,
 		SCOPED_FUNCTION,
 		IDENTIFIER,
+		THIS_EXPRESSION,
+		SUPER_EXPRESSION,
 		
 		//Prototype stuff
 		TYPEOF,
@@ -144,8 +153,10 @@ public interface Tree {
 		ERROR,
 		EXPRESSION_STATEMENT,
 		OTHER,
-		PROPERTY,
 		VOID,
+		
+		//Comments
+		COMMENT
 		;
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt;

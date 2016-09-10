@@ -1,5 +1,5 @@
 package com.mindlin.jsast.tree;
 
-public interface ControlStatementTree extends Tree{
+public interface ControlStatementTree extends Tree {
 	StatementTree getStatement();
 }
