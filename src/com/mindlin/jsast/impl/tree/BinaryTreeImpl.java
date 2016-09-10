@@ -21,9 +21,9 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 			case ADDITION_ASSIGNMENT:
 				return "+=";
 			case ARRAY_ACCESS:
-				return "[";//TODO fix
+				return "[";
 			case MEMBER_SELECT:
-				return "[";//TODO fix
+				return ".";
 			case ASSIGNMENT:
 				return "=";
 			case BITWISE_AND:
@@ -80,7 +80,7 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				//TODO should this be valid?
 				break;
 			case PROPERTY:
-				return ".";
+				break;
 			case REMAINDER:
 				return "%";
 			case REMAINDER_ASSIGNMENT:
