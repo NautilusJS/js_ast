@@ -90,9 +90,16 @@ public class JSParser {
 			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
 	}
 	
-	private static Token expect(Token t, TokenKind kind, Object value, JSLexer lexer, Context context) {
+	private static Token expect(Token t, TokenKind kind, Object value, JSLexer src, Context context) {
 		if (t == null)
-			t = lexer.nextToken();
+			t = src.nextToken();
+		ensureTokenKind(t, kind);
+		ensureToken(t, value);
+		return t;
+	}
+	
+	private static Token expect(TokenKind kind, Object value, JSLexer src, Context context) {
+		Token t = src.nextToken();
 		ensureTokenKind(t, kind);
 		ensureToken(t, value);
 		return t;
@@ -454,20 +461,20 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected Tree parseGroupExpression(Token leftParenToken, JSLexer lexer, Context context) {
-		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, lexer, context);
-		Token next = lexer.nextToken();
+	protected Tree parseGroupExpression(Token leftParenToken, JSLexer src, Context context) {
+		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
+		Token next = src.nextToken();
 		if (next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
 			//Is lambda w/ no args ("()=>???")
 			dialect.require("js.function.lambda", leftParenToken.getStart());
-			lexer.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
+			src.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
 			//TODO finish
 			return null;
 		} else if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 			dialect.require("js.function.lambda", leftParenToken.getStart());
-			ExpressionTree expr = parseSpread(next, lexer, context);
-			lexer.expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
-			lexer.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
+			ExpressionTree expr = parseSpread(next, src, context);
+			src.expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+			src.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
 			//TODO finish
 			return null;
 		} else {
@@ -477,11 +484,11 @@ public class JSParser {
 		return null;
 	}
 	
-	protected List<ParameterTree> parseArguments(Token t, JSLexer lexer, Context ctx) {
-		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, lexer, ctx);
+	protected List<? extends ExpressionTree> parseArguments(Token t, JSLexer src, Context ctx) {
+		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, ctx);
 		 List<ParameterTree> result = new ArrayList<>();
-		 while (!(t = lexer.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
-			 
+		 while (!(t = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
+			 //TODO finish
 		 }
 		 throw new UnsupportedOperationException();
 	}
@@ -531,24 +538,25 @@ public class JSParser {
 		return new UnaryTreeImpl(operator.getStart(), expr.getEnd(), expr, kind);
 	}
 	
-	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer lexer, Context context) {
+	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
-	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer lexer, Context context) {
+	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
-	protected TypeTree parseTypeStatement(Token typeToken, JSLexer lexer, Context context) {
+	
+	protected TypeTree parseTypeStatement(Token typeToken, JSLexer src, Context context) {
 		if (typeToken == null)
-			typeToken = lexer.nextToken();
+			typeToken = src.nextToken();
 		throw new UnsupportedOperationException();
 	}
 	
 	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
-	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer lexer, Context context) {
-		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, lexer);
+	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context) {
+		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, src);
 		boolean isConst = keywordToken.getValue() == JSKeyword.CONST;
 		boolean isScoped = keywordToken.getValue() == JSKeyword.LET;
 		//Check that the token is 'var', 'let', or 'const'.
@@ -564,31 +572,31 @@ public class JSParser {
 		List<VariableTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
-			Token identifier = lexer.nextToken();
+			Token identifier = src.nextToken();
 			TypeTree type = null;
 			ExpressionTree initializer = null;
 			if (!identifier.isIdentifier())
 				throw new JSUnexpectedTokenException(identifier);
-			Token peek = lexer.peek();
+			Token peek = src.peek();
 			//Check if a type is available
 			if (peek.matches(TokenKind.OPERATOR, JSOperator.COLON)) {
-				lexer.skip(peek);
-				type = parseTypeStatement(lexer.nextToken(), lexer, context);
+				src.skip(peek);
+				type = parseTypeStatement(src.nextToken(), src, context);
 				
-				peek = lexer.peek();
+				peek = src.peek();
 			}
 			//Check if an initializer is available
 			if (peek.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-				lexer.skip(peek);
-				initializer = parseExpression(null, lexer, context);
+				src.skip(peek);
+				initializer = parseNextExpression(null, src, context);
 			}
-			declarations.add(new VariableTreeImpl(declarations.isEmpty() ? keywordToken.getStart() : identifier.getStart(), lexer.getPosition(), isScoped, isConst, new IdentifierTreeImpl(identifier), type, initializer));
-		} while (lexer.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			declarations.add(new VariableTreeImpl(declarations.isEmpty() ? keywordToken.getStart() : identifier.getStart(), src.getPosition(), isScoped, isConst, new IdentifierTreeImpl(identifier), type, initializer));
+		} while (src.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
 		
 		if (declarations.size() == 1)
 			return declarations.get(0);
 		//Return as an unscoped block
-		return new BlockTreeImpl(keywordToken.getStart(), lexer.getPosition(), declarations, false);
+		return new BlockTreeImpl(keywordToken.getStart(), src.getPosition(), declarations, false);
 	}
 	
 	@JSKeywordParser(JSKeyword.CLASS)
@@ -615,7 +623,7 @@ public class JSParser {
 		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), identifierToken.getValue());
 	}
 	
-	protected StatementTree parseFunctionKeyword(Token functionKeywordToken, JSLexer lexer, Context context) {
+	protected ExpressionTree parseFunctionExpression(Token functionKeywordToken, JSLexer src, Context context) {
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
