@@ -1,22 +1,23 @@
 package com.mindlin.jsast.tree;
+
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
 //http://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/index.html
 //https://github.com/javaparser/javaparser
 public interface Tree {
 	public static enum Kind {
-		//Data structures
+		// Data structures
 		COMPILATION_UNIT(CompilationUnitTree.class),
 		FUNCTION,
 		FUNCTION_EXPRESSION(FunctionExpressionTree.class),
-		
-		//Loops
+
+		// Loops
 		FOR_IN_LOOP(ForEachLoopTree.class),
-		FOR_OF_LOOP(ForEachLoopTree.class),//Special
+		FOR_OF_LOOP(ForEachLoopTree.class), // Special
 		FOR_LOOP(ForLoopTree.class),
 		DO_WHILE_LOOP(DoWhileLoopTree.class),
 		WHILE_LOOP(WhileLoopTree.class),
-		
-		//Unary operators
+
+		// Unary operators
 		POSTFIX_DECREMENT,
 		POSTFIX_INCREMENT,
 		PREFIX_DECREMENT,
@@ -24,8 +25,8 @@ public interface Tree {
 		UNARY_PLUS,
 		UNARY_MINUS,
 		DELETE,
-		
-		//Binary operators
+
+		// Binary operators
 		ADDITION,
 		SUBTRACTION,
 		MULTIPLICATION,
@@ -35,14 +36,14 @@ public interface Tree {
 		LEFT_SHIFT,
 		RIGHT_SHIFT,
 		UNSIGNED_RIGHT_SHIFT,
-		
-		//Bitwise operators
+
+		// Bitwise operators
 		BITWISE_AND,
 		BITWISE_OR,
 		BITWISE_XOR,
 		BITWISE_NOT,
-		
-		//Assignment operators
+
+		// Assignment operators
 		ASSIGNMENT,
 		ADDITION_ASSIGNMENT,
 		SUBTRACTION_ASSIGNMENT,
@@ -53,13 +54,13 @@ public interface Tree {
 		LEFT_SHIFT_ASSIGNMENT,
 		RIGHT_SHIFT_ASSIGNMENT,
 		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT,
-		
-		//Assignment bitwise operators
+
+		// Assignment bitwise operators
 		BITWISE_AND_ASSIGNMENT,
 		BITWISE_OR_ASSIGNMENT,
 		BITWISE_XOR_ASSIGNMENT,
-		
-		//Comparison operators
+
+		// Comparison operators
 		EQUAL,
 		NOT_EQUAL,
 		STRICT_EQUAL,
@@ -68,13 +69,13 @@ public interface Tree {
 		LESS_THAN,
 		GREATER_THAN_EQUAL,
 		LESS_THAN_EQUAL,
-		
-		//Logical operators
+
+		// Logical operators
 		LOGICAL_AND,
 		LOGICAL_OR,
 		LOGICAL_NOT,
-		
-		//Literals
+
+		// Literals
 		BOOLEAN_LITERAL,
 		ARRAY_LITERAL,
 		NULL_LITERAL,
@@ -83,112 +84,121 @@ public interface Tree {
 		REGEXP_LITERAL,
 		STRING_LITERAL,
 		STRING_INTERPOLATED_LITERAL,
-		
-		//Misc. operators
+
+		// Misc. operators
 		COMMA,
 		PARENTHESIZED,
-		
-		//Member access
+
+		// Member access
 		ARRAY_ACCESS,
 		MEMBER_SELECT,
-		
-		//Control structures
+
+		// Control structures
 		BLOCK,
 		CATCH,
 		EMPTY_STATEMENT,
 		SWITCH,
 		TRY,
 		FINALLY,
-		
-		//Control flow modifiers
+
+		// Control flow modifiers
 		CASE,
 		RETURN,
 		THROW,
 		IF,
 		WITH,
 		CONDITIONAL,
-		
-		//GOTO stuff
+
+		// GOTO stuff
 		LABELED_STATEMENT,
 		CONTINUE,
 		BREAK,
 		DEBUGGER,
-		
-		//Module stuff
+
+		// Module stuff
 		IMPORT,
 		EXPORT,
-		
-		//Class stuff
+
+		// Class stuff
 		CLASS_EXPRESSION,
 		CLASS_DECLARATION,
-		INTERFACE_DECLARATION,//Support some typescript
+		INTERFACE_DECLARATION, // Support some typescript
 		PROPERTY,
-		
-		//Type stuff
+
+		// Type stuff
 		ENUM,
 		UNION,
 		GENERIC_PARAM,
-		
-		//Array stuff
+
+		// Array stuff
 		IN,
 		OF,
 		SPREAD,
-		
-		//Method invocation
+
+		// Method invocation
 		NEW,
 		FUNCTION_INVOCATION,
 		PARAMETER,
-		
-		//Variable stuff
+
+		// Variable stuff
 		VARIABLE,
 		SCOPED_FUNCTION,
 		IDENTIFIER,
 		THIS_EXPRESSION,
 		SUPER_EXPRESSION,
-		
-		//Prototype stuff
+
+		// Prototype stuff
 		TYPEOF,
 		INSTANCE_OF,
-		
+
 		ERROR,
 		EXPRESSION_STATEMENT,
 		OTHER,
 		VOID,
-		
-		//Comments
-		COMMENT
-		;
+
+		// Comments
+		COMMENT;
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt;
+
 		Kind() {
-			this(Tree.class);//TODO fix
+			this(Tree.class);// TODO fix
 		}
+
 		Kind(Class<? extends Tree> clazz) {
 			this.iface = clazz;
 			this.expr = ExpressionTree.class.isAssignableFrom(clazz);
 			this.litr = LiteralTree.class.isAssignableFrom(clazz);
 			this.stmt = StatementTree.class.isAssignableFrom(clazz);
 		}
+
 		public Class<? extends Tree> asInterface() {
 			return iface;
 		}
+
 		public boolean isExpression() {
 			return this.expr;
 		}
+
 		public boolean isLiteral() {
 			return this.litr;
 		}
+
 		public boolean isStatement() {
 			return this.stmt;
 		}
+
 		@Override
 		public String toString() {
-			return this.name().substring(0,1) + this.name().substring(1).toLowerCase();
+			return this.name().substring(0, 1) + this.name().substring(1).toLowerCase();
 		}
 	}
-	
+
 	Kind getKind();
+
 	long getStart();
+
 	long getEnd();
-	<R,D> R accept(TreeVisitor<R, D> visitor, D data);
+
+	<R, D> R accept(TreeVisitor<R, D> visitor, D data);
 }

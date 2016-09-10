@@ -6,7 +6,6 @@ public interface ConditionalExpressionTree extends ExpressionTree {
 	ExpressionTree getFalseExpression();
 
 	ExpressionTree getTrueExcpression();
-	
 
 	@Override
 	default Tree.Kind getKind() {

@@ -2,8 +2,8 @@ package com.mindlin.jsast.tree;
 
 public interface UnaryTree extends ExpressiveExpressionTree {
 	/**
-	 * VOID is treated as both an expression and a statement, which allows us to convert
-	 * expressions to statements (via <code>void([expression])</code>).
+	 * VOID is treated as both an expression and a statement, which allows us to
+	 * convert expressions to statements (via <code>void([expression])</code>).
 	 * 
 	 * @author mailmindlin
 	 */
