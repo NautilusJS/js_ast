@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-public interface FunctionCallTree extends ExpressionTree {
+public interface FunctionCallTree extends StatementTree, ExpressionTree {
 	List<? extends ExpressionTree> getArguments();
 
 	ExpressionTree getFunctionSelect();

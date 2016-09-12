@@ -1,5 +1,7 @@
 package com.mindlin.jsast.tree;
 
+import com.mindlin.jsast.tree.UnaryTree.VoidTree;
+
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
 //http://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/index.html
 //https://github.com/javaparser/javaparser
@@ -44,7 +46,7 @@ public interface Tree {
 		BITWISE_NOT,
 
 		// Assignment operators
-		ASSIGNMENT,
+		ASSIGNMENT(AssignmentTree.class),
 		ADDITION_ASSIGNMENT,
 		SUBTRACTION_ASSIGNMENT,
 		MULTIPLICATION_ASSIGNMENT,
@@ -76,54 +78,53 @@ public interface Tree {
 		LOGICAL_NOT,
 
 		// Literals
-		BOOLEAN_LITERAL,
-		ARRAY_LITERAL,
-		NULL_LITERAL,
-		NUMERIC_LITERAL,
-		OBJECT_LITERAL,
+		BOOLEAN_LITERAL(BooleanLiteralTree.class),
+		ARRAY_LITERAL(ArrayLiteralTree.class),
+		NULL_LITERAL(NullLiteralTree.class),
+		NUMERIC_LITERAL(NumericLiteralTree.class),
+		OBJECT_LITERAL(ObjectLiteralTree.class),
 		REGEXP_LITERAL,
-		STRING_LITERAL,
-		STRING_INTERPOLATED_LITERAL,
+		STRING_LITERAL(StringLiteralTree.class),
+		TEMPLATE_LITERAL,
 
 		// Misc. operators
-		COMMA,
-		PARENTHESIZED,
+		SEQUENCE(SequenceTree.class),
+		PARENTHESIZED(ParenthesizedTree.class),
 
 		// Member access
-		ARRAY_ACCESS,
-		MEMBER_SELECT,
+		ARRAY_ACCESS(ArrayAccessTree.class),
+		MEMBER_SELECT(MemberSelectTree.class),
 
 		// Control structures
-		BLOCK,
-		CATCH,
-		EMPTY_STATEMENT,
-		SWITCH,
-		TRY,
-		FINALLY,
+		BLOCK(BlockTree.class),
+		CATCH(CatchTree.class),
+		EMPTY_STATEMENT(EmptyStatementTree.class),
+		SWITCH(SwitchTree.class),
+		TRY(TryTree.class),
 
 		// Control flow modifiers
-		CASE,
-		RETURN,
-		THROW,
-		IF,
-		WITH,
-		CONDITIONAL,
+		CASE(CaseTree.class),
+		RETURN(ReturnTree.class),
+		THROW(ThrowTree.class),
+		IF(IfTree.class),
+		WITH(WithTree.class),
+		CONDITIONAL(ConditionalExpressionTree.class),
 
 		// GOTO stuff
 		LABELED_STATEMENT,
-		CONTINUE,
-		BREAK,
-		DEBUGGER,
+		CONTINUE(ContinueTree.class),
+		BREAK(BreakTree.class),
+		DEBUGGER(DebuggerTree.class),
 
 		// Module stuff
-		IMPORT,
-		EXPORT,
+		IMPORT(ImportTree.class),
+		EXPORT(ExportTree.class),
 
 		// Class stuff
 		CLASS_EXPRESSION,
 		CLASS_DECLARATION,
 		INTERFACE_DECLARATION, // Support some typescript
-		PROPERTY,
+		PROPERTY(PropertyTree.class),
 
 		// Type stuff
 		ENUM,
@@ -133,31 +134,31 @@ public interface Tree {
 		// Array stuff
 		IN,
 		OF,
-		SPREAD,
+		SPREAD(SpreadTree.class),
 
 		// Method invocation
-		NEW,
-		FUNCTION_INVOCATION,
-		PARAMETER,
+		NEW(NewTree.class),
+		FUNCTION_INVOCATION(FunctionCallTree.class),
+		PARAMETER(ParameterTree.class),
 
 		// Variable stuff
-		VARIABLE,
-		SCOPED_FUNCTION,
-		IDENTIFIER,
-		THIS_EXPRESSION,
-		SUPER_EXPRESSION,
+		VARIABLE(VariableTree.class),
+		SCOPED_FUNCTION,//Lambda
+		IDENTIFIER(IdentifierTree.class),
+		THIS_EXPRESSION(ThisExpressionTree.class),
+		SUPER_EXPRESSION(SuperExpressionTree.class),
 
 		// Prototype stuff
 		TYPEOF,
-		INSTANCE_OF,
+		INSTANCE_OF(InstanceOfTree.class),
 
-		ERROR,
-		EXPRESSION_STATEMENT,
+		ERROR(ErroneousTree.class),
+		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
 		OTHER,
-		VOID,
+		VOID(VoidTree.class),
 
 		// Comments
-		COMMENT;
+		COMMENT(CommentNode.class);
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt;
 
@@ -167,8 +168,8 @@ public interface Tree {
 
 		Kind(Class<? extends Tree> clazz) {
 			this.iface = clazz;
-			this.expr = ExpressionTree.class.isAssignableFrom(clazz);
 			this.litr = LiteralTree.class.isAssignableFrom(clazz);
+			this.expr = litr || ExpressionTree.class.isAssignableFrom(clazz);//literals are expressions
 			this.stmt = StatementTree.class.isAssignableFrom(clazz);
 		}
 
