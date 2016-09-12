@@ -154,10 +154,6 @@ public class JSParser {
 		return new CompilationUnitTreeImpl(0, src.getPosition(), unitName, null, elements, false);
 	}
 	
-	protected ExpressionTree parseNextExpression(JSLexer src, Context context) {
-		return parseNextExpression(src.nextToken(), src, context);
-	}
-	
 	public Tree parseNext(JSLexer src, Context context) {
 		Token t = src.nextToken();
 		switch (t.getKind()) {
@@ -1522,6 +1518,10 @@ public class JSParser {
 			default:
 				throw new JSUnexpectedTokenException(literalToken);
 		}
+	}
+	
+	protected ExpressionTree parseNextExpression(JSLexer src, Context context) {
+		return parseNextExpression(src.nextToken(), src, context);
 	}
 	
 	/**
