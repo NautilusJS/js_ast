@@ -73,7 +73,25 @@ public class JSParserTest {
 			parseExpression("++'foo'");
 			fail("Did not throw error");
 		} catch (JSSyntaxException e) {
-			
+			//Expected
+		}
+		try {
+			parseExpression("++4");
+			fail("Did not throw error");
+		} catch (JSSyntaxException e) {
+			//Expected
+		}
+		try {
+			parseExpression("++true");
+			fail("Did not throw error");
+		} catch (JSSyntaxException e) {
+			//Expected
+		}
+		try {
+			parseExpression("++false");
+			fail("Did not throw error");
+		} catch (JSSyntaxException e) {
+			//Expected
 		}
 	}
 	
