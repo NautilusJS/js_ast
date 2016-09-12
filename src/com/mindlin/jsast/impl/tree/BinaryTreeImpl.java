@@ -13,6 +13,9 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 		this.left = left;
 		this.right = right;
 	}
+	public BinaryTreeImpl(Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
+		this(left.getStart(), right.getEnd(), kind, left, right);
+	}
 	protected String getOperand() {
 		//TODO finish
 		switch(kind) {
