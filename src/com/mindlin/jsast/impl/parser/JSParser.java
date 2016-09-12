@@ -719,13 +719,28 @@ public class JSParser {
 		}
 	}
 	
-	protected List<? extends ExpressionTree> parseArguments(Token t, JSLexer src, Context ctx) {
-		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, ctx);
-		 List<ParameterTree> result = new ArrayList<>();
-		 while (!(t = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
-			 //TODO finish
+	protected List<? extends ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
+		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
+		 List<ExpressionTree> result = new ArrayList<>();
+		 t = src.nextToken();
+		 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			 return result;
+		 while (true) {
+			 ExpressionTree expr;
+			 if (t.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
+				 expr = this.parseSpread(t, src, context);
+			 else
+				 expr = parseNextExpression(src, context);
+			 t = src.nextToken();
+			 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+				 break;
+			 if (!t.matches(TokenKind.OPERATOR, JSOperator.COMMA))
+				 throw new JSUnexpectedTokenException(t);
+			 t = src.nextToken();
 		 }
-		 throw new UnsupportedOperationException();
+		 if (!t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			 throw new JSUnexpectedTokenException(t);
+		 return result;
 	}
 	
 	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
