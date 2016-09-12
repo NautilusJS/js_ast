@@ -1542,62 +1542,98 @@ public class JSParser {
 	protected ExpressionTree parseNextExpression(Token t, JSLexer src, Context context) {
 		if (t == null)
 			t = src.nextToken();
-		List<ExpressionTree> atoms = new ArrayList<>();
+		ExpressionTree result = null;
 		do {
 			switch (t.getKind()) {
 				case KEYWORD:
 					switch (t.<JSKeyword>getValue()) {
 						case NEW:
-							atoms.add(parseNew(t, src, context));
+							src.skip(t);
+							result = parseNew(t, src, context);
 							continue;
 						case DELETE:
 						case TYPEOF:
 						case VOID:
-							atoms.add(parseUnaryPrefix(t, src, context));
+							src.skip(t);
+							result = parseUnaryPrefix(t, src, context);
 							continue;
 					}
 					throw new JSUnexpectedTokenException(t);
 				case OPERATOR:
 					switch (t.<JSOperator>getValue()) {
 						case LEFT_PARENTHESIS:
-							atoms.add(parseGroupExpression(t, src, context));
+							src.skip(t);
+							result = parseGroupExpression(t, src, context);
 							continue;
 						case PLUS:
 						case MINUS:
+							if (result != null) {
+								if (context.inBinding())
+									return result;
+								src.skip(t);
+								context.push().enterBinding();
+								ExpressionTree right = parseNextExpression(src, context);
+								context.pop();
+								result = new BinaryTreeImpl(t.getValue() == JSOperator.PLUS ? Kind.ADDITION : Kind.SUBTRACTION, result, right);
+								continue;
+							}
 						case INCREMENT:
 						case DECREMENT:
 						case LOGICAL_NOT:
 						case BITWISE_NOT:
-							atoms.add(parseUnaryPrefix(t, src, context));
+							src.skip(t);
+							result = parseUnaryPrefix(t, src, context);
 							continue;
+						case EQUAL:
+						case NOT_EQUAL:
+						case STRICT_EQUAL:
+						case STRICT_NOT_EQUAL:
+						case GREATER_THAN:
+						case LESS_THAN:
+						case MULTIPLICATION:
+						case DIVISION:
+						case REMAINDER:
+						case EXPONENTIATION:
+							if (result != null) {
+								if (context.inBinding())
+									return result;
+								src.skip(t);
+								context.push().enterBinding();
+								ExpressionTree right = parseNextExpression(src, context);
+								context.pop();
+								result = new BinaryTreeImpl(t.getValue() == JSOperator.PLUS ? Kind.ADDITION : Kind.SUBTRACTION, result, right);
+								continue;
+							} else
+								throw new JSSyntaxException("Illegal right-hand side expression", t.getStart());
 					}
 					throw new JSUnexpectedTokenException(t);
 				case IDENTIFIER:
-					atoms.add(parseIdentifier(t, src, context));
+					src.skip(t);
+					result = parseIdentifier(t, src, context);
 					continue;
 				case NUMERIC_LITERAL:
 				case STRING_LITERAL:
 				case BOOLEAN_LITERAL:
-					atoms.add(parseLiteral(t, src, context));
+					src.skip(t);
+					result = parseLiteral(t, src, context);
 					continue;
 				case TEMPLATE_LITERAL:
 					//TODO parse template
 					throw new UnsupportedOperationException();
 			}
-		} while (!isWeakExpressionEnd((t = src.peek())));
-		if (atoms.size() == 1)
-			return atoms.get(0);
-		return new SequenceTreeImpl(atoms);
+		} while (!isWeakExpressionEnd((t = src.peek()), context));
+		return result;
 	}
 	
-	boolean isWeakExpressionEnd(Token t) {
+	boolean isWeakExpressionEnd(Token t, Context context) {
 		Object v = t.getValue();
 		return v == JSOperator.COMMA
 				|| v == JSOperator.RIGHT_PARENTHESIS
 				|| v == JSSpecialGroup.SEMICOLON
 				|| v == JSSpecialGroup.EOF
-				|| t.getKind() == TokenKind.BRACKET
-					&& (((char)v) == ']' || ((char)v) == '}');
+				|| (t.getKind() == TokenKind.BRACKET
+					&& (((char)v) == ']' || ((char)v) == '}'))
+			;
 	}
 	
 	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken,
@@ -1687,7 +1723,9 @@ public class JSParser {
 		}
 		if (kind == null)
 			throw new JSUnexpectedTokenException(operatorToken);
-		ExpressionTree expression = this.parseNextExpression(src, context);
+		context.push().enterBinding();
+		ExpressionTree expression = parseNextExpression(src, context);
+		context.pop();
 		
 		//If the operator modifies its argument, check if the argument can be modified
 		if (modifiesArg && !Validator.canBeAssigned(expression, dialect))
@@ -1771,7 +1809,7 @@ public class JSParser {
 			return data.inGenerator;
 		}
 		
-		public boolean allowSpread() {
+		public boolean inBinding() {
 			return data.isBindingElement;
 		}
 		
@@ -1802,6 +1840,7 @@ public class JSParser {
 		public void exitBinding() {
 			data.isBindingElement = false;
 		}
+		
 		static class ContextData {
 			boolean isStrict = false;
 			/**
