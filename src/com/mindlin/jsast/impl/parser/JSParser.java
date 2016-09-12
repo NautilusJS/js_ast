@@ -1494,6 +1494,18 @@ public class JSParser {
 		return result;
 	}
 	
+	protected LiteralTree parseLiteral(Token literalToken, JSLexer src, Context context) {
+		if (literalToken == null)
+			literalToken = src.nextToken();
+		switch (literalToken.getKind()) {
+			case STRING_LITERAL:
+				return new StringLiteralTreeImpl(literalToken);
+			case NUMERIC_LITERAL:
+				return new NumericLiteralTreeImpl(literalToken);
+		}
+		throw new UnsupportedOperationException();
+	}
+	
 	/**
 	 * Parses the immediate next expression. For example, in 'a*b;c', it would parse 'a*b'
 	 * Will stop at:
