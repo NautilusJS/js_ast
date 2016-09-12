@@ -80,7 +80,13 @@ public class Token {
 	}
 	
 	public boolean isLiteral() {
-		return getKind() == TokenKind.LITERAL;
+		final TokenKind kind = getKind();
+		return kind == TokenKind.STRING_LITERAL
+				|| kind == TokenKind.BOOLEAN_LITERAL
+				|| kind == TokenKind.NULL_LITERAL
+				|| kind == TokenKind.REGEX_LITERAL
+				|| kind == TokenKind.NUMERIC_LITERAL
+				|| kind == TokenKind.TEMPLATE_LITERAL;
 	}
 	
 	/**
