@@ -592,6 +592,7 @@ public class JSParser {
 	 *            Context that this is parsing in
 	 * @return Either a ParenthesizedTree or a FunctionExpressionTree
 	 */
+	@SuppressWarnings("unchecked")
 	protected ExpressionTree parseGroupExpression(Token leftParenToken, JSLexer src, Context context) {
 		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
 		Token next = src.nextToken();
@@ -609,7 +610,6 @@ public class JSParser {
 			src.expect(TokenKind.OPERATOR, JSOperator.LAMBDA);
 			return finishLambda(leftParenToken.getStart(), Arrays.asList(expr), null, src, context);
 		} else {
-			context.push().enterBinding();
 			boolean arrow = false;
 			
 			ExpressionTree expr = parseNextExpression(next, src, context);
@@ -729,9 +729,10 @@ public class JSParser {
 		 while (true) {
 			 ExpressionTree expr;
 			 if (t.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
-				 expr = this.parseSpread(t, src, context);
+				 expr = parseSpread(t, src, context);
 			 else
 				 expr = parseNextExpression(src, context);
+			 result.add(expr);
 			 t = src.nextToken();
 			 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 				 break;
@@ -940,8 +941,6 @@ public class JSParser {
 	protected SpreadTree parseSpread(Token spreadToken, JSLexer src, Context context) {
 		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, context);
 		ExpressionTree expr = parseNextExpression(src, context);
-		if (!context.allowSpread())
-			throw new JSSyntaxException("Spread not allowed in context", spreadToken.getStart());
 		return new SpreadTreeImpl(spreadToken, expr);
 	}
 	
