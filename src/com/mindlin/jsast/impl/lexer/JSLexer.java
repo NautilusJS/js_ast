@@ -278,7 +278,7 @@ public class JSLexer implements Supplier<Token> {
 			case '+':
 				if (d == '+')
 					return JSOperator.INCREMENT;
-				return JSOperator.ADDITION_ASSIGNMENT;
+				return JSOperator.PLUS;
 			case '-':
 				if (d == '-')
 					return JSOperator.DECREMENT;
