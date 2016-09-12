@@ -6,9 +6,9 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TypeTree;
-import com.mindlin.jsast.tree.VariableTree;
+import com.mindlin.jsast.tree.VariableDeclarationTree;
 
-public class VariableTreeImpl extends AbstractTree implements VariableTree {
+public class VariableTreeImpl extends AbstractTree implements VariableDeclarationTree {
 	protected final boolean isScoped, isConst;
 	protected final IdentifierTree name;
 	protected final ExpressionTree initializer;
@@ -24,7 +24,7 @@ public class VariableTreeImpl extends AbstractTree implements VariableTree {
 
 	@Override
 	public Kind getKind() {
-		return Tree.Kind.VARIABLE;
+		return Tree.Kind.VARIABLE_DECLARATION;
 	}
 	
 	@Override

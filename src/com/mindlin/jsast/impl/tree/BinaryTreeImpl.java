@@ -128,11 +128,7 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				break;
 			case RETURN:
 				break;
-			case SCOPED_FUNCTION:
-				break;
 			case TYPEOF:
-				break;
-			case VARIABLE:
 				break;
 			case VOID:
 				break;

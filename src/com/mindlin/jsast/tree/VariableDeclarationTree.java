@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.Optional;
 
-public interface VariableTree extends StatementTree {
+public interface VariableDeclarationTree extends StatementTree {
 	IdentifierTree getName();
 
 	/**
@@ -37,6 +37,6 @@ public interface VariableTree extends StatementTree {
 
 	@Override
 	default Tree.Kind getKind() {
-		return Tree.Kind.VARIABLE;
+		return Tree.Kind.VARIABLE_DECLARATION;
 	}
 }

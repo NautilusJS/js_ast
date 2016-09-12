@@ -142,8 +142,8 @@ public interface Tree {
 		PARAMETER(ParameterTree.class),
 
 		// Variable stuff
-		VARIABLE(VariableTree.class),
-		SCOPED_FUNCTION,//Lambda
+		VARIABLE_DECLARATION(VariableDeclarationTree.class),
+		VARIABLE_DECLARATOR(VariableDeclaratorTree.class),
 		IDENTIFIER(IdentifierTree.class),
 		THIS_EXPRESSION(ThisExpressionTree.class),
 		SUPER_EXPRESSION(SuperExpressionTree.class),

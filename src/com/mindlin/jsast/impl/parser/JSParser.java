@@ -84,7 +84,7 @@ import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
-import com.mindlin.jsast.tree.VariableTree;
+import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 
@@ -772,13 +772,13 @@ public class JSParser {
 		if (keywordToken.getValue() != JSKeyword.VAR && !(isConst || isScoped))
 			throw new JSUnexpectedTokenException(keywordToken);
 		//Check if allowed
-		if (isScoped && !dialect.supports("js.variable.scoped"))
-			throw new JSUnsupportedException("js.variable.scoped", keywordToken.getStart());
-		if (isConst && !dialect.supports("js.variable.const"))
-			throw new JSUnsupportedException("js.variable.const", keywordToken.getStart());
+		if (isScoped)
+			dialect.require("js.variable.scoped", keywordToken.getStart());
+		else if (isConst)
+			dialect.require("js.variable.const", keywordToken.getStart());
 		
 		//Build list of declarations
-		List<VariableTree> declarations = new ArrayList<>();
+		List<VariableDeclarationTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
 			Token identifier = src.nextToken();
