@@ -32,11 +32,12 @@ public abstract class AbstractTree implements Tree {
 
 	@Override
 	public String toString() {
-		//Use reflection to build string. Class-specific overrides may be faster.
+		//Use reflection to build string. Class-specific overrides will definitely be faster.
 		StringBuilder sb = new StringBuilder();
 		String treeType = getClass().getSimpleName();
 		//TODO test
-		treeType = treeType.substring(0,treeType.length() - 4);//Remove 'Impl' at the end of the string
+		if (treeType.endsWith("Impl"))
+			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
 		sb.append(treeType).append('{');
 		//TODO combine loops
 		Set<Field> fields = new LinkedHashSet<>();

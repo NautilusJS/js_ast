@@ -38,8 +38,6 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return "^";
 			case BITWISE_XOR_ASSIGNMENT:
 				return "^=";
-			case COMMA:
-				return ",";
 			case DIVISION:
 				return "/";
 			case DIVISION_ASSIGNMENT:

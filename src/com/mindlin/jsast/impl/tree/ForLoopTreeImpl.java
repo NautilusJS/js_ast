@@ -29,7 +29,7 @@ public class ForLoopTreeImpl extends AbstractConditionalLoopTree implements ForL
 			.append(getInitializer())
 			.append("; ").append(getCondition())
 			.append("; ").append(getUpdate())
-			.append(')')
+			.append(")\n")
 			.append(getStatement())
 			.toString();
 	}

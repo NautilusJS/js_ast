@@ -6,7 +6,7 @@ import com.mindlin.jsast.tree.GotoTree;
 
 public abstract class AbstractGotoTree extends AbstractTree implements GotoTree {
 	protected final String label;
-	
+
 	public AbstractGotoTree(long start, long end, String label) {
 		super(start, end);
 		this.label = label;
@@ -16,7 +16,7 @@ public abstract class AbstractGotoTree extends AbstractTree implements GotoTree 
 	public String getLabel() {
 		return this.label;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getKind().toString());
@@ -24,11 +24,13 @@ public abstract class AbstractGotoTree extends AbstractTree implements GotoTree 
 			sb.append(' ').append(getLabel());
 		return sb.toString();
 	}
+
 	public static class ContinueTreeImpl extends AbstractGotoTree implements ContinueTree {
 		public ContinueTreeImpl(long start, long end, String label) {
 			super(start, end, label);
 		}
 	}
+
 	public static class BreakTreeImpl extends AbstractGotoTree implements BreakTree {
 		public BreakTreeImpl(long start, long end, String label) {
 			super(start, end, label);

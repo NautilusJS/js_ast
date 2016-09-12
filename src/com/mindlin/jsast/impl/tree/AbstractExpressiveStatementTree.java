@@ -1,12 +1,12 @@
 package com.mindlin.jsast.impl.tree;
 
 import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ExpressiveExpressionTree;
+import com.mindlin.jsast.tree.ExpressiveStatementTree;
 
-public abstract class AbstractExpressiveExpressionTree extends AbstractTree implements ExpressiveExpressionTree {
+public abstract class AbstractExpressiveStatementTree extends AbstractTree implements ExpressiveStatementTree {
 	protected final ExpressionTree expression;
 
-	public AbstractExpressiveExpressionTree(long start, long end, ExpressionTree expression) {
+	public AbstractExpressiveStatementTree(long start, long end, ExpressionTree expression) {
 		super(start, end);
 		this.expression = expression;
 	}
