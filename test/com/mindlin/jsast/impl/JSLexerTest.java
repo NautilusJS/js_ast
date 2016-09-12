@@ -1,4 +1,4 @@
-package js_ast;
+package com.mindlin.jsast.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
