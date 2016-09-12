@@ -9,10 +9,10 @@ import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.VariableTree;
 
 public class VariableTreeImpl extends AbstractTree implements VariableTree {
-	final boolean isScoped, isConst;
-	final IdentifierTree name;
-	final ExpressionTree initializer;
-	final TypeTree type;
+	protected final boolean isScoped, isConst;
+	protected final IdentifierTree name;
+	protected final ExpressionTree initializer;
+	protected final TypeTree type;
 	public VariableTreeImpl(long start, long end, boolean isScoped, boolean isConst, IdentifierTree name, TypeTree type, ExpressionTree initializer) {
 		super(start, end);
 		this.isScoped = isScoped;

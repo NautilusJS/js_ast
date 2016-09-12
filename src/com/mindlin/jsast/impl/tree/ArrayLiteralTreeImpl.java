@@ -6,7 +6,7 @@ import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 
 public class ArrayLiteralTreeImpl extends AbstractTree implements ArrayLiteralTree {
-	List<? extends ExpressionTree> elements;
+	protected final List<? extends ExpressionTree> elements;
 
 	public ArrayLiteralTreeImpl(long start, long end, List<? extends ExpressionTree> elements) {
 		super(start, end);

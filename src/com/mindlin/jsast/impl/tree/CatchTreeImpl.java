@@ -6,9 +6,9 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.TypeTree;
 
 public class CatchTreeImpl extends AbstractTree implements CatchTree {
-	BlockTree block;
-	IdentifierTree param;
-	TypeTree type;
+	protected final BlockTree block;
+	protected final IdentifierTree param;
+	protected final TypeTree type;
 	public CatchTreeImpl(long start, long end, BlockTree block, IdentifierTree param, TypeTree type) {
 		super(start, end);
 		this.block = block;

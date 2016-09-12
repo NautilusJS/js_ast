@@ -4,7 +4,7 @@ import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 
 public class NumericLiteralTreeImpl extends AbstractTree implements NumericLiteralTree {
-	final Number value;
+	protected final Number value;
 	public NumericLiteralTreeImpl(Token t) {
 		this(t.getStart(), t.getEnd(), t.getValue());
 	}

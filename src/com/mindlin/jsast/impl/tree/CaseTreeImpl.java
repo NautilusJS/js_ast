@@ -7,8 +7,8 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.StatementTree;
 
 public class CaseTreeImpl extends AbstractTree implements CaseTree {
-	ExpressionTree expression;
-	List<? extends StatementTree> statements;
+	protected final ExpressionTree expression;
+	protected final List<? extends StatementTree> statements;
 	public CaseTreeImpl(long start, long end, ExpressionTree expression, List<? extends StatementTree> statements) {
 		super(start, end);
 		this.expression = expression;

@@ -8,11 +8,11 @@ import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.StatementTree;
 
 public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree {
-	final StatementTree body;
-	final String name;
-	final List<ParameterTree> parameters;
-	final boolean strict;
-	final boolean arrow;
+	protected final StatementTree body;
+	protected final String name;
+	protected final List<ParameterTree> parameters;
+	protected final boolean strict;
+	protected final boolean arrow;
 
 	public FunctionExpressionTreeImpl(long start, long end, List<ParameterTree> parameters, String name, boolean arrow,
 			StatementTree body, boolean strict) {

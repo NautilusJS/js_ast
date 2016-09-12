@@ -6,7 +6,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.SequenceTree;
 
 public class SequenceTreeImpl extends AbstractTree implements SequenceTree {
-	final List<ExpressionTree> expressions;
+	protected final List<ExpressionTree> expressions;
 
 	public SequenceTreeImpl(List<ExpressionTree> expressions) {
 		this(expressions.get(0).getStart(), expressions.get(expressions.size() - 1).getEnd(), expressions);
