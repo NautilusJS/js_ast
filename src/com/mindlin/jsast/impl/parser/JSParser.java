@@ -17,6 +17,7 @@ import com.mindlin.jsast.impl.tree.AbstractGotoTree;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
+import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
@@ -30,6 +31,7 @@ import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
+import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
@@ -1510,8 +1512,16 @@ public class JSParser {
 				return new StringLiteralTreeImpl(literalToken);
 			case NUMERIC_LITERAL:
 				return new NumericLiteralTreeImpl(literalToken);
+			case BOOLEAN_LITERAL:
+				return new BooleanLiteralTreeImpl(literalToken);
+			case NULL_LITERAL:
+				return new NullLiteralTreeImpl(literalToken);
+			case TEMPLATE_LITERAL:
+			case REGEX_LITERAL:
+				throw new UnsupportedOperationException();
+			default:
+				throw new JSUnexpectedTokenException(literalToken);
 		}
-		throw new UnsupportedOperationException();
 	}
 	
 	/**
