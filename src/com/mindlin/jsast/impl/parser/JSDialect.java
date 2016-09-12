@@ -22,6 +22,7 @@ public interface JSDialect {
 	}
 	public static enum JSStandardDialect implements JSDialect {
 		ES5 {
+			@Override
 			public boolean supports(String feature) {
 				switch (feature) {
 					case "js.accessors":
@@ -33,34 +34,36 @@ public interface JSDialect {
 			}
 		},
 		ES6 {
+			@Override
 			public boolean supports(String feature) {
 				switch (feature) {
-					case "js.module":
-					case "js.parameter.defaultValue":
-					case "js.parameter.rest":
-					case "js.variable.scoped":
-					case "js.variable.const":
+					case "js.class":
+					case "js.class.constructor":
+					case "js.class.inheritance":
+					case "js.class.static":
+					case "js.class.super":
+					case "js.class.this":
+					case "js.desctructuring":
+					case "js.forOf":
 					case "js.function.lambda":
-					case "js.operator.spread":
-					case "js.literal.octal":
+					case "js.generator":
+					case "js.iterator":
 					case "js.literal.binary":
-					case "js.literal.template":
-					case "js.literal.unicode":
-					case "js.literal.regex.sticky":
+					case "js.literal.object.methodProperties":
 					case "js.literal.object.shorthand":
 					case "js.literal.object.shorthand.computed":
-					case "js.literal.object.methodProperties":
-					case "js.desctructuring":
-					case "js.yield":
-					case "js.class":
-					case "js.class.static":
-					case "js.class.inheritance":
-					case "js.class.constructor":
-					case "js.class.super":
+					case "js.literal.octal":
+					case "js.literal.regex.sticky":
+					case "js.literal.template":
+					case "js.literal.unicode":
+					case "js.module":
+					case "js.operator.spread":
+					case "js.parameter.default":
+					case "js.parameter.rest":
 					case "js.symbol":
-					case "js.forOf":
-					case "js.iterator":
-					case "js.generator":
+					case "js.variable.const":
+					case "js.variable.scoped":
+					case "js.yield":
 						//TODO finish
 						return true;
 				}
@@ -70,6 +73,7 @@ public interface JSDialect {
 			}
 		},
 		TYPESCRIPT {
+			@Override
 			public boolean supports(String feature) {
 				switch (feature) {
 					case "extension.parameter.optional":
@@ -82,6 +86,12 @@ public interface JSDialect {
 				if (JSStandardDialect.ES6.supports(feature))
 					return true;
 				return false;
+			}
+		},
+		EVERYTHING {
+			@Override
+			public boolean supports(String feature) {
+				return true;
 			}
 		};
 	}
