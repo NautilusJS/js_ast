@@ -335,9 +335,9 @@ public class JSParser {
 				}
 				break;
 			default:
-				throw new UnsupportedOperationException("Unknown kind: " + token.getKind());
+				break;
 		}
-		throw new UnsupportedOperationException();
+		throw new JSUnexpectedTokenException(token);
 	}
 	
 	/**
@@ -751,6 +751,8 @@ public class JSParser {
 	}
 	
 	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {
+		exportKeywordToken = expect(exportKeywordToken, TokenKind.KEYWORD, JSKeyword.EXPORT, src, context);
+		ExpressionTree expr = parseNextExpression(src, context);
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
@@ -926,6 +928,7 @@ public class JSParser {
 	
 	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, Context context) {
 		functionKeywordToken = Token.expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src);
+		//TODO finish
 		throw new UnsupportedOperationException("Type support is (currently) not supported");
 	}
 	
@@ -1496,6 +1499,7 @@ public class JSParser {
 	}
 	
 	protected NewTree parseNew(Token newKeywordToken, JSLexer src, Context context) {
+		//TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
@@ -1513,6 +1517,7 @@ public class JSParser {
 				return new NullLiteralTreeImpl(literalToken);
 			case TEMPLATE_LITERAL:
 			case REGEX_LITERAL:
+				//TODO finish parsing
 				throw new UnsupportedOperationException();
 			default:
 				throw new JSUnexpectedTokenException(literalToken);
@@ -1614,12 +1619,11 @@ public class JSParser {
 				case NUMERIC_LITERAL:
 				case STRING_LITERAL:
 				case BOOLEAN_LITERAL:
+				case TEMPLATE_LITERAL:
+				case REGEX_LITERAL:
 					src.skip(t);
 					result = parseLiteral(t, src, context);
 					continue;
-				case TEMPLATE_LITERAL:
-					//TODO parse template
-					throw new UnsupportedOperationException();
 			}
 		} while (!isWeakExpressionEnd((t = src.peek()), context));
 		return result;
