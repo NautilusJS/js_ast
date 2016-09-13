@@ -779,6 +779,7 @@ public class JSParser {
 				importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
 			} while (t.matches(TokenKind.OPERATOR, JSOperator.COMMA));
 			expect(t, TokenKind.BRACKET, '}', src, context);
+			t = src.nextToken();
 		}
 		if (!importSpecifiers.isEmpty()) {
 			expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
