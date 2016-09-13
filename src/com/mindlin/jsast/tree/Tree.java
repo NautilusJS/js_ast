@@ -127,6 +127,12 @@ public interface Tree {
 		PROPERTY(PropertyTree.class),
 
 		// Type stuff
+		VOID_TYPE,
+		ANY_TYPE,
+		ARRAY_TYPE,
+		TUPLE_TYPE,
+		FUNCTION_TYPE,
+		TYPE_IDENTIFIER,
 		ENUM,
 		UNION,
 		GENERIC_PARAM,
@@ -158,7 +164,8 @@ public interface Tree {
 		VOID(VoidTree.class),
 
 		// Comments
-		COMMENT(CommentNode.class);
+		COMMENT(CommentNode.class),
+		;
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt;
 
