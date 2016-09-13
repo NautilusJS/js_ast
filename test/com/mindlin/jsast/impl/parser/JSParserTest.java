@@ -1,19 +1,20 @@
 package com.mindlin.jsast.impl.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
-import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.impl.tree.AbstractTree;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
@@ -126,16 +127,15 @@ public class JSParserTest {
 		System.out.println(((AbstractTree)stmt).toJSON());
 	}
 	
+	/**
+	 * Pretty exhaustive tests for <code>import</code> statement parsing.
+	 * I honestly can't think of any (non-trivial) test cases that could be added.
+	 */
 	@Test
 	public void testImportStatement() {
 		final String msg = "Failed to throw error on illegal import statement";
-		{
-			StatementTree stmt = parseStatement("import 'foo.js';");
-			assertEquals(Tree.Kind.IMPORT, stmt.getKind());
-			ImportTree impt = (ImportTree) stmt;
-			assertLiteral(impt.getSource(), "foo.js");
-			assertTrue(impt.getSpecifiers().isEmpty());
-		}
+		//Things that *shouldn't* work
+		assertExceptionalStatement("import ;", msg);
 		assertExceptionalStatement("import foo;", msg);
 		assertExceptionalStatement("import from 'foo.js';", msg);
 		assertExceptionalStatement("import def 'foo.js';", msg);
@@ -150,25 +150,124 @@ public class JSParserTest {
 		assertExceptionalStatement("import {def ghi} from 'foo.js';", msg);
 		assertExceptionalStatement("import * as bar;", msg);
 		assertExceptionalStatement("import * as bar, def;", msg);
-		assertExceptionalStatement("import ;", msg);
-		{
-			ImportTree impt = (ImportTree)parseStatement("import def from 'foo.js';");
-		}
-		{
-			ImportTree impt = (ImportTree)parseStatement("import * as bar from 'foo.js';");
-		}
-		{
-			ImportTree impt = (ImportTree)parseStatement("import def, * as bar from 'foo.js';");
-		}
-		{
-			ImportTree impt = (ImportTree)parseStatement("import {foo as bar} from 'foo.js';");
-		}
-		{
-			ImportTree impt = (ImportTree)parseStatement("import def, {foo as bar} from 'foo.js';");
-		}
 		assertExceptionalStatement("import * as a, {foo as bar} from 'foo.js';", msg);
+		assertExceptionalStatement("import {foo as bar from 'foo.js';", msg);
+		assertExceptionalStatement("import {'hello' as world} from 'foo.js';", msg);
+		assertExceptionalStatement("import {hello as 'world'} from 'foo.js';", msg);
+		assertExceptionalStatement("import default from 'foo.js';", msg);
+		//Things that *should* work
+		//Examples taken from developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
 		{
-			ImportTree impt = (ImportTree)parseStatement("import 'x';");
+			ImportTree impt = (ImportTree)parseStatement("import defaultMember from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(1, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier.getImported(), "defaultMember");
+			assertIdentifier(specifier.getAlias(), "defaultMember");
+			assertEquals(specifier.getImported(), specifier.getAlias());
+			assertTrue(specifier.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import * as name from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(1, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier.getImported(), "*");
+			assertIdentifier(specifier.getAlias(), "name");
+			assertFalse(specifier.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import { member } from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(1, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier.getImported(), "member");
+			assertIdentifier(specifier.getAlias(), "member");
+			assertEquals(specifier.getImported(), specifier.getAlias());
+			assertFalse(specifier.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import { member as alias } from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(1, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier0 = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier0.getImported(), "member");
+			assertIdentifier(specifier0.getAlias(), "alias");
+			assertFalse(specifier0.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import { member1 , member2 } from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(2, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier0 = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier0.getImported(), "member1");
+			assertIdentifier(specifier0.getAlias(), "member1");
+			assertEquals(specifier0.getImported(), specifier0.getAlias());
+			assertFalse(specifier0.isDefault());
+			
+			ImportSpecifierTree specifier1 = impt.getSpecifiers().get(1);
+			assertIdentifier(specifier1.getImported(), "member2");
+			assertIdentifier(specifier1.getAlias(), "member2");
+			assertEquals(specifier1.getImported(), specifier1.getAlias());
+			assertFalse(specifier1.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import { member1 , member2 as alias2 } from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(2, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier0 = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier0.getImported(), "member1");
+			assertIdentifier(specifier0.getAlias(), "member1");
+			assertEquals(specifier0.getImported(), specifier0.getAlias());
+			assertFalse(specifier0.isDefault());
+			
+			ImportSpecifierTree specifier1 = impt.getSpecifiers().get(1);
+			assertIdentifier(specifier1.getImported(), "member2");
+			assertIdentifier(specifier1.getAlias(), "alias2");
+			assertFalse(specifier1.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import defaultMember, { member } from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(2, impt.getSpecifiers().size());
+			
+			ImportSpecifierTree specifier0 = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier0.getImported(), "defaultMember");
+			assertIdentifier(specifier0.getAlias(), "defaultMember");
+			assertEquals(specifier0.getImported(), specifier0.getAlias());
+			assertTrue(specifier0.isDefault());
+			
+			ImportSpecifierTree specifier1 = impt.getSpecifiers().get(1);
+			assertIdentifier(specifier1.getImported(), "member");
+			assertIdentifier(specifier1.getAlias(), "member");
+			assertEquals(specifier1.getImported(), specifier1.getAlias());
+			assertFalse(specifier1.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import defaultMember, * as name from 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(2, impt.getSpecifiers().size());
+			ImportSpecifierTree specifier0 = impt.getSpecifiers().get(0);
+			assertIdentifier(specifier0.getImported(), "defaultMember");
+			assertIdentifier(specifier0.getAlias(), "defaultMember");
+			assertEquals(specifier0.getImported(), specifier0.getAlias());
+			assertTrue(specifier0.isDefault());
+			
+			ImportSpecifierTree specifier1 = impt.getSpecifiers().get(1);
+			assertIdentifier(specifier1.getImported(), "*");
+			assertIdentifier(specifier1.getAlias(), "name");
+			assertFalse(specifier1.isDefault());
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import 'module-name';");
+			assertLiteral(impt.getSource(), "module-name");
+			assertEquals(0, impt.getSpecifiers().size());
 		}
 	}
 	
