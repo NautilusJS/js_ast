@@ -6,7 +6,7 @@ import com.mindlin.jsast.tree.Tree;
 
 public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 	protected final ExpressionTree left, right;
-	protected Tree.Kind kind;
+	protected final Tree.Kind kind;
 
 	public BinaryTreeImpl(long start, long end, Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		super(start, end);
@@ -80,9 +80,6 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return "*=";
 			case NOT_EQUAL:
 				return "!=";
-			case OF:
-				// TODO should this be valid?
-				break;
 			case REMAINDER:
 				return "%";
 			case REMAINDER_ASSIGNMENT:
@@ -103,8 +100,8 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return ">>>";
 			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
 				return ">>>=";
-			case DELETE:
-				return "delete ";
+			default:
+				break;
 		}
 		throw new IllegalArgumentException(kind.toString() + " is not a binary operator");
 	}
