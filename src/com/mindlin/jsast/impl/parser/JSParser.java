@@ -9,7 +9,6 @@ import java.util.Objects;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
-import com.mindlin.jsast.exception.JSUnsupportedException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
@@ -31,6 +30,7 @@ import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
+import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
@@ -41,15 +41,18 @@ import com.mindlin.jsast.impl.tree.SpreadTreeImpl;
 import com.mindlin.jsast.impl.tree.StringLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.SuperExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
+import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ThrowTreeImpl;
 import com.mindlin.jsast.impl.tree.TryTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
+import com.mindlin.jsast.impl.tree.VoidTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
+import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
@@ -70,7 +73,6 @@ import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
-import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.SequenceTree;
@@ -166,7 +168,7 @@ public class JSParser {
 					case DO:
 						return this.parseDoWhileLoop(t, src, context);
 					case FOR:
-						return this.parseUnknownForLoop(t, src, context);
+						return this.parseForStatement(t, src, context);
 					case IF:
 						return this.parseIfStatement(t, src, context);
 					case SWITCH:
@@ -265,7 +267,7 @@ public class JSParser {
 					case DO:
 						return this.parseDoWhileLoop(token, src, context);
 					case FOR:
-						return this.parseUnknownForLoop(token, src, context);
+						return this.parseForStatement(token, src, context);
 					case WHILE:
 						return this.parseWhileLoop(token, src, context);
 					case IMPORT:
@@ -511,7 +513,7 @@ public class JSParser {
 					case FUNCTION:
 						return this.parseFunctionExpression(t, src, ctx);
 					case THIS:
-						return parseThisExpression(t, src, ctx);
+						return parseThis(t, src, ctx);
 					case CLASS:
 						
 				}
@@ -715,7 +717,7 @@ public class JSParser {
 		}
 	}
 	
-	protected List<? extends ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
+	protected List<ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
 		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
 		 List<ExpressionTree> result = new ArrayList<>();
 		 t = src.nextToken();
@@ -752,9 +754,28 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
+	TypeTree reinterpretType(Token typeToken) {
+		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
+			return new VoidTypeTreeImpl(typeToken);
+		}
+		//TODO fix identifiers
+		throw new JSUnexpectedTokenException(typeToken);
+	}
+	
 	protected TypeTree parseTypeStatement(Token typeToken, JSLexer src, Context context) {
 		if (typeToken == null)
 			typeToken = src.nextToken();
+		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
+				return new VoidTypeTreeImpl(typeToken);
+		if (typeToken.isIdentifier()) {
+			switch (typeToken.<String>getValue()) {
+				case "any":
+				case "string":
+				case "number":
+				case "boolean":
+					//TODO finish
+			}
+		}
 		throw new UnsupportedOperationException();
 	}
 	
@@ -1012,11 +1033,43 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected LoopTree parseUnknownForLoop(Token forKeywordToken, JSLexer src, Context context) {
+	protected LoopTree parseForStatement(Token forKeywordToken, JSLexer src, Context context) {
 		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, context);
 		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
-		//TODO fix
-		StatementTree statement0 = this.parseStatement(src, context);
+		
+		Token t = src.nextToken();
+		if (t.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+			return parsePartialForLoopTree(forKeywordToken, new EmptyStatementTreeImpl(t), src, context);
+		
+		StatementTree initializer;
+		if (t.getKind() == TokenKind.KEYWORD) {
+			if (t.getValue() == JSKeyword.VAR) {
+				context.push().allowIn(false);
+				VariableDeclarationTree declarations = parseVariableDeclaration(t, src, context);
+				context.pop();
+				t = src.nextToken();
+				if (declarations.getDeclarations().size() == 1 && declarations.getDeclarations().get(0).getIntitializer() == null && (t.matches(TokenKind.KEYWORD, JSKeyword.IN) || t.matches(TokenKind.KEYWORD, JSKeyword.OF)))
+					return parsePartialForEachLoopTree(forKeywordToken, t.getValue() == JSKeyword.OF, declarations, src, context);
+				initializer = declarations;
+			} else if (t.getValue() == JSKeyword.LET || t.getValue() == JSKeyword.CONST) {
+				//For??? with let/const variable initializer
+				Token identifier = src.nextToken();
+				if (!identifier.isIdentifier())
+					throw new JSUnexpectedTokenException(identifier);
+				Token lookahead = src.peek();
+				if (!context.isStrict() && lookahead.getValue() == JSKeyword.IN) {
+					VariableDeclarationTree var = new VariableDeclarationTreeImpl(t.getStart(), identifier.getEnd(), true, t.getValue() == JSKeyword.CONST, Arrays.asList(new VariableDeclaratorTreeImpl(identifier)));
+					return parsePartialForEachLoopTree(forKeywordToken, false, var, src, context);
+				} else {
+					//TODO destructuring
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
+		context.push().allowIn(false);
+		StatementTree statement0 = parseStatement(src, context);
+		context.pop();
+		
 		Token separator = src.nextToken();
 		if (separator.isSpecial()) {
 			ensureToken(separator, JSSpecialGroup.SEMICOLON);
@@ -1025,6 +1078,7 @@ public class JSParser {
 				&& (separator.getValue() == JSKeyword.IN || separator.getValue() == JSKeyword.OF)) {
 			//return this.parsePartialForEachLoopTree(forKeywordToken, separator.getValue() == JSKeyword.OF, statement0,
 					//src, context);
+			//TODO finish
 			throw new UnsupportedOperationException();
 		}
 		throw new JSSyntaxException("Invalid 'for' loop", src.getPosition());
@@ -1079,7 +1133,7 @@ public class JSParser {
 	 * @return
 	 */
 	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, boolean isForEach,
-			ExpressionTree variable, JSLexer src, Context context) {
+			VariableDeclarationTree variable, JSLexer src, Context context) {
 		ExpressionTree expression = this.parseNextExpression(src, context);
 		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
 		StatementTree statement = this.parseStatement(src, context);
@@ -1477,7 +1531,31 @@ public class JSParser {
 		return result;
 	}
 	
-	protected NewTree parseNew(Token newKeywordToken, JSLexer src, Context context) {
+	protected ExpressionTree parseNew(Token newKeywordToken, JSLexer src, Context context) {
+		newKeywordToken = expect(newKeywordToken, TokenKind.KEYWORD, JSKeyword.NEW, src, context);
+		Token t = src.nextToken();
+		if (t.matches(TokenKind.OPERATOR, JSOperator.PERIOD)) {
+			t = src.nextToken();
+			if (context.inFunction() && t.matches(TokenKind.IDENTIFIER, "target"))
+				//See developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target
+				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new"), new IdentifierTreeImpl(t));
+			throw new JSUnexpectedTokenException(t);
+		}
+		final ExpressionTree callee = parseNextExpression(t, src, context);
+		final List<ExpressionTree> args;
+		if ((t = src.peek()).matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
+			src.skip(t);
+			args = parseArguments(t, src, context);
+		} else {
+			args = Collections.emptyList();
+		}
+		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
+	}
+	
+	protected ExpressionTree parseLeftSideExpression(JSLexer src, Context context) {
+		if (!context.allowIn())
+			throw new IllegalStateException();
+		
 		//TODO finish
 		throw new UnsupportedOperationException();
 	}
@@ -1616,6 +1694,7 @@ public class JSParser {
 				|| v == JSSpecialGroup.EOF
 				|| (t.getKind() == TokenKind.BRACKET
 					&& (((char)v) == ']' || ((char)v) == '}'))
+				|| (!context.allowIn() && v == JSKeyword.IN)
 			;
 	}
 	
@@ -1780,6 +1859,14 @@ public class JSParser {
 			return data.inFunction || data.inGenerator;
 		}
 		
+		public boolean allowIn() {
+			return data.allowIn;
+		}
+		
+		public void allowIn(boolean value) {
+			data.allowIn = value;
+		}
+		
 		public boolean allowBreak() {
 			return data.inLoop || data.inSwitch || data.inNamedBlock;
 		}
@@ -1794,6 +1881,10 @@ public class JSParser {
 		
 		public boolean inBinding() {
 			return data.isBindingElement;
+		}
+		
+		public boolean inFunction() {
+			return data.inFunction;
 		}
 		
 		public void enterFunction() {
@@ -1845,6 +1936,7 @@ public class JSParser {
 			boolean isAssignmentTarget = false;
 			boolean inNamedBlock = false;
 			boolean isBindingElement = false;
+			boolean allowIn = true;
 			final ContextData parent;
 			public ContextData() {
 				this.parent = null;
@@ -1857,6 +1949,7 @@ public class JSParser {
 				this.inLoop = parent.inLoop;
 				this.isAssignmentTarget = parent.isAssignmentTarget;
 				this.isBindingElement = parent.isBindingElement;
+				this.allowIn = parent.allowIn;
 				this.parent = parent;
 			}
 		}
