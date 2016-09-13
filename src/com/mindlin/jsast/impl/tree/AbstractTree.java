@@ -1,8 +1,11 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -19,6 +22,8 @@ public abstract class AbstractTree implements Tree {
 			sb.append('"').append(value).append('"');
 		else if (type.equals(Character.TYPE))
 			sb.append('\'').append(value).append('\'');
+		else if (type.equals(Boolean.TYPE) || Number.class.isAssignableFrom(type))
+			return value.toString();
 		else if (AbstractTree.class.isAssignableFrom(type))
 			return ((AbstractTree)value).toJSON();
 		else if (Collection.class.isAssignableFrom(type)) {
@@ -28,8 +33,9 @@ public abstract class AbstractTree implements Tree {
 			if (!((Collection<?>)value).isEmpty())
 				sb.setLength(sb.length() - 1);
 			sb.append(']');
-		} else
-			return value.toString();
+		} else {
+			sb.append('"').append(value.toString()).append('"');
+		}
 		return sb.toString();
 	}
 	protected final long start, end;
@@ -61,7 +67,7 @@ public abstract class AbstractTree implements Tree {
 		//TODO test
 		if (treeType.endsWith("Impl"))
 			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
-		sb.append(treeType).append('{');
+		System.out.println(treeType);
 		//TODO combine loops
 		Set<Field> fields = new LinkedHashSet<>();
 		Class<?> clazz = getClass();
@@ -99,25 +105,30 @@ public abstract class AbstractTree implements Tree {
 		String treeType = getClass().getSimpleName();
 		if (treeType.endsWith("Impl"))
 			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
-		sb.append("type:\"").append(treeType).append("\",");
+		sb.append("class:\"").append(treeType).append("\",");
 		//TODO combine loops
-		Set<Field> fields = new LinkedHashSet<>();
+		Set<Method> getters = new LinkedHashSet<>();
+		Set<String> getterNames = new HashSet<>();
 		Class<?> clazz = getClass();
 		do {
-			for (Field f : clazz.getDeclaredFields())
-				if ((f.getModifiers() & Modifier.PROTECTED) != 0)
-					fields.add(f);
+			for (Method m : clazz.getMethods())
+				if (m.getParameterCount() == 0 && getterNames.add(m.getName()) && (m.getName().startsWith("get") || m.getName().startsWith("is")) && !m.getName().equals("getClass"))
+					getters.add(m);
 		} while ((clazz = clazz.getSuperclass()) != null);
-		for (Field f : fields) {
-			Class<?> type = f.getType();
+		for (Method getter : getters) {
 			Object value;
 			try {
-				value = f.get(this);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+				value = getter.invoke(this, new Object[0]);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
 				e.printStackTrace();
 				continue;
 			}
-			sb.append(f.getName()).append(':');
+			String name = getter.getName();
+			if (name.startsWith("get"))
+				name = name.substring(3);
+			else if (name.startsWith("is"))
+				name = name.substring(2);
+			sb.append(name.substring(0,1).toLowerCase()).append(name.substring(1)).append(':');
 			sb.append(AbstractTree.writeJSON(value));
 			sb.append(',');
 		}
