@@ -7,18 +7,21 @@ import com.mindlin.jsast.tree.Tree;
 public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 	protected final ExpressionTree left, right;
 	protected Tree.Kind kind;
+
 	public BinaryTreeImpl(long start, long end, Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		super(start, end);
 		this.kind = kind;
 		this.left = left;
 		this.right = right;
 	}
+
 	public BinaryTreeImpl(Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		this(left.getStart(), right.getEnd(), kind, left, right);
 	}
+
 	protected String getOperand() {
-		//TODO finish
-		switch(kind) {
+		// TODO finish
+		switch (kind) {
 			case ADDITION:
 				return "+";
 			case ADDITION_ASSIGNMENT:
@@ -78,9 +81,7 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 			case NOT_EQUAL:
 				return "!=";
 			case OF:
-				//TODO should this be valid?
-				break;
-			case PROPERTY:
+				// TODO should this be valid?
 				break;
 			case REMAINDER:
 				return "%";
@@ -103,58 +104,32 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
 				return ">>>=";
 			case DELETE:
-				break;
-			case EXPORT:
-				break;
-			case FOR_IN_LOOP:
-				break;
-			case FOR_LOOP:
-				break;
-			case FOR_OF_LOOP:
-				break;
-			case FUNCTION:
-				break;
-			case FUNCTION_EXPRESSION:
-				break;
-			case FUNCTION_INVOCATION:
-				break;
-			case IDENTIFIER:
-				break;
-			case IMPORT:
-				break;
-			case LOGICAL_NOT:
-				break;
-			case PARENTHESIZED:
-				break;
-			case RETURN:
-				break;
-			case TYPEOF:
-				break;
-			case VOID:
-				break;
-			default:
+				return "delete ";
 		}
 		throw new IllegalArgumentException(kind.toString() + " is not a binary operator");
 	}
+
 	@Override
 	public ExpressionTree getLeftOperand() {
 		return left;
 	}
+
 	@Override
 	public ExpressionTree getRightOperand() {
 		return right;
 	}
-	
+
 	@Override
 	public String toString() {
 		return new StringBuilder()
-			.append(getLeftOperand())
-			.append(' ')
-			.append(getOperand())
-			.append(' ')
-			.append(getRightOperand())
-			.toString();
+				.append(getLeftOperand())
+				.append(' ')
+				.append(getOperand())
+				.append(' ')
+				.append(getRightOperand())
+				.toString();
 	}
+
 	@Override
 	public Kind getKind() {
 		return kind;
