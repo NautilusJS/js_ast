@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.impl.tree.AbstractTree;
@@ -14,6 +15,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
+import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
 
@@ -35,11 +37,28 @@ public class JSParserTest {
 		assertEquals(name, ((IdentifierTree)expr).getName());
 	}
 	
-	protected StatementTree parseStatement(String stmt) {
+	protected static void assertExceptionalExpression(String expr, String errorMsg) {
+		try {
+			parseExpression(expr);
+			fail(errorMsg);
+		} catch (JSSyntaxException e) {
+			
+		}
+	}
+	
+	protected static void assertExceptionalStatement(String stmt, String errorMsg) {
+		try {
+			parseStatement(stmt);
+			fail(errorMsg);
+		} catch (JSSyntaxException e) {
+		}
+	}
+	
+	protected static  StatementTree parseStatement(String stmt) {
 		return new JSParser().parseStatement(new JSLexer(stmt), new Context());
 	}
 	
-	protected ExpressionTree parseExpression(String expr) {
+	protected static ExpressionTree parseExpression(String expr) {
 		return new JSParser().parseNextExpression(new JSLexer(expr), new Context());
 	}
 	
@@ -75,30 +94,11 @@ public class JSParserTest {
 	
 	@Test
 	public void testInvalidUnary() {
-		try {
-			parseExpression("++'foo'");
-			fail("Did not throw error");
-		} catch (JSSyntaxException e) {
-			//Expected
-		}
-		try {
-			parseExpression("++4");
-			fail("Did not throw error");
-		} catch (JSSyntaxException e) {
-			//Expected
-		}
-		try {
-			parseExpression("++true");
-			fail("Did not throw error");
-		} catch (JSSyntaxException e) {
-			//Expected
-		}
-		try {
-			parseExpression("++false");
-			fail("Did not throw error");
-		} catch (JSSyntaxException e) {
-			//Expected
-		}
+		final String msg = "Did not throw error on illegal expression";
+		assertExceptionalExpression("++'foo'", msg);
+		assertExceptionalExpression("++4", msg);
+		assertExceptionalExpression("++true", msg);
+		assertExceptionalExpression("++false", msg);
 	}
 	
 	@Test
