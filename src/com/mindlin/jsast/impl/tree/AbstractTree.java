@@ -11,6 +11,8 @@ import com.mindlin.jsast.tree.TreeVisitor;
 
 public abstract class AbstractTree implements Tree {
 	public static String writeJSON(Object value) {
+		if (value == null)
+			return "null";
 		StringBuilder sb = new StringBuilder();
 		Class<?> type = value.getClass();
 		if (type.equals(String.class))
