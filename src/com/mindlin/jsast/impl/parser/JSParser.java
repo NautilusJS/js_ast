@@ -30,6 +30,8 @@ import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
+import com.mindlin.jsast.impl.tree.ImportSpecifierTreeImpl;
+import com.mindlin.jsast.impl.tree.ImportTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
@@ -69,6 +71,7 @@ import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.GotoTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
+import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceTree;
 import com.mindlin.jsast.tree.LiteralTree;
@@ -78,6 +81,7 @@ import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.SequenceTree;
 import com.mindlin.jsast.tree.SpreadTree;
 import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
 import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
@@ -571,7 +575,7 @@ public class JSParser {
 			body = new ReturnTreeImpl(expr);
 		}
 		//TODO infer name from syntax
-		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), parameters, "", true, body, ctx.isStrict());
+		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), parameters, "", true, body, ctx.isStrict(), false);
 		ctx.pop();
 		return result;
 	}
@@ -744,14 +748,42 @@ public class JSParser {
 	
 	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
 		importKeywordToken = expect(importKeywordToken, TokenKind.KEYWORD, JSKeyword.IMPORT, src, context);
-		IdentifierTree defaultMember;
-		String source;
+		List<ImportSpecifierTree> importSpecifiers = new ArrayList<>();
 		Token t = src.nextToken();
-		if (t.getKind() == TokenKind.STRING_LITERAL) {
-			source = t.getValue();
+		if (t.isIdentifier()) {
+			importSpecifiers.add(new ImportSpecifierTreeImpl(parseIdentifier(t, src, context)));
+			if (!(t = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+				expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
+				StringLiteralTree source = (StringLiteralTree)parseLiteral(null, src, context);
+				return new ImportTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
+			}
+			t = src.nextToken();
 		}
-		// TODO finish
-		throw new UnsupportedOperationException();
+		if (t.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+			IdentifierTree identifier = new IdentifierTreeImpl(t.getStart(), t.getEnd(), "*");
+			t = expect(TokenKind.KEYWORD, JSKeyword.AS, src, context);
+			IdentifierTree alias = parseIdentifier(null, src, context);
+			importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
+			t = src.nextToken();
+		} else if (t.matches(TokenKind.BRACKET, '{')) {
+			do {
+				t = src.nextToken();
+				IdentifierTree identifier = parseIdentifier(t, src, context);
+				IdentifierTree alias = identifier;
+				if ((t = src.nextToken()).matches(TokenKind.KEYWORD, JSKeyword.AS)) {
+					alias = parseIdentifier(null, src, context);
+					t = src.nextToken();
+				}
+				importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
+			} while (t.matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			expect(t, TokenKind.BRACKET, '}', src, context);
+		}
+		if (!importSpecifiers.isEmpty()) {
+			expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
+			t = null;
+		}
+		StringLiteralTree source = (StringLiteralTree)parseLiteral(t, src, context);
+		return new ImportTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
 	}
 	
 	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {
@@ -825,7 +857,7 @@ public class JSParser {
 			}
 			if (isConst && initializer == null)
 				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
-			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), identifier.<String>getValue(), type, initializer));
+			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
 		} while (src.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
 		
 		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);

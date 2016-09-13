@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -13,6 +14,7 @@ import com.mindlin.jsast.impl.tree.AbstractTree;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.Tree;
@@ -122,6 +124,52 @@ public class JSParserTest {
 		StatementTree stmt = parseStatement("var foo : void = 5, bar = foo + 1;");
 		//TODO assert that it was parsed correctly
 		System.out.println(((AbstractTree)stmt).toJSON());
+	}
+	
+	@Test
+	public void testImportStatement() {
+		final String msg = "Failed to throw error on illegal import statement";
+		{
+			StatementTree stmt = parseStatement("import 'foo.js';");
+			assertEquals(Tree.Kind.IMPORT, stmt.getKind());
+			ImportTree impt = (ImportTree) stmt;
+			assertLiteral(impt.getSource(), "foo.js");
+			assertTrue(impt.getSpecifiers().isEmpty());
+		}
+		assertExceptionalStatement("import foo;", msg);
+		assertExceptionalStatement("import from 'foo.js';", msg);
+		assertExceptionalStatement("import def 'foo.js';", msg);
+		assertExceptionalStatement("import * 'foo.js';", msg);
+		assertExceptionalStatement("import * as def 'foo.js';", msg);
+		assertExceptionalStatement("import * from 'foo.js';", msg);
+		assertExceptionalStatement("import {} from 'foo.js';", msg);
+		assertExceptionalStatement("import {*} from 'foo.js';", msg);
+		assertExceptionalStatement("import {* as def} from 'foo.js';", msg);
+		assertExceptionalStatement("import {def} 'foo.js';", msg);
+		assertExceptionalStatement("import {def, *} from 'foo.js';", msg);
+		assertExceptionalStatement("import {def ghi} from 'foo.js';", msg);
+		assertExceptionalStatement("import * as bar;", msg);
+		assertExceptionalStatement("import * as bar, def;", msg);
+		assertExceptionalStatement("import ;", msg);
+		{
+			ImportTree impt = (ImportTree)parseStatement("import def from 'foo.js';");
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import * as bar from 'foo.js';");
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import def, * as bar from 'foo.js';");
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import {foo as bar} from 'foo.js';");
+		}
+		{
+			ImportTree impt = (ImportTree)parseStatement("import def, {foo as bar} from 'foo.js';");
+		}
+		assertExceptionalStatement("import * as a, {foo as bar} from 'foo.js';", msg);
+		{
+			ImportTree impt = (ImportTree)parseStatement("import 'x';");
+		}
 	}
 	
 }
