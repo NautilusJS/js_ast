@@ -743,6 +743,13 @@ public class JSParser {
 	}
 	
 	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
+		importKeywordToken = expect(importKeywordToken, TokenKind.KEYWORD, JSKeyword.IMPORT, src, context);
+		IdentifierTree defaultMember;
+		String source;
+		Token t = src.nextToken();
+		if (t.getKind() == TokenKind.STRING_LITERAL) {
+			source = t.getValue();
+		}
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
@@ -1039,6 +1046,7 @@ public class JSParser {
 		
 		Token t = src.nextToken();
 		if (t.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+			//Empty initializer statement
 			return parsePartialForLoopTree(forKeywordToken, new EmptyStatementTreeImpl(t), src, context);
 		
 		StatementTree initializer;
@@ -1058,6 +1066,7 @@ public class JSParser {
 					throw new JSUnexpectedTokenException(identifier);
 				Token lookahead = src.peek();
 				if (!context.isStrict() && lookahead.getValue() == JSKeyword.IN) {
+					src.skip(lookahead);
 					VariableDeclarationTree var = new VariableDeclarationTreeImpl(t.getStart(), identifier.getEnd(), true, t.getValue() == JSKeyword.CONST, Arrays.asList(new VariableDeclaratorTreeImpl(identifier)));
 					return parsePartialForEachLoopTree(forKeywordToken, false, var, src, context);
 				} else {
@@ -1533,18 +1542,17 @@ public class JSParser {
 	
 	protected ExpressionTree parseNew(Token newKeywordToken, JSLexer src, Context context) {
 		newKeywordToken = expect(newKeywordToken, TokenKind.KEYWORD, JSKeyword.NEW, src, context);
-		Token t = src.nextToken();
-		if (t.matches(TokenKind.OPERATOR, JSOperator.PERIOD)) {
-			t = src.nextToken();
-			if (context.inFunction() && t.matches(TokenKind.IDENTIFIER, "target"))
+		Token t;
+		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
+			Token r = src.nextToken();
+			if (context.inFunction() && r.matches(TokenKind.IDENTIFIER, "target"))
 				//See developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target
-				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new"), new IdentifierTreeImpl(t));
+				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new"), new IdentifierTreeImpl(r));
 			throw new JSUnexpectedTokenException(t);
 		}
-		final ExpressionTree callee = parseNextExpression(t, src, context);
+		final ExpressionTree callee = parseLeftSideExpression(src, context, false);
 		final List<ExpressionTree> args;
-		if ((t = src.peek()).matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
-			src.skip(t);
+		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 			args = parseArguments(t, src, context);
 		} else {
 			args = Collections.emptyList();
@@ -1552,12 +1560,44 @@ public class JSParser {
 		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
 	}
 	
-	protected ExpressionTree parseLeftSideExpression(JSLexer src, Context context) {
+	protected ExpressionTree parseLeftSideExpression(JSLexer src, Context context, boolean allowCall) {
+		context.push().allowIn(true);
 		if (!context.allowIn())
 			throw new IllegalStateException();
+		ExpressionTree expr;
+
+		Token t = src.nextToken();
+		if (t.matches(TokenKind.KEYWORD, JSKeyword.SUPER) && context.inFunction()) {
+			expr = parseSuper(t, src, context);
+		} else if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW)) {
+			expr = parseNew(t, src, context);
+		} else {
+			expr = parsePrimaryExpression(t, src, context);
+		}
 		
-		//TODO finish
-		throw new UnsupportedOperationException();
+		while (true) {
+			t = src.nextToken();
+			Token lookahead;
+			if (t.matches(TokenKind.BRACKET, '[')) {
+				ExpressionTree property = parseNextExpression(t, src, context.pushed().exitBinding().isAssignmentTarget(true));
+				expect(TokenKind.BRACKET, ']', src, context);
+				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
+			} else if (allowCall && t.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
+				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed().exitBinding().isAssignmentTarget(false));
+				expr = new FunctionCallTreeImpl(t.getStart(), src.getPosition(), expr, arguments);
+			} else if (t.matches(TokenKind.OPERATOR, JSOperator.PERIOD)) {
+				ExpressionTree property = parseIdentifier(t, src, context.pushed().exitBinding().isAssignmentTarget(true));
+				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
+			} else if ((lookahead = src.peek()).getKind() == TokenKind.TEMPLATE_LITERAL) {
+				//TODO tagged template literal
+				throw new UnsupportedOperationException();
+			} else {
+				break;
+			}
+		}
+		
+		context.pop();
+		return expr;
 	}
 	
 	protected LiteralTree parseLiteral(Token literalToken, JSLexer src, Context context) {
@@ -1702,7 +1742,7 @@ public class JSParser {
 			JSLexer src, Context context) {
 		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
 		List<? extends ExpressionTree> arguments = parseArguments(openParenToken, src, context);
-		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), arguments, functionSelectExpression);
+		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), functionSelectExpression, arguments);
 	}
 	
 	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, Context context) {
@@ -1839,11 +1879,23 @@ public class JSParser {
 	}
 	
 	public static class Context {
-		ContextData data = new ContextData();
+		ContextData data;
+		
+		public Context() {
+			data = new ContextData();
+		}
+		
+		public Context(ContextData data) {
+			data = data;
+		}
 		
 		public Context push() {
 			data = new ContextData(data);
 			return this;
+		}
+		
+		public Context pushed() {
+			return new Context(new ContextData(data));
 		}
 		
 		public Context pop() {
@@ -1883,20 +1935,28 @@ public class JSParser {
 			return data.isBindingElement;
 		}
 		
+		public Context inBinding(boolean value) {
+			data.isBindingElement = value;
+			return this;
+		}
+		
 		public boolean inFunction() {
 			return data.inFunction;
 		}
 		
-		public void enterFunction() {
+		public Context enterFunction() {
 			data.inFunction = true;
+			return this;
 		}
 		
-		public void enterSwitch() {
+		public Context enterSwitch() {
 			data.inSwitch = true;
+			return this;
 		}
 		
-		public void enterGenerator() {
+		public Context enterGenerator() {
 			data.inGenerator = true;
+			return this;
 		}
 		
 		public void enterLoop() {
@@ -1911,8 +1971,18 @@ public class JSParser {
 			data.isBindingElement = true;
 		}
 		
-		public void exitBinding() {
+		public Context exitBinding() {
 			data.isBindingElement = false;
+			return this;
+		}
+		
+		public boolean isAssignmentTarget() {
+			return data.isAssignmentTarget;
+		}
+		
+		public Context isAssignmentTarget(boolean value) {
+			data.isAssignmentTarget = value;
+			return this;
 		}
 		
 		static class ContextData {
