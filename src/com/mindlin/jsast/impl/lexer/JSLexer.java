@@ -47,14 +47,12 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public String nextStringLiteral(final char startChar) {
-//		System.out.println("BG " + Character.getName(startChar));
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
 		while (true) {
 			if (!chars.hasNext())
 				throw new JSSyntaxException("Unexpected EOF while parsing a string literal", getPosition());
 			char c = chars.next();
-//			System.out.println("Char " + Character.getName(c));
 			if (isEscaped) {
 				isEscaped = false;
 				switch (c) {
@@ -181,7 +179,6 @@ public class JSLexer implements Supplier<Token> {
 		chars.skip(-1);
 		while (chars.hasNext()) {
 			c = chars.next();
-//			System.out.println("C: " + Character.getName(c));
 			if (c == '.') {
 				if (type == NumericLiteralType.DECIMAL && !hasDecimal) {
 					hasDecimal = true;
@@ -192,7 +189,6 @@ public class JSLexer implements Supplier<Token> {
 			
 			if (c == ';' || !Character.isJavaIdentifierPart(c)) {
 				chars.skip(-1);
-//				System.out.println("BRK");
 				break;
 			}
 			
@@ -224,14 +220,12 @@ public class JSLexer implements Supplier<Token> {
 						break;
 				}
 			}
-//			System.out.println("VALID: " + isValid);
 			if (!isValid)
 				throw new JSSyntaxException("Unexpected identifier in numeric literal (" + type + "): " + Character.getName(c), chars.position());
 		}
 		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
 		//but it causes problems with OCTAL_IMPLICIT upgrades.
 		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
-//		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + type + "|" + nmb);
 		if (hasDecimal)
 			return Double.parseDouble(nmb);
 		return Long.parseLong(nmb, type.getExponent());
