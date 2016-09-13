@@ -523,13 +523,6 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected ThisExpressionTree parseThisExpression(Token thisKeywordToken, JSLexer src, Context ctx) {
-		thisKeywordToken = expect(thisKeywordToken, TokenKind.KEYWORD, JSKeyword.THIS, src, ctx);
-		
-		//TODO finish
-		return null;
-	}
-	
 	ParameterTree reinterpretExpressionAsParameter(ExpressionTree expr) {
 		switch (expr.getKind()) {
 			case IDENTIFIER:
@@ -1360,28 +1353,61 @@ public class JSParser {
 			case PARENTHESIZED:
 				//Precedence 19
 				return new ParenthesizedTreeImpl(expression.getStart(), expression.getEnd(), recalculateO3(((ParenthesizedTree)expression).getExpression()));
+			case SEQUENCE: {
+				List<ExpressionTree> expressions = ((SequenceTree)expression).getExpressions();
+				List<ExpressionTree> recalculated = new ArrayList<>(expressions.size());
+				for (ExpressionTree expr : expressions)
+					recalculated.add(recalculateO3(expr));
+				return new SequenceTreeImpl(expression.getStart(), expression.getEnd(), recalculated);
+			}
 			//TODO finish
 			case ADDITION:
-				break;
+			case BITWISE_AND:
+			case BITWISE_OR:
+			case BITWISE_XOR:
+			case EQUAL:
+			case EXPONENTIATION:
+			case GREATER_THAN:
+			case GREATER_THAN_EQUAL:
+			case LEFT_SHIFT:
+			case LESS_THAN:
+			case LESS_THAN_EQUAL:
+			case LOGICAL_AND:
+			case LOGICAL_OR:
+			case MULTIPLICATION:
+			case NOT_EQUAL:
+			case PROPERTY:
+			case REMAINDER:
+			case RIGHT_SHIFT:
+			case STRICT_EQUAL:
+			case STRICT_NOT_EQUAL:
+			case SUBTRACTION:
+			case UNSIGNED_RIGHT_SHIFT:
+			{
+				BinaryTree binary = (BinaryTree) expression;
+				ExpressionTree left = recalculateO3(binary.getLeftOperand());
+				ExpressionTree right = recalculateO3(binary.getRightOperand());
+				
+				return new BinaryTreeImpl(binary.getKind(), left, right);
+			}
 			case ADDITION_ASSIGNMENT:
+			case BITWISE_AND_ASSIGNMENT:
+			case BITWISE_OR_ASSIGNMENT:
+			case BITWISE_XOR_ASSIGNMENT:
+			case DIVISION_ASSIGNMENT:
+			case EXPONENTIATION_ASSIGNMENT:
+			case LEFT_SHIFT_ASSIGNMENT:
+			case MULTIPLICATION_ASSIGNMENT:
+			case REMAINDER_ASSIGNMENT:
+			case RIGHT_SHIFT_ASSIGNMENT:
+			case SUBTRACTION_ASSIGNMENT:
+			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
 				break;
 			case ARRAY_ACCESS:
 				break;
 			case ASSIGNMENT:
 				break;
-			case BITWISE_AND:
-				break;
-			case BITWISE_AND_ASSIGNMENT:
-				break;
 			case BITWISE_NOT:
-				break;
-			case BITWISE_OR:
-				break;
-			case BITWISE_OR_ASSIGNMENT:
-				break;
-			case BITWISE_XOR:
-				break;
-			case BITWISE_XOR_ASSIGNMENT:
 				break;
 			case BLOCK:
 				break;
@@ -1393,23 +1419,13 @@ public class JSParser {
 				break;
 			case DIVISION:
 				break;
-			case DIVISION_ASSIGNMENT:
-				break;
-			case EQUAL:
-				break;
-			case EXPONENTIATION:
-				break;
-			case EXPONENTIATION_ASSIGNMENT:
-				break;
 			case FUNCTION:
 				break;
 			case FUNCTION_EXPRESSION:
 				break;
-			case FUNCTION_INVOCATION:
-				break;
-			case GREATER_THAN:
-				break;
-			case GREATER_THAN_EQUAL:
+			case FUNCTION_INVOCATION: {
+				FunctionCallTree invoc = (FunctionCallTree) expression;
+			}
 				break;
 			case IN:
 				break;
@@ -1419,29 +1435,11 @@ public class JSParser {
 				break;
 			case LABELED_STATEMENT:
 				break;
-			case LEFT_SHIFT:
-				break;
-			case LEFT_SHIFT_ASSIGNMENT:
-				break;
-			case LESS_THAN:
-				break;
-			case LESS_THAN_EQUAL:
-				break;
-			case LOGICAL_AND:
-				break;
 			case LOGICAL_NOT:
-				break;
-			case LOGICAL_OR:
 				break;
 			case MEMBER_SELECT:
 				break;
-			case MULTIPLICATION:
-				break;
-			case MULTIPLICATION_ASSIGNMENT:
-				break;
 			case NEW:
-				break;
-			case NOT_EQUAL:
 				break;
 			case POSTFIX_DECREMENT:
 				break;
@@ -1451,37 +1449,13 @@ public class JSParser {
 				break;
 			case PREFIX_INCREMENT:
 				break;
-			case PROPERTY:
-				break;
-			case REMAINDER:
-				break;
-			case REMAINDER_ASSIGNMENT:
-				break;
-			case RIGHT_SHIFT:
-				break;
-			case RIGHT_SHIFT_ASSIGNMENT:
-				break;
-			case SCOPED_FUNCTION:
-				break;
 			case SPREAD:
-				break;
-			case STRICT_EQUAL:
-				break;
-			case STRICT_NOT_EQUAL:
-				break;
-			case SUBTRACTION:
-				break;
-			case SUBTRACTION_ASSIGNMENT:
 				break;
 			case TYPEOF:
 				break;
 			case UNARY_MINUS:
 				break;
 			case UNARY_PLUS:
-				break;
-			case UNSIGNED_RIGHT_SHIFT:
-				break;
-			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
 				break;
 			case VOID:
 				break;
@@ -1491,7 +1465,10 @@ public class JSParser {
 		throw new JSSyntaxException("Unexpected branch: " + expression, expression.getStart());
 	}
 
-
+	protected ThisExpressionTree parseThis(Token thisKeywordToken, JSLexer src, Context ctx) {
+		return new ThisExpressionTreeImpl(expect(thisKeywordToken, TokenKind.KEYWORD, JSKeyword.THIS, src, ctx));
+	}
+	
 	protected SuperExpressionTree parseSuper(Token superKeywordToken, JSLexer src, Context context) {
 		SuperExpressionTree result = new SuperExpressionTreeImpl(expect(superKeywordToken, TokenKind.KEYWORD, JSKeyword.SUPER, src, context));
 		Token tmp = src.peek();
