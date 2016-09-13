@@ -13,6 +13,8 @@ public interface FunctionExpressionTree extends ExpressionTree {
 	
 	boolean isArrow();
 	
+	boolean isGenerator();
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.FUNCTION_EXPRESSION;

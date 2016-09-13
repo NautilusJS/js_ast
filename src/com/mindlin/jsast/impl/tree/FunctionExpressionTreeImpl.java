@@ -13,15 +13,17 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	protected final List<ParameterTree> parameters;
 	protected final boolean strict;
 	protected final boolean arrow;
+	protected final boolean generator;
 
 	public FunctionExpressionTreeImpl(long start, long end, List<ParameterTree> parameters, String name, boolean arrow,
-			StatementTree body, boolean strict) {
+			StatementTree body, boolean strict, boolean generator) {
 		super(start, end);
 		this.parameters = Collections.unmodifiableList(parameters);
 		this.name = name;
 		this.arrow = arrow;
 		this.body = body;
 		this.strict = strict;
+		this.generator = generator;
 	}
 
 	@Override
@@ -47,6 +49,11 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	@Override
 	public boolean isArrow() {
 		return arrow;
+	}
+
+	@Override
+	public boolean isGenerator() {
+		return generator;
 	}
 
 }
