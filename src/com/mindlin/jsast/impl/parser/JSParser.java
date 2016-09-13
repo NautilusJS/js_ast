@@ -44,7 +44,8 @@ import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
 import com.mindlin.jsast.impl.tree.ThrowTreeImpl;
 import com.mindlin.jsast.impl.tree.TryTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
-import com.mindlin.jsast.impl.tree.VariableTreeImpl;
+import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
@@ -85,6 +86,7 @@ import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
+import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 
@@ -764,21 +766,22 @@ public class JSParser {
 	}
 	
 	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
-	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context) {
+	protected VariableDeclarationTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context) {
 		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, src);
 		boolean isConst = keywordToken.getValue() == JSKeyword.CONST;
-		boolean isScoped = keywordToken.getValue() == JSKeyword.LET;
+		boolean isScoped = isConst || keywordToken.getValue() == JSKeyword.LET;//Const's are also scoped
 		//Check that the token is 'var', 'let', or 'const'.
-		if (keywordToken.getValue() != JSKeyword.VAR && !(isConst || isScoped))
+		if (keywordToken.getValue() != JSKeyword.VAR && !isScoped)
 			throw new JSUnexpectedTokenException(keywordToken);
 		//Check if allowed
-		if (isScoped)
+		if (isScoped) {
 			dialect.require("js.variable.scoped", keywordToken.getStart());
-		else if (isConst)
-			dialect.require("js.variable.const", keywordToken.getStart());
+			if (isConst)
+				dialect.require("js.variable.const", keywordToken.getStart());
+		}
 		
 		//Build list of declarations
-		List<VariableDeclarationTree> declarations = new ArrayList<>();
+		List<VariableDeclaratorTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
 			Token identifier = src.nextToken();
@@ -799,13 +802,12 @@ public class JSParser {
 				src.skip(peek);
 				initializer = parseNextExpression(null, src, context);
 			}
-			declarations.add(new VariableTreeImpl(declarations.isEmpty() ? keywordToken.getStart() : identifier.getStart(), src.getPosition(), isScoped, isConst, new IdentifierTreeImpl(identifier), type, initializer));
+			if (isConst && initializer == null)
+				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
+			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), identifier.<String>getValue(), type, initializer));
 		} while (src.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
 		
-		if (declarations.size() == 1)
-			return declarations.get(0);
-		//Return as an unscoped block
-		return new BlockTreeImpl(keywordToken.getStart(), src.getPosition(), declarations, false);
+		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
 	
 	@JSKeywordParser(JSKeyword.CLASS)
