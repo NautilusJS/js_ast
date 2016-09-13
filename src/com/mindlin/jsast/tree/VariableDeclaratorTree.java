@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface VariableDeclaratorTree extends IdentifierTree {
+public interface VariableDeclaratorTree extends Tree {
 
 	/**
 	 * Get any initializer for this variable. For parameters, this is the
@@ -17,6 +17,8 @@ public interface VariableDeclaratorTree extends IdentifierTree {
 	 * @return
 	 */
 	TypeTree getType();
+	
+	IdentifierTree getIdentifier();
 
 	@Override
 	default Tree.Kind getKind() {
