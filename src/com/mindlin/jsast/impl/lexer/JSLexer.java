@@ -515,6 +515,15 @@ public class JSLexer implements Supplier<Token> {
 		return new Token(start, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
+	public Token nextTokenIf(TokenKind kind, Object value) {
+		Token lookahead = peek();
+		if (lookahead.matches(kind, value)) {
+			skip(lookahead);
+			return lookahead;
+		}
+		return null;
+	}
+	
 	public Token peek() {
 		chars.mark();
 		Token result = nextToken();
@@ -522,9 +531,10 @@ public class JSLexer implements Supplier<Token> {
 		return result;
 	}
 	
-	public void skip(Token token) {
+	public Token skip(Token token) {
 		//chars.skip(token.getLength());
 		chars.position(token.getEnd());
+		return token;
 	}
 
 	@Override
