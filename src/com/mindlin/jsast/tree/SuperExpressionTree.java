@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface SuperExpressionTree extends Tree {
+public interface SuperExpressionTree extends ExpressionTree {
 
 	@Override
 	default Tree.Kind getKind() {
