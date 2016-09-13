@@ -123,12 +123,14 @@ public class JSParser {
 			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
 	}
 	
-	private static Token expect(Token t, TokenKind kind, Object value, JSLexer src, Context context) {
-		if (t == null)
-			t = src.nextToken();
-		ensureTokenKind(t, kind);
-		ensureToken(t, value);
-		return t;
+	private static Token expect(Token token, TokenKind kind, Object value, JSLexer src, Context context) {
+		if (token == null)
+			token = src.nextToken();
+		if (token.getKind() != kind)
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getStart());
+		if (!Objects.equals(token.getValue(), value))
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
+		return token;
 	}
 	
 	private static Token expect(TokenKind kind, Object value, JSLexer src, Context context) {
