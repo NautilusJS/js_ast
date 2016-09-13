@@ -226,9 +226,27 @@ public class JSLexer implements Supplier<Token> {
 		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
 		//but it causes problems with OCTAL_IMPLICIT upgrades.
 		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
-		if (hasDecimal)
-			return Double.parseDouble(nmb);
-		return Long.parseLong(nmb, type.getExponent());
+		
+		//Return number. Tries to cast down to the smallest size that it can losslessly
+		if (hasDecimal) {
+			double result = Double.parseDouble(nmb);
+			//TODO reorder return options
+			long lResult = (long) result;
+			if (result > Long.MIN_VALUE && result < Long.MAX_VALUE && lResult == result) {
+				if (lResult > Integer.MIN_VALUE && lResult < Integer.MAX_VALUE)
+					return (int) lResult;
+				return lResult;
+			}
+			float fResult = (float) result;
+			if (result == fResult)
+				return fResult;
+			return result;
+		}
+		long result = Long.parseLong(nmb, type.getExponent());
+		if (result > Integer.MIN_VALUE && result < Integer.MAX_VALUE)
+			//Downgrade to an int if possible
+			return (int) result;
+		return result;
 	}
 	
 	public JSOperator peekOperator() {
