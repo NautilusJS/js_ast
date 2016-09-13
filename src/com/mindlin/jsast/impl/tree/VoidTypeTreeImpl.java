@@ -1,7 +1,6 @@
-package com.mindlin.jsast.impl.tree.type;
+package com.mindlin.jsast.impl.tree;
 
 import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.impl.tree.AbstractTree;
 import com.mindlin.jsast.tree.type.VoidTypeTree;
 
 public class VoidTypeTreeImpl extends AbstractTree implements VoidTypeTree {
