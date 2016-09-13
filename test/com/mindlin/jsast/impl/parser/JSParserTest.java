@@ -9,8 +9,10 @@ import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.impl.tree.AbstractTree;
+import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
@@ -24,13 +26,17 @@ public class JSParserTest {
 		System.out.println(result);
 		fail("Not yet implemented");
 	}*/
-	protected void assertLiteral(ExpressionTree expr, String value) {
+	protected static final void assertLiteral(ExpressionTree expr, String value) {
 		assertEquals(Kind.STRING_LITERAL, expr.getKind());
 		assertEquals(value, ((StringLiteralTree)expr).getValue());
 	}
-	protected void assertIdentifier(ExpressionTree expr, String name) {
+	protected static final void assertIdentifier(ExpressionTree expr, String name) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	protected StatementTree parseStatement(String stmt) {
+		return new JSParser().parseStatement(new JSLexer(stmt), new Context());
 	}
 	
 	protected ExpressionTree parseExpression(String expr) {
@@ -100,13 +106,22 @@ public class JSParserTest {
 		ExpressionTree expr = parseExpression("typeof 'foo'");
 		assertEquals(Kind.TYPEOF, expr.getKind());
 		assertLiteral(((UnaryTree)expr).getExpression(), "foo");
-		System.out.println(((AbstractTree)expr).toJSON());
 	}
 	
 	@Test
 	public void testBinaryExpression() {
 		ExpressionTree expr = parseExpression("a+b");
-		System.out.println(((AbstractTree)expr).toJSON());
+		assertEquals(Kind.ADDITION, expr.getKind());
+		BinaryTree binary = (BinaryTree) expr;
+		assertIdentifier(binary.getLeftOperand(), "a");
+		assertIdentifier(binary.getRightOperand(), "b");
+	}
+	
+	@Test
+	public void testVariableDeclaration() {
+		StatementTree stmt = parseStatement("var foo : void = 5, bar = foo + 1;");
+		//TODO assert that it was parsed correctly
+		System.out.println(((AbstractTree)stmt).toJSON());
 	}
 	
 }
