@@ -11,5 +11,4 @@ public class SuperExpressionTreeImpl extends AbstractTree implements SuperExpres
 	public SuperExpressionTreeImpl(long start, long end) {
 		super(start, end);
 	}
-
 }
