@@ -42,6 +42,7 @@ public enum JSKeyword {
 	THIS,
 	THROW,
 	TRY,
+	TYPE,
 	TYPEOF,
 	VAR,
 	VOID,

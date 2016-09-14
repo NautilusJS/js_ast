@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.lexer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import com.mindlin.jsast.exception.JSEOFException;
@@ -539,6 +540,15 @@ public class JSLexer implements Supplier<Token> {
 	public Token nextTokenIf(TokenKind kind) {
 		Token lookahead = peek();
 		if (lookahead.getKind() == kind) {
+			skip(lookahead);
+			return lookahead;
+		}
+		return null;
+	}
+	
+	public Token nextTokenIf(Predicate<Token> acceptor) {
+		Token lookahead = peek();
+		if (acceptor.test(lookahead)) {
 			skip(lookahead);
 			return lookahead;
 		}
