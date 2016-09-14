@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 
 import org.junit.Test;
 
@@ -127,17 +128,17 @@ public class JSLexerTest {
 		{
 			//Check octal upgrade
 			JSLexer lexer = new JSLexer("01019");
-			assertEquals(1019L, lexer.nextNumericLiteral());
+			assertNumberEquals(1019L, lexer.nextNumericLiteral(), null);
 		}
 		{
 			//Check all digits are supported
 			JSLexer lexer = new JSLexer("1234567890");
-			assertEquals(1234567890L, lexer.nextNumericLiteral());
+			assertNumberEquals(1234567890L, lexer.nextNumericLiteral());
 		}
 		{
 			//Check decimals
 			JSLexer lexer = new JSLexer("32.5");
-			assertEquals(32.5, lexer.nextNumericLiteral());
+			assertNumberEquals(32.5, lexer.nextNumericLiteral());
 		}
 		{
 			//Check termination
@@ -175,7 +176,7 @@ public class JSLexerTest {
 		{
 			//Check case insensitivity
 			JSLexer lexer = new JSLexer("0xabcdefABCDEF");
-			assertEquals(0xABCDEFABCDEFL, lexer.nextNumericLiteral());
+			assertNumberEquals(0xABCDEFABCDEFL, lexer.nextNumericLiteral());
 		}
 		{
 			//Check invalid other characters numbers
@@ -200,12 +201,12 @@ public class JSLexerTest {
 		{
 			//Check termination
 			JSLexer lexer = new JSLexer("0x1 0x10;0x11\n0x100\r0x101\r0x110");
-			assertEquals(0x1, lexer.nextNumericLiteral().intValue());
-			assertEquals(0x10, lexer.nextNumericLiteral().intValue());
-			assertEquals(0x11, lexer.nextNumericLiteral().intValue());
-			assertEquals(0x100, lexer.nextNumericLiteral().intValue());
-			assertEquals(0x101, lexer.nextNumericLiteral().intValue());
-			assertEquals(0x110, lexer.nextNumericLiteral().intValue());
+			assertNumberEquals(0x1, lexer.nextNumericLiteral().intValue());
+			assertNumberEquals(0x10, lexer.nextNumericLiteral().intValue());
+			assertNumberEquals(0x11, lexer.nextNumericLiteral().intValue());
+			assertNumberEquals(0x100, lexer.nextNumericLiteral().intValue());
+			assertNumberEquals(0x101, lexer.nextNumericLiteral().intValue());
+			assertNumberEquals(0x110, lexer.nextNumericLiteral().intValue());
 		}
 	}
 	@Test
@@ -237,7 +238,7 @@ public class JSLexerTest {
 		
 		Token FFNumberToken = lexer.nextToken();
 		assertEquals(TokenKind.NUMERIC_LITERAL, FFNumberToken.getKind());
-		assertEquals(0xFF, ((Number)FFNumberToken.getValue()).intValue());
+		assertNumberEquals(0xFF, ((Number)FFNumberToken.getValue()).intValue());
 		
 		Token EofNumberToken = lexer.nextToken();
 		assertEquals(TokenKind.SPECIAL, EofNumberToken.getKind());
