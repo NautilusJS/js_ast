@@ -2,8 +2,11 @@ package com.mindlin.jsast.impl.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 
 import org.junit.Test;
 
@@ -16,11 +19,13 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
+import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
-import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.VariableDeclarationTree;
+import com.mindlin.jsast.tree.VariableDeclaratorTree;
 
 public class JSParserTest {
 	
@@ -35,6 +40,19 @@ public class JSParserTest {
 		assertEquals(Kind.STRING_LITERAL, expr.getKind());
 		assertEquals(value, ((StringLiteralTree)expr).getValue());
 	}
+	
+	/**
+	 * Assert if a number literal matches an expected value. Doubles are considered to be
+	 * equivalent with a .0001 tolerance.
+	 * @param expr
+	 * @param value
+	 */
+	protected static final void assertLiteral(ExpressionTree expr, Number value) {
+		assertEquals(Kind.NUMERIC_LITERAL, expr.getKind());
+		Number actual = ((NumericLiteralTree)expr).getValue();
+		assertNumberEquals(actual, value);
+	}
+	
 	protected static final void assertIdentifier(ExpressionTree expr, String name) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
@@ -122,9 +140,24 @@ public class JSParserTest {
 	
 	@Test
 	public void testVariableDeclaration() {
-		StatementTree stmt = parseStatement("var foo : void = 5, bar = foo + 1;");
+		VariableDeclarationTree decl = (VariableDeclarationTree)parseStatement("var foo : void = 5, bar = foo + 1;");
 		//TODO assert that it was parsed correctly
-		System.out.println(((AbstractTree)stmt).toJSON());
+		System.out.println(((AbstractTree)decl).toJSON());
+		assertNumberEquals(2, decl.getDeclarations().size());
+		
+		VariableDeclaratorTree declarator0 = decl.getDeclarations().get(0);
+		assertIdentifier(declarator0.getIdentifier(), "foo");
+		assertEquals(Kind.VOID_TYPE, declarator0.getType().getKind());
+		assertNotNull(declarator0.getIntitializer());
+		assertLiteral(declarator0.getIntitializer(), 5);
+		
+		VariableDeclaratorTree declarator1 = decl.getDeclarations().get(1);
+		assertIdentifier(declarator1.getIdentifier(), "bar");
+		assertNull(declarator1.getType());
+		assertEquals(Kind.ADDITION, declarator1.getIntitializer().getKind());
+		BinaryTree bin1 = (BinaryTree)declarator1.getIntitializer();
+		assertIdentifier(bin1.getLeftOperand(), "foo");
+		assertLiteral(bin1.getRightOperand(), 1);
 	}
 	
 	/**
