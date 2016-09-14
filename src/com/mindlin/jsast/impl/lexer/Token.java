@@ -81,7 +81,39 @@ public class Token {
 	public boolean matches(TokenKind kind, Object value) {
 		return getKind() == kind && getValue() == value;
 	}
-	
+
+	public Token reinterpretAsIdentifier() {
+		Object value;
+		switch (getKind()) {
+			case IDENTIFIER:
+				return this;
+			case KEYWORD:
+			case NUMERIC_LITERAL:
+			case BOOLEAN_LITERAL:
+				value = this.getValue().toString();
+				break;
+			case NULL_LITERAL:
+				value = "null";
+				break;
+			case OPERATOR:
+				value = this.<JSOperator>getValue().getText();
+				break;
+			case SPECIAL:
+				if (this.getValue() == JSSpecialGroup.SEMICOLON)
+					value = ';';
+				// Fallthrough intentional
+				// There is no way to possibly reinterpret these
+			case REGEX_LITERAL:
+			case STRING_LITERAL:
+			case TEMPLATE_LITERAL:
+			case BRACKET:
+			case COMMENT:
+			default:
+				throw new UnsupportedOperationException(this + " cannot be reinterpreted as an identifier");
+		}
+		return new Token(getStart(), TokenKind.IDENTIFIER, getText(), value);
+	}
+
 	@Override
 	public String toString() {
 		//@formatter:off

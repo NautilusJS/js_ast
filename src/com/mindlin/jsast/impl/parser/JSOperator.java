@@ -81,6 +81,10 @@ public enum JSOperator {
 	JSOperator(int arity, String operator, String... allotropes) {
 		this(false, arity, operator, allotropes);
 	}
+	
+	public String getText() {
+		return operator;
+	}
 
 	public int length() {
 		return operator.length();
