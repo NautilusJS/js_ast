@@ -868,19 +868,47 @@ public class JSParser {
 	
 	@JSKeywordParser(JSKeyword.CLASS)
 	protected StatementTree parseClassUnknown(Token classKeywordToken, JSLexer src, Context context) {
+		if (classKeywordToken == null)
+			classKeywordToken = src.nextToken();
+		//TODO fix for abstract classes
 		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
 		IdentifierTree classIdentifier = null;
+		TypeTree superClass = null;
+		List<TypeTree> interfaces = new ArrayList<>();
 		
 		Token next = src.nextToken();
-		if (next.isIdentifier())
+		if (next.isIdentifier()) {
 			classIdentifier = this.parseIdentifier(next, src, context);
+			next = src.nextToken();
+		}
+		for (int i = 0; i < 1; i++) {
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS) && superClass == null) {
+				superClass = this.parseTypeStatement(null, src, context);
+				next = src.nextToken();
+			}
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.IMPLEMENTS) && interfaces.isEmpty()) {
+				do {
+					interfaces.add(parseTypeStatement(null, src, context));
+				} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			}
+		}
+		expect(next, TokenKind.BRACKET, '{', src, context);
+		
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
 	protected InterfaceTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
 		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
-		
+		Token next = src.nextToken();
+		ensureTokenKind(next, TokenKind.IDENTIFIER);
+		IdentifierTree name = parseIdentifier(next, src, context);
+		List<TypeTree> superClasses = new ArrayList<>();
+		if ((next = src.nextToken()).matches(TokenKind.KEYWORD, JSKeyword.EXTENDS))
+			do {
+				superClasses.add(parseTypeStatement(null, src, context));
+			} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+		expect(next, TokenKind.BRACKET, '{');
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
