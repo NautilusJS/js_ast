@@ -201,8 +201,8 @@ public class JSParser {
 					case TRY:
 						return this.parseTryStatement(t, src, context);
 					case FUNCTION:
-						throw new UnsupportedOperationException();
-//						return this.parseFunctionKeyword(t, src, context);
+					case FUNCTION_GENERATOR:
+						return this.parseFunctionExpression(t, src, context);
 					case WITH:
 						return this.parseWithStatement(t, src, context);
 					case CONST:
@@ -211,13 +211,38 @@ public class JSParser {
 						return this.parseVariableDeclaration(t, src, context);
 					case CLASS:
 						return this.parseClassUnknown(t, src, context);
+					case DEBUGGER:
+						return this.parseDebugger(t, src, context);
+					case DELETE:
+					case NEW:
 					case TYPEOF:
-						return this.parseUnaryPrefix(t, src, context);
+					case YIELD:
+					case YIELD_GENERATOR:
+					case SUPER:
+					case THIS: {
+						ExpressionTree expr = parseUnaryPrefix(t, src, context);
+						if (expr.getKind().isStatement())
+							return (StatementTree) expr;
+						return new ExpressionStatementTreeImpl(expr);
+					}
 					case VOID:
 						return this.parseVoid(t, src, context);
-					case CASE:
+					case EXPORT:
+						return this.parseExportStatement(t, src, context);
+					case IMPORT:
+						return this.parseImportStatement(t, src, context);
 					case BREAK:
 					case CONTINUE:
+						return this.parseGotoStatement(t, src, context);
+					case RETURN:
+					case THROW:
+						return this.parseUnaryStatement(t, src, context);
+					case TYPE:
+					case ENUM:
+					case INTERFACE:
+						//TODO finish
+						throw new UnsupportedOperationException();
+					case CASE:
 					case CATCH:
 					case FINALLY:
 					case DEFAULT:
@@ -225,31 +250,29 @@ public class JSParser {
 					case EXTENDS:
 					case IN:
 					case INSTANCEOF:
-					case RETURN:
-					case SUPER:
-					case THIS:
-					case YIELD:
 					default:
 						throw new JSSyntaxException("Unexpected keyword " + t.getValue(), t.getStart());
 				}
 			case IDENTIFIER:
-				return this.parseIncompleteExpression(t, src, context);
+				return this.parseNextExpression(t, src, context);
 			case BRACKET:
-				return this.parseBlock(t, src, context);
+				if (t.<Character>getValue() == '{')
+					return this.parseBlock(t, src, context);
+				return this.parseNextExpression(t, src, context);
 			case OPERATOR:
 				throw new UnsupportedOperationException();
 			case SPECIAL:
 				switch (t.<JSSpecialGroup>getValue()) {
 					case EOF:
-						break;
+						return null;
 					case EOL:
-						break;
 					case SEMICOLON:
-						break;
+						return new EmptyStatementTreeImpl(t);
 					default:
 						break;
 				}
-				throw new UnsupportedOperationException();
+			case COMMENT:
+				break;
 		}
 		throw new JSUnexpectedTokenException(t);
 	}
@@ -258,6 +281,7 @@ public class JSParser {
 		return this.parseStatement(src.nextToken(), src, context);
 	}
 	
+	@Deprecated
 	protected StatementTree parseStatement(Token token, JSLexer src, Context context) {
 		switch (token.getKind()) {
 			case SPECIAL:
@@ -1759,13 +1783,23 @@ public class JSParser {
 								ExpressionTree right = parseNextExpression(src, context);
 								context.pop();
 								result = new BinaryTreeImpl(t.getValue() == JSOperator.PLUS ? Kind.ADDITION : Kind.SUBTRACTION, result, right);
-								continue;
+							} else {
+								result = parseUnaryPrefix(t, src, context);
 							}
+							continue;
 						case INCREMENT:
 						case DECREMENT:
+							src.skip(t);
+							if (result == null)
+								result = parseUnaryPrefix(t, src, context);
+							else
+								result = parseUnaryPostfix(result, t, src, context);
+							continue;
 						case LOGICAL_NOT:
 						case BITWISE_NOT:
 							src.skip(t);
+							if (result != null)
+								throw new JSUnexpectedTokenException(t);
 							result = parseUnaryPrefix(t, src, context);
 							continue;
 						case EQUAL:
@@ -1793,6 +1827,8 @@ public class JSParser {
 					throw new JSUnexpectedTokenException(t);
 				case IDENTIFIER:
 					src.skip(t);
+					if (result != null)
+						throw new JSUnexpectedTokenException(t);
 					result = parseIdentifier(t, src, context);
 					continue;
 				case NUMERIC_LITERAL:
@@ -1801,10 +1837,12 @@ public class JSParser {
 				case TEMPLATE_LITERAL:
 				case REGEX_LITERAL:
 					src.skip(t);
+					if (result != null)
+						throw new JSUnexpectedTokenException(t);
 					result = parseLiteral(t, src, context);
 					continue;
 			}
-		} while (!isWeakExpressionEnd((t = src.peek()), context));
+		} while ((t = src.nextTokenIf(x->!isWeakExpressionEnd(x, context))) != null);
 		return result;
 	}
 	
