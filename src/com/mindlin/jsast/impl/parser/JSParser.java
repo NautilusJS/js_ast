@@ -1809,15 +1809,100 @@ public class JSParser {
 	}
 	
 	boolean isWeakExpressionEnd(Token t, Context context) {
-		Object v = t.getValue();
-		return v == JSOperator.COMMA
-				|| v == JSOperator.RIGHT_PARENTHESIS
-				|| v == JSSpecialGroup.SEMICOLON
-				|| v == JSSpecialGroup.EOF
-				|| (t.getKind() == TokenKind.BRACKET
-					&& (((char)v) == ']' || ((char)v) == '}'))
-				|| (!context.allowIn() && v == JSKeyword.IN)
-			;
+		switch (t.getKind()) {
+			case STRING_LITERAL:
+			case NUMERIC_LITERAL:
+			case BOOLEAN_LITERAL:
+			case REGEX_LITERAL:
+			case TEMPLATE_LITERAL:
+			case IDENTIFIER:
+			case NULL_LITERAL:
+				return false;
+			case BRACKET: {
+				char v = t.<Character>getValue();
+				return v != '[' && v != '{';
+			}
+			case OPERATOR:
+				switch (t.<JSOperator>getValue()) {
+					case EQUAL:
+					case NOT_EQUAL:
+					case STRICT_EQUAL:
+					case STRICT_NOT_EQUAL:
+					case GREATER_THAN:
+					case LESS_THAN:
+					case INCREMENT:
+					case DECREMENT:
+					case PLUS:
+					case MINUS:
+					case MULTIPLICATION:
+					case DIVISION:
+					case REMAINDER:
+					case EXPONENTIATION:
+					case LEFT_SHIFT:
+					case RIGHT_SHIFT:
+					case UNSIGNED_RIGHT_SHIFT:
+					case BITWISE_AND:
+					case BITWISE_XOR:
+					case BITWISE_OR:
+					case BITWISE_NOT:
+					case LOGICAL_AND:
+					case LOGICAL_OR:
+					case LOGICAL_NOT:
+					case ASSIGNMENT:
+					case ADDITION_ASSIGNMENT:
+					case SUBTRACTION_ASSIGNMENT:
+					case MULTIPLICATION_ASSIGNMENT:
+					case DIVISION_ASSIGNMENT:
+					case REMAINDER_ASSIGNMENT:
+					case EXPONENTIATION_ASSIGNMENT:
+					case LEFT_SHIFT_ASSIGNMENT:
+					case RIGHT_SHIFT_ASSIGNMENT:
+					case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					case BITWISE_AND_ASSIGNMENT:
+					case BITWISE_XOR_ASSIGNMENT:
+					case BITWISE_OR_ASSIGNMENT:
+					case QUESTION_MARK:
+					case LEFT_PARENTHESIS:
+					case PERIOD:
+					case SPREAD:
+						return false;
+					case COMMA:
+					case RIGHT_PARENTHESIS:
+					case COLON:
+					case LAMBDA:
+						return true;
+					default:
+						throw new UnsupportedOperationException("Unknown operator " + t.getValue());
+				}
+			case KEYWORD:
+				switch (t.<JSKeyword>getValue()) {
+					case DELETE:
+					case TYPEOF:
+					case AS:
+					case VOID:
+					case NEW:
+						return false;
+					case IN:
+						return !context.allowIn();
+					case SUPER:
+					case THIS:
+						if (!context.inFunction())
+							throw new JSUnexpectedTokenException(t);
+						return false;
+					case YIELD:
+					case YIELD_GENERATOR:
+						if (!context.allowYield())
+							throw new JSUnexpectedTokenException(t);
+						return false;
+					default:
+						return true;
+				}
+			case COMMENT:
+			case SPECIAL:
+				return true;
+			default:
+				throw new UnsupportedOperationException("Unknown kind " + t.getKind());
+		}
 	}
 	
 	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken,
@@ -1829,13 +1914,13 @@ public class JSParser {
 	
 	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, Context context) {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
+		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
+			throw new JSUnexpectedTokenException(keywordToken);
+		//TODO check if keyword allowed in context
 		String label = null;
-		Token next = src.nextToken();
-		if (next.isIdentifier()) {
+		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
+		if (next != null)
 			label = next.getValue();
-			next = src.nextToken();
-		}
-		ensureToken(src, JSSpecialGroup.EOL);
 		final long start = keywordToken.getStart();
 		final long end = src.getPosition();
 		if (keywordToken.getValue() == JSKeyword.BREAK)

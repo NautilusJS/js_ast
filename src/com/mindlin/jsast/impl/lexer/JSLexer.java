@@ -536,6 +536,15 @@ public class JSLexer implements Supplier<Token> {
 		return null;
 	}
 	
+	public Token nextTokenIf(TokenKind kind) {
+		Token lookahead = peek();
+		if (lookahead.getKind() == kind) {
+			skip(lookahead);
+			return lookahead;
+		}
+		return null;
+	}
+	
 	public Token peek() {
 		chars.mark();
 		Token result = nextToken();
