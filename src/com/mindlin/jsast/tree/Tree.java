@@ -118,6 +118,7 @@ public interface Tree {
 
 		// Module stuff
 		IMPORT(ImportTree.class),
+		IMPORT_SPECIFIER(ImportSpecifierTree.class),
 		EXPORT(ExportTree.class),
 
 		// Class stuff
@@ -125,6 +126,7 @@ public interface Tree {
 		CLASS_DECLARATION,
 		INTERFACE_DECLARATION, // Support some typescript
 		PROPERTY(PropertyTree.class),
+		METHOD_DEFINITION(MethodDefinitionTree.class),
 
 		// Type stuff
 		VOID_TYPE,
@@ -165,6 +167,10 @@ public interface Tree {
 
 		// Comments
 		COMMENT(CommentNode.class),
+		
+		//Destructuring patterns
+		OBJECT_PATTERN(ObjectPatternTree.class),
+		ARRAY_PATTERN(ArrayPatternTree.class),
 		;
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt;
@@ -194,11 +200,6 @@ public interface Tree {
 
 		public boolean isStatement() {
 			return this.stmt;
-		}
-
-		@Override
-		public String toString() {
-			return this.name().substring(0, 1) + this.name().substring(1).toLowerCase();
 		}
 	}
 
