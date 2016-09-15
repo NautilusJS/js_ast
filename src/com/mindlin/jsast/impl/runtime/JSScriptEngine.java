@@ -7,15 +7,18 @@ import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
+import com.mindlin.jsast.impl.parser.JSParser;
+import com.mindlin.jsast.tree.CompilationUnitTree;
+
 public class JSScriptEngine implements ScriptEngine, Compilable {
-	Bindings globalBindings;
+	NestedBindings engineBindings = new NestedBindings(JSScriptEngineFactory.getInstance().globalBindings, ScriptContext.ENGINE_SCOPE);
+	JSParser parser;
 
 	@Override
 	public Object eval(String script, ScriptContext context) throws ScriptException {
-		// TODO Auto-generated method stub
+		CompilationUnitTree ast = parser.apply(null, script);
 		return null;
 	}
 

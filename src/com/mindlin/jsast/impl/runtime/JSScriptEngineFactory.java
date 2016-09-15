@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
@@ -37,6 +38,8 @@ public class JSScriptEngineFactory implements ScriptEngineFactory {
 	public static JSScriptEngineFactory getInstance() {
 		return INSTANCE;
 	}
+	
+	protected final NestedBindings globalBindings = new NestedBindings(ScriptContext.GLOBAL_SCOPE);
 
 	private JSScriptEngineFactory() {
 
