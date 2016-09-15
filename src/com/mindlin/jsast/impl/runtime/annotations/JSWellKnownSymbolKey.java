@@ -10,7 +10,6 @@ import java.lang.annotation.Target;
 
 @Retention(CLASS)
 @Target({ TYPE, FIELD, METHOD })
-public @interface JSExtern {
-	boolean isDefault() default false;
-	String value() default "";
+public @interface JSWellKnownSymbolKey {
+	String value();
 }
