@@ -111,7 +111,7 @@ public interface Tree {
 		CONDITIONAL(ConditionalExpressionTree.class),
 
 		// GOTO stuff
-		LABELED_STATEMENT,
+		LABELED_STATEMENT(LabeledStatementTree.class),
 		CONTINUE(ContinueTree.class),
 		BREAK(BreakTree.class),
 		DEBUGGER(DebuggerTree.class),
@@ -126,7 +126,7 @@ public interface Tree {
 		CLASS_DECLARATION,
 		INTERFACE_DECLARATION, // Support some typescript
 		PROPERTY(PropertyTree.class),
-		METHOD_DEFINITION(MethodDefinitionTree.class),
+		METHOD_DEFINITION,
 
 		// Type stuff
 		VOID_TYPE,
@@ -169,11 +169,11 @@ public interface Tree {
 		COMMENT(CommentNode.class),
 		
 		//Destructuring patterns
-		OBJECT_PATTERN(ObjectPatternTree.class),
-		ARRAY_PATTERN(ArrayPatternTree.class),
+		OBJECT_PATTERN,
+		ARRAY_PATTERN,
 		;
 		private final Class<? extends Tree> iface;
-		private final boolean expr, litr, stmt;
+		private final boolean expr, litr, stmt, typ;
 
 		Kind() {
 			this(Tree.class);// TODO fix
@@ -184,6 +184,7 @@ public interface Tree {
 			this.litr = LiteralTree.class.isAssignableFrom(clazz);
 			this.expr = litr || ExpressionTree.class.isAssignableFrom(clazz);//literals are expressions
 			this.stmt = StatementTree.class.isAssignableFrom(clazz);
+			this.typ = TypeTree.class.isAssignableFrom(clazz);
 		}
 
 		public Class<? extends Tree> asInterface() {
@@ -200,6 +201,10 @@ public interface Tree {
 
 		public boolean isStatement() {
 			return this.stmt;
+		}
+		
+		public boolean isType() {
+			return this.typ;
 		}
 	}
 
