@@ -2,11 +2,11 @@ package com.mindlin.jsast.impl.runtime.objects;
 
 import java.util.List;
 
-import com.mindlin.jsast.impl.runtime.annotations.JSExtern;
+import com.mindlin.jsast.impl.runtime.annotations.JSProperty;
 import com.mindlin.jsast.impl.runtime.annotations.JSParam;
 
 public class Promise {
-	@JSExtern
+	@JSProperty
 	public static Promise all(Promise...promises) {
 		Promise result = new Promise();
 		for (Promise promise : promises) {
@@ -14,17 +14,17 @@ public class Promise {
 		}
 		throw new UnsupportedOperationException();
 	}
-	@JSExtern
+	@JSProperty
 	public static Promise race(Object...iterable) {
 		throw new UnsupportedOperationException();
 	}
-	@JSExtern
+	@JSProperty
 	public static Promise reject(Object reason) {
 		Promise result = new Promise();
 		result.doReject(reason);
 		return result;
 	}
-	@JSExtern
+	@JSProperty
 	public static Promise resolve(Object reason) {
 		Promise result = new Promise();
 		result.doResolve(reason);
@@ -43,13 +43,13 @@ public class Promise {
 	protected Promise() {
 		
 	}
-	@JSExtern
+	@JSProperty
 	public Promise(JSFunction executor) {
 		this.executor = executor;
 		executor.invoke((JSFunction)this::doResolve, (JSFunction)this::doReject);
 	}
 	
-	@JSExtern(name="catch")
+	@JSProperty(name="catch")
 	public Promise _catch(JSFunction onRejected) {
 		throw new UnsupportedOperationException();
 	}
@@ -78,7 +78,7 @@ public class Promise {
 		return null;
 	}
 	
-	@JSExtern
+	@JSProperty
 	public Promise then(JSFunction onFufilled, @JSParam(optional=true) JSFunction onRejected) {
 		if (this.state == PromiseState.FUFILLED) {
 			onFufilled.invoke(this.result);
