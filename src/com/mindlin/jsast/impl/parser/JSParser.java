@@ -184,35 +184,57 @@ public class JSParser {
 	}
 	
 	public Tree parseNext(JSLexer src, Context context) {
-		Token t = src.nextToken();
-		switch (t.getKind()) {
+		return parseNext(src.nextToken(), src, context);
+	}
+	
+	protected Tree parseNext(Token token, JSLexer src, Context context) {
+		switch (token.getKind()) {
 			case KEYWORD:
-				switch (t.<JSKeyword>getValue()) {
-					case WHILE:
-						return this.parseWhileLoop(t, src, context);
-					case DO:
-						return this.parseDoWhileLoop(t, src, context);
-					case FOR:
-						return this.parseForStatement(t, src, context);
-					case IF:
-						return this.parseIfStatement(t, src, context);
-					case SWITCH:
-						return this.parseSwitchStatement(t, src, context);
-					case TRY:
-						return this.parseTryStatement(t, src, context);
-					case FUNCTION:
-					case FUNCTION_GENERATOR:
-						return this.parseFunctionExpression(t, src, context);
-					case WITH:
-						return this.parseWithStatement(t, src, context);
-					case CONST:
-					case VAR:
-					case LET:
-						return this.parseVariableDeclaration(t, src, context);
+				switch (token.<JSKeyword>getValue()) {
+					case BREAK:
+					case CONTINUE:
+						return this.parseGotoStatement(token, src, context);
 					case CLASS:
-						return this.parseClassUnknown(t, src, context);
+						return this.parseClassUnknown(token, src, context);
+					case CONST:
+					case LET:
+					case VAR:
+						return this.parseVariableDeclaration(token, src, context);
 					case DEBUGGER:
-						return this.parseDebugger(t, src, context);
+						return this.parseDebugger(token, src, context);
+					case DO:
+						return this.parseDoWhileLoop(token, src, context);
+					case AWAIT:
+					case ENUM:
+					case TYPE:
+						throw new UnsupportedOperationException();
+					case EXPORT:
+						return this.parseExportStatement(token, src, context);
+					case FOR:
+						return this.parseForStatement(token, src, context);
+					case FUNCTION:
+						return this.parseFunctionExpression(token, src, context);
+					case FUNCTION_GENERATOR:
+						return this.parseGeneratorKeyword(token, src, context);
+					case IF:
+						return this.parseIfStatement(token, src, context);
+					case IMPORT:
+						return this.parseImportStatement(token, src, context);
+					case INTERFACE:
+						return this.parseInterface(token, src, context);
+					case RETURN:
+					case THROW:
+						return this.parseUnaryStatement(token, src, context);
+					case SWITCH:
+						return this.parseSwitchStatement(token, src, context);
+					case TRY:
+						return this.parseTryStatement(token, src, context);
+					case VOID:
+						return this.parseVoid(token, src, context);
+					case WHILE:
+						return this.parseWhileLoop(token, src, context);
+					case WITH:
+						return this.parseWithStatement(token, src, context);
 					case DELETE:
 					case NEW:
 					case TYPEOF:
@@ -220,28 +242,11 @@ public class JSParser {
 					case YIELD_GENERATOR:
 					case SUPER:
 					case THIS: {
-						ExpressionTree expr = parseUnaryPrefix(t, src, context);
+						ExpressionTree expr = parseUnaryPrefix(token, src, context);
 						if (expr.getKind().isStatement())
 							return (StatementTree) expr;
 						return new ExpressionStatementTreeImpl(expr);
 					}
-					case VOID:
-						return this.parseVoid(t, src, context);
-					case EXPORT:
-						return this.parseExportStatement(t, src, context);
-					case IMPORT:
-						return this.parseImportStatement(t, src, context);
-					case BREAK:
-					case CONTINUE:
-						return this.parseGotoStatement(t, src, context);
-					case RETURN:
-					case THROW:
-						return this.parseUnaryStatement(t, src, context);
-					case TYPE:
-					case ENUM:
-					case INTERFACE:
-						//TODO finish
-						throw new UnsupportedOperationException();
 					case CASE:
 					case CATCH:
 					case FINALLY:
@@ -251,146 +256,49 @@ public class JSParser {
 					case IN:
 					case INSTANCEOF:
 					default:
-						throw new JSSyntaxException("Unexpected keyword " + t.getValue(), t.getStart());
+						throw new JSSyntaxException("Unexpected keyword " + token.getValue(), token.getStart());
 				}
-			case IDENTIFIER:
-				return this.parseNextExpression(t, src, context);
+			case IDENTIFIER: {
+				Token lookahead = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+				if (lookahead != null)
+					return this.parseLabeledStatement(this.parseIdentifier(token, src, context), lookahead, src, context);
+				return this.parseNextExpression(token, src, context);
+			}
 			case BRACKET:
-				if (t.<Character>getValue() == '{')
-					return this.parseBlock(t, src, context);
-				return this.parseNextExpression(t, src, context);
+				if (token.<Character>getValue() == '{')
+					return this.parseBlock(token, src, context);
+				return this.parseNextExpression(token, src, context);
 			case OPERATOR:
-				throw new UnsupportedOperationException();
+				return this.parseUnaryPrefix(token, src, context);
 			case SPECIAL:
-				switch (t.<JSSpecialGroup>getValue()) {
+				switch (token.<JSSpecialGroup>getValue()) {
 					case EOF:
 						return null;
 					case EOL:
 					case SEMICOLON:
-						return new EmptyStatementTreeImpl(t);
+						return new EmptyStatementTreeImpl(token);
 					default:
 						break;
 				}
 			case COMMENT:
 				break;
 		}
-		throw new JSUnexpectedTokenException(t);
+		throw new JSUnexpectedTokenException(token);
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
 		return this.parseStatement(src.nextToken(), src, context);
 	}
 	
-	@Deprecated
 	protected StatementTree parseStatement(Token token, JSLexer src, Context context) {
-		switch (token.getKind()) {
-			case SPECIAL:
-				expect(token, JSSpecialGroup.SEMICOLON);
-				return new EmptyStatementTreeImpl(token);
-			case BRACKET:
-				expect(token, '{');
-				return parseBlock(token, src, context);
-			case KEYWORD:
-				switch (token.<JSKeyword>getValue()) {
-					case BREAK:
-					case CONTINUE:
-						return parseGotoStatement(token, src, context);
-					case DEBUGGER:
-						return parseDebugger(token, src, context);
-					case RETURN:
-					case THROW:
-						return parseUnaryStatement(token, src, context);
-					case DELETE:
-					case NEW:
-					case TYPEOF: {
-						ExpressionTree expr = parseUnaryPrefix(token, src, context);
-						if (expr.getKind().isStatement())
-							return (StatementTree) expr;
-						return new ExpressionStatementTreeImpl(expr);
-					}
-					case AWAIT:
-						// TODO impl
-						break;
-					case VOID:
-						return this.parseVoid(token, src, context);
-					case DO:
-						return this.parseDoWhileLoop(token, src, context);
-					case FOR:
-						return this.parseForStatement(token, src, context);
-					case WHILE:
-						return this.parseWhileLoop(token, src, context);
-					case IMPORT:
-						return this.parseImportStatement(token, src, context);
-					case EXPORT:
-						return this.parseExportStatement(token, src, context);
-					case IF:
-						return this.parseIfStatement(token, src, context);
-					case CLASS:
-						return this.parseClassUnknown(token, src, context);
-					case LET:
-					case VAR:
-					case CONST:
-						return this.parseVariableDeclaration(token, src, context);
-					case FUNCTION:
-						break;
-					case FUNCTION_GENERATOR:
-						return this.parseGeneratorKeyword(token, src, context);
-					case INTERFACE:
-						return this.parseInterface(token, src, context);
-					case SWITCH:
-						return this.parseSwitchStatement(token, src, context);
-					case TRY:
-						return this.parseTryStatement(token, src, context);
-					case WITH:
-						return this.parseWithStatement(token, src, context);
-					//These are all invalid
-					case ELSE:
-					case ENUM:
-					case EXTENDS:
-					case FINALLY:
-					case CASE:
-					case DEFAULT:
-					case CATCH:
-					case IMPLEMENTS:
-					case IN:
-					case INSTANCEOF:
-					case OF:
-					case PACKAGE:
-					case PRIVATE:
-					case PROTECTED:
-					case PUBLIC:
-					case STATIC:
-					case SUPER:
-					case THIS:
-					case YIELD:
-					default:
-						throw new JSUnexpectedTokenException(token);
-				}
-				break;
-			case NUMERIC_LITERAL:
-			case STRING_LITERAL:
-			case BOOLEAN_LITERAL:
-			case NULL_LITERAL:
-			case TEMPLATE_LITERAL:
-			case REGEX_LITERAL:
-			case IDENTIFIER: {
-				ExpressionTree expr = parseNextExpression(token, src, context);
-				if (expr.getKind().isStatement())
-					return (StatementTree) expr;
-				return new ExpressionStatementTreeImpl(expr);
-			}
-			case OPERATOR:
-				if (token.<JSOperator>getValue().arity() == 1) {
-					ExpressionTree expr = parseNextExpression(token, src, context);
-					if (expr.getKind().isStatement())
-						return (StatementTree) expr;
-					return new ExpressionStatementTreeImpl(expr);
-				}
-				break;
-			default:
-				break;
-		}
-		throw new JSUnexpectedTokenException(token);
+		Tree next = parseNext(token, src, context);
+		if (next.getKind().isStatement())
+			return (StatementTree)next;
+		if (next.getKind().isExpression())
+			return new ExpressionStatementTreeImpl((ExpressionTree)next);
+		if (next.getKind().isType())
+			throw new JSSyntaxException("Unexpected TypeTree when parsing statement: " + next);
+		throw new JSSyntaxException("Unexpected Tree when parsing statement: " + next);
 	}
 	
 	/**
