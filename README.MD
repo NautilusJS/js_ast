@@ -19,7 +19,7 @@ This parser should be able to process valid JavaScript and TypeScript. It should
  - Identifiers named certain keywords (e.g., `of` is reserved by me for for-of loops. However, you can do window['of']
  to access it)
 
- ### Things that it MIGHT do in the future
+### Things that it MIGHT do in the future
   - Interpert generated ASTs
   - Compile generated ASTs to Java bytecode
   - Transpile to another dialect of ECMAScript (e.g., TypeScript 1.8 -> ES5)
