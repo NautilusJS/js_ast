@@ -262,12 +262,19 @@ public class JSParser {
 				Token lookahead = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
 				if (lookahead != null)
 					return this.parseLabeledStatement(this.parseIdentifier(token, src, context), lookahead, src, context);
-				return this.parseNextExpression(token, src, context);
 			}
+			case BOOLEAN_LITERAL:
+			case NUMERIC_LITERAL:
+			case STRING_LITERAL:
+			case REGEX_LITERAL:
+			case TEMPLATE_LITERAL:
+			case NULL_LITERAL:
+				return this.parseNextExpression(token, src, context);
 			case BRACKET:
 				if (token.<Character>getValue() == '{')
 					return this.parseBlock(token, src, context);
-				return this.parseNextExpression(token, src, context);
+				else if (token.<Character>getValue() == '[')
+					return this.parseNextExpression(token, src, context);
 			case OPERATOR:
 				return this.parseUnaryExpression(token, src, context);
 			case SPECIAL:
@@ -470,11 +477,13 @@ public class JSParser {
 				}
 				return new NumericLiteralTreeImpl(t);
 			case STRING_LITERAL:
-			case TEMPLATE_LITERAL:
+				return new StringLiteralTreeImpl(t);
 			case BOOLEAN_LITERAL:
+				return new BooleanLiteralTreeImpl(t);
 			case NULL_LITERAL:
-				//TODO finish
-				throw new UnsupportedOperationException();
+				return new NullLiteralTreeImpl(t);
+			case TEMPLATE_LITERAL:
+				return parseLiteral(t, src, context);
 			case OPERATOR:
 				switch (t.<JSOperator>getValue()) {
 					case LEFT_PARENTHESIS:
