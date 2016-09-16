@@ -632,25 +632,22 @@ public class JSParser {
 		//Parse identifier(s)
 		do {
 			Token identifier = src.nextToken();
-			TypeTree type = null;
-			ExpressionTree initializer = null;
 			if (!identifier.isIdentifier())
 				throw new JSUnexpectedTokenException(identifier);
-			Token peek = src.peek();
+			
 			//Check if a type is available
-			if (peek.matches(TokenKind.OPERATOR, JSOperator.COLON)) {
-				src.skip(peek);
+			TypeTree type = null;
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null)
 				type = parseTypeStatement(src.nextToken(), src, context);
-				
-				peek = src.peek();
-			}
+			
 			//Check if an initializer is available
-			if (peek.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-				src.skip(peek);
+			ExpressionTree initializer = null;
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
 				initializer = parseNextExpression(null, src, context);
-			}
-			if (isConst && initializer == null)
+			else if (isConst)
+				//No initializer
 				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
+			
 			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
 		} while (src.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
 		
@@ -768,9 +765,8 @@ public class JSParser {
 		src.expect(JSOperator.RIGHT_PARENTHESIS);
 		StatementTree thenStatement = parseStatement(null, src, context);
 		StatementTree elseStatement = null;
-		Token next = src.peek();
-		if (next.matches(TokenKind.KEYWORD, JSKeyword.ELSE)) {
-			src.skip(next);
+		Token next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.ELSE);
+		if (next != null) {
 			next = src.nextToken();
 			// This if statement isn't really needed, but it speeds up 'else if'
 			// statements by a bit, and else if statements are more common than
@@ -779,9 +775,10 @@ public class JSParser {
 				elseStatement = parseIfStatement(next, src, context);
 			else
 				elseStatement = parseStatement(next, src, context);
+		} else {
+			next = expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
+			elseStatement = new EmptyStatementTreeImpl(next);
 		}
-		if (elseStatement == null)
-			elseStatement = new EmptyStatementTreeImpl(src.getPosition(), src.getPosition());
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
 	
@@ -816,8 +813,7 @@ public class JSParser {
 		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
 		
 		Token next;
-		while ((next = src.peek()).matches(TokenKind.KEYWORD, JSKeyword.CATCH)) {
-			src.skip(next);
+		while ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.CATCH)) != null) {
 			expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 			IdentifierTree param = parseIdentifier(src.nextToken(), src, context);
 			
@@ -836,12 +832,12 @@ public class JSParser {
 
 		//Optional finally block
 		BlockTree finallyBlock = null;
-		if (next.matches(TokenKind.KEYWORD, JSKeyword.FINALLY)) {
-			src.skip(next);
+		if (src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.FINALLY) != null)
 			finallyBlock = parseBlock(null, src, context);
-		}
-		if (finallyBlock == null && catchBlocks.isEmpty())
+		else if (catchBlocks.isEmpty())
+			//No catch or finally blocks
 			throw new JSSyntaxException("Incomplete try statement", src.getPosition());
+		catchBlocks.trimToSize();
 		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
 	}
 	
@@ -925,9 +921,8 @@ public class JSParser {
 				Token identifier = src.nextToken();
 				if (!identifier.isIdentifier())
 					throw new JSUnexpectedTokenException(identifier);
-				Token lookahead = src.peek();
-				if (!context.isStrict() && lookahead.getValue() == JSKeyword.IN) {
-					src.skip(lookahead);
+				Token lookahead;
+				if (!context.isStrict() && (lookahead = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.IN)) != null) {
 					VariableDeclarationTree var = new VariableDeclarationTreeImpl(t.getStart(), identifier.getEnd(), true, t.getValue() == JSKeyword.CONST, Arrays.asList(new VariableDeclaratorTreeImpl(identifier)));
 					return parsePartialForEachLoopTree(forKeywordToken, false, var, src, context);
 				} else {
@@ -1266,20 +1261,12 @@ public class JSParser {
 			ExpressionTree expr = parseNextExpression(next, src, context);
 			
 			//There are multiple expressions here
-			if ((next = src.peek()).matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
-				src.skip(next);
-				
+			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null) {
 				List<Tree> expressions = new ArrayList<>();
 				expressions.add(expr);
 				
 				next = src.nextToken();
 				do {
-					// Lookahead for symbols. This variable is so, in case there
-					// is no declared type, the token can be reused later
-					// (less ovarall computation) at the cost of practically 0
-					// (or maybe <0, b/c GC) memory.
-					Token lookahead = null;
-					
 					if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 						dialect.require("js.parameter.rest", leftParenToken.getStart());
 						//Rest parameter. Must be lambda expression
@@ -1301,9 +1288,8 @@ public class JSParser {
 					} else {
 						final ExpressionTree expression = parseNextExpression(next, src, context);
 						// Check for declared types (means its a lambda param)
-						if ((lookahead = src.peek()).matches(TokenKind.OPERATOR, JSOperator.COLON)) {
-							src.skip(lookahead);
-							
+						Token colonToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+						if (colonToken != null) {
 							if (!arrow) {
 								//Upgrade to lambda
 								dialect.require("js.function.lambda", leftParenToken.getStart());
@@ -1314,26 +1300,22 @@ public class JSParser {
 							}
 							arrow = true;
 							if (expression.getKind() != Kind.IDENTIFIER)
-								throw new JSUnexpectedTokenException(lookahead);
-							//TODO support destructured parameters
+								//TODO support destructured parameters
+								throw new JSUnexpectedTokenException(colonToken);
 							
 							//Parse type declaration
 							TypeTree type = parseTypeStatement(null, src, context);
 							
 							expressions.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), ((IdentifierTree)expression).getName(), false, false, type, null));
-							
-							//Invalidate lookahead (can't be used for the next iteration anymore)
-							lookahead = null;
 						} else if (arrow) {
 							expressions.add(reinterpretExpressionAsParameter(expression));
 						} else {
 							expressions.add(expression);
 						}
 					}
-
-					if (!(next = lookahead == null ? src.peek() : lookahead).matches(TokenKind.OPERATOR, JSOperator.COMMA))
+					Token commaToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA);
+					if (commaToken == null)
 						break;
-					src.skip(next);
 					next = src.nextToken();
 				} while (!src.isEOF());
 				
@@ -1407,9 +1389,11 @@ public class JSParser {
 		context.push().allowIn(true);
 		if (!context.allowIn())
 			throw new IllegalStateException();
+		
+		if (t == null)
+			t = src.nextToken();
+		
 		ExpressionTree expr;
-
-		Token t = src.nextToken();
 		if (t.matches(TokenKind.KEYWORD, JSKeyword.SUPER) && context.inFunction()) {
 			expr = parseSuper(t, src, context);
 		} else if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW)) {
@@ -1555,9 +1539,8 @@ public class JSParser {
 			case KEYWORD:
 				switch (operatorToken.<JSKeyword>getValue()) {
 					case VOID: {
-						Token next = src.peek();
-						if (next.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
-							src.skip(next);
+						Token next;
+						if ((next = src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) != null)
 							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
 						}
 					}
@@ -1625,9 +1608,9 @@ public class JSParser {
 		if (!Validator.canBeAssigned(expr, dialect))
 			throw new JSSyntaxException("Invalid left-hand side expression in " + operatorToken.getKind() + " expression", expr.getStart());
 		Kind kind;
-		if (operatorToken.matches(TokenKind.OPERATOR, JSOperator.INCREMENT))
+		if (operatorToken.getValue() == JSOperator.INCREMENT)
 			kind = Kind.POSTFIX_INCREMENT;
-		else if (operatorToken.matches(TokenKind.OPERATOR, JSOperator.DECREMENT))
+		else if (operatorToken.getValue() == JSOperator.DECREMENT)
 			kind = Kind.POSTFIX_DECREMENT;
 		else
 			throw new JSUnexpectedTokenException(operatorToken, " is not a unary postfix operator.");
