@@ -1040,21 +1040,20 @@ public class JSParser {
 				case KEYWORD:
 					switch (t.<JSKeyword>getValue()) {
 						case NEW:
-							src.skip(t);
 							result = parseNew(t, src, context);
 							continue;
 						case DELETE:
 						case TYPEOF:
 						case VOID:
-							src.skip(t);
-							result = parseUnaryPrefix(t, src, context);
+						case YIELD:
+						case YIELD_GENERATOR:
+							result = parseUnaryExpression(t, src, context);
 							continue;
 					}
 					throw new JSUnexpectedTokenException(t);
 				case OPERATOR:
 					switch (t.<JSOperator>getValue()) {
 						case LEFT_PARENTHESIS:
-							src.skip(t);
 							result = parseGroupExpression(t, src, context);
 							continue;
 						case PLUS:
@@ -1062,7 +1061,6 @@ public class JSParser {
 							if (result != null) {
 								if (context.inBinding())
 									return result;
-								src.skip(t);
 								context.push().enterBinding();
 								ExpressionTree right = parseNextExpression(src, context);
 								context.pop();
@@ -1073,7 +1071,6 @@ public class JSParser {
 							continue;
 						case INCREMENT:
 						case DECREMENT:
-							src.skip(t);
 							if (result == null)
 								result = parseUnaryExpression(t, src, context);
 							else
@@ -1081,7 +1078,6 @@ public class JSParser {
 							continue;
 						case LOGICAL_NOT:
 						case BITWISE_NOT:
-							src.skip(t);
 							if (result != null)
 								throw new JSUnexpectedTokenException(t);
 							result = parseUnaryExpression(t, src, context);
@@ -1099,7 +1095,6 @@ public class JSParser {
 							if (result != null) {
 								if (context.inBinding())
 									return result;
-								src.skip(t);
 								context.push().enterBinding();
 								ExpressionTree right = parseNextExpression(src, context);
 								context.pop();
@@ -1110,7 +1105,6 @@ public class JSParser {
 					}
 					throw new JSUnexpectedTokenException(t);
 				case IDENTIFIER:
-					src.skip(t);
 					if (result != null)
 						throw new JSUnexpectedTokenException(t);
 					result = parseIdentifier(t, src, context);
@@ -1120,7 +1114,6 @@ public class JSParser {
 				case BOOLEAN_LITERAL:
 				case TEMPLATE_LITERAL:
 				case REGEX_LITERAL:
-					src.skip(t);
 					if (result != null)
 						throw new JSUnexpectedTokenException(t);
 					result = parseLiteral(t, src, context);
