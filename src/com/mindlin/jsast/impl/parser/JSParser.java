@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
@@ -14,12 +15,14 @@ import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
+import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
@@ -58,10 +61,11 @@ import com.mindlin.jsast.tree.AssignmentTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
+import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
-import com.mindlin.jsast.tree.EnumTree;
+import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ExpressiveStatementTree;
@@ -74,7 +78,7 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
-import com.mindlin.jsast.tree.InterfaceTree;
+import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
@@ -195,7 +199,7 @@ public class JSParser {
 					case CONTINUE:
 						return this.parseGotoStatement(token, src, context);
 					case CLASS:
-						return this.parseClassUnknown(token, src, context);
+						return this.parseClass(token, src, context);
 					case CONST:
 					case LET:
 					case VAR:
@@ -334,104 +338,112 @@ public class JSParser {
 	}
 
 	/**
-	 * Map a JSOperator type to a Tree.Kind type. Does not support
-	 * {@link JSOperator#PLUS}, {@link JSOperator#MINUS},
-	 * {@link JSOperator#INCREMENT}, or {@link JSOperator#DECREMENT}.
+	 * Map a JSOperator type to a Tree.Kind type. Does not support operators not binary.
 	 * 
 	 * @param operator
 	 * @return
 	 */
-	protected Tree.Kind mapOperatorToTree(JSOperator operator) {
-		switch (operator) {
-			case ADDITION_ASSIGNMENT:
-				return Tree.Kind.ADDITION_ASSIGNMENT;
-			case ASSIGNMENT:
-				return Tree.Kind.ASSIGNMENT;
-			case BITWISE_AND:
-				return Tree.Kind.BITWISE_AND;
-			case BITWISE_AND_ASSIGNMENT:
-				return Tree.Kind.BITWISE_AND_ASSIGNMENT;
-			case BITWISE_NOT:
-				return Tree.Kind.BITWISE_NOT;
-			case BITWISE_OR:
-				return Tree.Kind.BITWISE_OR;
-			case BITWISE_OR_ASSIGNMENT:
-				return Tree.Kind.BITWISE_OR_ASSIGNMENT;
-			case BITWISE_XOR:
-				return Tree.Kind.BITWISE_XOR;
-			case BITWISE_XOR_ASSIGNMENT:
-				return Tree.Kind.BITWISE_XOR_ASSIGNMENT;
-			case DIVISION:
-				return Tree.Kind.DIVISION;
-			case DIVISION_ASSIGNMENT:
-				return Tree.Kind.DIVISION_ASSIGNMENT;
-			case EQUAL:
-				return Tree.Kind.EQUAL;
-			case EXPONENTIATION:
-				return Tree.Kind.EXPONENTIATION;
-			case EXPONENTIATION_ASSIGNMENT:
-				return Tree.Kind.EXPONENTIATION_ASSIGNMENT;
-			case GREATER_THAN:
-				return Tree.Kind.GREATER_THAN;
-			case GREATER_THAN_EQUAL:
-				return Tree.Kind.GREATER_THAN_EQUAL;
-			case LAMBDA:
-				return Tree.Kind.FUNCTION;
-			case LEFT_SHIFT:
-				return Tree.Kind.LEFT_SHIFT;
-			case LEFT_SHIFT_ASSIGNMENT:
-				return Tree.Kind.LEFT_SHIFT_ASSIGNMENT;
-			case LESS_THAN:
-				return Tree.Kind.LESS_THAN;
-			case LESS_THAN_EQUAL:
-				return Tree.Kind.LESS_THAN_EQUAL;
-			case LOGICAL_AND:
-				return Tree.Kind.LOGICAL_AND;
-			case LOGICAL_NOT:
-				return Tree.Kind.LOGICAL_NOT;
-			case LOGICAL_OR:
-				return Tree.Kind.LOGICAL_OR;
-			case MULTIPLICATION:
-				return Tree.Kind.MULTIPLICATION;
-			case MULTIPLICATION_ASSIGNMENT:
-				return Tree.Kind.MULTIPLICATION_ASSIGNMENT;
-			case NOT_EQUAL:
-				return Tree.Kind.NOT_EQUAL;
-			case PERIOD:
-				return Tree.Kind.MEMBER_SELECT;
-			case QUESTION_MARK:
-				return Tree.Kind.CONDITIONAL;
-			case REMAINDER:
-				return Tree.Kind.REMAINDER;
-			case REMAINDER_ASSIGNMENT:
-				return Tree.Kind.REMAINDER_ASSIGNMENT;
-			case LEFT_PARENTHESIS:
-			case RIGHT_PARENTHESIS:
-				return Tree.Kind.PARENTHESIZED;
-			case RIGHT_SHIFT:
-				return Tree.Kind.RIGHT_SHIFT;
-			case RIGHT_SHIFT_ASSIGNMENT:
-				return Tree.Kind.RIGHT_SHIFT_ASSIGNMENT;
-			case SPREAD:
-				return Tree.Kind.SPREAD;
-			case STRICT_EQUAL:
-				return Tree.Kind.STRICT_EQUAL;
-			case STRICT_NOT_EQUAL:
-				return Tree.Kind.STRICT_NOT_EQUAL;
-			case SUBTRACTION_ASSIGNMENT:
-				return Tree.Kind.SUBTRACTION_ASSIGNMENT;
-			case UNSIGNED_RIGHT_SHIFT:
-				return Tree.Kind.UNSIGNED_RIGHT_SHIFT;
-			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-				return Tree.Kind.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
-			case INCREMENT:
-			case DECREMENT:
-			case MINUS:
-			case PLUS:
-			case COLON:
-			default:
-				throw new UnsupportedOperationException();
-		}
+	protected Tree.Kind mapTokenToBinaryTree(Token token) {
+		if (token.isOperator())
+			switch (token.<JSOperator>getValue()) {
+				case ADDITION_ASSIGNMENT:
+					return Tree.Kind.ADDITION_ASSIGNMENT;
+				case ASSIGNMENT:
+					return Tree.Kind.ASSIGNMENT;
+				case BITWISE_AND:
+					return Tree.Kind.BITWISE_AND;
+				case BITWISE_AND_ASSIGNMENT:
+					return Tree.Kind.BITWISE_AND_ASSIGNMENT;
+				case BITWISE_NOT:
+					return Tree.Kind.BITWISE_NOT;
+				case BITWISE_OR:
+					return Tree.Kind.BITWISE_OR;
+				case BITWISE_OR_ASSIGNMENT:
+					return Tree.Kind.BITWISE_OR_ASSIGNMENT;
+				case BITWISE_XOR:
+					return Tree.Kind.BITWISE_XOR;
+				case BITWISE_XOR_ASSIGNMENT:
+					return Tree.Kind.BITWISE_XOR_ASSIGNMENT;
+				case DIVISION:
+					return Tree.Kind.DIVISION;
+				case DIVISION_ASSIGNMENT:
+					return Tree.Kind.DIVISION_ASSIGNMENT;
+				case EQUAL:
+					return Tree.Kind.EQUAL;
+				case EXPONENTIATION:
+					return Tree.Kind.EXPONENTIATION;
+				case EXPONENTIATION_ASSIGNMENT:
+					return Tree.Kind.EXPONENTIATION_ASSIGNMENT;
+				case GREATER_THAN:
+					return Tree.Kind.GREATER_THAN;
+				case GREATER_THAN_EQUAL:
+					return Tree.Kind.GREATER_THAN_EQUAL;
+				case LEFT_SHIFT:
+					return Tree.Kind.LEFT_SHIFT;
+				case LEFT_SHIFT_ASSIGNMENT:
+					return Tree.Kind.LEFT_SHIFT_ASSIGNMENT;
+				case LESS_THAN:
+					return Tree.Kind.LESS_THAN;
+				case LESS_THAN_EQUAL:
+					return Tree.Kind.LESS_THAN_EQUAL;
+				case LOGICAL_AND:
+					return Tree.Kind.LOGICAL_AND;
+				case LOGICAL_NOT:
+					return Tree.Kind.LOGICAL_NOT;
+				case LOGICAL_OR:
+					return Tree.Kind.LOGICAL_OR;
+				case MINUS:
+					return Tree.Kind.SUBTRACTION;
+				case MULTIPLICATION:
+					return Tree.Kind.MULTIPLICATION;
+				case MULTIPLICATION_ASSIGNMENT:
+					return Tree.Kind.MULTIPLICATION_ASSIGNMENT;
+				case NOT_EQUAL:
+					return Tree.Kind.NOT_EQUAL;
+				case PERIOD:
+					return Tree.Kind.MEMBER_SELECT;
+				case PLUS:
+					return Tree.Kind.ADDITION;
+				case QUESTION_MARK:
+					return Tree.Kind.CONDITIONAL;
+				case REMAINDER:
+					return Tree.Kind.REMAINDER;
+				case REMAINDER_ASSIGNMENT:
+					return Tree.Kind.REMAINDER_ASSIGNMENT;
+				case RIGHT_SHIFT:
+					return Tree.Kind.RIGHT_SHIFT;
+				case RIGHT_SHIFT_ASSIGNMENT:
+					return Tree.Kind.RIGHT_SHIFT_ASSIGNMENT;
+				case STRICT_EQUAL:
+					return Tree.Kind.STRICT_EQUAL;
+				case STRICT_NOT_EQUAL:
+					return Tree.Kind.STRICT_NOT_EQUAL;
+				case SUBTRACTION_ASSIGNMENT:
+					return Tree.Kind.SUBTRACTION_ASSIGNMENT;
+				case UNSIGNED_RIGHT_SHIFT:
+					return Tree.Kind.UNSIGNED_RIGHT_SHIFT;
+				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					return Tree.Kind.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
+				case INCREMENT:
+				case DECREMENT:
+				case COLON:
+				case COMMA:
+				case LAMBDA:
+				case LEFT_PARENTHESIS:
+				case RIGHT_PARENTHESIS:
+				default:
+					break;
+			}
+		if (token.isKeyword())
+			switch (token.<JSKeyword>getValue()) {
+				case YIELD:
+					return Tree.Kind.YIELD;
+				case YIELD_GENERATOR:
+					return Tree.Kind.YIELD_GENERATOR;
+				default:
+					break;
+			}
+		throw new JSSyntaxException(token + "is not a binary operator", token.getStart());
 	}
 	
 	ParameterTree reinterpretExpressionAsParameter(ExpressionTree expr) {
@@ -466,61 +478,54 @@ public class JSParser {
 	}
 	
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
-		if (t == null)
-			t = src.nextToken();
 		switch (t.getKind()) {
 			case IDENTIFIER:
-				return new IdentifierTreeImpl(t);
+				return parseIdentifier(t, src, context);
 			case NUMERIC_LITERAL:
 				if (context.isStrict()) {
 					//TODO throw error on implicit octal
 				}
-				return new NumericLiteralTreeImpl(t);
 			case STRING_LITERAL:
-				return new StringLiteralTreeImpl(t);
 			case BOOLEAN_LITERAL:
-				return new BooleanLiteralTreeImpl(t);
 			case NULL_LITERAL:
-				return new NullLiteralTreeImpl(t);
 			case TEMPLATE_LITERAL:
 				return parseLiteral(t, src, context);
 			case OPERATOR:
 				switch (t.<JSOperator>getValue()) {
 					case LEFT_PARENTHESIS:
+						context.exitBinding();
+						return this.parseGroupExpression(t, src, context.pushed());
 					case DIVISION:
 					case DIVISION_ASSIGNMENT:
-						//TODO finish
+						//TODO finish (parse regex literal)
+						throw new UnsupportedOperationException();
+					default:
+						throw new JSUnexpectedTokenException(t);
 				}
-				break;
 			case BRACKET:
 				switch ((char)t.getValue()) {
 					case '[':
 						this.parseArrayInitializer(t, src, context);
 					case '{':
 						this.parseObjectInitializer(t, src, context);
+					default:
+						throw new JSUnexpectedTokenException(t);
 				}
-				break;
 			case KEYWORD:
-				ExpressionTree expr;
+				context.isAssignmentTarget(false).exitBinding();
 				switch (t.<JSKeyword>getValue()) {
-					case YIELD:
-						if (!context.allowYield())
-							throw new JSUnexpectedTokenException(t);
-						//TODO finish
-						break;
 					case FUNCTION:
 						return this.parseFunctionExpression(t, src, context);
 					case THIS:
 						return parseThis(t, src, context);
 					case CLASS:
-						
+						return this.parseClass(t, src, context);
+					default:
+						throw new JSUnexpectedTokenException(t);
 				}
-				break;
-			case SPECIAL:
 			default:
-				break;
+				throw new JSUnexpectedTokenException(t);
 		}
-		throw new UnsupportedOperationException();
 	}
 	
 	protected List<ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
@@ -534,7 +539,7 @@ public class JSParser {
 			 if (t.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
 				 expr = parseSpread(t, src, context);
 			 else
-				 expr = parseNextExpression(src, context);
+				 expr = parseAssignment(t, src, context.pushed());
 			 result.add(expr);
 			 t = src.nextToken();
 			 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
@@ -683,7 +688,7 @@ public class JSParser {
 	//Type structures
 	
 	@JSKeywordParser(JSKeyword.CLASS)
-	protected StatementTree parseClassUnknown(Token classKeywordToken, JSLexer src, Context context) {
+	protected ClassDeclarationTree parseClass(Token classKeywordToken, JSLexer src, Context context) {
 		if (classKeywordToken == null)
 			classKeywordToken = src.nextToken();
 		//TODO fix for abstract classes
@@ -714,7 +719,7 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected InterfaceTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
+	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
 		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
 		Token next = src.nextToken();
 		expect(next, TokenKind.IDENTIFIER);
@@ -729,7 +734,7 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected EnumTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
+	protected EnumDeclarationTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -819,7 +824,6 @@ public class JSParser {
 	
 	protected TryTree parseTryStatement(Token tryKeywordToken, JSLexer src, Context context) {
 		tryKeywordToken = expect(tryKeywordToken, TokenKind.KEYWORD, JSKeyword.TRY, src, context);
-		//TODO support try-with-resources?
 		BlockTree tryBlock = parseBlock(null, src, context);
 		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
 		
@@ -1123,8 +1127,6 @@ public class JSParser {
 				case BOOLEAN_LITERAL:
 				case TEMPLATE_LITERAL:
 				case REGEX_LITERAL:
-					if (result != null)
-						throw new JSUnexpectedTokenException(t);
 					result = parseLiteral(t, src, context);
 					continue;
 			}
@@ -1245,8 +1247,187 @@ public class JSParser {
 		Token operatorToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.EXPONENTIATION);
 		if (operatorToken == null)
 			return expr;
-		final ExpressionTree right = parseExponentiation(null, src, context.pushed().isAssignmentTarget(false).exitBinding());
+		context.isAssignmentTarget(false).exitBinding().push();
+		final ExpressionTree right = parseExponentiation(null, src, context);
+		context.pop();
 		return new BinaryTreeImpl(t.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
+	}
+	
+	int binaryPrecedence(Token t) {
+		if (t.isOperator())
+			switch (t.<JSOperator>getValue()) {
+				case COMMA:
+					return 0;
+				case SPREAD:
+					break;
+				case ASSIGNMENT:
+				case ADDITION_ASSIGNMENT:
+				case SUBTRACTION_ASSIGNMENT:
+				case MULTIPLICATION_ASSIGNMENT:
+				case DIVISION_ASSIGNMENT:
+				case EXPONENTIATION_ASSIGNMENT:
+				case REMAINDER_ASSIGNMENT:
+				case BITWISE_OR_ASSIGNMENT:
+				case BITWISE_XOR_ASSIGNMENT:
+				case BITWISE_AND_ASSIGNMENT:
+				case LEFT_SHIFT_ASSIGNMENT:
+				case RIGHT_SHIFT_ASSIGNMENT:
+				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					return 3;
+				case QUESTION_MARK:
+					return 4;
+				case LOGICAL_OR:
+					return 5;
+				case LOGICAL_AND:
+					return 6;
+				case BITWISE_OR:
+					return 7;
+				case BITWISE_XOR:
+					return 8;
+				case BITWISE_AND:
+					return 9;
+				case STRICT_EQUAL:
+				case STRICT_NOT_EQUAL:
+				case EQUAL:
+				case NOT_EQUAL:
+					return 10;
+				case LESS_THAN:
+				case GREATER_THAN:
+				case LESS_THAN_EQUAL:
+				case GREATER_THAN_EQUAL:
+					return 11;
+				case LEFT_SHIFT:
+				case RIGHT_SHIFT:
+				case UNSIGNED_RIGHT_SHIFT:
+					return 12;
+				case PLUS:
+				case MINUS:
+					return 13;
+				case MULTIPLICATION:
+				case DIVISION:
+				case REMAINDER:
+				case EXPONENTIATION:
+					return 14;
+				case PERIOD:
+					return 18;
+				default:
+					return -1;
+			}
+		if (t.isKeyword())
+			switch (t.<JSKeyword>getValue()) {
+				case YIELD:
+				case YIELD_GENERATOR:
+					return 2;
+				case IN:
+				case INSTANCEOF:
+					return 11;
+				default:
+					return -1;
+			}
+		return -1;
+	}
+	
+	protected ExpressionTree parseBinaryExpression(Token startToken, JSLexer src, Context context) {
+		if (startToken == null)
+			startToken = src.nextToken();
+		
+		context.push();
+		ExpressionTree expr = parseExponentiation(startToken, src, context);
+		context.pop();
+		
+		Token token = src.peek();
+		expect(token, TokenKind.OPERATOR, null, context);
+		
+		int precedence = binaryPrecedence(token);
+		if (precedence < 0)
+			return expr;
+		
+		src.skip(token);
+		context.isAssignmentTarget(false);
+		context.exitBinding();
+		
+		final Stack<Token> operators = new Stack<>();
+		operators.add(token);
+		
+		ExpressionTree left = expr;
+		ExpressionTree right = parseExponentiation(src.nextToken(), src, context);
+		
+		final Stack<ExpressionTree> stack = new Stack<>();
+		stack.add(left);
+		stack.add(right);
+		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
+			while (stack.size() > 1 && (precedence <= binaryPrecedence(operators.peek()))) {
+				right = stack.pop();
+				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
+				left = stack.pop();
+				stack.add(new BinaryTreeImpl(kind, left, right));
+			}
+			//Shift top onto stack
+			token = src.nextToken();
+			operators.add(token);
+			stack.add(parseExponentiation(src.nextToken(), src, context));
+		}
+		//Final reduce
+		for (int i = stack.size() - 1; i > 1; i --) {
+			left = stack.pop();
+			final Kind kind = this.mapTokenToBinaryTree(operators.pop());
+			right = expr;
+			expr = new BinaryTreeImpl(kind, left, right);
+		}
+		if (!stack.isEmpty()) {
+			System.out.println(stack);
+			throw new IllegalStateException("Stack not empty");
+		}
+		return expr;
+	}
+	
+	protected ExpressionTree parseConditional(Token startToken, JSLexer src, Context context) {
+		ExpressionTree expr = this.parseBinaryExpression(startToken, src, context.pushed());
+		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
+		if (next == null)
+			return expr;
+		
+		context.push();
+		context.allowIn(true);
+		ExpressionTree concequent = parseAssignment(null, src, context);
+		context.pop();
+		
+		expectOperator(JSOperator.COLON, src, context);
+		ExpressionTree alternate = parseAssignment(null, src, context);
+		
+		context.isAssignmentTarget(false);
+		context.exitBinding();
+		
+		return new ConditionalExpressionTreeImpl(expr, concequent, alternate);
+	}
+	
+	ExpressionTree reinterpretExpressionAsPattern(ExpressionTree expr) {
+		throw new UnsupportedOperationException();
+	}
+	
+	protected ExpressionTree parseAssignment(Token startToken, JSLexer src, Context context) {
+		if (startToken == null)
+			startToken = src.nextToken();
+		if (context.allowYield() && startToken.matches(TokenKind.KEYWORD, JSKeyword.YIELD)) {
+			//TODO finish
+			throw new UnsupportedOperationException();
+		}
+		ExpressionTree expr = this.parseConditional(startToken, src, context);
+		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
+			return expr;
+		if (!context.isAssignmentTarget())
+			throw new JSSyntaxException("Not assignment target", src.getPosition());
+		if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
+			context.isAssignmentTarget(false);
+			context.exitBinding();
+		} else {
+			expr = reinterpretExpressionAsPattern(expr);
+		}
+		
+		Token assignmentOperator = src.nextToken();
+		
+		final ExpressionTree right = this.parseAssignment(null, src, context.pushed());
+		return new AssignmentTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
 	}
 	/**
 	 * Parse an expression starting with <kbd>(</kbd>, generating either a
@@ -1409,15 +1590,14 @@ public class JSParser {
 	}
 	
 	protected ExpressionTree parseLeftSideExpression(Token t, JSLexer src, Context context, boolean allowCall) {
+		if (t == null)
+			t = src.nextToken();
 		context.push().allowIn(true);
 		if (!context.allowIn())
 			throw new IllegalStateException();
 		
-		if (t == null)
-			t = src.nextToken();
-		
 		ExpressionTree expr;
-		if (t.matches(TokenKind.KEYWORD, JSKeyword.SUPER) && context.inFunction()) {
+		if (context.inFunction() && t.matches(TokenKind.KEYWORD, JSKeyword.SUPER)) {
 			expr = parseSuper(t, src, context);
 		} else if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW)) {
 			expr = parseNew(t, src, context);
@@ -1508,7 +1688,7 @@ public class JSParser {
 
 	//Literals
 	
-	protected LiteralTree parseLiteral(Token literalToken, JSLexer src, Context context) {
+	protected LiteralTree<?> parseLiteral(Token literalToken, JSLexer src, Context context) {
 		if (literalToken == null)
 			literalToken = src.nextToken();
 		switch (literalToken.getKind()) {
@@ -1563,7 +1743,6 @@ public class JSParser {
 	
 	//Unary ops
 	
-	
 	protected ExpressionTree parseUnaryExpression(Token operatorToken, JSLexer src, Context context) {
 		if (operatorToken == null)
 			operatorToken = src.nextToken();
@@ -1572,11 +1751,9 @@ public class JSParser {
 		switch (operatorToken.getKind()) {
 			case KEYWORD:
 				switch (operatorToken.<JSKeyword>getValue()) {
-					case VOID: {
-						Token next;
-						if ((next = src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) != null)
+					case VOID:
+						if (src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON) != null)
 							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
-					}
 						kind = Tree.Kind.VOID;
 						break;
 					case TYPEOF:
@@ -1586,8 +1763,11 @@ public class JSParser {
 						kind = Tree.Kind.DELETE;
 						break;
 					case YIELD:
+						kind = Tree.Kind.YIELD;
+						break;
 					case YIELD_GENERATOR:
-						throw new UnsupportedOperationException("Not yet supported");
+						kind = Tree.Kind.YIELD_GENERATOR;
+						break;
 					default:
 						break;
 				}
@@ -1675,7 +1855,7 @@ public class JSParser {
 		}
 		
 		public Context(ContextData data) {
-			data = data;
+			this.data = data;
 		}
 		
 		public Context setScriptName(String name) {
