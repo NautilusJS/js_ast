@@ -18,6 +18,7 @@ import com.mindlin.jsast.impl.util.Characters;
 
 public class JSLexer implements Supplier<Token> {
 	protected final CharacterStream chars;
+	protected Token lookahead = null;
 	
 	public JSLexer(char[] chars) {
 		this(new CharacterArrayStream(chars));
@@ -445,9 +446,15 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public Token nextToken() {
+		if (this.lookahead != null) {
+			Token result = this.lookahead;
+			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+				skip(result);
+			return result;
+		}
 		chars.skipWhitespace();
 		if (isEOF())
-			return new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+			return this.lookahead = new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
 		final long start = Math.max(chars.position(), -1);
 		char c = chars.peekNext();
 		Object value = null;
@@ -556,14 +563,20 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public Token peek() {
+		if (this.lookahead != null)
+			return this.lookahead;
 		chars.mark();
-		Token result = nextToken();
+		this.lookahead = nextToken();
 		chars.resetToMark();
-		return result;
+		return this.lookahead;
 	}
 	
 	public Token skip(Token token) {
-		//chars.skip(token.getLength());
+		if (token != this.lookahead)
+			throw new IllegalArgumentException("Skipped token " + token + " is not lookahead");
+		if (token.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+			throw new IllegalStateException("Cannot skip EOF token " + token);
+		this.lookahead = null;
 		chars.position(token.getEnd());
 		return token;
 	}
