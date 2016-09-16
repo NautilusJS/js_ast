@@ -60,7 +60,7 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return "<";
 			case IN:
 				return " in ";
-			case INSTANCE_OF:
+			case INSTANCEOF:
 				return " instanceof ";
 			case LEFT_SHIFT:
 				return "<<";

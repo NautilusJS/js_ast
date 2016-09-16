@@ -1,6 +1,15 @@
 package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
+import com.mindlin.jsast.tree.type.AnyTypeTree;
+import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.FunctionTypeTree;
+import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.IdentifierTypeTree;
+import com.mindlin.jsast.tree.type.InterfaceTypeTree;
+import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.UnionTypeTree;
+import com.mindlin.jsast.tree.type.VoidTypeTree;
 
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
 //http://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/index.html
@@ -20,76 +29,78 @@ public interface Tree {
 		WHILE_LOOP(WhileLoopTree.class),
 
 		// Unary operators
-		POSTFIX_DECREMENT,
-		POSTFIX_INCREMENT,
-		PREFIX_DECREMENT,
-		PREFIX_INCREMENT,
-		UNARY_PLUS,
-		UNARY_MINUS,
-		DELETE,
+		POSTFIX_DECREMENT(UnaryTree.class),
+		POSTFIX_INCREMENT(UnaryTree.class),
+		PREFIX_DECREMENT(UnaryTree.class),
+		PREFIX_INCREMENT(UnaryTree.class),
+		UNARY_PLUS(UnaryTree.class),
+		UNARY_MINUS(UnaryTree.class),
+		DELETE(UnaryTree.class),
 
 		// Binary operators
-		ADDITION,
-		SUBTRACTION,
-		MULTIPLICATION,
-		DIVISION,
-		REMAINDER,
-		EXPONENTIATION,
-		LEFT_SHIFT,
-		RIGHT_SHIFT,
-		UNSIGNED_RIGHT_SHIFT,
+		ADDITION(BinaryTree.class),
+		SUBTRACTION(BinaryTree.class),
+		MULTIPLICATION(BinaryTree.class),
+		DIVISION(BinaryTree.class),
+		REMAINDER(BinaryTree.class),
+		EXPONENTIATION(BinaryTree.class),
+		LEFT_SHIFT(BinaryTree.class),
+		RIGHT_SHIFT(BinaryTree.class),
+		UNSIGNED_RIGHT_SHIFT(BinaryTree.class),
 
 		// Bitwise operators
-		BITWISE_AND,
-		BITWISE_OR,
-		BITWISE_XOR,
-		BITWISE_NOT,
+		BITWISE_AND(BinaryTree.class),
+		BITWISE_OR(BinaryTree.class),
+		BITWISE_XOR(BinaryTree.class),
+		BITWISE_NOT(BinaryTree.class),
 
 		// Assignment operators
 		ASSIGNMENT(AssignmentTree.class),
-		ADDITION_ASSIGNMENT,
-		SUBTRACTION_ASSIGNMENT,
-		MULTIPLICATION_ASSIGNMENT,
-		DIVISION_ASSIGNMENT,
-		REMAINDER_ASSIGNMENT,
-		EXPONENTIATION_ASSIGNMENT,
-		LEFT_SHIFT_ASSIGNMENT,
-		RIGHT_SHIFT_ASSIGNMENT,
-		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT,
+		ADDITION_ASSIGNMENT(AssignmentTree.class),
+		SUBTRACTION_ASSIGNMENT(AssignmentTree.class),
+		MULTIPLICATION_ASSIGNMENT(AssignmentTree.class),
+		DIVISION_ASSIGNMENT(AssignmentTree.class),
+		REMAINDER_ASSIGNMENT(AssignmentTree.class),
+		EXPONENTIATION_ASSIGNMENT(AssignmentTree.class),
+		LEFT_SHIFT_ASSIGNMENT(AssignmentTree.class),
+		RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
+		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
 
 		// Assignment bitwise operators
-		BITWISE_AND_ASSIGNMENT,
-		BITWISE_OR_ASSIGNMENT,
-		BITWISE_XOR_ASSIGNMENT,
+		BITWISE_AND_ASSIGNMENT(BinaryTree.class),
+		BITWISE_OR_ASSIGNMENT(BinaryTree.class),
+		BITWISE_XOR_ASSIGNMENT(BinaryTree.class),
 
 		// Comparison operators
-		EQUAL,
-		NOT_EQUAL,
-		STRICT_EQUAL,
-		STRICT_NOT_EQUAL,
-		GREATER_THAN,
-		LESS_THAN,
-		GREATER_THAN_EQUAL,
-		LESS_THAN_EQUAL,
+		EQUAL(BinaryTree.class),
+		NOT_EQUAL(BinaryTree.class),
+		STRICT_EQUAL(BinaryTree.class),
+		STRICT_NOT_EQUAL(BinaryTree.class),
+		GREATER_THAN(BinaryTree.class),
+		LESS_THAN(BinaryTree.class),
+		GREATER_THAN_EQUAL(BinaryTree.class),
+		LESS_THAN_EQUAL(BinaryTree.class),
 
 		// Logical operators
-		LOGICAL_AND,
-		LOGICAL_OR,
-		LOGICAL_NOT,
+		LOGICAL_AND(BinaryTree.class),
+		LOGICAL_OR(BinaryTree.class),
+		LOGICAL_NOT(BinaryTree.class),
 
 		// Literals
 		BOOLEAN_LITERAL(BooleanLiteralTree.class),
-		ARRAY_LITERAL(ArrayLiteralTree.class),
 		NULL_LITERAL(NullLiteralTree.class),
 		NUMERIC_LITERAL(NumericLiteralTree.class),
-		OBJECT_LITERAL(ObjectLiteralTree.class),
 		REGEXP_LITERAL,
 		STRING_LITERAL(StringLiteralTree.class),
 		TEMPLATE_LITERAL,
+		ARRAY_LITERAL(ArrayLiteralTree.class),
+		OBJECT_LITERAL(ObjectLiteralTree.class),
+		OBJECT_LITERAL_PROPERTY(ObjectLiteralPropertyTree.class),
 
 		// Misc. operators
 		SEQUENCE(SequenceTree.class),
 		PARENTHESIZED(ParenthesizedTree.class),
+		INSTANCEOF(BinaryTree.class),
 
 		// Member access
 		ARRAY_ACCESS(ArrayAccessTree.class),
@@ -109,6 +120,8 @@ public interface Tree {
 		IF(IfTree.class),
 		WITH(WithTree.class),
 		CONDITIONAL(ConditionalExpressionTree.class),
+		YIELD(UnaryTree.class),
+		YIELD_GENERATOR(UnaryTree.class),
 
 		// GOTO stuff
 		LABELED_STATEMENT(LabeledStatementTree.class),
@@ -122,26 +135,24 @@ public interface Tree {
 		EXPORT(ExportTree.class),
 
 		// Class stuff
-		CLASS_EXPRESSION,
-		CLASS_DECLARATION,
-		INTERFACE_DECLARATION, // Support some typescript
-		PROPERTY(PropertyTree.class),
+		CLASS_DECLARATION(ClassDeclarationTree.class),
+		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
+		ENUM_DECLARATION(EnumDeclarationTree.class),
 		METHOD_DEFINITION,
 
 		// Type stuff
-		VOID_TYPE,
-		ANY_TYPE,
-		ARRAY_TYPE,
-		TUPLE_TYPE,
-		FUNCTION_TYPE,
-		TYPE_IDENTIFIER,
-		ENUM,
-		UNION,
-		GENERIC_PARAM,
+		ANY_TYPE(AnyTypeTree.class),
+		VOID_TYPE(VoidTypeTree.class),
+		ARRAY_TYPE(ArrayTypeTree.class),
+		TUPLE_TYPE(TupleTypeTree.class),
+		FUNCTION_TYPE(FunctionTypeTree.class),
+		IDENTIFIER_TYPE(IdentifierTypeTree.class),
+		UNION(UnionTypeTree.class),
+		GENERIC_PARAM(GenericTypeTree.class),
+		INTERFACE_TYPE(InterfaceTypeTree.class),
 
 		// Array stuff
-		IN,
-		OF,
+		IN(BinaryTree.class),
 		SPREAD(SpreadTree.class),
 
 		// Method invocation
@@ -157,8 +168,7 @@ public interface Tree {
 		SUPER_EXPRESSION(SuperExpressionTree.class),
 
 		// Prototype stuff
-		TYPEOF,
-		INSTANCE_OF(InstanceOfTree.class),
+		TYPEOF(UnaryTree.class),
 
 		ERROR(ErroneousTree.class),
 		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
