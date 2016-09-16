@@ -5,7 +5,7 @@ import java.util.List;
 public interface FunctionExpressionTree extends ExpressionTree {
 	StatementTree getBody();
 
-	String getName();
+	IdentifierTree getName();
 
 	List<ParameterTree> getParameters();
 
