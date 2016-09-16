@@ -8,7 +8,7 @@ package com.mindlin.jsast.tree;
  * TODO Does not yet support destructuring.
  * @author mailmindlin
  */
-public interface ParameterTree extends IdentifierTree {
+public interface ParameterTree extends Tree {
 	boolean isRest();
 
 	boolean isOptional();
@@ -16,6 +16,8 @@ public interface ParameterTree extends IdentifierTree {
 	TypeTree getType();
 	
 	ExpressionTree getInitializer();
+	
+	IdentifierTree getIdentifier();
 
 	@Override
 	default Tree.Kind getKind() {

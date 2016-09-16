@@ -460,12 +460,12 @@ public class JSParser {
 				// as a default value (except ones that won't run at all)
 				
 				IdentifierTree identifier = (IdentifierTree) assignment.getLeftOperand();
-				return new ParameterTreeImpl(identifier.getStart(), assignment.getRightOperand().getEnd(), identifier.getName(), false, false, null, assignment.getRightOperand());
+				return new ParameterTreeImpl(identifier.getStart(), assignment.getRightOperand().getEnd(), identifier, false, false, null, assignment.getRightOperand());
 			}
 			case SPREAD:
 				dialect.require("js.parameter.rest", expr.getStart());
 				//Turn into rest parameter
-				return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), ((IdentifierTree)((UnaryTree)expr).getExpression()).getName(), true, false, null, null);
+				return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), (IdentifierTree)((UnaryTree)expr).getExpression(), true, false, null, null);
 			case ARRAY_LITERAL:
 			case OBJECT_LITERAL:
 				dialect.require("js.parameter.destructured", expr.getStart());
@@ -1366,12 +1366,22 @@ public class JSParser {
 			if (!identifier.isIdentifier()) {
 				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 					Token spread = identifier;
-					ExpressionTree restParam = this.reinterpretExpressionAsParameter(this.parseSpread(spread, src, context));
+					SpreadTree expr = this.parseSpread(spread, src, context);
 					
-					//TODO types/defaults
+					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null)
+						throw new JSSyntaxException("Rest parameters cannot be optional", src.getPosition());
+					
+					TypeTree type = null;
+					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null)
+						type = parseTypeStatement(null, src, context);
+					
+					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
+						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
 					
 					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
-						throw new JSSyntaxException("Rest parameter must be the last", spread.getStart());
+						throw new JSSyntaxException("Rest parameter must be the last", src.getPosition());
+					
+					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), (IdentifierTree)expr.getExpression(), true, false, type, null));
 					break;
 				}
 				throw new JSUnexpectedTokenException(identifier);
@@ -1389,7 +1399,7 @@ public class JSParser {
 			if (assignment != null)
 				defaultValue = parseAssignment(null, src, context);
 			
-			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), identifier.<String>getValue()), false, optional, type, defaultValue);
+			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
 		result.trimToSize();
@@ -1467,7 +1477,7 @@ public class JSParser {
 							//Parse type declaration
 							TypeTree type = parseTypeStatement(null, src, context);
 							
-							params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), ((IdentifierTree)expression).getName(), false, false, type, null));
+							params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, false, type, null));
 							
 							if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null)
 								params.addAll(this.parseParameters(src, context));
@@ -1565,7 +1575,7 @@ public class JSParser {
 		
 		while (true) {
 			if ((t = src.nextTokenIf(TokenKind.BRACKET, '[')) != null) {
-				ExpressionTree property = parseNextExpression(null, src, context.pushed().exitBinding().isAssignmentTarget(true));
+				ExpressionTree property = parseNextExpression(t, src, context.pushed().exitBinding().isAssignmentTarget(true));
 				expect(TokenKind.BRACKET, ']', src, context);
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
