@@ -665,7 +665,7 @@ public class JSParser {
 				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
 			
 			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
-		} while (src.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
+		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
@@ -927,8 +927,8 @@ public class JSParser {
 				context.push().allowIn(false);
 				VariableDeclarationTree declarations = parseVariableDeclaration(t, src, context);
 				context.pop();
-				t = src.nextToken();
-				if (declarations.getDeclarations().size() == 1 && declarations.getDeclarations().get(0).getIntitializer() == null && (t.matches(TokenKind.KEYWORD, JSKeyword.IN) || t.matches(TokenKind.KEYWORD, JSKeyword.OF)))
+				t = src.nextTokenIf(token->(token.isKeyword() && (token.getValue() == JSKeyword.OF || token.getValue() == JSKeyword.IN)));
+				if (t != null && declarations.getDeclarations().size() == 1 && declarations.getDeclarations().get(0).getIntitializer() == null)
 					return parsePartialForEachLoopTree(forKeywordToken, t.getValue() == JSKeyword.OF, declarations, src, context);
 				initializer = declarations;
 			} else if (t.getValue() == JSKeyword.LET || t.getValue() == JSKeyword.CONST) {
@@ -957,15 +957,6 @@ public class JSParser {
 			throw new UnsupportedOperationException();
 		}
 		throw new JSSyntaxException("Invalid 'for' loop", src.getPosition());
-	}
-	
-	protected ForLoopTree parseForLoopTree(Token forKeywordToken, JSLexer src, Context context) {
-		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, context);
-		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		StatementTree initializer = parseStatement(src, context);
-		
-		expectSemicolon(src, context);
-		return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
 	}
 	
 	/**
@@ -1292,9 +1283,11 @@ public class JSParser {
 			stack.add(parseExponentiation(src.nextToken(), src, context));
 		}
 		expr = stack.pop();
-		System.out.println("Stack: " + stack);
-		System.out.println("Ops: " + operators);
+		
 		//Final reduce
+
+//		System.out.println("Stack: " + stack);
+//		System.out.println("Ops: " + operators);
 		while (!stack.isEmpty()) {
 			left = stack.pop();
 			final Kind kind = this.mapTokenToBinaryTree(operators.pop());
@@ -1302,8 +1295,8 @@ public class JSParser {
 			expr = new BinaryTreeImpl(kind, left, right);
 		}
 		if (!stack.isEmpty()) {
-			System.out.println("Stack: " + stack);
-			System.out.println("Ops: " + operators);
+			System.err.println("Stack: " + stack);
+			System.err.println("Ops: " + operators);
 			throw new IllegalStateException("Stack not empty");
 		}
 		return expr;
