@@ -22,6 +22,11 @@ public class JSONUtils {
 		return '"' + escape(chars) + '"';
 	}
 
+	/**
+	 * Escape string for JSON.
+	 * @param chars
+	 * @return
+	 */
 	static String escape(char[] chars) {
 		final int l = chars.length;
 		StringBuilder sb = new StringBuilder(l + (l >>> 3));
@@ -96,6 +101,11 @@ public class JSONUtils {
 		return sb.toString();
 	}
 
+	/**
+	 * Serialize an object to JSON.
+	 * @param o Object to serialize
+	 * @return JSON string
+	 */
 	public static String serialize(Object o) {
 		StringWriter sw = new StringWriter();
 		JSONOutput out = new JSONOutputStream(sw);
@@ -118,6 +128,11 @@ public class JSONUtils {
 		return null;
 	}
 
+	/**
+	 * Utility method to serialize an object, choosing the optimal strategy
+	 * @param o Object to serialize
+	 * @param out JSONOutput to write to
+	 */
 	public static void serialize(Object o, JSONOutput out) {
 		if (o == null) {
 			out.writeUnescaped("null");
