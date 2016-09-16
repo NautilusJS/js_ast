@@ -1382,6 +1382,8 @@ public class JSParser {
 				throw new JSUnexpectedTokenException(identifier);
 			}
 			
+			boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+			
 			Token colon = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
 			TypeTree type = null;
 			if (colon != null)
@@ -1391,10 +1393,10 @@ public class JSParser {
 			ExpressionTree defaultValue = null;
 			if (assignment != null)
 				defaultValue = parseAssignment(null, src, context);
-			//TODO finish
-			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), identifier.<String>getValue()));
-			throw new UnsupportedOperationException("Not finished");
+			
+			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), identifier.<String>getValue()), false, optional, type, defaultValue);
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
 		result.trimToSize();
 		return result;
 	}
