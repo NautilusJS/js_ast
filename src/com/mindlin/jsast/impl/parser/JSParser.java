@@ -921,7 +921,7 @@ public class JSParser {
 			//Empty initializer statement
 			return parsePartialForLoopTree(forKeywordToken, new EmptyStatementTreeImpl(t), src, context);
 		
-		StatementTree initializer;
+		StatementTree initializer = null;
 		if (t.isKeyword()) {
 			if (t.getValue() == JSKeyword.VAR) {
 				context.push().allowIn(false);
@@ -936,8 +936,7 @@ public class JSParser {
 				Token identifier = src.nextToken();
 				if (!identifier.isIdentifier())
 					throw new JSUnexpectedTokenException(identifier);
-				Token lookahead;
-				if (!context.isStrict() && (lookahead = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.IN)) != null) {
+				if (!context.isStrict() && src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.IN) != null) {
 					VariableDeclarationTree var = new VariableDeclarationTreeImpl(t.getStart(), identifier.getEnd(), true, t.getValue() == JSKeyword.CONST, Arrays.asList(new VariableDeclaratorTreeImpl(identifier)));
 					return parsePartialForEachLoopTree(forKeywordToken, false, var, src, context);
 				} else {
@@ -946,16 +945,12 @@ public class JSParser {
 				}
 			}
 		}
-		context.push().allowIn(false);
-		StatementTree statement0 = parseStatement(src, context);
-		context.pop();
 		
 		Token separator = src.nextToken();
 		if (separator.isSpecial()) {
 			expect(separator, JSSpecialGroup.SEMICOLON);
-			return parsePartialForLoopTree(forKeywordToken, statement0, src, context);
-		} else if (separator.isKeyword()
-				&& (separator.getValue() == JSKeyword.IN || separator.getValue() == JSKeyword.OF)) {
+			return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
+		} else if (separator.isKeyword() && (separator.getValue() == JSKeyword.IN || separator.getValue() == JSKeyword.OF)) {
 			//return this.parsePartialForEachLoopTree(forKeywordToken, separator.getValue() == JSKeyword.OF, statement0,
 					//src, context);
 			//TODO finish
