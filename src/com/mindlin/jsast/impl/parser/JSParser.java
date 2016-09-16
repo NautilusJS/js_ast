@@ -659,7 +659,7 @@ public class JSParser {
 			//Check if an initializer is available
 			ExpressionTree initializer = null;
 			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
-				initializer = parseNextExpression(null, src, context);
+				initializer = parseAssignment(null, src, context);
 			else if (isConst)
 				//No initializer
 				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
@@ -1047,91 +1047,21 @@ public class JSParser {
 	protected ExpressionTree parseNextExpression(Token t, JSLexer src, Context context) {
 		if (t == null)
 			t = src.nextToken();
-		ExpressionTree result = null;
+		
+		ExpressionTree result = this.parseAssignment(t, src, context.pushed());
+		
+		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null)
+			return result;
+		
+		ArrayList<ExpressionTree> expressions = new ArrayList<>();
+		expressions.add(result);
+		
 		do {
-			switch (t.getKind()) {
-				case KEYWORD:
-					switch (t.<JSKeyword>getValue()) {
-						case NEW:
-							result = parseNew(t, src, context);
-							continue;
-						case DELETE:
-						case TYPEOF:
-						case VOID:
-						case YIELD:
-						case YIELD_GENERATOR:
-							result = parseUnaryExpression(t, src, context);
-							continue;
-					}
-					throw new JSUnexpectedTokenException(t);
-				case OPERATOR:
-					switch (t.<JSOperator>getValue()) {
-						case LEFT_PARENTHESIS:
-							result = parseGroupExpression(t, src, context);
-							continue;
-						case PLUS:
-						case MINUS:
-							if (result != null) {
-								if (context.inBinding())
-									return result;
-								context.push().enterBinding();
-								ExpressionTree right = parseNextExpression(src, context);
-								context.pop();
-								result = new BinaryTreeImpl(t.getValue() == JSOperator.PLUS ? Kind.ADDITION : Kind.SUBTRACTION, result, right);
-							} else {
-								result = parseUnaryExpression(t, src, context);
-							}
-							continue;
-						case INCREMENT:
-						case DECREMENT:
-							if (result == null)
-								result = parseUnaryExpression(t, src, context);
-							else
-								result = parseUnaryPostfix(result, t, src, context);
-							continue;
-						case LOGICAL_NOT:
-						case BITWISE_NOT:
-							if (result != null)
-								throw new JSUnexpectedTokenException(t);
-							result = parseUnaryExpression(t, src, context);
-							continue;
-						case EQUAL:
-						case NOT_EQUAL:
-						case STRICT_EQUAL:
-						case STRICT_NOT_EQUAL:
-						case GREATER_THAN:
-						case LESS_THAN:
-						case MULTIPLICATION:
-						case DIVISION:
-						case REMAINDER:
-						case EXPONENTIATION:
-							if (result != null) {
-								if (context.inBinding())
-									return result;
-								context.push().enterBinding();
-								ExpressionTree right = parseNextExpression(src, context);
-								context.pop();
-								result = new BinaryTreeImpl(t.getValue() == JSOperator.PLUS ? Kind.ADDITION : Kind.SUBTRACTION, result, right);
-								continue;
-							} else
-								throw new JSSyntaxException("Illegal right-hand side expression", t.getStart());
-					}
-					throw new JSUnexpectedTokenException(t);
-				case IDENTIFIER:
-					if (result != null)
-						throw new JSUnexpectedTokenException(t);
-					result = parseIdentifier(t, src, context);
-					continue;
-				case NUMERIC_LITERAL:
-				case STRING_LITERAL:
-				case BOOLEAN_LITERAL:
-				case TEMPLATE_LITERAL:
-				case REGEX_LITERAL:
-					result = parseLiteral(t, src, context);
-					continue;
-			}
-		} while ((t = src.nextTokenIf(x->!isWeakExpressionEnd(x, context))) != null);
-		return result;
+			expressions.add(parseAssignment(t, src, context));
+		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+			
+		expressions.trimToSize();
+		return new SequenceTreeImpl(expressions);
 	}
 	
 	boolean isWeakExpressionEnd(Token t, Context context) {
@@ -1257,7 +1187,8 @@ public class JSParser {
 		if (t.isOperator())
 			switch (t.<JSOperator>getValue()) {
 				case COMMA:
-					return 0;
+					//return 0;
+					return -1;
 				case SPREAD:
 					break;
 				case ASSIGNMENT:
@@ -1336,8 +1267,6 @@ public class JSParser {
 		context.pop();
 		
 		Token token = src.peek();
-		expect(token, TokenKind.OPERATOR, null, context);
-		
 		int precedence = binaryPrecedence(token);
 		if (precedence < 0)
 			return expr;
@@ -1356,7 +1285,7 @@ public class JSParser {
 		stack.add(left);
 		stack.add(right);
 		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
-			while (stack.size() > 1 && (precedence <= binaryPrecedence(operators.peek()))) {
+			while (stack.size() > 2 && (precedence <= binaryPrecedence(operators.peek()))) {
 				right = stack.pop();
 				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
 				left = stack.pop();
@@ -1367,15 +1296,17 @@ public class JSParser {
 			operators.add(token);
 			stack.add(parseExponentiation(src.nextToken(), src, context));
 		}
+		expr = stack.pop();
+		System.out.println("Stack: " + stack);
+		System.out.println("Ops: " + operators);
 		//Final reduce
-		for (int i = stack.size() - 1; i > 1; i --) {
+		while (!stack.isEmpty()) {
 			left = stack.pop();
 			final Kind kind = this.mapTokenToBinaryTree(operators.pop());
 			right = expr;
 			expr = new BinaryTreeImpl(kind, left, right);
 		}
 		if (!stack.isEmpty()) {
-			System.out.println(stack);
 			throw new IllegalStateException("Stack not empty");
 		}
 		return expr;
