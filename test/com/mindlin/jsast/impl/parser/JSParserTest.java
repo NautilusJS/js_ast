@@ -1,21 +1,21 @@
 package com.mindlin.jsast.impl.parser;
 
+import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 
 import org.junit.Test;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.impl.tree.AbstractTree;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
@@ -75,7 +75,7 @@ public class JSParserTest {
 		}
 	}
 	
-	protected static  StatementTree parseStatement(String stmt) {
+	protected static StatementTree parseStatement(String stmt) {
 		return new JSParser().parseStatement(new JSLexer(stmt), new Context());
 	}
 	
@@ -94,7 +94,7 @@ public class JSParserTest {
 		ExpressionTree expr = parseExpression("++a");
 		assertEquals(Kind.PREFIX_INCREMENT, expr.getKind());
 		assertIdentifier(((UnaryTree)expr).getExpression(), "a");
-		System.out.println(((AbstractTree)expr).toJSON());
+		System.out.println(expr);
 		
 		/*expr = parseExpression("+a");
 		assertEquals(Kind.UNARY_PLUS, expr.getKind());
@@ -124,15 +124,15 @@ public class JSParserTest {
 	
 	@Test
 	public void testUnaryOnLiteral() {
-		ExpressionTree expr = parseExpression("typeof 'foo'");
+		ExpressionTree expr = parseExpression("typeof 'foo';");
 		assertEquals(Kind.TYPEOF, expr.getKind());
 		assertLiteral(((UnaryTree)expr).getExpression(), "foo");
 	}
 	
 	@Test
 	public void testBinaryExpression() {
-		ExpressionTree expr = parseExpression("a+b");
-		assertEquals(Kind.ADDITION, expr.getKind());
+		ExpressionTree expr = parseExpression("a>b");
+		assertEquals(Kind.GREATER_THAN, expr.getKind());
 		BinaryTree binary = (BinaryTree) expr;
 		assertIdentifier(binary.getLeftOperand(), "a");
 		assertIdentifier(binary.getRightOperand(), "b");
@@ -142,7 +142,7 @@ public class JSParserTest {
 	public void testVariableDeclaration() {
 		VariableDeclarationTree decl = (VariableDeclarationTree)parseStatement("var foo : void = 5, bar = foo + 1;");
 		//TODO assert that it was parsed correctly
-		System.out.println(((AbstractTree)decl).toJSON());
+		System.out.println(decl);
 		assertNumberEquals(2, decl.getDeclarations().size());
 		
 		VariableDeclaratorTree declarator0 = decl.getDeclarations().get(0);
@@ -301,6 +301,14 @@ public class JSParserTest {
 			ImportTree impt = (ImportTree)parseStatement("import 'module-name';");
 			assertLiteral(impt.getSource(), "module-name");
 			assertEquals(0, impt.getSpecifiers().size());
+		}
+	}
+	
+	@Test
+	public void testForLoops() {
+		{
+			ForLoopTree loop = (ForLoopTree)parseStatement("for(var i = 0 + 2 * 7; i<j; i++);");
+			System.out.println(loop);
 		}
 	}
 	
