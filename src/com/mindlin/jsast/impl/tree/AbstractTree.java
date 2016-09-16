@@ -22,7 +22,7 @@ public abstract class AbstractTree implements Tree {
 			sb.append('"').append(value).append('"');
 		else if (type.equals(Character.TYPE))
 			sb.append('\'').append(value).append('\'');
-		else if (type.equals(Boolean.TYPE) || Number.class.isAssignableFrom(type))
+		else if (type.equals(Boolean.TYPE) || type.equals(Boolean.class) || Number.class.isAssignableFrom(type))
 			return value.toString();
 		else if (AbstractTree.class.isAssignableFrom(type))
 			return ((AbstractTree)value).toJSON();
@@ -67,33 +67,32 @@ public abstract class AbstractTree implements Tree {
 		//TODO test
 		if (treeType.endsWith("Impl"))
 			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
-		System.out.println(treeType);
+		sb.append(treeType).append("{");
 		//TODO combine loops
 		Set<Field> fields = new LinkedHashSet<>();
 		Class<?> clazz = getClass();
 		do {
-			for (Field f : clazz.getDeclaredFields())
-				if ((f.getModifiers() & Modifier.PROTECTED) != 0)
-					fields.add(f);
-		} while ((clazz = clazz.getSuperclass()) != null);
-		for (Field f : fields) {
-			Class<?> type = f.getType();
-			Object value;
-			try {
-				value = f.get(this);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-				continue;
+			for (Field f : clazz.getDeclaredFields()) {
+				if ((f.getModifiers() & Modifier.PROTECTED) != 0 && fields.add(f)) {
+					Class<?> type = f.getType();
+					Object value;
+					try {
+						value = f.get(this);
+					} catch (IllegalArgumentException | IllegalAccessException e) {
+						e.printStackTrace();
+						continue;
+					}
+					sb.append(f.getName()).append('=');
+					if (type.equals(String.class))
+						sb.append('"').append(value).append('"');
+					else if (type.equals(Character.TYPE))
+						sb.append('\'').append(value).append('\'');
+					else
+						sb.append(value);
+					sb.append(',');
+				}
 			}
-			sb.append(f.getName()).append('=');
-			if (type.equals(String.class))
-				sb.append('"').append(value).append('"');
-			else if (type.equals(Character.TYPE))
-				sb.append('\'').append(value).append('\'');
-			else
-				sb.append(value);
-			sb.append(',');
-		}
+		} while ((clazz = clazz.getSuperclass()) != null);
 		sb.setLength(sb.length() - 1);
 		sb.append('}');
 		return sb.toString();
