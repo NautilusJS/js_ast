@@ -54,7 +54,6 @@ import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
-import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
@@ -1522,9 +1521,9 @@ public class JSParser {
 	
 	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
-		List<ExpressionTree> values = new ArrayList<>();
-		Token t;
-		while (!(t = src.nextToken()).matches(TokenKind.BRACKET, ']')) {
+		ArrayList<ExpressionTree> values = new ArrayList<>();
+		Token t = src.nextToken();
+		while (!t.matches(TokenKind.BRACKET, ']')) {
 			if (t.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
 				values.add(null);
 				continue;
@@ -1534,12 +1533,8 @@ public class JSParser {
 			else
 				values.add(parseNextExpression(t, src, context));
 			
-			t = src.peek();
-			if (t.matches(TokenKind.BRACKET, ']'))
-				break;
-			if (!t.matches(TokenKind.OPERATOR, JSOperator.COMMA))
-				throw new JSUnexpectedTokenException(t);
-			src.skip(t);
+			if (!(t = src.nextToken()).matches(TokenKind.BRACKET, ']'))
+				expect(t, TokenKind.OPERATOR, JSOperator.COMMA, null, context);
 		}
 		return new ArrayLiteralTreeImpl(startToken.getStart(), t.getEnd(), values);
 	}
