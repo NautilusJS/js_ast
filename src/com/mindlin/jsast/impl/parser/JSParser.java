@@ -1250,7 +1250,7 @@ public class JSParser {
 		context.isAssignmentTarget(false).exitBinding().push();
 		final ExpressionTree right = parseExponentiation(null, src, context);
 		context.pop();
-		return new BinaryTreeImpl(t.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
+		return new BinaryTreeImpl(expr.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
 	}
 	
 	int binaryPrecedence(Token t) {
@@ -1606,24 +1606,21 @@ public class JSParser {
 		}
 		
 		while (true) {
-			t = src.nextToken();
-			Token lookahead;
-			if (t.matches(TokenKind.BRACKET, '[')) {
-				ExpressionTree property = parseNextExpression(t, src, context.pushed().exitBinding().isAssignmentTarget(true));
+			if ((t = src.nextTokenIf(TokenKind.BRACKET, '[')) != null) {
+				ExpressionTree property = parseNextExpression(null, src, context.pushed().exitBinding().isAssignmentTarget(true));
 				expect(TokenKind.BRACKET, ']', src, context);
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
-			} else if (allowCall && t.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
+			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed().exitBinding().isAssignmentTarget(false));
 				expr = new FunctionCallTreeImpl(t.getStart(), src.getPosition(), expr, arguments);
-			} else if (t.matches(TokenKind.OPERATOR, JSOperator.PERIOD)) {
-				ExpressionTree property = parseIdentifier(t, src, context.pushed().exitBinding().isAssignmentTarget(true));
+			} else if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
+				ExpressionTree property = parseIdentifier(null, src, context.pushed().exitBinding().isAssignmentTarget(true));
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
-			} else if ((lookahead = src.peek()).getKind() == TokenKind.TEMPLATE_LITERAL) {
-				//TODO tagged template literal
-				throw new UnsupportedOperationException();
 			} else {
 				break;
 			}
+			//TODO tagged template literal
+			throw new UnsupportedOperationException();
 		}
 		
 		context.pop();

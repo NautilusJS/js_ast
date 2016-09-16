@@ -1,9 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -61,41 +59,7 @@ public abstract class AbstractTree implements Tree {
 
 	@Override
 	public String toString() {
-		//Use reflection to build string. Class-specific overrides will definitely be faster.
-		StringBuilder sb = new StringBuilder();
-		String treeType = getClass().getSimpleName();
-		//TODO test
-		if (treeType.endsWith("Impl"))
-			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
-		sb.append(treeType).append("{");
-		//TODO combine loops
-		Set<Field> fields = new LinkedHashSet<>();
-		Class<?> clazz = getClass();
-		do {
-			for (Field f : clazz.getDeclaredFields()) {
-				if ((f.getModifiers() & Modifier.PROTECTED) != 0 && fields.add(f)) {
-					Class<?> type = f.getType();
-					Object value;
-					try {
-						value = f.get(this);
-					} catch (IllegalArgumentException | IllegalAccessException e) {
-						e.printStackTrace();
-						continue;
-					}
-					sb.append(f.getName()).append('=');
-					if (type.equals(String.class))
-						sb.append('"').append(value).append('"');
-					else if (type.equals(Character.TYPE))
-						sb.append('\'').append(value).append('\'');
-					else
-						sb.append(value);
-					sb.append(',');
-				}
-			}
-		} while ((clazz = clazz.getSuperclass()) != null);
-		sb.setLength(sb.length() - 1);
-		sb.append('}');
-		return sb.toString();
+		return toJSON();
 	}
 	
 	public String toJSON() {
