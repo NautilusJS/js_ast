@@ -1221,6 +1221,25 @@ public class JSParser {
 	}
 
 	/**
+	 * Unlike most binary operators, <code>**</code> has right-associativity, which means:
+	 * <ol>
+	 * <li><code>a**b**c</code> is interperted as <code>a**(b**c)</code></li>
+	 * <li>A lot of extra code has to be written to handle it</li>
+	 * </ol>
+	 * @param t
+	 * @param src
+	 * @param context
+	 * @return
+	 */
+	protected ExpressionTree parseExponentiation(Token t, JSLexer src, Context context) {
+		final ExpressionTree expr = this.parseUnaryExpression(t, src, context.pushed());
+		Token operatorToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.EXPONENTIATION);
+		if (operatorToken == null)
+			return expr;
+		final ExpressionTree right = parseExponentiation(null, src, context.pushed().isAssignmentTarget(false).exitBinding());
+		return new BinaryTreeImpl(t.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
+	}
+	/**
 	 * Parse an expression starting with <kbd>(</kbd>, generating either a
 	 * ParenthesizedTree or a FunctionExpressionTree (if a lambda expression)
 	 * 
