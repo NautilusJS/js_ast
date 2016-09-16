@@ -35,6 +35,7 @@ import com.mindlin.jsast.impl.tree.ImportTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
@@ -77,6 +78,8 @@ import com.mindlin.jsast.tree.InterfaceTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
+import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
+import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.SequenceTree;
@@ -483,11 +486,9 @@ public class JSParser {
 			case BRACKET:
 				switch ((char)t.getValue()) {
 					case '[':
-						//Parse array initializer
-						break;
+						this.parseArrayInitializer(t, src, context);
 					case '{':
-						//Parse object initializer
-						break;
+						this.parseObjectInitializer(t, src, context);
 				}
 				break;
 			case KEYWORD:
@@ -1536,8 +1537,23 @@ public class JSParser {
 			if (!(t = src.nextToken()).matches(TokenKind.BRACKET, ']'))
 				expect(t, TokenKind.OPERATOR, JSOperator.COMMA, null, context);
 		}
+		values.trimToSize();
 		return new ArrayLiteralTreeImpl(startToken.getStart(), t.getEnd(), values);
 	}
+	
+	protected ObjectLiteralTree parseObjectInitializer(Token startToken, JSLexer src, Context context) {
+		startToken = expect(startToken, TokenKind.BRACKET, '{', src, context);
+		ArrayList<? extends ObjectLiteralPropertyTree> properties = new ArrayList<>();
+		Token next;
+		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
+			
+		}
+		properties.trimToSize();
+		return new ObjectLiteralTreeImpl(startToken.getStart(), next.getEnd(), properties);
+	}
+	
+	//Unary ops
+	
 	
 	protected ExpressionTree parseUnaryExpression(Token operatorToken, JSLexer src, Context context) {
 		if (operatorToken == null)
