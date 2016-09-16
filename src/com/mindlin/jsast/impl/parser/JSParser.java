@@ -175,6 +175,7 @@ public class JSParser {
 		List<Tree> elements = new ArrayList<>();
 		Tree value;
 		Context context = new Context();
+		context.setScriptName(unitName);
 		while ((value = parseNext(src, context)) != null)
 			elements.add(value);
 		return new CompilationUnitTreeImpl(0, src.getPosition(), unitName, null, elements, false);
@@ -239,7 +240,7 @@ public class JSParser {
 					case YIELD_GENERATOR:
 					case SUPER:
 					case THIS: {
-						ExpressionTree expr = parseUnaryPrefix(token, src, context);
+						ExpressionTree expr = parseUnaryExpression(token, src, context);
 						if (expr.getKind().isStatement())
 							return (StatementTree) expr;
 						return new ExpressionStatementTreeImpl(expr);
@@ -266,7 +267,7 @@ public class JSParser {
 					return this.parseBlock(token, src, context);
 				return this.parseNextExpression(token, src, context);
 			case OPERATOR:
-				return this.parseUnaryPrefix(token, src, context);
+				return this.parseUnaryExpression(token, src, context);
 			case SPECIAL:
 				switch (token.<JSSpecialGroup>getValue()) {
 					case EOF:
@@ -455,14 +456,14 @@ public class JSParser {
 		throw new JSSyntaxException("Cannot reinterpret " + expr + "as parameter", expr.getStart());
 	}
 	
-	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context ctx) {
+	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
 		if (t == null)
 			t = src.nextToken();
 		switch (t.getKind()) {
 			case IDENTIFIER:
 				return new IdentifierTreeImpl(t);
 			case NUMERIC_LITERAL:
-				if (ctx.isStrict()) {
+				if (context.isStrict()) {
 					//TODO throw error on implicit octal
 				}
 				return new NumericLiteralTreeImpl(t);
@@ -479,6 +480,7 @@ public class JSParser {
 					case DIVISION_ASSIGNMENT:
 						//TODO finish
 				}
+				break;
 			case BRACKET:
 				switch ((char)t.getValue()) {
 					case '[':
@@ -493,14 +495,14 @@ public class JSParser {
 				ExpressionTree expr;
 				switch (t.<JSKeyword>getValue()) {
 					case YIELD:
-						if (!ctx.allowYield())
+						if (!context.allowYield())
 							throw new JSUnexpectedTokenException(t);
 						//TODO finish
 						break;
 					case FUNCTION:
-						return this.parseFunctionExpression(t, src, ctx);
+						return this.parseFunctionExpression(t, src, context);
 					case THIS:
-						return parseThis(t, src, ctx);
+						return parseThis(t, src, context);
 					case CLASS:
 						
 				}
@@ -1066,14 +1068,14 @@ public class JSParser {
 								context.pop();
 								result = new BinaryTreeImpl(t.getValue() == JSOperator.PLUS ? Kind.ADDITION : Kind.SUBTRACTION, result, right);
 							} else {
-								result = parseUnaryPrefix(t, src, context);
+								result = parseUnaryExpression(t, src, context);
 							}
 							continue;
 						case INCREMENT:
 						case DECREMENT:
 							src.skip(t);
 							if (result == null)
-								result = parseUnaryPrefix(t, src, context);
+								result = parseUnaryExpression(t, src, context);
 							else
 								result = parseUnaryPostfix(result, t, src, context);
 							continue;
@@ -1082,7 +1084,7 @@ public class JSParser {
 							src.skip(t);
 							if (result != null)
 								throw new JSUnexpectedTokenException(t);
-							result = parseUnaryPrefix(t, src, context);
+							result = parseUnaryExpression(t, src, context);
 							continue;
 						case EQUAL:
 						case NOT_EQUAL:
@@ -1369,7 +1371,7 @@ public class JSParser {
 				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new"), new IdentifierTreeImpl(r));
 			throw new JSUnexpectedTokenException(t);
 		}
-		final ExpressionTree callee = parseLeftSideExpression(src, context, false);
+		final ExpressionTree callee = parseLeftSideExpression(null, src, context, false);
 		final List<ExpressionTree> args;
 		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 			args = parseArguments(t, src, context);
@@ -1385,7 +1387,7 @@ public class JSParser {
 		return new UnaryTreeImpl.VoidTreeImpl(voidKeywordToken.getStart(), src.getPosition(), expr);
 	}
 	
-	protected ExpressionTree parseLeftSideExpression(JSLexer src, Context context, boolean allowCall) {
+	protected ExpressionTree parseLeftSideExpression(Token t, JSLexer src, Context context, boolean allowCall) {
 		context.push().allowIn(true);
 		if (!context.allowIn())
 			throw new IllegalStateException();
@@ -1530,11 +1532,11 @@ public class JSParser {
 		return new ArrayLiteralTreeImpl(startToken.getStart(), t.getEnd(), values);
 	}
 	
-	protected UnaryTree parseUnaryPrefix(Token operatorToken, JSLexer src, Context context) {
+	protected ExpressionTree parseUnaryExpression(Token operatorToken, JSLexer src, Context context) {
 		if (operatorToken == null)
 			operatorToken = src.nextToken();
-		boolean modifiesArg = false;
 		Tree.Kind kind = null;
+		boolean updates = false;
 		switch (operatorToken.getKind()) {
 			case KEYWORD:
 				switch (operatorToken.<JSKeyword>getValue()) {
@@ -1542,7 +1544,6 @@ public class JSParser {
 						Token next;
 						if ((next = src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) != null)
 							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
-						}
 					}
 						kind = Tree.Kind.VOID;
 						break;
@@ -1551,22 +1552,16 @@ public class JSParser {
 						break;
 					case DELETE:
 						kind = Tree.Kind.DELETE;
-						modifiesArg = true;
 						break;
+					case YIELD:
+					case YIELD_GENERATOR:
+						throw new UnsupportedOperationException("Not yet supported");
 					default:
 						break;
 				}
 				break;
 			case OPERATOR:
 				switch (operatorToken.<JSOperator>getValue()) {
-					case INCREMENT:
-						kind = Tree.Kind.PREFIX_INCREMENT;
-						modifiesArg = true;
-						break;
-					case DECREMENT:
-						kind = Tree.Kind.PREFIX_DECREMENT;
-						modifiesArg = true;
-						break;
 					case PLUS:
 						kind = Tree.Kind.UNARY_PLUS;
 						break;
@@ -1581,6 +1576,14 @@ public class JSParser {
 						break;
 					case SPREAD:
 						return parseSpread(operatorToken, src, context);
+					case INCREMENT:
+						kind = Tree.Kind.PREFIX_INCREMENT;
+						updates = true;
+						break;
+					case DECREMENT:
+						kind = Tree.Kind.PREFIX_DECREMENT;
+						updates = false;
+						break;
 					default:
 						break;
 				}
@@ -1588,23 +1591,36 @@ public class JSParser {
 			default:
 				break;
 		}
-		if (kind == null)
-			throw new JSUnexpectedTokenException(operatorToken);
-		context.push().enterBinding();
-		ExpressionTree expression = parseNextExpression(src, context);
-		context.pop();
-		
-		//If the operator modifies its argument, check if the argument can be modified
-		if (modifiesArg && !Validator.canBeAssigned(expression, dialect))
-			throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", operatorToken.getStart());
-		
-		if (kind == Tree.Kind.VOID)
-			//Because it's a special little snowflake
-			return new UnaryTreeImpl.VoidTreeImpl(operatorToken, expression);
-		return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), expression, kind);
+		if (kind != null) {
+			context.push();
+			if (updates)
+				context.enterBinding();
+			ExpressionTree expression = parseUnaryExpression(null, src, context);
+			context.pop();
+			if (updates) {
+				//Check if the target can be modified
+				if (!Validator.canBeAssigned(expression, dialect))
+					throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", operatorToken.getStart());
+			} else if (context.isStrict() && kind == Tree.Kind.DELETE && expression.getKind() == Tree.Kind.IDENTIFIER)
+				throw new JSSyntaxException("Cannot delete unqualified identifier " + ((IdentifierTree)expression).getName() + " in strict mode", operatorToken.getStart());
+			else if (kind == Tree.Kind.VOID)
+				//Because it's a special little snowflake
+				return new UnaryTreeImpl.VoidTreeImpl(operatorToken, expression);
+			return new UnaryTreeImpl(operatorToken.getStart(), expression.getEnd(), expression, kind);
+		} else {
+			context.push();
+			ExpressionTree result = parseLeftSideExpression(operatorToken, src, context, true);
+			context.pop();
+			operatorToken = src.nextTokenIf(t->(t.isOperator() && (t.getValue() == JSOperator.INCREMENT || t.getValue() == JSOperator.DECREMENT)));
+			if (operatorToken != null)
+				return parseUnaryPostfix(result, operatorToken, src, context);
+			return result;
+		}
 	}
 	
 	protected UnaryTree parseUnaryPostfix(ExpressionTree expr, Token operatorToken, JSLexer src, Context context) {
+		if (expr == null)
+			expr = parseLeftSideExpression(null, src, context.pushed(), true);
 		if (!Validator.canBeAssigned(expr, dialect))
 			throw new JSSyntaxException("Invalid left-hand side expression in " + operatorToken.getKind() + " expression", expr.getStart());
 		Kind kind;
@@ -1717,8 +1733,9 @@ public class JSParser {
 			data.isStrict = true;
 		}
 		
-		public void enterBinding() {
+		public Context enterBinding() {
 			data.isBindingElement = true;
+			return this;
 		}
 		
 		public Context exitBinding() {
