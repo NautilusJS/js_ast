@@ -1557,30 +1557,39 @@ public class JSParser {
 			throw new IllegalStateException();
 		
 		ExpressionTree expr;
-		if (context.inFunction() && t.matches(TokenKind.KEYWORD, JSKeyword.SUPER)) {
+		if (context.inFunction() && t.matches(TokenKind.KEYWORD, JSKeyword.SUPER))
 			expr = parseSuper(t, src, context);
-		} else if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW)) {
+		else if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW))
 			expr = parseNew(t, src, context);
-		} else {
+		else
 			expr = parsePrimaryExpression(t, src, context);
-		}
 		
 		while (true) {
 			if ((t = src.nextTokenIf(TokenKind.BRACKET, '[')) != null) {
-				ExpressionTree property = parseNextExpression(t, src, context.pushed().exitBinding().isAssignmentTarget(true));
+				//Computed member access expressions
+				context.exitBinding();
+				context.isAssignmentTarget(true);
+				ExpressionTree property = parseNextExpression(null, src, context.pushed());
 				expect(TokenKind.BRACKET, ']', src, context);
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
-				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed().exitBinding().isAssignmentTarget(false));
+				//Function call
+				context.exitBinding();
+				context.isAssignmentTarget(false);
+				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed());
 				expr = new FunctionCallTreeImpl(t.getStart(), src.getPosition(), expr, arguments);
 			} else if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
+				//Static member access
+				context.exitBinding();
+				context.isAssignmentTarget(true);
 				ExpressionTree property = parseIdentifier(null, src, context.pushed().exitBinding().isAssignmentTarget(true));
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
+			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
+				//TODO Tagged template literal
+				throw new UnsupportedOperationException();
 			} else {
 				break;
 			}
-			//TODO tagged template literal
-			throw new UnsupportedOperationException();
 		}
 		
 		context.pop();
