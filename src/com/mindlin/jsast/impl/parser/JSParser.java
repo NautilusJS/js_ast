@@ -505,9 +505,9 @@ public class JSParser {
 			case BRACKET:
 				switch ((char)t.getValue()) {
 					case '[':
-						this.parseArrayInitializer(t, src, context);
+						return this.parseArrayInitializer(t, src, context);
 					case '{':
-						this.parseObjectInitializer(t, src, context);
+						return this.parseObjectInitializer(t, src, context);
 					default:
 						throw new JSUnexpectedTokenException(t);
 				}
