@@ -917,47 +917,41 @@ public class JSParser {
 		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, context);
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 		
-		Token t = src.nextToken();
-		if (t.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+		Token next = src.nextToken();
+		if (next.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
 			//Empty initializer statement
-			return parsePartialForLoopTree(forKeywordToken, new EmptyStatementTreeImpl(t), src, context);
+			return parsePartialForLoopTree(forKeywordToken, new EmptyStatementTreeImpl(next), src, context);
 		
 		StatementTree initializer = null;
-		if (t.isKeyword()) {
-			if (t.getValue() == JSKeyword.VAR) {
-				context.push().allowIn(false);
-				VariableDeclarationTree declarations = parseVariableDeclaration(t, src, context);
-				context.pop();
-				t = src.nextTokenIf(token->(token.isKeyword() && (token.getValue() == JSKeyword.OF || token.getValue() == JSKeyword.IN)));
-				if (t != null && declarations.getDeclarations().size() == 1 && declarations.getDeclarations().get(0).getIntitializer() == null)
-					return parsePartialForEachLoopTree(forKeywordToken, t.getValue() == JSKeyword.OF, declarations, src, context);
-				initializer = declarations;
-			} else if (t.getValue() == JSKeyword.LET || t.getValue() == JSKeyword.CONST) {
-				//For??? with let/const variable initializer
-				Token identifier = src.nextToken();
-				if (!identifier.isIdentifier())
-					throw new JSUnexpectedTokenException(identifier);
-				if (!context.isStrict() && src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.IN) != null) {
-					VariableDeclarationTree var = new VariableDeclarationTreeImpl(t.getStart(), identifier.getEnd(), true, t.getValue() == JSKeyword.CONST, Arrays.asList(new VariableDeclaratorTreeImpl(identifier)));
-					return parsePartialForEachLoopTree(forKeywordToken, false, var, src, context);
-				} else {
-					//TODO destructuring
-					throw new UnsupportedOperationException();
-				}
+		if (TokenPredicate.VARIABLE_START.test(next)) {
+			context.push().allowIn(false);
+			VariableDeclarationTree declarations = parseVariableDeclaration(next, src, context);
+			context.pop();
+			
+			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
+				boolean isOf = next.getValue() == JSKeyword.OF;
+				
+				if (declarations.getDeclarations().size() != 1)
+					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Must have 1 binding", next.getStart());
+				if (declarations.getDeclarations().get(0).getIntitializer() != null)
+					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getIntitializer().getStart());
+				
+				return parsePartialForEachLoopTree(forKeywordToken, isOf, declarations, src, context);
 			}
+			initializer = declarations;
+		} else {
+			ExpressionTree expr = this.parseLeftSideExpression(next, src, context, true);
+			
+			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
+				boolean isOf = next.getValue() == JSKeyword.OF;
+				throw new UnsupportedOperationException();
+			}
+			
+			initializer = new ExpressionStatementTreeImpl(expr);
 		}
 		
-		Token separator = src.nextToken();
-		if (separator.isSpecial()) {
-			expect(separator, JSSpecialGroup.SEMICOLON);
-			return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
-		} else if (separator.isKeyword() && (separator.getValue() == JSKeyword.IN || separator.getValue() == JSKeyword.OF)) {
-			//return this.parsePartialForEachLoopTree(forKeywordToken, separator.getValue() == JSKeyword.OF, statement0,
-					//src, context);
-			//TODO finish
-			throw new UnsupportedOperationException();
-		}
-		throw new JSSyntaxException("Invalid 'for' loop", src.getPosition());
+		expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
+		return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
 	}
 	
 	/**
@@ -1322,7 +1316,7 @@ public class JSParser {
 		return new ConditionalExpressionTreeImpl(expr, concequent, alternate);
 	}
 	
-	ExpressionTree reinterpretExpressionAsPattern(ExpressionTree expr) {
+	PatternTree reinterpretExpressionAsPattern(ExpressionTree expr) {
 		throw new UnsupportedOperationException();
 	}
 	
