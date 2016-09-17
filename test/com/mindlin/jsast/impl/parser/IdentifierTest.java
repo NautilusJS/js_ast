@@ -33,7 +33,6 @@ public class IdentifierTest {
 		ExpressionTree expr = parseExpression("null");
 		assertNotEquals(Tree.Kind.IDENTIFIER, expr.getKind());
 		
-		expr = parseExpression("class");
-		assertNotEquals(Tree.Kind.IDENTIFIER, expr.getKind());
+		//TODO expound
 	}
 }
