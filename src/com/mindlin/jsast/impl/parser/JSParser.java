@@ -1677,22 +1677,28 @@ public class JSParser {
 	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
 		ArrayList<ExpressionTree> values = new ArrayList<>();
-		Token t = src.nextToken();
-		while (!t.matches(TokenKind.BRACKET, ']')) {
-			if (t.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+		
+		Token next;
+		while (!((next = src.nextToken()).matches(TokenKind.BRACKET, ']') || src.isEOF())) {
+			if (next.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
 				values.add(null);
 				continue;
 			}
-			if (t.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
-				values.add(parseSpread(t, src, context));
+
+			if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
+				values.add(parseSpread(next, src, context));
 			else
-				values.add(parseNextExpression(t, src, context));
+				values.add(parseAssignment(next, src, context));
 			
-			if (!(t = src.nextToken()).matches(TokenKind.BRACKET, ']'))
-				expect(t, TokenKind.OPERATOR, JSOperator.COMMA, null, context);
+			if (!src.peek().matches(TokenKind.BRACKET, ']'))
+				expect(TokenKind.OPERATOR, JSOperator.COMMA, src, context);
 		}
+		
+		expect(next, TokenKind.BRACKET, ']');
+		
 		values.trimToSize();
-		return new ArrayLiteralTreeImpl(startToken.getStart(), t.getEnd(), values);
+		
+		return new ArrayLiteralTreeImpl(startToken.getStart(), next.getEnd(), values);
 	}
 	
 	protected ObjectLiteralTree parseObjectInitializer(Token startToken, JSLexer src, Context context) {
