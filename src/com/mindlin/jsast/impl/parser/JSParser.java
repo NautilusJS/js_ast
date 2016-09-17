@@ -86,6 +86,7 @@ import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
+import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.SequenceTree;
 import com.mindlin.jsast.tree.SpreadTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -493,7 +494,7 @@ public class JSParser {
 			case OPERATOR:
 				switch (t.<JSOperator>getValue()) {
 					case LEFT_PARENTHESIS:
-						context.exitBinding();
+						context.isBindingElement(false);
 						return this.parseGroupExpression(t, src, context.pushed());
 					case DIVISION:
 					case DIVISION_ASSIGNMENT:
@@ -512,7 +513,7 @@ public class JSParser {
 						throw new JSUnexpectedTokenException(t);
 				}
 			case KEYWORD:
-				context.isAssignmentTarget(false).exitBinding();
+				context.isAssignmentTarget(false).isBindingElement(false);
 				switch (t.<JSKeyword>getValue()) {
 					case FUNCTION:
 						return this.parseFunctionExpression(t, src, context);
@@ -1162,7 +1163,7 @@ public class JSParser {
 		Token operatorToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.EXPONENTIATION);
 		if (operatorToken == null)
 			return expr;
-		context.isAssignmentTarget(false).exitBinding().push();
+		context.isAssignmentTarget(false).isBindingElement(false).push();
 		final ExpressionTree right = parseExponentiation(null, src, context);
 		context.pop();
 		return new BinaryTreeImpl(expr.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
@@ -1258,7 +1259,7 @@ public class JSParser {
 		
 		src.skip(token);
 		context.isAssignmentTarget(false);
-		context.exitBinding();
+		context.isBindingElement(false);
 		
 		final Stack<Token> operators = new Stack<>();
 		operators.add(token);
@@ -1316,7 +1317,7 @@ public class JSParser {
 		ExpressionTree alternate = parseAssignment(null, src, context);
 		
 		context.isAssignmentTarget(false);
-		context.exitBinding();
+		context.isBindingElement(false);
 		
 		return new ConditionalExpressionTreeImpl(expr, concequent, alternate);
 	}
@@ -1339,7 +1340,7 @@ public class JSParser {
 			throw new JSSyntaxException("Not assignment target", src.getPosition());
 		if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
 			context.isAssignmentTarget(false);
-			context.exitBinding();
+			context.isBindingElement(false);
 		} else {
 			expr = reinterpretExpressionAsPattern(expr);
 		}
@@ -1567,22 +1568,22 @@ public class JSParser {
 		while (true) {
 			if ((t = src.nextTokenIf(TokenKind.BRACKET, '[')) != null) {
 				//Computed member access expressions
-				context.exitBinding();
+				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
 				ExpressionTree property = parseNextExpression(null, src, context.pushed());
 				expect(TokenKind.BRACKET, ']', src, context);
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 				//Function call
-				context.exitBinding();
+				context.isBindingElement(false);
 				context.isAssignmentTarget(false);
 				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed());
 				expr = new FunctionCallTreeImpl(t.getStart(), src.getPosition(), expr, arguments);
 			} else if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
 				//Static member access
-				context.exitBinding();
+				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
-				ExpressionTree property = parseIdentifier(null, src, context.pushed().exitBinding().isAssignmentTarget(true));
+				ExpressionTree property = parseIdentifier(null, src, context.pushed());
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
 			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
 				//TODO Tagged template literal
@@ -1685,6 +1686,7 @@ public class JSParser {
 	
 	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
+		
 		ArrayList<ExpressionTree> values = new ArrayList<>();
 		
 		Token next;
@@ -1786,7 +1788,7 @@ public class JSParser {
 		if (kind != null) {
 			context.push();
 			if (updates)
-				context.enterBinding();
+				context.isBindingElement(true);
 			ExpressionTree expression = parseUnaryExpression(null, src, context);
 			context.pop();
 			if (updates) {
@@ -1827,7 +1829,7 @@ public class JSParser {
 	
 	public static class Context {
 		ContextData data;
-		//Fields that are global
+		// Fields that are global
 		String scriptName;
 		
 		public Context() {
@@ -1872,11 +1874,7 @@ public class JSParser {
 		public boolean allowIn() {
 			return data.allowIn;
 		}
-		
-		public void allowIn(boolean value) {
-			data.allowIn = value;
-		}
-		
+
 		public boolean allowBreak() {
 			return data.inLoop || data.inSwitch || data.inNamedBlock;
 		}
@@ -1892,53 +1890,75 @@ public class JSParser {
 		public boolean inBinding() {
 			return data.isBindingElement;
 		}
-		
-		public Context inBinding(boolean value) {
-			data.isBindingElement = value;
-			return this;
-		}
-		
+
 		public boolean inFunction() {
 			return data.inFunction;
 		}
-		
+
+		public Context allowIn(boolean value) {
+			data.allowIn = value;
+			return this;
+		}
+
+		public boolean isAssignmentTarget() {
+			return data.isAssignmentTarget;
+		}
+
+		/**
+		 * Marks this level of the context as being in a function body. Allows
+		 * the use of <code>return</code> statements.
+		 * 
+		 * @return self
+		 */
 		public Context enterFunction() {
 			data.inFunction = true;
 			return this;
 		}
-		
+
+		/**
+		 * Marks this level of the context as being in a switch statement.
+		 * Allows the use of <code>break</code>
+		 * 
+		 * @return self
+		 */
 		public Context enterSwitch() {
 			data.inSwitch = true;
 			return this;
 		}
-		
+
+		/**
+		 * Marks this level of the context as being in a generator function.
+		 * Allows the same expressions as being in a normal function, in
+		 * addition to <code>yield</code> and <code>yield*</code>.
+		 * 
+		 * @return self
+		 */
 		public Context enterGenerator() {
 			data.inGenerator = true;
 			return this;
 		}
-		
-		public void enterLoop() {
+
+		/**
+		 * Marks this level of the context as being in a loop. Allows
+		 * <code>break</code> and <break>continue</break> statements
+		 * 
+		 * @return self
+		 */
+		public Context enterLoop() {
 			data.inLoop = true;
+			return this;
 		}
-		
-		public void enterStrict() {
+
+		public Context enterStrict() {
 			data.isStrict = true;
-		}
-		
-		public Context enterBinding() {
-			data.isBindingElement = true;
 			return this;
 		}
-		
-		public Context exitBinding() {
-			data.isBindingElement = false;
+
+		public Context isBindingElement(boolean value) {
+			data.isBindingElement = value;
 			return this;
 		}
-		
-		public boolean isAssignmentTarget() {
-			return data.isAssignmentTarget;
-		}
-		
+
 		public Context isAssignmentTarget(boolean value) {
 			data.isAssignmentTarget = value;
 			return this;
@@ -1952,14 +1972,14 @@ public class JSParser {
 			 */
 			boolean inFunction = false;
 			/**
-			 * Whether the parser is currently inside a switch statement.
-			 * Allows the <code>break</code> keyword.
+			 * Whether the parser is currently inside a switch statement. Allows
+			 * the <code>break</code> keyword.
 			 */
 			boolean inSwitch = false;
 			boolean inGenerator = false;
 			/**
-			 * Whether the parser is currently inside a loop statement.
-			 * Allows the <code>break</code> and <code>continue</code> statements.
+			 * Whether the parser is currently inside a loop statement. Allows
+			 * the <code>break</code> and <code>continue</code> statements.
 			 */
 			boolean inLoop = false;
 			boolean isAssignmentTarget = false;
@@ -1967,9 +1987,11 @@ public class JSParser {
 			boolean isBindingElement = false;
 			boolean allowIn = true;
 			final ContextData parent;
+
 			public ContextData() {
 				this.parent = null;
 			}
+
 			public ContextData(ContextData parent) {
 				this.isStrict = parent.isStrict;
 				this.inFunction = parent.inFunction;
