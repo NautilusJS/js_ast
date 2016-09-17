@@ -972,8 +972,7 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src,
-			Context context) {
+	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src, Context context) {
 		ExpressionTree condition = parseNextExpression(src, context);
 		expectSemicolon(src, context);
 		ExpressionTree update = parseNextExpression(src, context);
@@ -1001,7 +1000,7 @@ public class JSParser {
 	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, boolean isForEach,
 			VariableDeclarationTree variable, JSLexer src, Context context) {
 		ExpressionTree expression = this.parseNextExpression(src, context);
-		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = this.parseStatement(src, context);
 		return new ForEachLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), isForEach, variable, expression,
 				statement);
