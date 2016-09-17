@@ -11,7 +11,6 @@ import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
-import com.mindlin.jsast.impl.parser.NumericLiteralType;
 import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.impl.util.Characters;

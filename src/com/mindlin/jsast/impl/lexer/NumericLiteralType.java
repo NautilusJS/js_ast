@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.jsast.impl.lexer;
 
 /**
  * An enumeration of the possible numberic literal types.
