@@ -22,15 +22,4 @@ public class ForLoopTreeImpl extends AbstractConditionalLoopTree implements ForL
 	public ExpressionTree getUpdate() {
 		return update;
 	}
-	
-	@Override
-	public String toString() {
-		return new StringBuilder("for (")
-			.append(getInitializer())
-			.append("; ").append(getCondition())
-			.append("; ").append(getUpdate())
-			.append(")\n")
-			.append(getStatement())
-			.toString();
-	}
 }

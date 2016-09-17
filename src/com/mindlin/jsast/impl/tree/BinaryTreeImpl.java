@@ -117,17 +117,6 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 	}
 
 	@Override
-	public String toString() {
-		return new StringBuilder()
-				.append(getLeftOperand())
-				.append(' ')
-				.append(getOperand())
-				.append(' ')
-				.append(getRightOperand())
-				.toString();
-	}
-
-	@Override
 	public Kind getKind() {
 		return kind;
 	}

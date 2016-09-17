@@ -30,15 +30,4 @@ public class ForEachLoopTreeImpl extends AbstractLoopTree implements ForEachLoop
 	public ExpressionTree getExpression() {
 		return expression;
 	}
-	
-	@Override
-	public String toString() {
-		return new StringBuilder("for (")
-			.append(getVariable())
-			.append(of ? " of " : " in ")
-			.append(getExpression())
-			.append(") ")
-			.append(getStatement())
-			.toString();
-	}
 }

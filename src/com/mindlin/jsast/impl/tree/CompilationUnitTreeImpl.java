@@ -33,14 +33,4 @@ public class CompilationUnitTreeImpl extends AbstractTree implements Compilation
 	public boolean isStrict() {
 		return this.isStrict;
 	}
-	@Override
-	public String toString() {
-		return new StringBuilder()
-				.append("CompilationUnitTree{name: \"").append(unitName)
-				.append("\", strict: ").append(isStrict)
-				.append(",lineMap: ").append(lineMap)
-				.append(",sourceElements: ").append(sourceElements)
-				.append("}")
-				.toString();
-	}
 }

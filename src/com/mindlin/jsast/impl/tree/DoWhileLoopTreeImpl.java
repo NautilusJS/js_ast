@@ -8,14 +8,4 @@ public class DoWhileLoopTreeImpl extends AbstractConditionalLoopTree implements 
 	public DoWhileLoopTreeImpl(long start, long end, StatementTree statement, ExpressionTree condition) {
 		super(start, end, condition, statement);
 	}
-	
-	@Override
-	public String toString() {
-		return new StringBuilder("do")
-			.append(getStatement())
-			.append("while (")
-			.append(getCondition())
-			.append(");")
-			.toString();
-	}
 }

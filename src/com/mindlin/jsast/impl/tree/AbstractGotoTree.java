@@ -17,14 +17,6 @@ public abstract class AbstractGotoTree extends AbstractTree implements GotoTree 
 		return this.label;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder(getKind().toString());
-		if (getLabel() != null)
-			sb.append(' ').append(getLabel());
-		return sb.toString();
-	}
-
 	public static class ContinueTreeImpl extends AbstractGotoTree implements ContinueTree {
 		public ContinueTreeImpl(long start, long end, String label) {
 			super(start, end, label);
