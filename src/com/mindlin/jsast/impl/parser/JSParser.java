@@ -447,6 +447,20 @@ public class JSParser {
 		throw new JSSyntaxException(token + "is not a binary operator", token.getStart());
 	}
 	
+	List<ParameterTree> reinterpretExpressionAsParameterList(ExpressionTree expr) {
+		if (expr.getKind() == Kind.PARENTHESIZED)
+			return reinterpretExpressionAsParameterList(((ParenthesizedTree)expr).getExpression());
+		if (expr.getKind() == Kind.SEQUENCE) {
+			List<ExpressionTree> exprs= ((SequenceTree)expr).getExpressions();
+			ArrayList<ParameterTree> params = new ArrayList<>(exprs.size());
+			for (ExpressionTree child : exprs)
+				params.add(reinterpretExpressionAsParameter(child));
+			params.trimToSize();
+			return params;
+		}
+		return Arrays.asList(reinterpretExpressionAsParameter(expr));
+	}
+	
 	ParameterTree reinterpretExpressionAsParameter(ExpressionTree expr) {
 		switch (expr.getKind()) {
 			case IDENTIFIER:
@@ -1328,12 +1342,15 @@ public class JSParser {
 			throw new UnsupportedOperationException();
 		}
 		ExpressionTree expr = this.parseConditional(startToken, src, context);
+		//Upgrade to lambda
+		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA) != null)
+			return this.finishFunctionBody(expr.getStart(), null, this.reinterpretExpressionAsParameterList(expr), true, src, context);
+		
 		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
 			return expr;
 		if (!context.isAssignmentTarget())
 			throw new JSSyntaxException("Not assignment target", src.getPosition());
 		
-
 		Token assignmentOperator = src.nextToken();
 		if (assignmentOperator.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
 			expr = reinterpretExpressionAsPattern(expr);
@@ -1420,12 +1437,12 @@ public class JSParser {
 			//Lambda w/ 1 rest operator
 			dialect.require("js.function.lambda", leftParenToken.getStart());
 			dialect.require("js.parameter.rest", next.getStart());
-			ParameterTree expr = reinterpretExpressionAsParameter(parseSpread(next, src, context));
+			List<ParameterTree> param = reinterpretExpressionAsParameterList(parseSpread(next, src, context));
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 			expectOperator(JSOperator.LAMBDA, src, context);
-			return finishFunctionBody(leftParenToken.getStart(), null, Arrays.asList(expr), true, src, context);
+			return finishFunctionBody(leftParenToken.getStart(), null, param, true, src, context);
 		} else {
-			ExpressionTree expr = parseNextExpression(next, src, context);
+			ExpressionTree expr = parseAssignment(next, src, context);
 			
 			//There are multiple expressions here
 			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null) {
@@ -1478,8 +1495,8 @@ public class JSParser {
 						}
 						expressions.add(expression);
 					}
-					Token commaToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA);
-					if (commaToken == null)
+					next = src.nextToken();
+					if (!next.matches(TokenKind.OPERATOR, JSOperator.COMMA))
 						break;
 					next = src.nextToken();
 				} while (!src.isEOF());
@@ -1500,14 +1517,8 @@ public class JSParser {
 			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA)) != null) {
 				//Upgrade to lambda
 				dialect.require("js.function.lambda", leftParenToken.getStart());
-				if (expr.getKind() == Kind.SEQUENCE) {
-					List<ExpressionTree> expressions = ((SequenceTree)expr).getExpressions();
-					List<ParameterTree> params = new ArrayList<>(expressions.size());
-					for (ExpressionTree x : expressions)
-						params.add(reinterpretExpressionAsParameter(x));
-					return finishFunctionBody(leftParenToken.getStart(), null, params, true, src, context);
-				}
-				return finishFunctionBody(leftParenToken.getStart(), null, Arrays.asList(reinterpretExpressionAsParameter(expr)), true, src, context);
+				List<ParameterTree> params = this.reinterpretExpressionAsParameterList(expr);
+				return finishFunctionBody(leftParenToken.getStart(), null, params, true, src, context);
 			}
 			//Not a lambda, just some parentheses around some expression.
 			return expr;
