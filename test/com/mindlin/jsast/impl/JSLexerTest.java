@@ -279,4 +279,36 @@ public class JSLexerTest {
 		assertEquals(false, falseToken.getValue());
 		assertEquals("false", falseToken.getText());
 	}
+	
+	@Test
+	public void testYield() {
+		JSLexer lexer = new JSLexer("yield yield* yield *");
+		Token next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.YIELD, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.YIELD_GENERATOR, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.YIELD, next.getValue());
+	}
+	
+	@Test
+	public void testGenerator() {
+		JSLexer lexer = new JSLexer("function function* function *");
+		Token next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.FUNCTION, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.FUNCTION_GENERATOR, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.FUNCTION, next.getValue());
+	}
 }
