@@ -19,7 +19,7 @@ import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 @RunWith(Suite.class)
-@SuiteClasses({ArrayLiteralTest.class, BinaryExpressionTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
+@SuiteClasses({ArrayLiteralTest.class, BinaryExpressionTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, LambdaTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
 public class JSParserTest {
 	
 	protected static final void assertLiteral(ExpressionTree expr, String value) {
