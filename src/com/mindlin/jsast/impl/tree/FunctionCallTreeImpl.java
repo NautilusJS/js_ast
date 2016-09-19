@@ -6,12 +6,12 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
 
 public class FunctionCallTreeImpl extends AbstractTree implements FunctionCallTree {
-	List<? extends ExpressionTree> arguments;
-	ExpressionTree functionSelect;
-	public FunctionCallTreeImpl(long start, long end, List<? extends ExpressionTree> args, ExpressionTree functionSelect) {
+	protected final ExpressionTree functionSelect;
+	protected final List<? extends ExpressionTree> arguments;
+	public FunctionCallTreeImpl(long start, long end, ExpressionTree functionSelect, List<? extends ExpressionTree> args) {
 		super(start, end);
-		this.arguments = args;
 		this.functionSelect = functionSelect;
+		this.arguments = args;
 	}
 
 	@Override

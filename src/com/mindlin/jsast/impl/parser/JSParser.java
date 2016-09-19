@@ -1,20 +1,28 @@
 package com.mindlin.jsast.impl.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Stack;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
-import com.mindlin.jsast.exception.JSUnsupportedException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
+import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
+import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
+import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
+import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
@@ -22,60 +30,90 @@ import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
+import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
+import com.mindlin.jsast.impl.tree.ImportSpecifierTreeImpl;
+import com.mindlin.jsast.impl.tree.ImportTreeImpl;
+import com.mindlin.jsast.impl.tree.NewTreeImpl;
+import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
+import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
+import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
+import com.mindlin.jsast.impl.tree.SpreadTreeImpl;
+import com.mindlin.jsast.impl.tree.StringLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.SuperExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
+import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
+import com.mindlin.jsast.impl.tree.ThrowTreeImpl;
 import com.mindlin.jsast.impl.tree.TryTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
-import com.mindlin.jsast.impl.tree.VariableTreeImpl;
+import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
+import com.mindlin.jsast.impl.tree.VoidTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
+import com.mindlin.jsast.tree.ArrayLiteralTree;
+import com.mindlin.jsast.tree.AssignmentTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
+import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
+import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.ExpressiveStatementTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
+import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.GotoTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
+import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
-import com.mindlin.jsast.tree.InterfaceTree;
+import com.mindlin.jsast.tree.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.LabeledStatementTree;
+import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
+import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
+import com.mindlin.jsast.tree.ObjectLiteralTree;
+import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
+import com.mindlin.jsast.tree.PatternTree;
+import com.mindlin.jsast.tree.SequenceTree;
 import com.mindlin.jsast.tree.SpreadTree;
 import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.jsast.tree.StringLiteralTree;
+import com.mindlin.jsast.tree.SuperExpressionTree;
 import com.mindlin.jsast.tree.SwitchTree;
+import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
-import com.mindlin.jsast.tree.VariableTree;
+import com.mindlin.jsast.tree.VariableDeclarationTree;
+import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 
 public class JSParser {
-	private static Token ensureToken(JSLexer src, Object value) {
-		Token token = src.nextToken();
-		ensureToken(token, value);
-		return token;
-	}
-	
 	/**
 	 * A convenience method, to assert a token's kind
 	 * @param token
 	 * @param value
 	 */
-	private static void ensureTokenKind(Token token, TokenKind value) {
-		if (token.getKind() != value)
-			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + value, token.getStart());
+	private static void expect(Token token, TokenKind kind) {
+		if (token.getKind() != kind)
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getStart());
 	}
 	
 	/**
@@ -83,25 +121,55 @@ public class JSParser {
 	 * @param token
 	 * @param value
 	 */
-	private static void ensureToken(Token token, Object value) {
-		if (token.getValue() != value)
+	private static void expect(Token token, Object value) {
+		if (!Objects.equals(token.getValue(), value))
 			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
 	}
 	
-	private static Token expect(Token t, TokenKind kind, Object value, JSLexer lexer, boolean isStrict) {
-		if (t == null)
-			t = lexer.nextToken();
-		ensureTokenKind(t, kind);
-		ensureToken(t, value);
+	private static Token expect(Token token, TokenKind kind, Object value, JSLexer src, Context context) {
+		if (token == null)
+			token = src.nextToken();
+		if (token.getKind() != kind)
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getStart());
+		if (!Objects.equals(token.getValue(), value))
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
+		return token;
+	}
+	
+	private static Token expect(TokenKind kind, Object value, JSLexer src, Context context) {
+		Token t = src.nextToken();
+		expect(t, kind);
+		expect(t, value);
 		return t;
+	}
+	
+	private static void expect(Token token, TokenKind kind, Object value) {
+		expect(token, kind);
+		expect(token, value);
+	}
+	
+	private static Token expect(Token token, TokenKind kind, JSLexer src, Context context) {
+		if (token == null)
+			token = src.nextToken();
+		expect(token, kind);
+		return token;
+	}
+	
+	private static Token expectOperator(JSOperator operator, JSLexer src, Context context) {
+		return expect(TokenKind.OPERATOR, operator, src, context);
+	}
+	
+	private static Token expectSemicolon(JSLexer src, Context context) {
+		return expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
 	}
 	
 	//Parser properties
 	protected JSDialect dialect;
 	
 	public JSParser() {
-		this(JSDialect.JSStandardDialect.TYPESCRIPT);
+		this(JSDialect.JSStandardDialect.EVERYTHING);
 	}
+	
 	public JSParser(JSDialect dialect) {
 		this.dialect = dialect;
 	}
@@ -113,425 +181,726 @@ public class JSParser {
 	public CompilationUnitTree apply(String unitName, JSLexer src) {
 		List<Tree> elements = new ArrayList<>();
 		Tree value;
-		while ((value = parseNext(src, false)) != null)
+		Context context = new Context();
+		context.setScriptName(unitName);
+		while ((value = parseNext(src, context)) != null)
 			elements.add(value);
-		// TODO fix isStrict
-		return new CompilationUnitTreeImpl(0, src.getCharIndex(), unitName, null, elements, false);
+		return new CompilationUnitTreeImpl(0, src.getPosition(), unitName, null, elements, false);
 	}
 	
-	protected ExpressionTree parseNextExpression(JSLexer src, boolean isStrict) {
-		throw new UnsupportedOperationException();
+	public Tree parseNext(JSLexer src, Context context) {
+		return parseNext(src.nextToken(), src, context);
 	}
 	
-	public Tree parseNext(JSLexer src, boolean isStrict) {
-		Token t = src.nextToken();
-		switch (t.getKind()) {
-			case KEYWORD:
-				switch (t.<JSKeyword>getValue()) {
-					case WHILE:
-						return this.parseWhileLoop(t, src, isStrict);
-					case DO:
-						return this.parseDoWhileLoop(t, src, isStrict);
-					case FOR:
-						return this.parseUnknownForLoop(t, src, isStrict);
-					case IF:
-						return this.parseIfStatement(t, src, isStrict);
-					case SWITCH:
-						return this.parseSwitchStatement(t, src, isStrict);
-					case TRY:
-						return this.parseTryStatement(t, src, isStrict);
-					case FUNCTION:
-						return this.parseFunctionKeyword(t, src, isStrict);
-					case WITH:
-						return this.parseWithStatement(t, src, isStrict);
-					case CONST:
-					case VAR:
-					case LET:
-						return this.parseVariableDeclaration(t, src, isStrict);
-					case CLASS:
-						return this.parseClassUnknown(t, src, isStrict);
-					case TYPEOF:
-						return this.parseUnaryExpression(t, src, isStrict);
-					case VOID:
-						return this.parseVoid(t, src, isStrict);
-					case CASE:
-					case BREAK:
-					case CONTINUE:
-					case CATCH:
-					case FINALLY:
-					case DEFAULT:
-					case ELSE:
-					case EXTENDS:
-					case IN:
-					case INSTANCEOF:
-					case RETURN:
-					case SUPER:
-					case THIS:
-					case YIELD:
-					default:
-						throw new JSSyntaxException("Unexpected keyword " + t.getValue(), t.getStart());
-				}
-			case IDENTIFIER:
-				return this.parseIncompleteExpression(t, src, isStrict);
-			case BRACKET:
-				return this.parseBlock(t, src, isStrict);
-			case LITERAL:
-				throw new UnsupportedOperationException();
-			case FUTURE:
-			case FUTURESTRICT:
-				//TODO remove?
-				break;
-			case OPERATOR:
-				throw new UnsupportedOperationException();
-			case SPECIAL:
-				switch (t.<JSSpecialGroup>getValue()) {
-					case EOF:
-						break;
-					case EOL:
-						break;
-					case SEMICOLON:
-						break;
-					default:
-						break;
-				}
-				throw new UnsupportedOperationException();
-		}
-		throw new JSUnexpectedTokenException(t);
-	}
-	
-	protected StatementTree parseStatement(JSLexer src, boolean isStrict) {
-		return this.parseStatement(src.nextToken(), src, isStrict);
-	}
-	
-	protected StatementTree parseStatement(Token token, JSLexer src, boolean isStrict) {
-		// TODO finish
+	protected Tree parseNext(Token token, JSLexer src, Context context) {
 		switch (token.getKind()) {
-			case SPECIAL:
-				ensureToken(token, JSSpecialGroup.SEMICOLON);
-				return new EmptyStatementTreeImpl(token);
-			case BRACKET:
-				ensureToken(token, '{');
-				return this.parseBlock(token, src, isStrict);
 			case KEYWORD:
 				switch (token.<JSKeyword>getValue()) {
 					case BREAK:
 					case CONTINUE:
-						return this.parseGotoStatement(token, src, isStrict);
+						return this.parseGotoStatement(token, src, context);
+					case CLASS:
+						return this.parseClass(token, src, context);
+					case CONST:
+					case LET:
+					case VAR:
+						return this.parseVariableDeclaration(token, src, context);
 					case DEBUGGER:
-						return this.parseDebugger(token, src, isStrict);
+						return this.parseDebugger(token, src, context);
+					case DO:
+						return this.parseDoWhileLoop(token, src, context);
+					case AWAIT:
+					case ENUM:
+					case TYPE:
+						throw new UnsupportedOperationException();
+					case EXPORT:
+						return this.parseExportStatement(token, src, context);
+					case FOR:
+						return this.parseForStatement(token, src, context);
+					case FUNCTION:
+						return this.parseFunctionExpression(token, src, context);
+					case FUNCTION_GENERATOR:
+						return this.parseGeneratorKeyword(token, src, context);
+					case IF:
+						return this.parseIfStatement(token, src, context);
+					case IMPORT:
+						return this.parseImportStatement(token, src, context);
+					case INTERFACE:
+						return this.parseInterface(token, src, context);
 					case RETURN:
-					case DELETE:
 					case THROW:
+						return this.parseUnaryStatement(token, src, context);
+					case SWITCH:
+						return this.parseSwitchStatement(token, src, context);
+					case TRY:
+						return this.parseTryStatement(token, src, context);
+					case VOID:
+						return this.parseVoid(token, src, context);
+					case WHILE:
+						return this.parseWhileLoop(token, src, context);
+					case WITH:
+						return this.parseWithStatement(token, src, context);
+					case DELETE:
 					case NEW:
-					case TYPEOF: {
-						ExpressionTree expr = this.parsePrefixUnary(token, src, isStrict);
-						if (expr instanceof StatementTree)
+					case TYPEOF:
+					case YIELD:
+					case YIELD_GENERATOR:
+					case SUPER:
+					case THIS: {
+						ExpressionTree expr = parseUnaryExpression(token, src, context);
+						if (expr.getKind().isStatement())
 							return (StatementTree) expr;
 						return new ExpressionStatementTreeImpl(expr);
 					}
-					case AWAIT:
-						// TODO impl
-						break;
-					case VOID:
-						return this.parseVoid(token, src, isStrict);
-					case DO:
-						return this.parseDoWhileLoop(token, src, isStrict);
-					case FOR:
-						return this.parseUnknownForLoop(token, src, isStrict);
-					case WHILE:
-						return this.parseWhileLoop(token, src, isStrict);
-					case IMPORT:
-						return this.parseImportStatement(token, src, isStrict);
-					case EXPORT:
-						return this.parseExportStatement(token, src, isStrict);
-					case IF:
-						return this.parseIfStatement(token, src, isStrict);
-					case CLASS:
-						return this.parseClassUnknown(token, src, isStrict);
-					case LET:
-					case VAR:
-					case CONST:
-						return this.parseVariableDeclaration(token, src, isStrict);
-					case FUNCTION:
-						return this.parseFunctionKeyword(token, src, isStrict);
-					case FUNCTION_GENERATOR:
-						return this.parseGeneratorKeyword(token, src, isStrict);
-					case INTERFACE:
-						return this.parseInterface(token, src, isStrict);
-					case SWITCH:
-						return this.parseSwitchStatement(token, src, isStrict);
-					case TRY:
-						return this.parseTryStatement(token, src, isStrict);
-					case WITH:
-						return this.parseWithStatement(token, src, isStrict);
-					//These are all invalid
-					case ELSE:
-					case ENUM:
-					case EXTENDS:
-					case FINALLY:
 					case CASE:
-					case DEFAULT:
 					case CATCH:
-					case IMPLEMENTS:
+					case FINALLY:
+					case DEFAULT:
+					case ELSE:
+					case EXTENDS:
 					case IN:
 					case INSTANCEOF:
-					case OF:
-					case PACKAGE:
-					case PRIVATE:
-					case PROTECTED:
-					case PUBLIC:
-					case STATIC:
-					case SUPER:
-					case THIS:
-					case YIELD:
 					default:
-						throw new JSUnexpectedTokenException(token);
+						throw new JSSyntaxException("Unexpected keyword " + token.getValue(), token.getStart());
 				}
-			case IDENTIFIER:
-				break;
-			case LITERAL:
-				break;
+			case IDENTIFIER: {
+				Token lookahead = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+				if (lookahead != null)
+					return this.parseLabeledStatement(this.parseIdentifier(token, src, context), lookahead, src, context);
+			}
+			case BOOLEAN_LITERAL:
+			case NUMERIC_LITERAL:
+			case STRING_LITERAL:
+			case REGEX_LITERAL:
+			case TEMPLATE_LITERAL:
+			case NULL_LITERAL:
+				return this.parseNextExpression(token, src, context);
+			case BRACKET:
+				if (token.<Character>getValue() == '{')
+					return this.parseBlock(token, src, context);
+				else if (token.<Character>getValue() == '[')
+					return this.parseNextExpression(token, src, context);
 			case OPERATOR:
-				throw new JSUnexpectedTokenException(token);
-			case FUTURE:
-			case FUTURESTRICT:
-			default:
-				throw new UnsupportedOperationException("Unknown kind: " + token.getKind());
+				return this.parseUnaryExpression(token, src, context);
+			case SPECIAL:
+				switch (token.<JSSpecialGroup>getValue()) {
+					case EOF:
+						return null;
+					case EOL:
+					case SEMICOLON:
+						return new EmptyStatementTreeImpl(token);
+					default:
+						break;
+				}
+			case COMMENT:
+				break;
 		}
-		throw new UnsupportedOperationException();
+		throw new JSUnexpectedTokenException(token);
 	}
 	
-	protected Tree parseGroupExpression(Token leftParenToken, JSLexer lexer, boolean isStrict) {
-		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, lexer, isStrict);
-		Token next = lexer.nextToken();
-		if (next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
-			//Is lambda w/ no args ("()=>???")
-			dialect.require("js.function.lambda", leftParenToken.getStart());
-			lexer.expectToken(TokenKind.OPERATOR, JSOperator.LAMBDA);
-			//TODO finish
-			return null;
-		} else if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
-			dialect.require("js.function.lambda", leftParenToken.getStart());
-			ExpressionTree expr = parseSpread(next, lexer, isStrict);
-			lexer.expectToken(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
-			lexer.expectToken(TokenKind.OPERATOR, JSOperator.LAMBDA);
-			//TODO finish
-			return null;
+	protected StatementTree parseStatement(JSLexer src, Context context) {
+		return this.parseStatement(src.nextToken(), src, context);
+	}
+	
+	protected StatementTree parseStatement(Token token, JSLexer src, Context context) {
+		Tree next = parseNext(token, src, context);
+		if (next.getKind().isStatement())
+			return (StatementTree)next;
+		if (next.getKind().isExpression())
+			return new ExpressionStatementTreeImpl((ExpressionTree)next);
+		if (next.getKind().isType())
+			throw new JSSyntaxException("Unexpected TypeTree when parsing statement: " + next);
+		throw new JSSyntaxException("Unexpected Tree when parsing statement: " + next);
+	}
+	
+	//Helper methods
+	
+	/**
+	 * 
+	 * @param commaToken
+	 * @param src
+	 * @param ctx
+	 */
+	protected void expectCommaSeparator(JSLexer src, Context ctx) {
+		if (dialect.supports("extension.tolerance")) {
+			Token commaToken = src.peek();
+			if (commaToken.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+				src.skip(commaToken);	
+			} else if (commaToken.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
+				src.skip(commaToken);
+				//TODO tolerate
+				throw new JSUnexpectedTokenException(commaToken);
+			} else {
+				throw new JSUnexpectedTokenException(commaToken);
+			}
 		} else {
-			boolean arrow = false;
-			
+			expectOperator(JSOperator.COMMA, src, ctx);
+		}
+	}
+
+	/**
+	 * Map a JSOperator type to a Tree.Kind type. Does not support operators not binary.
+	 * 
+	 * @param operator
+	 * @return
+	 */
+	protected Tree.Kind mapTokenToBinaryTree(Token token) {
+		if (token.isOperator())
+			switch (token.<JSOperator>getValue()) {
+				case ADDITION_ASSIGNMENT:
+					return Tree.Kind.ADDITION_ASSIGNMENT;
+				case ASSIGNMENT:
+					return Tree.Kind.ASSIGNMENT;
+				case BITWISE_AND:
+					return Tree.Kind.BITWISE_AND;
+				case BITWISE_AND_ASSIGNMENT:
+					return Tree.Kind.BITWISE_AND_ASSIGNMENT;
+				case BITWISE_NOT:
+					return Tree.Kind.BITWISE_NOT;
+				case BITWISE_OR:
+					return Tree.Kind.BITWISE_OR;
+				case BITWISE_OR_ASSIGNMENT:
+					return Tree.Kind.BITWISE_OR_ASSIGNMENT;
+				case BITWISE_XOR:
+					return Tree.Kind.BITWISE_XOR;
+				case BITWISE_XOR_ASSIGNMENT:
+					return Tree.Kind.BITWISE_XOR_ASSIGNMENT;
+				case DIVISION:
+					return Tree.Kind.DIVISION;
+				case DIVISION_ASSIGNMENT:
+					return Tree.Kind.DIVISION_ASSIGNMENT;
+				case EQUAL:
+					return Tree.Kind.EQUAL;
+				case EXPONENTIATION:
+					return Tree.Kind.EXPONENTIATION;
+				case EXPONENTIATION_ASSIGNMENT:
+					return Tree.Kind.EXPONENTIATION_ASSIGNMENT;
+				case GREATER_THAN:
+					return Tree.Kind.GREATER_THAN;
+				case GREATER_THAN_EQUAL:
+					return Tree.Kind.GREATER_THAN_EQUAL;
+				case LEFT_SHIFT:
+					return Tree.Kind.LEFT_SHIFT;
+				case LEFT_SHIFT_ASSIGNMENT:
+					return Tree.Kind.LEFT_SHIFT_ASSIGNMENT;
+				case LESS_THAN:
+					return Tree.Kind.LESS_THAN;
+				case LESS_THAN_EQUAL:
+					return Tree.Kind.LESS_THAN_EQUAL;
+				case LOGICAL_AND:
+					return Tree.Kind.LOGICAL_AND;
+				case LOGICAL_NOT:
+					return Tree.Kind.LOGICAL_NOT;
+				case LOGICAL_OR:
+					return Tree.Kind.LOGICAL_OR;
+				case MINUS:
+					return Tree.Kind.SUBTRACTION;
+				case MULTIPLICATION:
+					return Tree.Kind.MULTIPLICATION;
+				case MULTIPLICATION_ASSIGNMENT:
+					return Tree.Kind.MULTIPLICATION_ASSIGNMENT;
+				case NOT_EQUAL:
+					return Tree.Kind.NOT_EQUAL;
+				case PERIOD:
+					return Tree.Kind.MEMBER_SELECT;
+				case PLUS:
+					return Tree.Kind.ADDITION;
+				case QUESTION_MARK:
+					return Tree.Kind.CONDITIONAL;
+				case REMAINDER:
+					return Tree.Kind.REMAINDER;
+				case REMAINDER_ASSIGNMENT:
+					return Tree.Kind.REMAINDER_ASSIGNMENT;
+				case RIGHT_SHIFT:
+					return Tree.Kind.RIGHT_SHIFT;
+				case RIGHT_SHIFT_ASSIGNMENT:
+					return Tree.Kind.RIGHT_SHIFT_ASSIGNMENT;
+				case STRICT_EQUAL:
+					return Tree.Kind.STRICT_EQUAL;
+				case STRICT_NOT_EQUAL:
+					return Tree.Kind.STRICT_NOT_EQUAL;
+				case SUBTRACTION_ASSIGNMENT:
+					return Tree.Kind.SUBTRACTION_ASSIGNMENT;
+				case UNSIGNED_RIGHT_SHIFT:
+					return Tree.Kind.UNSIGNED_RIGHT_SHIFT;
+				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					return Tree.Kind.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
+				case INCREMENT:
+				case DECREMENT:
+				case COLON:
+				case COMMA:
+				case LAMBDA:
+				case LEFT_PARENTHESIS:
+				case RIGHT_PARENTHESIS:
+				default:
+					break;
+			}
+		if (token.isKeyword())
+			switch (token.<JSKeyword>getValue()) {
+				case YIELD:
+					return Tree.Kind.YIELD;
+				case YIELD_GENERATOR:
+					return Tree.Kind.YIELD_GENERATOR;
+				default:
+					break;
+			}
+		throw new JSSyntaxException(token + "is not a binary operator", token.getStart());
+	}
+	
+	ParameterTree reinterpretExpressionAsParameter(ExpressionTree expr) {
+		switch (expr.getKind()) {
+			case IDENTIFIER:
+				return new ParameterTreeImpl((IdentifierTree)expr);
+			case ASSIGNMENT: {
+				dialect.require("js.parameter.default", expr.getStart());
+				//Turn into default parameter
+				AssignmentTree assignment = (AssignmentTree) expr;
+				if (assignment.getLeftOperand().getKind() != Tree.Kind.IDENTIFIER)
+					throw new JSSyntaxException("Cannot reinterpret " + expr + "as parameter (left-hand side of assignment expression is not an identifier)", expr.getStart());
+				// I can't find any example of an expression that can't be used
+				// as a default value (except ones that won't run at all)
+				
+				IdentifierTree identifier = (IdentifierTree) assignment.getLeftOperand();
+				return new ParameterTreeImpl(identifier.getStart(), assignment.getRightOperand().getEnd(), identifier, false, false, null, assignment.getRightOperand());
+			}
+			case SPREAD:
+				dialect.require("js.parameter.rest", expr.getStart());
+				//Turn into rest parameter
+				return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), (IdentifierTree)((UnaryTree)expr).getExpression(), true, false, null, null);
+			case ARRAY_LITERAL:
+			case OBJECT_LITERAL:
+				dialect.require("js.parameter.destructured", expr.getStart());
+				// TODO support for destructuring
+				throw new UnsupportedOperationException("Array/Object literal conversion to destructuring parameters not yet supported");
+			default:
+				break;
+		}
+		throw new JSSyntaxException("Cannot reinterpret " + expr + "as parameter", expr.getStart());
+	}
+	
+	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
+		switch (t.getKind()) {
+			case IDENTIFIER:
+				return parseIdentifier(t, src, context);
+			case NUMERIC_LITERAL:
+				if (context.isStrict()) {
+					//TODO throw error on implicit octal
+				}
+			case STRING_LITERAL:
+			case BOOLEAN_LITERAL:
+			case NULL_LITERAL:
+			case TEMPLATE_LITERAL:
+				return parseLiteral(t, src, context);
+			case OPERATOR:
+				switch (t.<JSOperator>getValue()) {
+					case LEFT_PARENTHESIS:
+						context.isBindingElement(false);
+						return this.parseGroupExpression(t, src, context.pushed());
+					case DIVISION:
+					case DIVISION_ASSIGNMENT:
+						//TODO finish (parse regex literal)
+						throw new UnsupportedOperationException();
+					default:
+						throw new JSUnexpectedTokenException(t);
+				}
+			case BRACKET:
+				switch ((char)t.getValue()) {
+					case '[':
+						return this.parseArrayInitializer(t, src, context);
+					case '{':
+						return this.parseObjectInitializer(t, src, context);
+					default:
+						throw new JSUnexpectedTokenException(t);
+				}
+			case KEYWORD:
+				context.isAssignmentTarget(false).isBindingElement(false);
+				switch (t.<JSKeyword>getValue()) {
+					case FUNCTION:
+						return this.parseFunctionExpression(t, src, context);
+					case THIS:
+						return parseThis(t, src, context);
+					case CLASS:
+						return this.parseClass(t, src, context);
+					default:
+						throw new JSUnexpectedTokenException(t);
+				}
+			default:
+				throw new JSUnexpectedTokenException(t);
 		}
 	}
 	
-	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer lexer, boolean isStrict) {
+	protected List<ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
+		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
+		 List<ExpressionTree> result = new ArrayList<>();
+		 t = src.nextToken();
+		 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			 return result;
+		 while (true) {
+			 ExpressionTree expr;
+			 if (t.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
+				 expr = parseSpread(t, src, context);
+			 else
+				 expr = parseAssignment(t, src, context.pushed());
+			 result.add(expr);
+			 t = src.nextToken();
+			 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+				 break;
+			 if (!t.matches(TokenKind.OPERATOR, JSOperator.COMMA))
+				 throw new JSUnexpectedTokenException(t);
+			 t = src.nextToken();
+		 }
+		 if (!t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			 throw new JSUnexpectedTokenException(t);
+		 return result;
+	}
+	
+	//Various statements
+	
+	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
+		importKeywordToken = expect(importKeywordToken, TokenKind.KEYWORD, JSKeyword.IMPORT, src, context);
+		List<ImportSpecifierTree> importSpecifiers = new ArrayList<>();
+		Token t = src.nextToken();
+		if (t.isIdentifier()) {
+			importSpecifiers.add(new ImportSpecifierTreeImpl(parseIdentifier(t, src, context)));
+			if (!(t = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+				expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
+				StringLiteralTree source = (StringLiteralTree)parseLiteral(null, src, context);
+				return new ImportTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
+			}
+			t = src.nextToken();
+		}
+		if (t.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+			IdentifierTree identifier = new IdentifierTreeImpl(t.getStart(), t.getEnd(), "*");
+			t = expect(TokenKind.KEYWORD, JSKeyword.AS, src, context);
+			IdentifierTree alias = parseIdentifier(null, src, context);
+			importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
+			t = src.nextToken();
+		} else if (t.matches(TokenKind.BRACKET, '{')) {
+			do {
+				t = src.nextToken();
+				IdentifierTree identifier = parseIdentifier(t, src, context);
+				IdentifierTree alias = identifier;
+				if ((t = src.nextToken()).matches(TokenKind.KEYWORD, JSKeyword.AS)) {
+					alias = parseIdentifier(null, src, context);
+					t = src.nextToken();
+				}
+				importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
+			} while (t.matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			expect(t, TokenKind.BRACKET, '}', src, context);
+			t = src.nextToken();
+		}
+		if (!importSpecifiers.isEmpty()) {
+			expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
+			t = null;
+		}
+		StringLiteralTree source = (StringLiteralTree)parseLiteral(t, src, context);
+		return new ImportTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
+	}
+	
+	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {
+		exportKeywordToken = expect(exportKeywordToken, TokenKind.KEYWORD, JSKeyword.EXPORT, src, context);
+		ExpressionTree expr = parseNextExpression(src, context);
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
-	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer lexer, boolean isStrict) {
-		// TODO finish
-		throw new UnsupportedOperationException();
+	TypeTree reinterpretAsType(Token typeToken) {
+		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
+			return new VoidTypeTreeImpl(typeToken);
+		}
+		//TODO fix identifiers
+		throw new JSUnexpectedTokenException(typeToken);
 	}
-	protected TypeTree parseTypeStatement(Token typeToken, JSLexer lexer, boolean isStrict) {
+	
+	protected TypeTree parseTypeStatement(Token typeToken, JSLexer src, Context context) {
 		if (typeToken == null)
-			typeToken = lexer.nextToken();
+			typeToken = src.nextToken();
+		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
+				return new VoidTypeTreeImpl(typeToken);
+		if (typeToken.isIdentifier()) {
+			switch (typeToken.<String>getValue()) {
+				case "any":
+				case "string":
+				case "number":
+				case "boolean":
+					//TODO finish
+			}
+		}
 		throw new UnsupportedOperationException();
 	}
 	
 	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
-	protected StatementTree parseVariableDeclaration(Token keywordToken, JSLexer lexer, boolean isStrict) {
-		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, lexer);
+	protected VariableDeclarationTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context) {
+		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		boolean isConst = keywordToken.getValue() == JSKeyword.CONST;
-		boolean isScoped = keywordToken.getValue() == JSKeyword.LET;
+		boolean isScoped = isConst || keywordToken.getValue() == JSKeyword.LET;//Const's are also scoped
 		//Check that the token is 'var', 'let', or 'const'.
-		if (keywordToken.getValue() != JSKeyword.VAR && !(isConst || isScoped))
+		if (keywordToken.getValue() != JSKeyword.VAR && !isScoped)
 			throw new JSUnexpectedTokenException(keywordToken);
 		//Check if allowed
-		if (isScoped && !dialect.supports("js.variable.scoped"))
-			throw new JSUnsupportedException("js.variable.scoped", keywordToken.getStart());
-		if (isConst && !dialect.supports("js.variable.const"))
-			throw new JSUnsupportedException("js.variable.const", keywordToken.getStart());
+		if (isScoped) {
+			dialect.require("js.variable.scoped", keywordToken.getStart());
+			if (isConst)
+				dialect.require("js.variable.const", keywordToken.getStart());
+		}
 		
 		//Build list of declarations
-		List<VariableTree> declarations = new ArrayList<>();
+		List<VariableDeclaratorTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
-			Token identifier = lexer.nextToken();
-			TypeTree type = null;
-			ExpressionTree initializer = null;
+			Token identifier = src.nextToken();
 			if (!identifier.isIdentifier())
 				throw new JSUnexpectedTokenException(identifier);
-			Token peek = lexer.peekNextToken();
+			
 			//Check if a type is available
-			if (peek.matches(TokenKind.OPERATOR, JSOperator.COLON)) {
-				lexer.skipToken(peek);
-				type = parseTypeStatement(lexer.nextToken(), lexer, isStrict);
-				
-				peek = lexer.peekNextToken();
-			}
+			TypeTree type = null;
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null)
+				type = parseTypeStatement(src.nextToken(), src, context);
+			
 			//Check if an initializer is available
-			if (peek.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-				lexer.skipToken(peek);
-				initializer = parseExpression(null, lexer, isStrict);
-			}
-			declarations.add(new VariableTreeImpl(declarations.isEmpty() ? keywordToken.getStart() : identifier.getStart(), lexer.getPosition(), isScoped, isConst, new IdentifierTreeImpl(identifier), type, initializer));
-		} while (lexer.nextToken().matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			ExpressionTree initializer = null;
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
+				initializer = parseAssignment(null, src, context);
+			else if (isConst)
+				//No initializer
+				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
+			
+			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
+		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
-		if (declarations.size() == 1)
-			return declarations.get(0);
-		//Return as an unscoped block
-		return new BlockTreeImpl(keywordToken.getStart(), lexer.getPosition(), declarations, false);
+		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
+	
+	protected ExpressiveStatementTree parseUnaryStatement(Token keywordToken, JSLexer src, Context context) {
+		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
+		if (!(keywordToken.getValue() == JSKeyword.RETURN || keywordToken.getValue() == JSKeyword.THROW))
+			throw new JSUnexpectedTokenException(keywordToken);
+		ExpressionTree expr = parseNextExpression(null, src, context);
+		if (keywordToken.getValue() == JSKeyword.RETURN)
+			return new ReturnTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
+		else
+			return new ThrowTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
+	}
+
+	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, Token colon, JSLexer src, Context ctx) {
+		throw new UnsupportedOperationException();
+	}
+	
+	//Type structures
 	
 	@JSKeywordParser(JSKeyword.CLASS)
-	protected StatementTree parseClassUnknown(Token classKeywordToken, JSLexer src, boolean isStrict) {
-		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, isStrict);
+	protected ClassDeclarationTree parseClass(Token classKeywordToken, JSLexer src, Context context) {
+		if (classKeywordToken == null)
+			classKeywordToken = src.nextToken();
+		//TODO fix for abstract classes
+		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
 		IdentifierTree classIdentifier = null;
+		TypeTree superClass = null;
+		List<TypeTree> interfaces = new ArrayList<>();
 		
 		Token next = src.nextToken();
-		if (next.isIdentifier())
-			classIdentifier = this.parseIdentifier(next, src, isStrict);
-		// TODO finish
-		throw new UnsupportedOperationException();
-	}
-	
-	protected InterfaceTree parseInterface(Token interfaceKeywordToken, JSLexer src, boolean isStrict) {
-		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, isStrict);
+		if (next.isIdentifier()) {
+			classIdentifier = this.parseIdentifier(next, src, context);
+			next = src.nextToken();
+		}
+		for (int i = 0; i < 1; i++) {
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS) && superClass == null) {
+				superClass = this.parseTypeStatement(null, src, context);
+				next = src.nextToken();
+			}
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.IMPLEMENTS) && interfaces.isEmpty()) {
+				do {
+					interfaces.add(parseTypeStatement(null, src, context));
+				} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			}
+		}
+		expect(next, TokenKind.BRACKET, '{', src, context);
 		
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
-	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, boolean isStrict) {
-		identifierToken = Token.expectKind(identifierToken, TokenKind.IDENTIFIER, src);
-		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), identifierToken.getValue());
-	}
-	
-	protected StatementTree parseFunctionKeyword(Token functionKeywordToken, JSLexer lexer, boolean isStrict) {
+	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
+		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
+		Token next = src.nextToken();
+		expect(next, TokenKind.IDENTIFIER);
+		IdentifierTree name = parseIdentifier(next, src, context);
+		List<TypeTree> superClasses = new ArrayList<>();
+		if ((next = src.nextToken()).matches(TokenKind.KEYWORD, JSKeyword.EXTENDS))
+			do {
+				superClasses.add(parseTypeStatement(null, src, context));
+			} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+		expect(next, TokenKind.BRACKET, '{');
 		// TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
-	protected StatementTree parseGeneratorKeyword(Token generatorKeywordToken, JSLexer src, boolean isStrict) {
-		// TODO finish
+	protected EnumDeclarationTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected IfTree parseIfStatement(Token ifKeywordToken, JSLexer src, boolean isStrict) {
-		ifKeywordToken = Token.expect(ifKeywordToken, TokenKind.KEYWORD, JSKeyword.IF, src);
-		src.expectToken(JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
-		StatementTree thenStatement = this.parseStatement(null, src, isStrict);
+	
+	//Control flows
+	
+	protected DebuggerTree parseDebugger(Token debuggerKeywordToken, JSLexer src, Context context) {
+		debuggerKeywordToken = expect(debuggerKeywordToken, TokenKind.KEYWORD, JSKeyword.DEBUGGER, src, context);
+		return new DebuggerTreeImpl(debuggerKeywordToken.getStart(), debuggerKeywordToken.getEnd());
+	}
+	
+	protected BlockTree parseBlock(Token openBraceToken, JSLexer src, Context context) {
+		openBraceToken = expect(openBraceToken, TokenKind.BRACKET, '{', src, context);
+		List<StatementTree> statements = new LinkedList<>();
+		Token t;
+		while (!(t = src.nextToken()).matches(TokenKind.BRACKET, '}'))
+			statements.add(parseStatement(t, src, context));
+		expect(t, '}');
+		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
+	}
+	
+	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, Context context) {
+		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
+		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
+			throw new JSUnexpectedTokenException(keywordToken);
+		//TODO check if keyword allowed in context
+		String label = null;
+		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
+		if (next != null)
+			label = next.getValue();
+		final long start = keywordToken.getStart();
+		final long end = src.getPosition();
+		if (keywordToken.getValue() == JSKeyword.BREAK)
+			return new AbstractGotoTree.BreakTreeImpl(start, end, label);
+		else if (keywordToken.getValue() == JSKeyword.CONTINUE)
+			return new AbstractGotoTree.ContinueTreeImpl(start, end, label);
+		throw new JSUnexpectedTokenException(keywordToken);
+	}
+	
+	protected IfTree parseIfStatement(Token ifKeywordToken, JSLexer src, Context context) {
+		ifKeywordToken = expect(ifKeywordToken, TokenKind.KEYWORD, JSKeyword.IF, src, context);
+		src.expect(JSOperator.LEFT_PARENTHESIS);
+		ExpressionTree expression = this.parseNextExpression(src, context);
+		src.expect(JSOperator.RIGHT_PARENTHESIS);
+		StatementTree thenStatement = parseStatement(null, src, context);
 		StatementTree elseStatement = null;
-		Token next = src.peekNextToken();
-		if (next.matches(TokenKind.KEYWORD, JSKeyword.ELSE)) {
-			src.skipToken(next);
+		Token next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.ELSE);
+		if (next != null) {
 			next = src.nextToken();
 			// This if statement isn't really needed, but it speeds up 'else if'
-			// statements
-			// by a bit, and else if statements are actually more common than
-			// else statements
-			if (next.getKind() == TokenKind.KEYWORD && next.getValue() == JSKeyword.IF)
-				elseStatement = parseIfStatement(next, src, isStrict);
+			// statements by a bit, and else if statements are more common than
+			// else statements (IMHO)
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.IF))
+				elseStatement = parseIfStatement(next, src, context);
 			else
-				elseStatement = this.parseStatement(next, src, isStrict);
+				elseStatement = parseStatement(next, src, context);
+		} else {
+			next = expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
+			elseStatement = new EmptyStatementTreeImpl(next);
 		}
-		if (elseStatement == null)
-			elseStatement = new EmptyStatementTreeImpl(src.getPosition(), src.getPosition());
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
 	
-	protected SwitchTree parseSwitchStatement(Token switchKeywordToken, JSLexer src, boolean isStrict) {
-		switchKeywordToken = Token.expect(switchKeywordToken, TokenKind.KEYWORD, JSKeyword.SWITCH, src);
-		src.expectToken(JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
-		src.expectToken(TokenKind.BRACKET, '{');
+	protected SwitchTree parseSwitchStatement(Token switchKeywordToken, JSLexer src, Context context) {
+		switchKeywordToken = expect(switchKeywordToken, TokenKind.KEYWORD, JSKeyword.SWITCH, src, context);
+		src.expect(JSOperator.LEFT_PARENTHESIS);
+		ExpressionTree expression = this.parseNextExpression(src, context);
+		src.expect(JSOperator.RIGHT_PARENTHESIS);
+		src.expect(TokenKind.BRACKET, '{');
 		List<CaseTree> cases = new LinkedList<>();
 		Token next = src.nextToken();
-		while (next.getKind() == TokenKind.KEYWORD) {
+		while (next.isKeyword()) {
 			ExpressionTree caseExpr;
 			List<? extends StatementTree> statements = new LinkedList<>();
 			if (next.getValue() == JSKeyword.CASE)
-				caseExpr = this.parseNextExpression(src, isStrict);
+				caseExpr = this.parseNextExpression(src, context);
 			else if (next.getValue() == JSKeyword.DEFAULT)
 				caseExpr = null;
 			else
 				throw new JSUnexpectedTokenException(next);
-			src.expectToken(JSOperator.COLON);
+			src.expect(JSOperator.COLON);
 			// TODO parse statements
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
 	}
 	
-	protected TryTree parseTryStatement(Token tryKeywordToken, JSLexer src, boolean isStrict) {
-		tryKeywordToken = Token.expect(tryKeywordToken, TokenKind.KEYWORD, JSKeyword.TRY, src);
-		//TODO support try-with-resources?
-		BlockTree tryBlock = this.parseBlock(null, src, isStrict);
+	protected TryTree parseTryStatement(Token tryKeywordToken, JSLexer src, Context context) {
+		tryKeywordToken = expect(tryKeywordToken, TokenKind.KEYWORD, JSKeyword.TRY, src, context);
+		BlockTree tryBlock = parseBlock(null, src, context);
 		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
-		BlockTree finallyBlock = null;
 		
-		Token next = src.peekNextToken();
-		while (next.getKind() != TokenKind.SPECIAL && next.getValue() != JSSpecialGroup.EOF) {
+		Token next;
+		while ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.CATCH)) != null) {
+			expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+			IdentifierTree param = parseIdentifier(src.nextToken(), src, context);
 			
+			Token t = src.nextToken();
+			expect(t, TokenKind.OPERATOR);
+			//Optional param type
+			TypeTree type = null;
+			if (t.getValue() == JSOperator.COLON) {
+				type = parseTypeStatement(null, src, context);
+				t = src.nextToken();
+			}
+			expect(t, TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, null, context);
+			BlockTree block = parseBlock(src.nextToken(), src, context);
+			catchBlocks.add(new CatchTreeImpl(next.getStart(), block.getEnd(), block, param, type));
 		}
-		if (finallyBlock == null && catchBlocks.isEmpty())
+
+		//Optional finally block
+		BlockTree finallyBlock = null;
+		if (src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.FINALLY) != null)
+			finallyBlock = parseBlock(null, src, context);
+		else if (catchBlocks.isEmpty())
+			//No catch or finally blocks
 			throw new JSSyntaxException("Incomplete try statement", src.getPosition());
-		// TODO finish
+		catchBlocks.trimToSize();
 		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
 	}
 	
-	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, boolean isStrict) {
-		functionKeywordToken = Token.expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src);
+	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, Context context) {
+		functionKeywordToken = expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src, context);
+		//TODO finish
 		throw new UnsupportedOperationException("Type support is (currently) not supported");
 	}
 	
-	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, boolean isStrict) {
-		withKeywordToken = Token.expect(withKeywordToken, TokenKind.KEYWORD, JSKeyword.WITH, src);
-		src.expectToken(JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		src.expectToken(JSOperator.RIGHT_PARENTHESIS);
-		StatementTree statement = this.parseStatement(src, isStrict);
+	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, Context context) {
+		withKeywordToken = expect(withKeywordToken, TokenKind.KEYWORD, JSKeyword.WITH, src, context);
+		src.expect(JSOperator.LEFT_PARENTHESIS);
+		ExpressionTree expression = parseNextExpression(src, context);
+		src.expect(JSOperator.RIGHT_PARENTHESIS);
+		StatementTree statement = this.parseStatement(src, context);
 		return new WithTreeImpl(withKeywordToken.getStart(), src.getPosition(), expression, statement);
 	}
 	
-	protected SpreadTree parseSpread(Token spreadToken, JSLexer src, boolean isStrict) {
-		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, isStrict);
-		
-		throw new UnsupportedOperationException();
-	}
-	
-	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, boolean isStrict) {
-		voidKeywordToken = Token.expect(voidKeywordToken, TokenKind.KEYWORD, JSKeyword.VOID, src);
-		ExpressionTree expr = this.parseNextExpression(src, isStrict);
-		return new UnaryTreeImpl.VoidTreeImpl(voidKeywordToken.getStart(), src.getPosition(), expr);
-	}
-	
-	protected UnaryTree parseUnaryExpression(Token operatorToken, JSLexer src, boolean isStrict) {
-		// TODO finish
-		throw new UnsupportedOperationException();
-	}
-	
 	// Loops
-	protected WhileLoopTree parseWhileLoop(Token whileKeywordToken, JSLexer src, boolean isStrict) {
+	
+	@JSKeywordParser({JSKeyword.WHILE})
+	protected WhileLoopTree parseWhileLoop(Token whileKeywordToken, JSLexer src, Context context) {
 		if (whileKeywordToken == null)
-			whileKeywordToken = ensureToken(src, JSKeyword.WHILE);
-		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree condition = parseNextExpression(src, isStrict);
-		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
-		StatementTree statement = parseStatement(src, isStrict);
+			whileKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.WHILE, src, context);
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		ExpressionTree condition = parseNextExpression(src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		
+		context.push().enterLoop();
+		StatementTree statement = parseStatement(src, context);
+		context.pop();
 		return new WhileLoopTreeImpl(whileKeywordToken.getStart(), src.getPosition(), condition, statement);
 	}
 	
-	protected DoWhileLoopTree parseDoWhileLoop(Token doKeywordToken, JSLexer src, boolean isStrict) {
-		doKeywordToken = expect(doKeywordToken, TokenKind.KEYWORD, JSKeyword.DO, src, isStrict);
-		StatementTree statement = parseStatement(src, isStrict);
-		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree condition = parseNextExpression(src, isStrict);
-		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
-		ensureToken(src, JSSpecialGroup.SEMICOLON);
+	@JSKeywordParser({JSKeyword.DO})
+	protected DoWhileLoopTree parseDoWhileLoop(Token doKeywordToken, JSLexer src, Context context) {
+		doKeywordToken = expect(doKeywordToken, TokenKind.KEYWORD, JSKeyword.DO, src, context);
+		
+		context.push().enterLoop();
+		StatementTree statement = parseStatement(src, context);
+		context.pop();
+		
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		ExpressionTree condition = parseNextExpression(src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		expectSemicolon(src, context);
+		
 		return new DoWhileLoopTreeImpl(doKeywordToken.getStart(), src.getPosition(), statement, condition);
 	}
 	
@@ -544,30 +913,45 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected LoopTree parseUnknownForLoop(Token forKeywordToken, JSLexer src, boolean isStrict) {
-		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, isStrict);
-		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
-		//TODO fix
-		StatementTree statement0 = this.parseStatement(src, isStrict);
-		Token separator = src.nextToken();
-		if (separator.isSpecial()) {
-			ensureToken(separator, JSSpecialGroup.SEMICOLON);
-			return parsePartialForLoopTree(forKeywordToken, statement0, src, isStrict);
-		} else if (separator.isKeyword()
-				&& (separator.getValue() == JSKeyword.IN || separator.getValue() == JSKeyword.OF)) {
-			return this.parsePartialForEachLoopTree(forKeywordToken, separator.getValue() == JSKeyword.OF, statement0,
-					src, isStrict);
-		}
-		throw new JSSyntaxException("Invalid 'for' loop", src.getPosition());
-	}
-	
-	protected ForLoopTree parseForLoopTree(Token forKeywordToken, JSLexer src, boolean isStrict) {
-		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, isStrict);
-		ensureToken(src, JSOperator.LEFT_PARENTHESIS);
-		ExpressionTree initializer = parseNextExpression(src, isStrict);
+	protected LoopTree parseForStatement(Token forKeywordToken, JSLexer src, Context context) {
+		forKeywordToken = expect(forKeywordToken, TokenKind.KEYWORD, JSKeyword.FOR, src, context);
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 		
-		ensureToken(src, JSSpecialGroup.SEMICOLON);
-		return parsePartialForLoopTree(forKeywordToken, initializer, src, isStrict);
+		Token next = src.nextToken();
+		if (next.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+			//Empty initializer statement
+			return parsePartialForLoopTree(forKeywordToken, new EmptyStatementTreeImpl(next), src, context);
+		
+		StatementTree initializer = null;
+		if (TokenPredicate.VARIABLE_START.test(next)) {
+			context.push().allowIn(false);
+			VariableDeclarationTree declarations = parseVariableDeclaration(next, src, context);
+			context.pop();
+			
+			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
+				boolean isOf = next.getValue() == JSKeyword.OF;
+				
+				if (declarations.getDeclarations().size() != 1)
+					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Must have 1 binding", next.getStart());
+				if (declarations.getDeclarations().get(0).getIntitializer() != null)
+					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getIntitializer().getStart());
+				
+				return parsePartialForEachLoopTree(forKeywordToken, isOf, declarations, src, context);
+			}
+			initializer = declarations;
+		} else {
+			ExpressionTree expr = this.parseLeftSideExpression(next, src, context, true);
+			
+			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
+				boolean isOf = next.getValue() == JSKeyword.OF;
+				throw new UnsupportedOperationException();
+			}
+			
+			initializer = new ExpressionStatementTreeImpl(expr);
+		}
+		
+		expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
+		return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
 	}
 	
 	/**
@@ -583,13 +967,12 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, ExpressionTree initializer, JSLexer src,
-			boolean isStrict) {
-		ExpressionTree condition = this.parseNextExpression(src, isStrict);
-		ensureToken(src, JSSpecialGroup.SEMICOLON);
-		ExpressionTree update = this.parseNextExpression(src, isStrict);
-		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
-		StatementTree statement = this.parseStatement(src, isStrict);
+	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src, Context context) {
+		ExpressionTree condition = parseNextExpression(src, context);
+		expectSemicolon(src, context);
+		ExpressionTree update = parseNextExpression(src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		StatementTree statement = parseStatement(src, context);
 		return new ForLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), initializer, condition, update,
 				statement);
 	}
@@ -610,500 +993,744 @@ public class JSParser {
 	 * @return
 	 */
 	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, boolean isForEach,
-			ExpressionTree variable, JSLexer src, boolean isStrict) {
-		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		ensureToken(src, JSOperator.RIGHT_PARENTHESIS);
-		StatementTree statement = this.parseStatement(src, isStrict);
+			VariableDeclarationTree variable, JSLexer src, Context context) {
+		ExpressionTree expression = this.parseNextExpression(src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		StatementTree statement = this.parseStatement(src, context);
 		return new ForEachLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), isForEach, variable, expression,
 				statement);
 	}
 	
+	
+	// Expressions
+
+	public ExpressionTree parseNextExpression(JSLexer src, Context context) {
+		return parseNextExpression(src.nextToken(), src, context);
+	}
+	
 	/**
-	 * Parses an expression where it is known that a binary operator 
+	 * Parses the immediate next expression. For example, in 'a*b;c', it would parse 'a*b'
+	 * Will stop at:
+	 * <ul>
+	 * <li><kbd>;</kbd> (end of statement)</li>
+	 * <li><kbd>,</kbd> (separate)</li>
+	 * <li><kbd>)</kbd> (end of parenthetical/function call)</li>
+	 * <li><kbd>]</kbd> (end of array access/initializer)</li>
+	 * <li><kbd>}</kbd> (end of block)</li>
+	 * <li><kbd>:</kbd> (end of conditional)</li>
+	 * </ul>
 	 * @param t
 	 * @param src
 	 * @param isStrict
 	 * @return
 	 */
-	protected ExpressionTree parseIncompleteExpression(Token t, JSLexer src, boolean isStrict) {
-		if (t == null)
-			t = src.nextToken();
-		ExpressionTree leftExpr = this.parseNextExpression(t, src, isStrict);
-		Token next = src.nextToken();
-		switch (next.getKind()) {
-			case OPERATOR: {
-				JSOperator operator = next.<JSOperator>getValue();
-				if (operator.arity() == 2) {
-					ExpressionTree rightExpr = this.parseNextExpression(src.nextToken(), src, isStrict);
-					Tree.Kind exprKind = null;
-					switch (next.<JSOperator>getValue()) {
-						case ASSIGNMENT:
-							exprKind = Tree.Kind.ASSIGNMENT;
-							break;
-						case ADDITION_ASSIGNMENT:
-							exprKind = Tree.Kind.ADDITION_ASSIGNMENT;
-							break;
-						case BITWISE_AND_ASSIGNMENT:
-							exprKind = Tree.Kind.BITWISE_AND_ASSIGNMENT;
-							break;
-						case BITWISE_OR_ASSIGNMENT:
-							exprKind = Tree.Kind.BITWISE_OR_ASSIGNMENT;
-							break;
-						case BITWISE_XOR_ASSIGNMENT:
-							exprKind = Tree.Kind.BITWISE_XOR_ASSIGNMENT;
-							break;
-						case DIVISION_ASSIGNMENT:
-							exprKind = Tree.Kind.DIVISION_ASSIGNMENT;
-							break;
-						case EXPONENTIATION_ASSIGNMENT:
-							exprKind = Tree.Kind.EXPONENTIATION_ASSIGNMENT;
-							break;
-						case BITWISE_AND:
-							exprKind = Tree.Kind.BITWISE_AND;
-							break;
-						case BITWISE_OR:
-							exprKind = Tree.Kind.BITWISE_OR;
-							break;
-						case BITWISE_XOR:
-							exprKind = Tree.Kind.BITWISE_XOR;
-							break;
-						case COMMA:
-							exprKind = Tree.Kind.COMMA;
-							break;
-						case DIVISION:
-							exprKind = Tree.Kind.DIVISION;
-							break;
-						case EQUAL:
-							exprKind = Tree.Kind.EQUAL;
-							break;
-						case EXPONENTIATION:
-							exprKind = Tree.Kind.EXPONENTIATION;
-							break;
-						case GREATER_THAN:
-							exprKind = Tree.Kind.GREATER_THAN;
-							break;
-						case GREATER_THAN_EQUAL:
-							exprKind = Tree.Kind.GREATER_THAN_EQUAL;
-							break;
-						case LAMBDA:
-							//TODO special (transform comma in parens to arg list)
-							break;
-						case LEFT_SHIFT:
-							exprKind = Tree.Kind.LEFT_SHIFT;
-							break;
-						case LEFT_SHIFT_ASSIGNMENT:
-							exprKind = Tree.Kind.LEFT_SHIFT_ASSIGNMENT;
-							break;
-						case LESS_THAN:
-							exprKind = Tree.Kind.LESS_THAN;
-							break;
-						case LESS_THAN_EQUAL:
-							exprKind = Tree.Kind.LESS_THAN_EQUAL;
-							break;
-						case LOGICAL_AND:
-							exprKind = Tree.Kind.LOGICAL_AND;
-							break;
-						case LOGICAL_OR:
-							exprKind = Tree.Kind.LOGICAL_OR;
-							break;
-						case MINUS:
-							exprKind = Tree.Kind.SUBTRACTION;
-							break;
-						case MULTIPLICATION:
-							exprKind = Tree.Kind.MULTIPLICATION;
-							break;
-						case MULTIPLICATION_ASSIGNMENT:
-							exprKind = Tree.Kind.MULTIPLICATION_ASSIGNMENT;
-							break;
-						case NOT_EQUAL:
-							exprKind = Tree.Kind.NOT_EQUAL;
-							break;
-						case PLUS:
-							exprKind = Tree.Kind.ADDITION;
-							break;
-						case REMAINDER:
-							exprKind = Tree.Kind.REMAINDER;
-							break;
-						case REMAINDER_ASSIGNMENT:
-							exprKind = Tree.Kind.REMAINDER_ASSIGNMENT;
-							break;
-						case RIGHT_SHIFT:
-							exprKind = Tree.Kind.RIGHT_SHIFT;
-							break;
-						case RIGHT_SHIFT_ASSIGNMENT:
-							exprKind = Tree.Kind.RIGHT_SHIFT_ASSIGNMENT;
-							break;
-						case STRICT_EQUAL:
-							exprKind = Tree.Kind.STRICT_EQUAL;
-							break;
-						case STRICT_NOT_EQUAL:
-							exprKind = Tree.Kind.STRICT_NOT_EQUAL;
-							break;
-						case SUBTRACTION_ASSIGNMENT:
-							exprKind = Tree.Kind.SUBTRACTION_ASSIGNMENT;
-							break;
-						case UNSIGNED_RIGHT_SHIFT:
-							exprKind = Tree.Kind.UNSIGNED_RIGHT_SHIFT;
-							break;
-						case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-							exprKind = Tree.Kind.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
-							break;
-						default:
-							throw new IllegalStateException("Unsupported operator: " + operator);
-					}
-					if (operator.isAssignment()) {
-						return null;
-					} else {
-						return new BinaryTreeImpl(leftExpr.getStart(), rightExpr.getEnd(), exprKind, leftExpr, rightExpr);
-					}
-				}
-				switch (next.<JSOperator>getValue()) {
-					case ASSIGNMENT:
-						break;
-					case ADDITION_ASSIGNMENT:
-						break;
-					case BITWISE_AND_ASSIGNMENT:
-						break;
-					case BITWISE_OR_ASSIGNMENT:
-						break;
-					case BITWISE_XOR_ASSIGNMENT:
-						break;
-					case DIVISION_ASSIGNMENT:
-						break;
-					case EXPONENTIATION_ASSIGNMENT:
-						break;
-					case LEFT_SHIFT_ASSIGNMENT:
-						break;
-					case MULTIPLICATION_ASSIGNMENT:
-						break;
-					case REMAINDER_ASSIGNMENT:
-						break;
-					case RIGHT_SHIFT_ASSIGNMENT:
-						break;
-					case SUBTRACTION_ASSIGNMENT:
-						break;
-					case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-						break;
-					case BITWISE_AND:
-						break;
-					case BITWISE_NOT:
-						break;
-					case BITWISE_OR:
-						break;
-					case BITWISE_XOR:
-						break;
-					case COLON:
-						break;
-					case COMMA:
-						break;
-					case DECREMENT:
-						break;
-					case DIVISION:
-						break;
-					case EQUAL:
-						break;
-					case EXPONENTIATION:
-						break;
-					case GREATER_THAN:
-						break;
-					case GREATER_THAN_EQUAL:
-						break;
-					case INCREMENT:
-						break;
-					case LAMBDA:
-						break;
-					case LEFT_PARENTHESIS:
-						break;
-					case LEFT_SHIFT:
-						break;
-					case LESS_THAN:
-						break;
-					case LESS_THAN_EQUAL:
-						break;
-					case LOGICAL_AND:
-						break;
-					case LOGICAL_NOT:
-						break;
-					case LOGICAL_OR:
-						break;
-					case MINUS:
-						break;
-					case MULTIPLICATION:
-						break;
-					case NOT_EQUAL:
-						break;
-					case PLUS:
-						break;
-					case QUESTION_MARK:
-						break;
-					case REMAINDER:
-						break;
-					case RIGHT_PARENTHESIS:
-						break;
-					case RIGHT_SHIFT:
-						break;
-					case STRICT_EQUAL:
-						break;
-					case STRICT_NOT_EQUAL:
-						break;
-					case UNSIGNED_RIGHT_SHIFT:
-						break;
-					default:
-						break;
-					
-				}
-			}
-			case KEYWORD:
-				switch ((JSKeyword) t.getValue()) {
-					case VAR:
-					
-				}
-		}
-		// TODO finish
-		throw new UnsupportedOperationException();
-	}
-	/**
-	 * Recalculate the order of operations for an expression. Kinda recursive, should fix the
-	 * trees to match
-	 * developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
-	 * @param expression
-	 * @return correct expression
-	 */
-	protected ExpressionTree recalculateO3(ExpressionTree expression) {
-		Tree.Kind type = expression.getKind();
-		switch (type) {
-			case REGEXP_LITERAL:
-			case STRING_INTERPOLATED_LITERAL:
-			case STRING_LITERAL:
-			case NULL_LITERAL:
-			case NUMBER_LITERAL:
-			case OBJECT_LITERAL:
-			case ARRAY_LITERAL:
-			case BOOLEAN_LITERAL:
-			case IDENTIFIER:
-				//These can't be broken down at all
-				return expression;
-			case PARENTHESIZED:
-				//Precedence 19
-				return new ParenthesizedTreeImpl(expression.getStart(), expression.getEnd(), recalculateO3(((ParenthesizedTree)expression).getExpression()));
-			//TODO finish
-			case ADDITION:
-				break;
-			case ADDITION_ASSIGNMENT:
-				break;
-			case ARRAY_ACCESS:
-				break;
-			case ASSIGNMENT:
-				break;
-			case BITWISE_AND:
-				break;
-			case BITWISE_AND_ASSIGNMENT:
-				break;
-			case BITWISE_NOT:
-				break;
-			case BITWISE_OR:
-				break;
-			case BITWISE_OR_ASSIGNMENT:
-				break;
-			case BITWISE_XOR:
-				break;
-			case BITWISE_XOR_ASSIGNMENT:
-				break;
-			case BLOCK:
-				break;
-			case CLASS_DECLARATION:
-				break;
-			case CLASS_EXPRESSION:
-				break;
-			case COMMA:
-				break;
-			case DELETE:
-				break;
-			case DIVISION:
-				break;
-			case DIVISION_ASSIGNMENT:
-				break;
-			case EQUAL:
-				break;
-			case EXPONENTIATION:
-				break;
-			case EXPONENTIATION_ASSIGNMENT:
-				break;
-			case FUNCTION:
-				break;
-			case FUNCTION_EXPRESSION:
-				break;
-			case FUNCTION_INVOCATION:
-				break;
-			case GREATER_THAN:
-				break;
-			case GREATER_THAN_EQUAL:
-				break;
-			case IN:
-				break;
-			case INSTANCE_OF:
-				break;
-			case INTERFACE_DECLARATION:
-				break;
-			case LABELED_STATEMENT:
-				break;
-			case LEFT_SHIFT:
-				break;
-			case LEFT_SHIFT_ASSIGNMENT:
-				break;
-			case LESS_THAN:
-				break;
-			case LESS_THAN_EQUAL:
-				break;
-			case LOGICAL_AND:
-				break;
-			case LOGICAL_NOT:
-				break;
-			case LOGICAL_OR:
-				break;
-			case MEMBER_SELECT:
-				break;
-			case MULTIPLICATION:
-				break;
-			case MULTIPLICATION_ASSIGNMENT:
-				break;
-			case NEW:
-				break;
-			case NOT_EQUAL:
-				break;
-			case POSTFIX_DECREMENT:
-				break;
-			case POSTFIX_INCREMENT:
-				break;
-			case PREFIX_DECREMENT:
-				break;
-			case PREFIX_INCREMENT:
-				break;
-			case PROPERTY:
-				break;
-			case REMAINDER:
-				break;
-			case REMAINDER_ASSIGNMENT:
-				break;
-			case RIGHT_SHIFT:
-				break;
-			case RIGHT_SHIFT_ASSIGNMENT:
-				break;
-			case SCOPED_FUNCTION:
-				break;
-			case SPREAD:
-				break;
-			case STRICT_EQUAL:
-				break;
-			case STRICT_NOT_EQUAL:
-				break;
-			case SUBTRACTION:
-				break;
-			case SUBTRACTION_ASSIGNMENT:
-				break;
-			case TYPEOF:
-				break;
-			case UNARY_MINUS:
-				break;
-			case UNARY_PLUS:
-				break;
-			case UNSIGNED_RIGHT_SHIFT:
-				break;
-			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-				break;
-			case VOID:
-				break;
-			default:
-				break;
-		}
-		throw new JSSyntaxException("Unexpected branch: " + expression, expression.getStart());
-	}
-	protected ExpressionTree parseUnaryPostfix(ExpressionTree expr, Token t, JSLexer src, boolean isStrict) {
-		t = Token.expectKind(t, TokenKind.OPERATOR, src);
-		switch (t.<JSOperator>getValue()) {
-			case INCREMENT:
-				return new UnaryTreeImpl(expr.getStart(), t.getEnd(), expr, Tree.Kind.POSTFIX_INCREMENT);
-			case DECREMENT:
-				return new UnaryTreeImpl(expr.getStart(), t.getEnd(), expr, Tree.Kind.POSTFIX_INCREMENT);
-			default:
-				break;
-		}
-		throw new JSUnexpectedTokenException(t);
-	}
-	/**
-	 * Parses the immediate next expression. For example, in 'a*b+c', it would parse 'a*b'
-	 * @param t
-	 * @param src
-	 * @param isStrict
-	 * @return
-	 */
-	protected ExpressionTree parseNextExpression(Token t, JSLexer src, boolean isStrict) {
+	protected ExpressionTree parseNextExpression(Token t, JSLexer src, Context context) {
 		if (t == null)
 			t = src.nextToken();
 		
-		// TODO finish
-		return null;
+		ExpressionTree result = this.parseAssignment(t, src, context.pushed());
+		
+		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null)
+			return result;
+		
+		ArrayList<ExpressionTree> expressions = new ArrayList<>();
+		expressions.add(result);
+		
+		do {
+			expressions.add(parseAssignment(t, src, context));
+		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+			
+		expressions.trimToSize();
+		return new SequenceTreeImpl(expressions);
+	}
+	
+	boolean isWeakExpressionEnd(Token t, Context context) {
+		switch (t.getKind()) {
+			case STRING_LITERAL:
+			case NUMERIC_LITERAL:
+			case BOOLEAN_LITERAL:
+			case REGEX_LITERAL:
+			case TEMPLATE_LITERAL:
+			case IDENTIFIER:
+			case NULL_LITERAL:
+				return false;
+			case BRACKET: {
+				char v = t.<Character>getValue();
+				return v != '[' && v != '{';
+			}
+			case OPERATOR:
+				switch (t.<JSOperator>getValue()) {
+					case EQUAL:
+					case NOT_EQUAL:
+					case STRICT_EQUAL:
+					case STRICT_NOT_EQUAL:
+					case GREATER_THAN:
+					case LESS_THAN:
+					case INCREMENT:
+					case DECREMENT:
+					case PLUS:
+					case MINUS:
+					case MULTIPLICATION:
+					case DIVISION:
+					case REMAINDER:
+					case EXPONENTIATION:
+					case LEFT_SHIFT:
+					case RIGHT_SHIFT:
+					case UNSIGNED_RIGHT_SHIFT:
+					case BITWISE_AND:
+					case BITWISE_XOR:
+					case BITWISE_OR:
+					case BITWISE_NOT:
+					case LOGICAL_AND:
+					case LOGICAL_OR:
+					case LOGICAL_NOT:
+					case ASSIGNMENT:
+					case ADDITION_ASSIGNMENT:
+					case SUBTRACTION_ASSIGNMENT:
+					case MULTIPLICATION_ASSIGNMENT:
+					case DIVISION_ASSIGNMENT:
+					case REMAINDER_ASSIGNMENT:
+					case EXPONENTIATION_ASSIGNMENT:
+					case LEFT_SHIFT_ASSIGNMENT:
+					case RIGHT_SHIFT_ASSIGNMENT:
+					case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					case BITWISE_AND_ASSIGNMENT:
+					case BITWISE_XOR_ASSIGNMENT:
+					case BITWISE_OR_ASSIGNMENT:
+					case QUESTION_MARK:
+					case LEFT_PARENTHESIS:
+					case PERIOD:
+					case SPREAD:
+						return false;
+					case COMMA:
+					case RIGHT_PARENTHESIS:
+					case COLON:
+					case LAMBDA:
+						return true;
+					default:
+						throw new UnsupportedOperationException("Unknown operator " + t.getValue());
+				}
+			case KEYWORD:
+				switch (t.<JSKeyword>getValue()) {
+					case DELETE:
+					case TYPEOF:
+					case AS:
+					case VOID:
+					case NEW:
+						return false;
+					case IN:
+						return !context.allowIn();
+					case SUPER:
+					case THIS:
+						if (!context.inFunction())
+							throw new JSUnexpectedTokenException(t);
+						return false;
+					case YIELD:
+					case YIELD_GENERATOR:
+						if (!context.allowYield())
+							throw new JSUnexpectedTokenException(t);
+						return false;
+					default:
+						return true;
+				}
+			case COMMENT:
+			case SPECIAL:
+				return true;
+			default:
+				throw new UnsupportedOperationException("Unknown kind " + t.getKind());
+		}
+	}
+
+	/**
+	 * Unlike most binary operators, <code>**</code> has right-associativity, which means:
+	 * <ol>
+	 * <li><code>a**b**c</code> is interperted as <code>a**(b**c)</code></li>
+	 * <li>A lot of extra code has to be written to handle it</li>
+	 * </ol>
+	 * @param t
+	 * @param src
+	 * @param context
+	 * @return
+	 */
+	protected ExpressionTree parseExponentiation(Token t, JSLexer src, Context context) {
+		final ExpressionTree expr = this.parseUnaryExpression(t, src, context.pushed());
+		Token operatorToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.EXPONENTIATION);
+		if (operatorToken == null)
+			return expr;
+		context.isAssignmentTarget(false).isBindingElement(false).push();
+		final ExpressionTree right = parseExponentiation(null, src, context);
+		context.pop();
+		return new BinaryTreeImpl(expr.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
+	}
+	
+	int binaryPrecedence(Token t) {
+		if (t.isOperator())
+			switch (t.<JSOperator>getValue()) {
+				case COMMA:
+					//return 0;
+					return -1;
+				case SPREAD:
+					break;
+				case ASSIGNMENT:
+				case ADDITION_ASSIGNMENT:
+				case SUBTRACTION_ASSIGNMENT:
+				case MULTIPLICATION_ASSIGNMENT:
+				case DIVISION_ASSIGNMENT:
+				case EXPONENTIATION_ASSIGNMENT:
+				case REMAINDER_ASSIGNMENT:
+				case BITWISE_OR_ASSIGNMENT:
+				case BITWISE_XOR_ASSIGNMENT:
+				case BITWISE_AND_ASSIGNMENT:
+				case LEFT_SHIFT_ASSIGNMENT:
+				case RIGHT_SHIFT_ASSIGNMENT:
+				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					return 3;
+				case QUESTION_MARK:
+					return 4;
+				case LOGICAL_OR:
+					return 5;
+				case LOGICAL_AND:
+					return 6;
+				case BITWISE_OR:
+					return 7;
+				case BITWISE_XOR:
+					return 8;
+				case BITWISE_AND:
+					return 9;
+				case STRICT_EQUAL:
+				case STRICT_NOT_EQUAL:
+				case EQUAL:
+				case NOT_EQUAL:
+					return 10;
+				case LESS_THAN:
+				case GREATER_THAN:
+				case LESS_THAN_EQUAL:
+				case GREATER_THAN_EQUAL:
+					return 11;
+				case LEFT_SHIFT:
+				case RIGHT_SHIFT:
+				case UNSIGNED_RIGHT_SHIFT:
+					return 12;
+				case PLUS:
+				case MINUS:
+					return 13;
+				case MULTIPLICATION:
+				case DIVISION:
+				case REMAINDER:
+				case EXPONENTIATION:
+					return 14;
+				case PERIOD:
+					return 18;
+				default:
+					return -1;
+			}
+		if (t.isKeyword())
+			switch (t.<JSKeyword>getValue()) {
+				case YIELD:
+				case YIELD_GENERATOR:
+					return 2;
+				case IN:
+				case INSTANCEOF:
+					return 11;
+				default:
+					return -1;
+			}
+		return -1;
+	}
+	
+	protected ExpressionTree parseBinaryExpression(Token startToken, JSLexer src, Context context) {
+		if (startToken == null)
+			startToken = src.nextToken();
+		
+		context.push();
+		ExpressionTree expr = parseExponentiation(startToken, src, context);
+		context.pop();
+		
+		Token token = src.peek();
+		int precedence = binaryPrecedence(token);
+		if (precedence < 0)
+			return expr;
+		
+		src.skip(token);
+		context.isAssignmentTarget(false);
+		context.isBindingElement(false);
+		
+		final Stack<Token> operators = new Stack<>();
+		operators.add(token);
+		
+		ExpressionTree left = expr;
+		ExpressionTree right = parseExponentiation(src.nextToken(), src, context);
+		
+		final Stack<ExpressionTree> stack = new Stack<>();
+		stack.add(left);
+		stack.add(right);
+		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
+			while (stack.size() > 2 && (precedence <= binaryPrecedence(operators.peek()))) {
+				right = stack.pop();
+				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
+				left = stack.pop();
+				stack.add(new BinaryTreeImpl(kind, left, right));
+			}
+			//Shift top onto stack
+			token = src.nextToken();
+			operators.add(token);
+			stack.add(parseExponentiation(src.nextToken(), src, context));
+		}
+		expr = stack.pop();
+		
+		//Final reduce
+
+//		System.out.println("Stack: " + stack);
+//		System.out.println("Ops: " + operators);
+		while (!stack.isEmpty()) {
+			left = stack.pop();
+			final Kind kind = this.mapTokenToBinaryTree(operators.pop());
+			right = expr;
+			expr = new BinaryTreeImpl(kind, left, right);
+		}
+		if (!stack.isEmpty()) {
+			System.err.println("Stack: " + stack);
+			System.err.println("Ops: " + operators);
+			throw new IllegalStateException("Stack not empty");
+		}
+		return expr;
+	}
+	
+	protected ExpressionTree parseConditional(Token startToken, JSLexer src, Context context) {
+		ExpressionTree expr = this.parseBinaryExpression(startToken, src, context.pushed());
+		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
+		if (next == null)
+			return expr;
+		
+		context.push();
+		context.allowIn(true);
+		ExpressionTree concequent = parseAssignment(null, src, context);
+		context.pop();
+		
+		expectOperator(JSOperator.COLON, src, context);
+		ExpressionTree alternate = parseAssignment(null, src, context);
+		
+		context.isAssignmentTarget(false);
+		context.isBindingElement(false);
+		
+		return new ConditionalExpressionTreeImpl(expr, concequent, alternate);
+	}
+	
+	PatternTree reinterpretExpressionAsPattern(ExpressionTree expr) {
+		throw new UnsupportedOperationException();
+	}
+	
+	protected ExpressionTree parseAssignment(Token startToken, JSLexer src, Context context) {
+		if (startToken == null)
+			startToken = src.nextToken();
+		if (context.allowYield() && startToken.matches(TokenKind.KEYWORD, JSKeyword.YIELD)) {
+			//TODO finish
+			throw new UnsupportedOperationException();
+		}
+		ExpressionTree expr = this.parseConditional(startToken, src, context);
+		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
+			return expr;
+		if (!context.isAssignmentTarget())
+			throw new JSSyntaxException("Not assignment target", src.getPosition());
+		if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
+			context.isAssignmentTarget(false);
+			context.isBindingElement(false);
+		} else {
+			expr = reinterpretExpressionAsPattern(expr);
+		}
+		
+		Token assignmentOperator = src.nextToken();
+		
+		final ExpressionTree right = this.parseAssignment(null, src, context.pushed());
+		return new AssignmentTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
+	}
+	
+	protected List<ParameterTree> parseParameters(JSLexer src, Context context) {
+		ArrayList<ParameterTree> result = new ArrayList<>();
+		
+		do {
+			Token identifier = src.nextToken();
+			if (!identifier.isIdentifier()) {
+				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+					Token spread = identifier;
+					SpreadTree expr = this.parseSpread(spread, src, context);
+					
+					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null)
+						throw new JSSyntaxException("Rest parameters cannot be optional", src.getPosition());
+					
+					TypeTree type = null;
+					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null)
+						type = parseTypeStatement(null, src, context);
+					
+					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
+						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
+					
+					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+						throw new JSSyntaxException("Rest parameter must be the last", src.getPosition());
+					
+					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), (IdentifierTree)expr.getExpression(), true, false, type, null));
+					break;
+				}
+				throw new JSUnexpectedTokenException(identifier);
+			}
+			
+			boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+			
+			Token colon = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+			TypeTree type = null;
+			if (colon != null)
+				type = this.parseTypeStatement(null, src, context);
+			
+			Token assignment = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT);
+			ExpressionTree defaultValue = null;
+			if (assignment != null)
+				defaultValue = parseAssignment(null, src, context);
+			
+			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
+		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+		result.trimToSize();
+		return result;
+	}
+	/**
+	 * Parse an expression starting with <kbd>(</kbd>, generating either a
+	 * ParenthesizedTree or a FunctionExpressionTree (if a lambda expression)
+	 * 
+	 * @param leftParenToken
+	 *            Token for the opening parenthesis of this expression (if null,
+	 *            takes the next token from <var>src</var>)
+	 * @param src
+	 *            JS source code lexer
+	 * @param context
+	 *            Context that this is parsing in
+	 * @return Either a ParenthesizedTree or a FunctionExpressionTree
+	 */
+	@SuppressWarnings("unchecked")
+	protected ExpressionTree parseGroupExpression(Token leftParenToken, JSLexer src, Context context) {
+		leftParenToken = expect(leftParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
+		Token next = src.nextToken();
+		if (next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
+			//Is lambda w/ no args ("()=>???")
+			dialect.require("js.function.lambda", leftParenToken.getStart());
+			expectOperator(JSOperator.LAMBDA, src, context);
+			return finishFunctionBody(leftParenToken.getStart(), null, Collections.emptyList(), true, src, context);
+		} else if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+			//Lambda w/ 1 rest operator
+			dialect.require("js.function.lambda", leftParenToken.getStart());
+			dialect.require("js.parameter.rest", next.getStart());
+			ParameterTree expr = reinterpretExpressionAsParameter(parseSpread(next, src, context));
+			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+			expectOperator(JSOperator.LAMBDA, src, context);
+			return finishFunctionBody(leftParenToken.getStart(), null, Arrays.asList(expr), true, src, context);
+		} else {
+			ExpressionTree expr = parseNextExpression(next, src, context);
+			
+			//There are multiple expressions here
+			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null) {
+				List<Tree> expressions = new ArrayList<>();
+				expressions.add(expr);
+				
+				next = src.nextToken();
+				do {
+					if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+						dialect.require("js.parameter.rest", leftParenToken.getStart());
+						//Rest parameter. Must be lambda expression
+						expressions.add(parseSpread(next, src, context));
+						
+						//Upgrade to lambda
+						dialect.require("js.function.lambda", leftParenToken.getStart());
+						List<ParameterTree> params = new ArrayList<>(expressions.size());
+						for (ExpressionTree expression : (List<ExpressionTree>)(List<?>)expressions)
+							params.add(reinterpretExpressionAsParameter(expression));
+						//The rest parameter must be the last one
+						expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+						expectOperator(JSOperator.LAMBDA, src, context);
+						return this.finishFunctionBody(leftParenToken.getStart(), null, params, true, src, context);
+					} else {
+						final ExpressionTree expression = parseNextExpression(next, src, context);
+						// Check for declared types (means its a lambda param)
+						Token colonToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+						if (colonToken != null) {
+							//Upgrade to lambda
+							dialect.require("js.function.lambda", leftParenToken.getStart());
+							List<ParameterTree> params = new ArrayList<>(expressions.size());
+							for (ExpressionTree x : (List<ExpressionTree>)(List<?>)expressions)
+								params.add(reinterpretExpressionAsParameter(x));
+							
+							if (expression.getKind() != Kind.IDENTIFIER)
+								//TODO support destructured parameters
+								throw new JSUnexpectedTokenException(colonToken);
+							
+							//Parse type declaration
+							TypeTree type = parseTypeStatement(null, src, context);
+							
+							params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, false, type, null));
+							
+							if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null)
+								params.addAll(this.parseParameters(src, context));
+							
+							expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+							expectOperator(JSOperator.LAMBDA, src, context);
+							
+							return this.finishFunctionBody(leftParenToken.getStart(), null, params, true, src, context);
+						}
+						expressions.add(expression);
+					}
+					Token commaToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA);
+					if (commaToken == null)
+						break;
+					next = src.nextToken();
+				} while (!src.isEOF());
+				
+				//Ensure that it exited the loop with a closing paren
+				context.pop();
+				if (!next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+					throw new JSUnexpectedTokenException(next);
+				
+				//Sequence, but not lambda
+				return new ParenthesizedTreeImpl(leftParenToken.getStart(), next.getEnd(), new SequenceTreeImpl((List<ExpressionTree>)(List<?>)expressions));
+			}
+			context.pop();
+			//Only one expression
+			if (!(next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+				throw new JSUnexpectedTokenException(next);
+			
+			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA)) != null) {
+				//Upgrade to lambda
+				dialect.require("js.function.lambda", leftParenToken.getStart());
+				if (expr.getKind() == Kind.SEQUENCE) {
+					List<ExpressionTree> expressions = ((SequenceTree)expr).getExpressions();
+					List<ParameterTree> params = new ArrayList<>(expressions.size());
+					for (ExpressionTree x : expressions)
+						params.add(reinterpretExpressionAsParameter(x));
+					return finishFunctionBody(leftParenToken.getStart(), null, params, true, src, context);
+				}
+				return finishFunctionBody(leftParenToken.getStart(), null, Arrays.asList(reinterpretExpressionAsParameter(expr)), true, src, context);
+			}
+			//Not a lambda, just some parentheses around some expression.
+			return expr;
+		}
+	}
+	
+	protected SpreadTree parseSpread(Token spreadToken, JSLexer src, Context context) {
+		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, context);
+		ExpressionTree expr = parseNextExpression(src, context);
+		return new SpreadTreeImpl(spreadToken, expr);
+	}
+
+	protected ExpressionTree parseNew(Token newKeywordToken, JSLexer src, Context context) {
+		newKeywordToken = expect(newKeywordToken, TokenKind.KEYWORD, JSKeyword.NEW, src, context);
+		Token t;
+		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
+			Token r = src.nextToken();
+			if (context.inFunction() && r.matches(TokenKind.IDENTIFIER, "target"))
+				//See developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target
+				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new"), new IdentifierTreeImpl(r));
+			throw new JSUnexpectedTokenException(t);
+		}
+		final ExpressionTree callee = parseLeftSideExpression(null, src, context, false);
+		final List<ExpressionTree> args;
+		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
+			args = parseArguments(t, src, context);
+		} else {
+			args = Collections.emptyList();
+		}
+		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
+	}
+	
+	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, Context context) {
+		voidKeywordToken = expect(voidKeywordToken, TokenKind.KEYWORD, JSKeyword.VOID, src, context);
+		ExpressionTree expr = parseNextExpression(src, context);
+		return new UnaryTreeImpl.VoidTreeImpl(voidKeywordToken.getStart(), src.getPosition(), expr);
+	}
+	
+	protected ExpressionTree parseLeftSideExpression(Token t, JSLexer src, Context context, boolean allowCall) {
+		if (t == null)
+			t = src.nextToken();
+		context.push().allowIn(true);
+		if (!context.allowIn())
+			throw new IllegalStateException();
+		
+		ExpressionTree expr;
+		if (context.inFunction() && t.matches(TokenKind.KEYWORD, JSKeyword.SUPER))
+			expr = parseSuper(t, src, context);
+		else if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW))
+			expr = parseNew(t, src, context);
+		else
+			expr = parsePrimaryExpression(t, src, context);
+		
+		while (true) {
+			if ((t = src.nextTokenIf(TokenKind.BRACKET, '[')) != null) {
+				//Computed member access expressions
+				context.isBindingElement(false);
+				context.isAssignmentTarget(true);
+				ExpressionTree property = parseNextExpression(null, src, context.pushed());
+				expect(TokenKind.BRACKET, ']', src, context);
+				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
+			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
+				//Function call
+				context.isBindingElement(false);
+				context.isAssignmentTarget(false);
+				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed());
+				expr = new FunctionCallTreeImpl(t.getStart(), src.getPosition(), expr, arguments);
+			} else if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
+				//Static member access
+				context.isBindingElement(false);
+				context.isAssignmentTarget(true);
+				ExpressionTree property = parseIdentifier(null, src, context.pushed());
+				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
+			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
+				//TODO Tagged template literal
+				throw new UnsupportedOperationException();
+			} else {
+				break;
+			}
+		}
+		
+		context.pop();
+		return expr;
 	}
 	
 	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken,
-			JSLexer src, boolean isStrict) {
-		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, isStrict);
-		List<? extends ExpressionTree> arguments = parseParentheticalSeries(openParenToken, src, isStrict);
-		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), arguments, functionSelectExpression);
+			JSLexer src, Context context) {
+		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
+		List<? extends ExpressionTree> arguments = parseArguments(openParenToken, src, context);
+		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), functionSelectExpression, arguments);
 	}
 	
-	protected List<? extends ExpressionTree> parseParentheticalSeries(Token openParenToken, JSLexer src, boolean isStrict) {
-		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, isStrict);
-		ensureToken(openParenToken, JSOperator.LEFT_PARENTHESIS);
-		List<ExpressionTree> result = new LinkedList<>();
-		Token next;
-		do {
-			result.add(this.parseNextExpression(src, isStrict));
-		} while ((next = src.nextToken()).getValue() == JSOperator.COMMA);
-		ensureToken(next, JSOperator.RIGHT_PARENTHESIS);
+	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, Context context) {
+		identifierToken = expect(identifierToken, TokenKind.IDENTIFIER, src, context);
+		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), identifierToken.getValue());
+	}
+	
+	protected ThisExpressionTree parseThis(Token thisKeywordToken, JSLexer src, Context ctx) {
+		return new ThisExpressionTreeImpl(expect(thisKeywordToken, TokenKind.KEYWORD, JSKeyword.THIS, src, ctx));
+	}
+	
+	protected SuperExpressionTree parseSuper(Token superKeywordToken, JSLexer src, Context context) {
+		SuperExpressionTree result = new SuperExpressionTreeImpl(expect(superKeywordToken, TokenKind.KEYWORD, JSKeyword.SUPER, src, context));
+		Token tmp = src.peek();
+		if (!(tmp.matches(TokenKind.BRACKET, '[') || tmp.matches(TokenKind.OPERATOR, JSOperator.PERIOD)))
+			throw new JSUnexpectedTokenException(tmp);
 		return result;
 	}
 	
-	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, boolean isStrict) {
-		keywordToken = Token.expectKind(keywordToken, TokenKind.KEYWORD, src);
-		String label = null;
-		Token next = src.nextToken();
-		if (next.isIdentifier()) {
-			label = next.getValue();
-			next = src.nextToken();
+	//Function stuff
+
+	FunctionExpressionTree finishFunctionBody(long startPos, IdentifierTree identifier, List<ParameterTree> parameters, boolean isLambda, JSLexer src, Context ctx) {
+		Token startBodyToken = src.nextToken();
+		ctx.push().enterFunction();
+		StatementTree body;
+		if (startBodyToken.matches(TokenKind.BRACKET, '{')) {
+			body = parseBlock(startBodyToken, src, ctx);
+		} else {
+			ExpressionTree expr = parseNextExpression(startBodyToken, src, ctx);
+			//Unwrap parentheses
+			while (expr.getKind() == Kind.PARENTHESIZED && ((ParenthesizedTree)expr).getExpression().getKind() != Kind.SEQUENCE)
+				expr = parseNextExpression(startBodyToken, src, ctx);
+			body = new ReturnTreeImpl(expr);
 		}
-		ensureToken(src, JSSpecialGroup.EOL);
-		final long start = keywordToken.getStart();
-		final long end = src.getPosition();
-		if (keywordToken.getValue() == JSKeyword.BREAK)
-			return new AbstractGotoTree.BreakTreeImpl(start, end, label);
-		else if (keywordToken.getValue() == JSKeyword.CONTINUE)
-			return new AbstractGotoTree.ContinueTreeImpl(start, end, label);
-		throw new JSSyntaxException("Unexpected token " + keywordToken, start);
+		//TODO infer name from syntax
+		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), parameters, null, true, body, ctx.isStrict(), false);
+		ctx.pop();
+		return result;
 	}
 	
-	protected UnaryTree parsePrefixUnary(Token keywordToken, JSLexer src, boolean isStrict) {
-		if (keywordToken == null)
-			keywordToken = src.nextToken();
+	protected FunctionExpressionTree parseFunctionExpression(Token functionKeywordToken, JSLexer src, Context context) {
+		functionKeywordToken = expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src, context);
+		
+		IdentifierTree identifier = null;
+		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
+		if (next != null)
+			identifier = new IdentifierTreeImpl(next);
+		
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		List<ParameterTree> params = parseParameters(src, context);
+		
+		return finishFunctionBody(functionKeywordToken.getStart(), identifier, params, false, src, context);
+	}
+	
+	protected StatementTree parseGeneratorKeyword(Token generatorKeywordToken, JSLexer src, Context context) {
+		// TODO finish
+		throw new UnsupportedOperationException();
+	}
+
+	//Literals
+	
+	protected LiteralTree<?> parseLiteral(Token literalToken, JSLexer src, Context context) {
+		if (literalToken == null)
+			literalToken = src.nextToken();
+		switch (literalToken.getKind()) {
+			case STRING_LITERAL:
+				return new StringLiteralTreeImpl(literalToken);
+			case NUMERIC_LITERAL:
+				return new NumericLiteralTreeImpl(literalToken);
+			case BOOLEAN_LITERAL:
+				return new BooleanLiteralTreeImpl(literalToken);
+			case NULL_LITERAL:
+				return new NullLiteralTreeImpl(literalToken);
+			case TEMPLATE_LITERAL:
+			case REGEX_LITERAL:
+				//TODO finish parsing
+				throw new UnsupportedOperationException();
+			default:
+				throw new JSUnexpectedTokenException(literalToken);
+		}
+	}
+	
+	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
+		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
+		
+		ArrayList<ExpressionTree> values = new ArrayList<>();
+		
+		Token next;
+		while (!((next = src.nextToken()).matches(TokenKind.BRACKET, ']') || src.isEOF())) {
+			if (next.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+				values.add(null);
+				continue;
+			}
+
+			if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
+				values.add(parseSpread(next, src, context));
+			else
+				values.add(parseAssignment(next, src, context));
+			
+			if (!src.peek().matches(TokenKind.BRACKET, ']'))
+				expect(TokenKind.OPERATOR, JSOperator.COMMA, src, context);
+		}
+		
+		expect(next, TokenKind.BRACKET, ']');
+		
+		values.trimToSize();
+		
+		return new ArrayLiteralTreeImpl(startToken.getStart(), next.getEnd(), values);
+	}
+	
+	protected ObjectLiteralTree parseObjectInitializer(Token startToken, JSLexer src, Context context) {
+		startToken = expect(startToken, TokenKind.BRACKET, '{', src, context);
+		ArrayList<? extends ObjectLiteralPropertyTree> properties = new ArrayList<>();
+		Token next;
+		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
+			
+		}
+		properties.trimToSize();
+		return new ObjectLiteralTreeImpl(startToken.getStart(), next.getEnd(), properties);
+	}
+	
+	//Unary ops
+	
+	protected ExpressionTree parseUnaryExpression(Token operatorToken, JSLexer src, Context context) {
+		if (operatorToken == null)
+			operatorToken = src.nextToken();
 		Tree.Kind kind = null;
-		switch (keywordToken.getKind()) {
+		boolean updates = false;
+		switch (operatorToken.getKind()) {
 			case KEYWORD:
-				switch ((JSKeyword) keywordToken.getValue()) {
-					case VOID: {
-						Token next = src.peekNextToken();
-						if ((next = src.nextToken()).getKind() == TokenKind.SPECIAL
-								&& next.getValue() == JSSpecialGroup.SEMICOLON) {
-							src.skipToken(next);
-							return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
-						}
-					}
+				switch (operatorToken.<JSKeyword>getValue()) {
+					case VOID:
+						if (src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON) != null)
+							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
 						kind = Tree.Kind.VOID;
-						break;
-					case RETURN:
-						kind = Tree.Kind.RETURN;
-						break;
-					case THROW:
-						kind = Tree.Kind.THROW;
 						break;
 					case TYPEOF:
 						kind = Tree.Kind.TYPEOF;
@@ -1111,18 +1738,18 @@ public class JSParser {
 					case DELETE:
 						kind = Tree.Kind.DELETE;
 						break;
+					case YIELD:
+						kind = Tree.Kind.YIELD;
+						break;
+					case YIELD_GENERATOR:
+						kind = Tree.Kind.YIELD_GENERATOR;
+						break;
 					default:
 						break;
 				}
 				break;
 			case OPERATOR:
-				switch ((JSOperator) keywordToken.getValue()) {
-					case INCREMENT:
-						kind = Tree.Kind.PREFIX_INCREMENT;
-						break;
-					case DECREMENT:
-						kind = Tree.Kind.PREFIX_DECREMENT;
-						break;
+				switch (operatorToken.<JSOperator>getValue()) {
 					case PLUS:
 						kind = Tree.Kind.UNARY_PLUS;
 						break;
@@ -1135,6 +1762,16 @@ public class JSParser {
 					case LOGICAL_NOT:
 						kind = Tree.Kind.LOGICAL_NOT;
 						break;
+					case SPREAD:
+						return parseSpread(operatorToken, src, context);
+					case INCREMENT:
+						kind = Tree.Kind.PREFIX_INCREMENT;
+						updates = true;
+						break;
+					case DECREMENT:
+						kind = Tree.Kind.PREFIX_DECREMENT;
+						updates = false;
+						break;
 					default:
 						break;
 				}
@@ -1142,28 +1779,224 @@ public class JSParser {
 			default:
 				break;
 		}
-		if (kind == null)
-			throw new JSUnexpectedTokenException(keywordToken);
-		ExpressionTree expression = this.parseNextExpression(src, isStrict);
-		if (kind == Tree.Kind.VOID)
-			return new UnaryTreeImpl.VoidTreeImpl(expression);
-		return new UnaryTreeImpl(keywordToken.getStart(), src.getPosition(), expression, kind);
+		if (kind != null) {
+			context.push();
+			if (updates)
+				context.isBindingElement(true);
+			ExpressionTree expression = parseUnaryExpression(null, src, context);
+			context.pop();
+			if (updates) {
+				//Check if the target can be modified
+				if (!Validator.canBeAssigned(expression, dialect))
+					throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", operatorToken.getStart());
+			} else if (context.isStrict() && kind == Tree.Kind.DELETE && expression.getKind() == Tree.Kind.IDENTIFIER)
+				throw new JSSyntaxException("Cannot delete unqualified identifier " + ((IdentifierTree)expression).getName() + " in strict mode", operatorToken.getStart());
+			else if (kind == Tree.Kind.VOID)
+				//Because it's a special little snowflake
+				return new UnaryTreeImpl.VoidTreeImpl(operatorToken, expression);
+			return new UnaryTreeImpl(operatorToken.getStart(), expression.getEnd(), expression, kind);
+		} else {
+			context.push();
+			ExpressionTree result = parseLeftSideExpression(operatorToken, src, context, true);
+			context.pop();
+			operatorToken = src.nextTokenIf(t->(t.isOperator() && (t.getValue() == JSOperator.INCREMENT || t.getValue() == JSOperator.DECREMENT)));
+			if (operatorToken != null)
+				return parseUnaryPostfix(result, operatorToken, src, context);
+			return result;
+		}
 	}
 	
-	protected DebuggerTree parseDebugger(Token debuggerKeywordToken, JSLexer src, boolean isStrict) {
-		return new DebuggerTreeImpl(debuggerKeywordToken.getStart(), debuggerKeywordToken.getEnd());
+	protected UnaryTree parseUnaryPostfix(ExpressionTree expr, Token operatorToken, JSLexer src, Context context) {
+		if (expr == null)
+			expr = parseLeftSideExpression(null, src, context.pushed(), true);
+		if (!Validator.canBeAssigned(expr, dialect))
+			throw new JSSyntaxException("Invalid left-hand side expression in " + operatorToken.getKind() + " expression", expr.getStart());
+		Kind kind;
+		if (operatorToken.getValue() == JSOperator.INCREMENT)
+			kind = Kind.POSTFIX_INCREMENT;
+		else if (operatorToken.getValue() == JSOperator.DECREMENT)
+			kind = Kind.POSTFIX_DECREMENT;
+		else
+			throw new JSUnexpectedTokenException(operatorToken, " is not a unary postfix operator.");
+		return new UnaryTreeImpl(expr.getStart(), operatorToken.getEnd(), expr, kind);
 	}
 	
-	protected BlockTree parseBlock(Token openBraceToken, JSLexer src, boolean isStrict) {
-		openBraceToken = expect(openBraceToken, TokenKind.BRACKET, '{', src, isStrict);
-		List<StatementTree> statements = new LinkedList<>();
-		Token t;
-		while ((t = src.nextToken()).getKind() != TokenKind.BRACKET)
-			statements.add(parseStatement(t, src, isStrict));
-		ensureToken(t, '}');
-		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
-	}
-	protected static class Context {
-		boolean isStrict = false;
+	public static class Context {
+		ContextData data;
+		// Fields that are global
+		String scriptName;
+		
+		public Context() {
+			data = new ContextData();
+		}
+		
+		public Context(ContextData data) {
+			this.data = data;
+		}
+		
+		public Context setScriptName(String name) {
+			this.scriptName = name;
+			return this;
+		}
+		
+		public String getScriptName() {
+			return scriptName;
+		}
+		
+		public Context push() {
+			data = new ContextData(data);
+			return this;
+		}
+		
+		public Context pushed() {
+			return new Context(new ContextData(data));
+		}
+		
+		public Context pop() {
+			data = data.parent;
+			return this;
+		}
+		
+		public boolean isStrict() {
+			return data.isStrict;
+		}
+		
+		public boolean allowReturn() {
+			return data.inFunction || data.inGenerator;
+		}
+		
+		public boolean allowIn() {
+			return data.allowIn;
+		}
+
+		public boolean allowBreak() {
+			return data.inLoop || data.inSwitch || data.inNamedBlock;
+		}
+		
+		public boolean allowContinue() {
+			return data.inLoop;
+		}
+		
+		public boolean allowYield() {
+			return data.inGenerator;
+		}
+		
+		public boolean inBinding() {
+			return data.isBindingElement;
+		}
+
+		public boolean inFunction() {
+			return data.inFunction;
+		}
+
+		public Context allowIn(boolean value) {
+			data.allowIn = value;
+			return this;
+		}
+
+		public boolean isAssignmentTarget() {
+			return data.isAssignmentTarget;
+		}
+
+		/**
+		 * Marks this level of the context as being in a function body. Allows
+		 * the use of <code>return</code> statements.
+		 * 
+		 * @return self
+		 */
+		public Context enterFunction() {
+			data.inFunction = true;
+			return this;
+		}
+
+		/**
+		 * Marks this level of the context as being in a switch statement.
+		 * Allows the use of <code>break</code>
+		 * 
+		 * @return self
+		 */
+		public Context enterSwitch() {
+			data.inSwitch = true;
+			return this;
+		}
+
+		/**
+		 * Marks this level of the context as being in a generator function.
+		 * Allows the same expressions as being in a normal function, in
+		 * addition to <code>yield</code> and <code>yield*</code>.
+		 * 
+		 * @return self
+		 */
+		public Context enterGenerator() {
+			data.inGenerator = true;
+			return this;
+		}
+
+		/**
+		 * Marks this level of the context as being in a loop. Allows
+		 * <code>break</code> and <break>continue</break> statements
+		 * 
+		 * @return self
+		 */
+		public Context enterLoop() {
+			data.inLoop = true;
+			return this;
+		}
+
+		public Context enterStrict() {
+			data.isStrict = true;
+			return this;
+		}
+
+		public Context isBindingElement(boolean value) {
+			data.isBindingElement = value;
+			return this;
+		}
+
+		public Context isAssignmentTarget(boolean value) {
+			data.isAssignmentTarget = value;
+			return this;
+		}
+		
+		static class ContextData {
+			boolean isStrict = false;
+			/**
+			 * Whether the parser is currently inside a function statement.
+			 * Allows the <code>return</code> keyword.
+			 */
+			boolean inFunction = false;
+			/**
+			 * Whether the parser is currently inside a switch statement. Allows
+			 * the <code>break</code> keyword.
+			 */
+			boolean inSwitch = false;
+			boolean inGenerator = false;
+			/**
+			 * Whether the parser is currently inside a loop statement. Allows
+			 * the <code>break</code> and <code>continue</code> statements.
+			 */
+			boolean inLoop = false;
+			boolean isAssignmentTarget = false;
+			boolean inNamedBlock = false;
+			boolean isBindingElement = false;
+			boolean allowIn = true;
+			final ContextData parent;
+
+			public ContextData() {
+				this.parent = null;
+			}
+
+			public ContextData(ContextData parent) {
+				this.isStrict = parent.isStrict;
+				this.inFunction = parent.inFunction;
+				this.inSwitch = parent.inSwitch;
+				this.inGenerator = parent.inGenerator;
+				this.inLoop = parent.inLoop;
+				this.isAssignmentTarget = parent.isAssignmentTarget;
+				this.isBindingElement = parent.isBindingElement;
+				this.allowIn = parent.allowIn;
+				this.parent = parent;
+			}
+		}
 	}
 }

@@ -1,6 +1,9 @@
 package com.mindlin.jsast.impl.lexer;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
@@ -8,13 +11,13 @@ import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
-import com.mindlin.jsast.impl.parser.NumericLiteralType;
 import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.impl.util.Characters;
 
-public class JSLexer {
+public class JSLexer implements Supplier<Token> {
 	protected final CharacterStream chars;
+	protected Token lookahead = null;
 	
 	public JSLexer(char[] chars) {
 		this(new CharacterArrayStream(chars));
@@ -36,23 +39,21 @@ public class JSLexer {
 		return this.chars.position();
 	}
 	
-	public String parseStringLiteral() {
-		return parseStringLiteral(chars.next());
-	}
-	
 	public CharacterStream getCharacters() {
 		return this.chars;
 	}
 	
-	public String parseStringLiteral(final char startChar) {
-//		System.out.println("BG " + Character.getName(startChar));
+	public String nextStringLiteral() {
+		return nextStringLiteral(chars.next());
+	}
+	
+	public String nextStringLiteral(final char startChar) {
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
 		while (true) {
 			if (!chars.hasNext())
 				throw new JSSyntaxException("Unexpected EOF while parsing a string literal", getPosition());
 			char c = chars.next();
-//			System.out.println("Char " + Character.getName(c));
 			if (isEscaped) {
 				isEscaped = false;
 				switch (c) {
@@ -136,7 +137,7 @@ public class JSLexer {
 		return !chars.hasNext();
 	}
 	
-	public Number parseNumberLiteral() throws JSSyntaxException {
+	public Number nextNumericLiteral() throws JSSyntaxException {
 		NumericLiteralType type = NumericLiteralType.DECIMAL;
 		boolean isPositive = true;
 		if (!chars.hasNext())
@@ -179,7 +180,6 @@ public class JSLexer {
 		chars.skip(-1);
 		while (chars.hasNext()) {
 			c = chars.next();
-//			System.out.println("C: " + Character.getName(c));
 			if (c == '.') {
 				if (type == NumericLiteralType.DECIMAL && !hasDecimal) {
 					hasDecimal = true;
@@ -190,7 +190,6 @@ public class JSLexer {
 			
 			if (c == ';' || !Character.isJavaIdentifierPart(c)) {
 				chars.skip(-1);
-//				System.out.println("BRK");
 				break;
 			}
 			
@@ -222,21 +221,39 @@ public class JSLexer {
 						break;
 				}
 			}
-//			System.out.println("VALID: " + isValid);
 			if (!isValid)
 				throw new JSSyntaxException("Unexpected identifier in numeric literal (" + type + "): " + Character.getName(c), chars.position());
 		}
 		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
 		//but it causes problems with OCTAL_IMPLICIT upgrades.
 		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
-//		System.out.println((isPositive ? "POSITIVE " : "NEGATIVE ") + type + "|" + nmb);
-		if (hasDecimal)
-			return Double.parseDouble(nmb);
-		return Long.parseLong(nmb, type.getExponent());
+		
+		//Return number. Tries to cast down to the smallest size that it can losslessly
+		if (hasDecimal) {
+			double result = Double.parseDouble(nmb);
+			//TODO reorder return options
+			long lResult = (long) result;
+			if (result > Long.MIN_VALUE && result < Long.MAX_VALUE && lResult == result) {
+				if (lResult > Integer.MIN_VALUE && lResult < Integer.MAX_VALUE)
+					return (int) lResult;
+				return lResult;
+			}
+			float fResult = (float) result;
+			if (result == fResult)
+				return fResult;
+			return result;
+		}
+		long result = Long.parseLong(nmb, type.getExponent());
+		if (result > Integer.MIN_VALUE && result < Integer.MAX_VALUE)
+			//Downgrade to an int if possible
+			return (int) result;
+		return result;
 	}
 	
 	public JSOperator peekOperator() {
-		char c = chars.peekNext(), d = chars.peek(2), e = chars.peek(3);
+		char c = chars.peekNext(),
+				d = chars.hasNext(2) ? chars.peek(2) : '\0',
+				e = chars.hasNext(3) ? chars.peek(3) : '\0';
 		if (d == '=') {
 			//Switch through assignment types
 			switch (c) {
@@ -274,7 +291,7 @@ public class JSLexer {
 			case '+':
 				if (d == '+')
 					return JSOperator.INCREMENT;
-				return JSOperator.ADDITION_ASSIGNMENT;
+				return JSOperator.PLUS;
 			case '-':
 				if (d == '-')
 					return JSOperator.DECREMENT;
@@ -298,7 +315,7 @@ public class JSLexer {
 			case '>':
 				if (d == '>') {
 					if (e == '>') {
-						if (chars.peek(4) == '=')
+						if (chars.hasNext(4) && chars.peek(4) == '=')
 							return JSOperator.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
 						return JSOperator.UNSIGNED_RIGHT_SHIFT;
 					} else if (e == '=') {
@@ -343,68 +360,116 @@ public class JSLexer {
 		return null;
 	}
 	
-	public Token expectTokenKind(TokenKind kind) {
+	public Token expectKind(TokenKind kind) {
 		Token t = this.nextToken();
 		if (t.getKind() != kind)
 			throw new JSUnexpectedTokenException(t, kind);
 		return t;
 	}
-	public Token expectToken(TokenKind kind, Object value) {
+	
+	public Token expect(Object value) {
 		Token t = this.nextToken();
-		if (t.getValue() != value)
+		if (!Objects.equals(t.getValue(), value))
+			throw new JSUnexpectedTokenException(t, value);
+		return t;
+	}
+	
+	public Token expect(TokenKind kind, Object value) {
+		Token t = this.nextToken();
+		if (!Objects.equals(t.getValue(),value))
 			throw new JSUnexpectedTokenException(t, value);
 		if (t.getKind() != kind)
 			throw new JSUnexpectedTokenException(t, kind);
 		return t;
 	}
-	public Token expectToken(Object value) {
-		Token t = this.nextToken();
-		if (t.getValue() != value)
-			throw new JSUnexpectedTokenException(t, value);
-		return t;
-	}
 	
-	public long getCharIndex() {
-		return chars.position();
-	}
-	
-	public JSOperator parseOperator() {
+	public JSOperator nextOperator() {
 		JSOperator result = peekOperator();
 		if (result != null)
 			chars.skip(result.length());
 		return result;
 	}
 	
-	public String parseNextIdentifier() {
+	public String nextIdentifier() {
 		StringBuilder sb = new StringBuilder();
-		char c = chars.next();
-		if (!Character.isJavaIdentifierStart(c))
+		char c;
+		if (!chars.hasNext() || !Character.isJavaIdentifierStart(c = chars.next()))
 			return null;
 		do {
 			sb.append(c);
+			if (!chars.hasNext())
+				return sb.toString();
 		} while (Character.isJavaIdentifierPart(c = chars.next()));
 		chars.skip(-1);
 		return sb.toString();
 	}
 	
+	public String nextRegularExpression() {
+		StringBuilder sb = new StringBuilder();
+		boolean isEscaped = false;
+		while (true) {
+			if (!chars.hasNext())
+				throw new JSSyntaxException("Unexpected EOF while parsing a regex literal", getPosition());
+			char c = chars.next();
+			
+			if (isEscaped)
+				isEscaped = false;
+			else if (c == '\\')
+				isEscaped = true;
+			else if (c == '/')
+				break;
+			
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+	
+	public String nextComment(boolean singleLine) {
+		StringBuilder sb = new StringBuilder();
+		while (true) {
+			if (!chars.hasNext()) {
+				if (singleLine)
+					break;
+				throw new JSEOFException(chars.position());
+			}
+			char c = chars.next();
+			if (singleLine && (c == '\n' ||c == '\r'))
+				break;
+			else if (c == '*' && chars.hasNext() && chars.peekNext() == '/') {
+				chars.next();
+				break;
+			}
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+	
 	public Token nextToken() {
+		if (this.lookahead != null) {
+			Token result = this.lookahead;
+			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+				skip(result);
+			return result;
+		}
 		chars.skipWhitespace();
 		if (isEOF())
-			return new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+			return this.lookahead = new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
 		final long start = Math.max(chars.position(), -1);
 		char c = chars.peekNext();
 		Object value = null;
 		TokenKind kind = null;
 		//Drop through a various selection of possible results
 		//Check if it's a string literal
-		if (c == '"' || c == '\'' || c == '`') {
-			// TODO add support for template literals
-			value = parseStringLiteral();
-			kind = TokenKind.LITERAL;
+		if (c == '"' || c == '\'') {
+			value = nextStringLiteral();
+			kind = TokenKind.STRING_LITERAL;
+		} else if (c == '`') {
+			value = nextStringLiteral();
+			kind = TokenKind.TEMPLATE_LITERAL;
 		//Check if it's a numeric literal (the first letter of all numbers must be /[0-9]/)
 		} else if (c >= '0' && c <= '9') {
-			value = parseNumberLiteral();
-			kind = TokenKind.LITERAL;
+			value = nextNumericLiteral();
+			kind = TokenKind.NUMERIC_LITERAL;
 		//Check if it's a bracket
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
 			value = c;
@@ -414,17 +479,37 @@ public class JSLexer {
 			kind = TokenKind.SPECIAL;
 			value = JSSpecialGroup.SEMICOLON;
 			chars.next();
-		} else if ((value = parseOperator()) != null) {
+		} else if (c == '/') {
+			//Could be: '/', '//', '/*', '/=', or regex
+			if (!chars.hasNext(2))
+				throw new JSEOFException(getPosition());
+			c = chars.next(2);
+			if (c == '/' || c == '*') {
+				kind = TokenKind.COMMENT;
+				value = this.nextComment(c == '/');
+			} else if (c == '=') {
+				kind = TokenKind.OPERATOR;
+				value = JSOperator.DIVISION_ASSIGNMENT;
+			} else {
+				kind = TokenKind.OPERATOR;
+				value = JSOperator.DIVISION;
+			}
+		} else if ((value = nextOperator()) != null) {
 			kind = TokenKind.OPERATOR;
 		} else {
-			//TODO simplify logic (if possible)
 			//It's probably an identifier
-			String identifierName = this.parseNextIdentifier();
+			String identifierName = this.nextIdentifier();
 			if (identifierName == null) {
 				//Couldn't even parse an identifier
 				throw new JSSyntaxException("Illegal syntax at " + start);
 			} else if (identifierName.equals("true") || identifierName.equals("false")) {
 				//Boolean literal
+				kind = TokenKind.BOOLEAN_LITERAL;
+				value = identifierName.equals("true");
+			} else if (identifierName.equals("null")) {
+				//Null literal
+				kind = TokenKind.NULL_LITERAL;
+				value = null;
 			} else {
 				//An identifier was parsed, and it wasn't a boolean literal
 				//Check if it's a keyword
@@ -449,15 +534,54 @@ public class JSLexer {
 		return new Token(start, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
-	public Token peekNextToken() {
-		chars.mark();
-		Token result = nextToken();
-		chars.resetToMark();
-		return result;
+	public Token nextTokenIf(TokenKind kind, Object value) {
+		Token lookahead = peek();
+		if (lookahead.matches(kind, value)) {
+			skip(lookahead);
+			return lookahead;
+		}
+		return null;
 	}
 	
-	public void skipToken(Token token) {
-		//chars.skip(token.getLength());
+	public Token nextTokenIf(TokenKind kind) {
+		Token lookahead = peek();
+		if (lookahead.getKind() == kind) {
+			skip(lookahead);
+			return lookahead;
+		}
+		return null;
+	}
+	
+	public Token nextTokenIf(Predicate<Token> acceptor) {
+		Token lookahead = peek();
+		if (acceptor.test(lookahead)) {
+			skip(lookahead);
+			return lookahead;
+		}
+		return null;
+	}
+	
+	public Token peek() {
+		if (this.lookahead != null)
+			return this.lookahead;
+		chars.mark();
+		this.lookahead = nextToken();
+		chars.resetToMark();
+		return this.lookahead;
+	}
+	
+	public Token skip(Token token) {
+		if (token != this.lookahead)
+			throw new IllegalArgumentException("Skipped token " + token + " is not lookahead");
+		if (token.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+			throw new IllegalStateException("Cannot skip EOF token " + token);
+		this.lookahead = null;
 		chars.position(token.getEnd());
+		return token;
+	}
+
+	@Override
+	public Token get() {
+		return nextToken();
 	}
 }

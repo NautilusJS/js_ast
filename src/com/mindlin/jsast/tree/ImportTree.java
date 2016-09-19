@@ -1,12 +1,12 @@
 package com.mindlin.jsast.tree;
 
-import java.util.Map;
+import java.util.List;
 
 public interface ImportTree extends StatementTree {
-	public static final String WILDCARD = "*";
-	Map<String, String> getImports();
-	boolean importDefault();
-	String getTarget();
+	List<ImportSpecifierTree> getSpecifiers();
+
+	StringLiteralTree getSource();
+
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.IMPORT;

@@ -69,14 +69,14 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	public CharacterStream skipComments() {
 		while (true) {
 			skipWhitespace();
-			if (peek(1) != '/')
+			if (peekNext() != '/')
 				break;
 			if (peek(2) == '/') {
 				skip(2);
-				while (hasNext() && peek(1) != '\r' && peek(1) != '\n')
-					skip(1);
-				if (hasNext())
-					skipNewline();
+				while (hasNext() && current() != '\r' && current() != '\n')
+					next();
+				if (hasNext() && ((current() == '\r' && peekNext() == '\n') || (current() == '\n' && peekNext() == '\r')))
+					next();
 			} else
 				break;
 		}

@@ -1,5 +1,7 @@
 package com.mindlin.jsast.tree;
+
 public interface ForEachLoopTree extends LoopTree {
-	ExpressionTree getVariable();
+	VariableDeclarationTree getVariable();
+
 	ExpressionTree getExpression();
 }

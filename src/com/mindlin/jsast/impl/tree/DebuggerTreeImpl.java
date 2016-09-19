@@ -6,8 +6,4 @@ public class DebuggerTreeImpl extends AbstractTree implements DebuggerTree {
 	public DebuggerTreeImpl(long start, long end) {
 		super(start, end);
 	}
-	@Override
-	public String toString() {
-		return "debugger;";
-	}
 }

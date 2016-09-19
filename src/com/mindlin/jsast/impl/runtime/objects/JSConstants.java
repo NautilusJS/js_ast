@@ -10,4 +10,12 @@ public final class JSConstants {
 			return "undefined";
 		}
 	};
+	
+	@JSGlobal("Symbol")
+	public static JSFunction SYMBOL = new JSFunction() {
+		@Override
+		public Object invoke(Object thiz, Object... params) {
+			return new Symbol(params.length > 0 ? params[0] : "");
+		}
+	};
 }

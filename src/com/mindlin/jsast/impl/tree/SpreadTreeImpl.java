@@ -1,5 +1,6 @@
 package com.mindlin.jsast.impl.tree;
 
+import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.SpreadTree;
 
@@ -9,4 +10,7 @@ public class SpreadTreeImpl extends AbstractExpressiveExpressionTree implements 
 		super(start, end, expression);
 	}
 	
+	public SpreadTreeImpl(Token spreadToken, ExpressionTree expression) {
+		this(spreadToken.getStart(), expression.getEnd(), expression);
+	}
 }

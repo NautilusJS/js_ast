@@ -5,8 +5,8 @@ import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.StatementTree;
 
 public class IfTreeImpl extends AbstractTree implements IfTree {
-	ExpressionTree expression;
-	StatementTree thenStatement, elseStatement;
+	protected final ExpressionTree expression;
+	protected final StatementTree thenStatement, elseStatement;
 	public IfTreeImpl(long start, long end, ExpressionTree expression, StatementTree thenStatement, StatementTree elseStatement) {
 		super(start, end);
 		this.expression = expression;

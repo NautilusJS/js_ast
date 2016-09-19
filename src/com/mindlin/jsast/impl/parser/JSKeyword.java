@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.parser;
 
 public enum JSKeyword {
+	AS(true),
 	AWAIT,
 	BREAK,
 	CASE,
@@ -18,6 +19,7 @@ public enum JSKeyword {
 	EXTENDS,
 	FINALLY,
 	FOR,
+	FROM(true),
 	FUNCTION,
 	FUNCTION_GENERATOR(false, "function*"),
 	IF,
@@ -40,6 +42,7 @@ public enum JSKeyword {
 	THIS,
 	THROW,
 	TRY,
+	TYPE,
 	TYPEOF,
 	VAR,
 	VOID,

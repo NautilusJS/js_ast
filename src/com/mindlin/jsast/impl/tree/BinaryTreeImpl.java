@@ -6,24 +6,30 @@ import com.mindlin.jsast.tree.Tree;
 
 public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 	protected final ExpressionTree left, right;
-	protected Tree.Kind kind;
+	protected final Tree.Kind kind;
+
 	public BinaryTreeImpl(long start, long end, Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		super(start, end);
 		this.kind = kind;
 		this.left = left;
 		this.right = right;
 	}
+
+	public BinaryTreeImpl(Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
+		this(left.getStart(), right.getEnd(), kind, left, right);
+	}
+
 	protected String getOperand() {
-		//TODO finish
-		switch(kind) {
+		// TODO finish
+		switch (kind) {
 			case ADDITION:
 				return "+";
 			case ADDITION_ASSIGNMENT:
 				return "+=";
 			case ARRAY_ACCESS:
-				return "[";//TODO fix
+				return "[";
 			case MEMBER_SELECT:
-				return "[";//TODO fix
+				return ".";
 			case ASSIGNMENT:
 				return "=";
 			case BITWISE_AND:
@@ -38,8 +44,6 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return "^";
 			case BITWISE_XOR_ASSIGNMENT:
 				return "^=";
-			case COMMA:
-				return ",";
 			case DIVISION:
 				return "/";
 			case DIVISION_ASSIGNMENT:
@@ -56,7 +60,7 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return "<";
 			case IN:
 				return " in ";
-			case INSTANCE_OF:
+			case INSTANCEOF:
 				return " instanceof ";
 			case LEFT_SHIFT:
 				return "<<";
@@ -76,11 +80,6 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return "*=";
 			case NOT_EQUAL:
 				return "!=";
-			case OF:
-				//TODO should this be valid?
-				break;
-			case PROPERTY:
-				return ".";
 			case REMAINDER:
 				return "%";
 			case REMAINDER_ASSIGNMENT:
@@ -101,63 +100,22 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 				return ">>>";
 			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
 				return ">>>=";
-			case DELETE:
-				break;
-			case EXPORT:
-				break;
-			case FOR_IN_LOOP:
-				break;
-			case FOR_LOOP:
-				break;
-			case FOR_OF_LOOP:
-				break;
-			case FUNCTION:
-				break;
-			case FUNCTION_EXPRESSION:
-				break;
-			case FUNCTION_INVOCATION:
-				break;
-			case IDENTIFIER:
-				break;
-			case IMPORT:
-				break;
-			case LOGICAL_NOT:
-				break;
-			case PARENTHESIZED:
-				break;
-			case RETURN:
-				break;
-			case SCOPED_FUNCTION:
-				break;
-			case TYPEOF:
-				break;
-			case VARIABLE:
-				break;
-			case VOID:
-				break;
 			default:
+				break;
 		}
 		throw new IllegalArgumentException(kind.toString() + " is not a binary operator");
 	}
+
 	@Override
 	public ExpressionTree getLeftOperand() {
 		return left;
 	}
+
 	@Override
 	public ExpressionTree getRightOperand() {
 		return right;
 	}
-	
-	@Override
-	public String toString() {
-		return new StringBuilder()
-			.append(getLeftOperand())
-			.append(' ')
-			.append(getOperand())
-			.append(' ')
-			.append(getRightOperand())
-			.toString();
-	}
+
 	@Override
 	public Kind getKind() {
 		return kind;
