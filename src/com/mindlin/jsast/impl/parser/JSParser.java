@@ -1332,14 +1332,16 @@ public class JSParser {
 			return expr;
 		if (!context.isAssignmentTarget())
 			throw new JSSyntaxException("Not assignment target", src.getPosition());
-		if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
+		
+
+		Token assignmentOperator = src.nextToken();
+		if (assignmentOperator.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
+			expr = reinterpretExpressionAsPattern(expr);
+		} else {
 			context.isAssignmentTarget(false);
 			context.isBindingElement(false);
-		} else {
-			expr = reinterpretExpressionAsPattern(expr);
 		}
 		
-		Token assignmentOperator = src.nextToken();
 		
 		final ExpressionTree right = this.parseAssignment(null, src, context.pushed());
 		return new AssignmentTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
