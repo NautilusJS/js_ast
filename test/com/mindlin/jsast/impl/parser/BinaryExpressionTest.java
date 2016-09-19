@@ -18,4 +18,29 @@ public class BinaryExpressionTest {
 		assertIdentifier("a", binary.getLeftOperand());
 		assertIdentifier("b", binary.getRightOperand());
 	}
+
+	@Test
+	public void testNormalRTL() {
+		// Non-commutative ltr associativity
+		BinaryTree expr = parseExpression("a<<b<<c");
+		System.out.println(expr);
+		assertEquals(Kind.LEFT_SHIFT, expr.getKind());
+		assertIdentifier("c", expr.getRightOperand());
+		assertEquals(Kind.LEFT_SHIFT, expr.getLeftOperand().getKind());
+		BinaryTree left = (BinaryTree) expr.getLeftOperand();
+		assertIdentifier("a", left.getLeftOperand());
+		assertIdentifier("b", left.getRightOperand());
+	}
+
+	@Test
+	public void testExponentiationLTR() {
+		BinaryTree expr = parseExpression("a**b**c");
+		System.out.println(expr);
+		assertEquals(Kind.EXPONENTIATION, expr.getKind());
+		assertIdentifier("a", expr.getLeftOperand());
+		assertEquals(Kind.EXPONENTIATION, expr.getRightOperand().getKind());
+		BinaryTree right = (BinaryTree) expr.getRightOperand();
+		assertIdentifier("b", right.getLeftOperand());
+		assertIdentifier("c", right.getRightOperand());
+	}
 }

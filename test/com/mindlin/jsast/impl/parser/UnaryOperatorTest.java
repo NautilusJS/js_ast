@@ -51,6 +51,34 @@ public class UnaryOperatorTest {
 		assertEquals(Kind.UNARY_MINUS, expr.getKind());
 		assertIdentifier("a", expr.getExpression());
 	}
+	
+	@Test
+	public void testLogicalNot() {
+		UnaryTree expr = parseExpression("!a");
+		assertEquals(Kind.LOGICAL_NOT, expr.getKind());
+		assertIdentifier("a", expr.getExpression());
+	}
+	
+	@Test
+	public void testBitwiseNot() {
+		UnaryTree expr = parseExpression("~a");
+		assertEquals(Kind.BITWISE_NOT, expr.getKind());
+		assertIdentifier("a", expr.getExpression());
+	}
+	
+	@Test
+	public void testYield() {
+		UnaryTree expr = parseExpression("yield a");
+		assertEquals(Kind.YIELD, expr.getKind());
+		assertIdentifier("a", expr.getExpression());
+	}
+	
+	@Test
+	public void testYieldToGenerator() {
+		UnaryTree expr = parseExpression("yield* a");
+		assertEquals(Kind.YIELD_GENERATOR, expr.getKind());
+		assertIdentifier("a", expr.getExpression());
+	}
 
 	@Test
 	public void testTypeof() {
