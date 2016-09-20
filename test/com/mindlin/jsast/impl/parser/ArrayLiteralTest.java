@@ -1,10 +1,13 @@
 package com.mindlin.jsast.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
-import static org.junit.Assert.*;
+import static com.mindlin.jsast.impl.parser.JSParserTest.assertLiteral;
+import static com.mindlin.jsast.impl.parser.JSParserTest.parseExpression;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 
@@ -58,6 +61,17 @@ public class ArrayLiteralTest {
 		assertEquals(1, arr.getElements().size());
 		ArrayLiteralTree nested = (ArrayLiteralTree) arr.getElements().get(0);
 		assertEquals(0, nested.getElements().size());
+	}
+	
+	@Test
+	public void testTmp() {
+		/*
+		JSParser parser = new JSParser();
+		JSLexer lexer = new JSLexer("[1][0]");
+		System.out.println(parser.parseArrayInitializer(null, lexer, new JSParser.Context()));
+		System.out.println(lexer.peek());
+		System.out.println(parser.parseArrayInitializer(null, lexer, new JSParser.Context()));*/
+		System.out.println(parseExpression("[a[b]]").toString());
 	}
 	
 	@Test

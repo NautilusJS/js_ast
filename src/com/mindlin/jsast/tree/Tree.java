@@ -6,6 +6,7 @@ import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
+import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
@@ -147,6 +148,8 @@ public interface Tree {
 		TUPLE_TYPE(TupleTypeTree.class),
 		FUNCTION_TYPE(FunctionTypeTree.class),
 		IDENTIFIER_TYPE(IdentifierTypeTree.class),
+		INTERFACE_PROPERTY(InterfacePropertyTree.class),
+		INDEX_TYPE(IndexTypeTree.class),
 		UNION(UnionTypeTree.class),
 		GENERIC_PARAM(GenericTypeTree.class),
 		INTERFACE_TYPE(InterfaceTypeTree.class),
