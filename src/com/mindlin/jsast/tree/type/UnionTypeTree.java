@@ -10,6 +10,6 @@ public interface UnionTypeTree extends TypeTree {
 
 	@Override
 	default Tree.Kind getKind() {
-		return Tree.Kind.UNION;
+		return Tree.Kind.TYPE_UNION;
 	}
 }

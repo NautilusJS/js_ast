@@ -3,13 +3,13 @@ package com.mindlin.jsast.tree.type;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TypeTree;
 
-public interface IndexTypeTree extends TypeTree {
-	TypeTree getIndexType();
-	
-	TypeTree getReturnType();
-	
+public interface IntersectionTypeTree extends TypeTree {
+	TypeTree getLeftType();
+
+	TypeTree getRightType();
+
 	@Override
 	default Tree.Kind getKind() {
-		return Tree.Kind.INDEX_TYPE;
+		return Tree.Kind.TYPE_INTERSECTION;
 	}
 }
