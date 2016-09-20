@@ -848,8 +848,8 @@ public class JSParser {
 		openBraceToken = expect(openBraceToken, TokenKind.BRACKET, '{', src, context);
 		List<StatementTree> statements = new LinkedList<>();
 		Token t;
-		while (!(t = src.nextToken()).matches(TokenKind.BRACKET, '}'))
-			statements.add(parseStatement(t, src, context));
+		while ((t = src.nextTokenIf(TokenKind.BRACKET, '}')) == null)
+			statements.add(parseStatement(src, context));
 		expect(t, '}');
 		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
 	}
@@ -877,18 +877,18 @@ public class JSParser {
 		src.expect(JSOperator.LEFT_PARENTHESIS);
 		ExpressionTree expression = this.parseNextExpression(src, context);
 		src.expect(JSOperator.RIGHT_PARENTHESIS);
-		StatementTree thenStatement = parseStatement(null, src, context);
+		StatementTree thenStatement = parseStatement(src, context);
 		StatementTree elseStatement = null;
 		Token next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.ELSE);
 		if (next != null) {
-			next = src.nextToken();
+			next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.ELSE);
 			// This if statement isn't really needed, but it speeds up 'else if'
 			// statements by a bit, and else if statements are more common than
 			// else statements (IMHO)
-			if (next.matches(TokenKind.KEYWORD, JSKeyword.IF))
+			if (next != null)
 				elseStatement = parseIfStatement(next, src, context);
 			else
-				elseStatement = parseStatement(next, src, context);
+				elseStatement = parseStatement(src, context);
 		} else {
 			next = expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
 			elseStatement = new EmptyStatementTreeImpl(next);
