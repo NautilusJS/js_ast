@@ -7,6 +7,7 @@ import java.util.Random;
 
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
@@ -49,10 +50,11 @@ public class BinaryExpressionTest {
 		assertIdentifier("c", right.getRightOperand());
 	}
 	
+	@Ignore ("Profiling only")
 	@Test
 	public void profile() {
-		String[] exprs = new String[500];
-		String[] ops = new String[]{"+","-","*","/","<<",">>",">>>","|","&","||","&&","^","==","!=","===","!==","<",">","<=",">="};
+		String[] exprs = new String[100];
+		String[] ops = new String[]{"+","-","*","/","<<",">>",">>>","|","&","||","&&","^","==","!=","===","!==","<",">","<=",">=",".","**"};
 		String vars = "bcdefghijklmnopqrstuvwxyz";
 		Random r = new Random();
 		for (int i = 0; i < exprs.length; i++) {
@@ -63,10 +65,9 @@ public class BinaryExpressionTest {
 				sb.append(ops[r.nextInt(ops.length)]).append(vars.charAt(j));
 			exprs[i] = sb.toString();
 		}
-		long[] times = new long[500];
+		long[] times = new long[exprs.length];
 		JSParser parser = new JSParser();
-		for (int i = 0; i < 500; i++) {
-			System.out.println(exprs[i]);
+		for (int i = 0, l = times.length; i < l; i++) {
 			JSLexer lexer = new JSLexer(exprs[i]);
 			JSParser.Context context = new JSParser.Context();
 			long start = System.nanoTime();
@@ -76,16 +77,28 @@ public class BinaryExpressionTest {
 			times[i] = delta;
 		}
 		System.out.println(Arrays.toString(times));
+		long[] sorted = Arrays.copyOf(times, times.length);
+		Arrays.sort(sorted);
+		{
+			long q1 = sorted[(int) (sorted.length * .25)];
+			long q3 = sorted[(int) (sorted.length * .75)];
+			System.out.println("Min: " + sorted[0]);
+			System.out.println("Q1:  " + q1);
+			System.out.println("Med: " + sorted[sorted.length / 2]);
+			System.out.println("Q3:  " + q3);
+			System.out.println("Max: " + sorted[sorted.length - 1]);
+		}
 		double avg = 0;
-		for (int i = 0; i < 500; i++)
+		for (int i = 0, l = sorted.length; i < l; i++)
 			avg += times[i];
-		avg/=500.0;
+		avg/=sorted.length;
+		System.out.println("Avg: " + avg);
 		double stddev = 0;
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0, l = sorted.length; i < l; i++) {
 			double diff = times[i] - avg;
 			stddev += diff * diff;
 		}
-		stddev = Math.sqrt(stddev);
-		System.out.println("Avg: " + avg + "; stddev: " + stddev);
+		stddev = Math.sqrt(stddev/sorted.length);
+		System.out.println("Stddev: " + stddev);
 	}
 }
