@@ -11,18 +11,12 @@ import com.mindlin.jsast.impl.util.Characters;
 
 public class CharacterStreamTest {
 	@Test
-	public void testNextPrev() {
+	public void testNext() {
 		CharacterStream chars = new CharacterArrayStream("123456789");
 		assertEquals('1', chars.next());
 		assertEquals(0, chars.position());
 		
 		assertEquals('2', chars.next());
-		assertEquals(1, chars.position());
-		
-		assertEquals('1', chars.prev());
-		assertEquals(0, chars.position());
-		
-		assertEquals('2', chars.next(), '2');
 		assertEquals(1, chars.position());
 	}
 	
