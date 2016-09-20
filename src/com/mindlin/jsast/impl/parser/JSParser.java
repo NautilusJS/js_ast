@@ -32,9 +32,13 @@ import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
+import com.mindlin.jsast.impl.tree.IdentifierTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.ImportSpecifierTreeImpl;
 import com.mindlin.jsast.impl.tree.ImportTreeImpl;
+import com.mindlin.jsast.impl.tree.IndexTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
@@ -78,6 +82,7 @@ import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
@@ -664,9 +669,7 @@ public class JSParser {
 				throw new JSUnexpectedTokenException(identifier);
 			
 			//Check if a type is available
-			TypeTree type = null;
-			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null)
-				type = parseTypeStatement(src.nextToken(), src, context);
+			TypeTree type = this.parseTypeMaybe(src, context, false);
 			
 			//Check if an initializer is available
 			ExpressionTree initializer = null;
@@ -716,12 +719,12 @@ public class JSParser {
 		}
 		for (int i = 0; i < 1; i++) {
 			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS) && superClass == null) {
-				superClass = this.parseTypeStatement(null, src, context);
+				superClass = this.parseType(src, context);
 				next = src.nextToken();
 			}
 			if (next.matches(TokenKind.KEYWORD, JSKeyword.IMPLEMENTS) && interfaces.isEmpty()) {
 				do {
-					interfaces.add(parseTypeStatement(null, src, context));
+					interfaces.add(parseType(src, context));
 				} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
 			}
 		}
@@ -733,21 +736,105 @@ public class JSParser {
 	
 	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
 		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
+		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
 		Token next = src.nextToken();
 		expect(next, TokenKind.IDENTIFIER);
 		IdentifierTree name = parseIdentifier(next, src, context);
-		List<TypeTree> superClasses = new ArrayList<>();
-		if ((next = src.nextToken()).matches(TokenKind.KEYWORD, JSKeyword.EXTENDS))
+		List<TypeTree> superClasses;
+		if ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.EXTENDS)) != null) {
+			superClasses = new ArrayList<>();
 			do {
-				superClasses.add(parseTypeStatement(null, src, context));
-			} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
-		expect(next, TokenKind.BRACKET, '{');
-		// TODO finish
-		throw new UnsupportedOperationException();
+				superClasses.add(parseType(src, context));
+			} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+		} else {
+			superClasses = Collections.emptyList();
+		}
+		expect(src.nextToken(), TokenKind.BRACKET, '{');
+		List<InterfacePropertyTree> properties = new ArrayList<>();
+		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
+			IdentifierTree propname;
+			boolean optional;
+			TypeTree type;
+			if (next.isIdentifier()) {
+				propname = new IdentifierTreeImpl(next);
+				optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+				type = this.parseTypeMaybe(src, context, true);
+			} else if (next.matches(TokenKind.BRACKET, '[')) {
+				//Parse index type
+				Token id = src.nextToken();
+				expect(id, TokenKind.IDENTIFIER);
+				propname = new IdentifierTreeImpl(id);
+				optional = false;
+				expectOperator(JSOperator.COLON, src, context);
+				TypeTree idxType = this.parseType(src, context);
+				expect(TokenKind.BRACKET, ']', src, context);
+				expectOperator(JSOperator.COLON, src, context);
+				TypeTree returnType = this.parseType(src, context);
+				type = new IndexTypeTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
+			} else {
+				throw new JSUnexpectedTokenException(next);
+			}
+			properties.add(new InterfacePropertyTreeImpl(next.getStart(), src.getPosition(), propname, optional, type));
+		}
+		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), next.getEnd(), name, superClasses, properties);
 	}
 	
 	protected EnumDeclarationTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
 		throw new UnsupportedOperationException();
+	}
+	
+	/**
+	 * Parse a type, if unknown whether a type declaration follows the current statement.
+	 * Uses the colon (<kbd>:</kbd>) to detect if there should be a type.
+	 * @param src The source
+	 * @param context
+	 * @return
+	 */
+	protected TypeTree parseTypeMaybe(JSLexer src, Context context, boolean canBeFunction) {
+		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) == null) {
+			if (canBeFunction && src.peek().matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS))
+				return parseFunctionType(src, context);
+			return null;
+		}
+		return parseType(src, context);
+	}
+	
+	protected TypeTree parseFunctionType(JSLexer src, Context context) {
+		throw new UnsupportedOperationException();
+	}
+	
+	protected TypeTree parseImmediateType(Token startToken, JSLexer src, Context context) {
+		if (startToken.isIdentifier() || startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID) || startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
+			List<TypeTree> generics;
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LESS_THAN) != null) {
+				generics = new ArrayList<>();
+				do {
+					generics.add(parseType(src, context));
+				} while ((startToken = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+			} else {
+				generics = Collections.emptyList();
+			}
+			return  new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
+		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION)) {
+			//Function
+			return parseFunctionType(src, context);
+		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
+			//Inline interface
+		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
+			//Tuple
+		} else if (startToken.isLiteral()) {
+			//String literal
+		} else {
+			throw new JSUnexpectedTokenException(startToken);
+		}
+		throw new UnsupportedOperationException();
+	}
+	
+	protected TypeTree parseType(JSLexer src, Context context) {
+		TypeTree type = parseImmediateType(src.nextToken(), src, context);
+		
+		return type;
 	}
 	
 	
@@ -847,13 +934,10 @@ public class JSParser {
 			Token t = src.nextToken();
 			expect(t, TokenKind.OPERATOR);
 			//Optional param type
-			TypeTree type = null;
-			if (t.getValue() == JSOperator.COLON) {
-				type = parseTypeStatement(null, src, context);
-				t = src.nextToken();
-			}
-			expect(t, TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, null, context);
-			BlockTree block = parseBlock(src.nextToken(), src, context);
+			TypeTree type = this.parseTypeMaybe(src, context, false);
+			
+			expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
+			BlockTree block = parseBlock(null, src, context);
 			catchBlocks.add(new CatchTreeImpl(next.getStart(), block.getEnd(), block, param, type));
 		}
 
@@ -1278,9 +1362,7 @@ public class JSParser {
 					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null)
 						throw new JSSyntaxException("Rest parameters cannot be optional", src.getPosition());
 					
-					TypeTree type = null;
-					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null)
-						type = parseTypeStatement(null, src, context);
+					TypeTree type = this.parseTypeMaybe(src, context, false);
 					
 					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
 						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
@@ -1382,7 +1464,7 @@ public class JSParser {
 								throw new JSUnexpectedTokenException(colonToken);
 							
 							//Parse type declaration
-							TypeTree type = parseTypeStatement(null, src, context);
+							TypeTree type = parseType(src, context);
 							
 							params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, false, type, null));
 							
