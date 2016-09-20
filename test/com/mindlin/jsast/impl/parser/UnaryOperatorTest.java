@@ -109,6 +109,13 @@ public class UnaryOperatorTest {
 	}
 	
 	@Test
+	public void testSpread() {
+		UnaryTree expr = parseExpression("...a");
+		assertEquals(Kind.SPREAD, expr.getKind());
+		assertIdentifier("a", expr.getExpression());
+	}
+	
+	@Test
 	public void testInvalidUnary() {
 		final String msg = "Did not throw error on illegal expression";
 		assertExceptionalExpression("++'foo'", msg);
