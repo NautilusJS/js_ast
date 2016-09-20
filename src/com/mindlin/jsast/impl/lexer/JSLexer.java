@@ -85,11 +85,11 @@ public class JSLexer implements Supplier<Token> {
 						sb.append(Characters.NULL);
 						break;
 					case '\n':
-						if (chars.hasNext() && chars.peekNext() == '\r')
+						if (chars.hasNext() && chars.peek() == '\r')
 							chars.skip(1);
 						break;
 					case '\r':
-						if (chars.hasNext() && chars.peekNext() == '\n')
+						if (chars.hasNext() && chars.peek() == '\n')
 							chars.skip(1);
 						break;
 					case 'u':
@@ -119,7 +119,7 @@ public class JSLexer implements Supplier<Token> {
 			if (c == '\r' || c == '\n') {
 				if (startChar == '`') {
 					//Newlines are allowed as part of a template literal
-					if (chars.hasNext() && ((c == '\r' && chars.peekNext() == '\n') || chars.peekNext() == '\r'))
+					if (chars.hasNext() && ((c == '\r' && chars.peek() == '\n') || chars.peek() == '\r'))
 						chars.skip(1);
 					sb.append('\n');
 					continue;
@@ -251,7 +251,7 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public JSOperator peekOperator() {
-		char c = chars.peekNext(),
+		char c = chars.peek(),
 				d = chars.hasNext(2) ? chars.peek(2) : '\0',
 				e = chars.hasNext(3) ? chars.peek(3) : '\0';
 		if (d == '=') {
@@ -435,7 +435,7 @@ public class JSLexer implements Supplier<Token> {
 			char c = chars.next();
 			if (singleLine && (c == '\n' ||c == '\r'))
 				break;
-			else if (c == '*' && chars.hasNext() && chars.peekNext() == '/') {
+			else if (c == '*' && chars.hasNext() && chars.peek() == '/') {
 				chars.next();
 				break;
 			}
@@ -455,7 +455,7 @@ public class JSLexer implements Supplier<Token> {
 		if (isEOF())
 			return this.lookahead = new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
 		final long start = Math.max(chars.position(), -1);
-		char c = chars.peekNext();
+		char c = chars.peek();
 		Object value = null;
 		TokenKind kind = null;
 		//Drop through a various selection of possible results
@@ -505,7 +505,7 @@ public class JSLexer implements Supplier<Token> {
 				if (keyword != null) {
 					//Because the '*' in function* and yield* is not normally considered part of an
 					//identifier sequence, we have to check for it here
-					if (chars.hasNext() && chars.peekNext() == '*' && (keyword == JSKeyword.FUNCTION || keyword == JSKeyword.YIELD)) {
+					if (chars.hasNext() && chars.peek() == '*' && (keyword == JSKeyword.FUNCTION || keyword == JSKeyword.YIELD)) {
 						if (keyword == JSKeyword.FUNCTION)
 							keyword = JSKeyword.FUNCTION_GENERATOR;
 						else if (keyword == JSKeyword.YIELD)

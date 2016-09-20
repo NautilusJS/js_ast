@@ -10,14 +10,7 @@ public interface CharacterStream {
 		return current();
 	}
 
-	char prev();
-
-	default char prev(long offset) {
-		skip(-offset);
-		return current();
-	}
-
-	default char peekNext() {
+	default char peek() {
 		return peek(1);
 	}
 
@@ -50,8 +43,6 @@ public interface CharacterStream {
 	boolean isEOL();
 
 	boolean isWhitespace();
-
-	CharacterStream skipNewline();
 
 	CharacterStream skipWhitespace();
 
