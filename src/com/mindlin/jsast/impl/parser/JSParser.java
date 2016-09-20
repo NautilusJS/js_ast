@@ -811,6 +811,7 @@ public class JSParser {
 				do {
 					generics.add(parseType(src, context));
 				} while ((startToken = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+				expect(startToken, TokenKind.OPERATOR, JSOperator.GREATER_THAN);
 			} else {
 				generics = Collections.emptyList();
 			}
