@@ -186,7 +186,7 @@ public class JSParser {
 		Tree value;
 		Context context = new Context();
 		context.setScriptName(unitName);
-		while ((value = parseNext(src, context)) != null)
+		while ((value = parseStatement(src, context)) != null)
 			elements.add(value);
 		return new CompilationUnitTreeImpl(0, src.getPosition(), unitName, null, elements, false);
 	}
@@ -301,16 +301,15 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
-		return this.parseStatement(src.nextToken(), src, context);
-	}
-	
-	protected StatementTree parseStatement(Token token, JSLexer src, Context context) {
-		Tree next = parseNext(token, src, context);
+		Tree next = parseNext(src, context);
+		if (next == null)
+			return null;
+		expectSemicolon(src, context);
 		if (next.getKind().isStatement())
 			return (StatementTree)next;
-		if (next.getKind().isExpression())
+		else if (next.getKind().isExpression())
 			return new ExpressionStatementTreeImpl((ExpressionTree)next);
-		if (next.getKind().isType())
+		else if (next.getKind().isType())
 			throw new JSSyntaxException("Unexpected TypeTree when parsing statement: " + next);
 		throw new JSSyntaxException("Unexpected Tree when parsing statement: " + next);
 	}
