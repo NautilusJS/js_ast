@@ -76,11 +76,11 @@ public interface JSDialect {
 			@Override
 			public boolean supports(String feature) {
 				switch (feature) {
-					case "extension.parameter.optional":
-					case "extension.types":
-					case "extension.types.union":
-					case "extension.types.interface":
-					case "extension.types.cast":
+					case "ts.parameter.optional":
+					case "ts.types":
+					case "ts.types.union":
+					case "ts.types.interface":
+					case "ts.types.cast":
 						return true;
 				}
 				if (JSStandardDialect.ES6.supports(feature))
