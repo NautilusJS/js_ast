@@ -20,7 +20,7 @@ public class BinaryExpressionTest {
 	}
 
 	@Test
-	public void testNormalRTL() {
+	public void testNormalLTR() {
 		// Non-commutative ltr associativity
 		BinaryTree expr = parseExpression("a<<b<<c");
 		System.out.println(expr);
@@ -33,7 +33,7 @@ public class BinaryExpressionTest {
 	}
 
 	@Test
-	public void testExponentiationLTR() {
+	public void testExponentiationRTL() {
 		BinaryTree expr = parseExpression("a**b**c");
 		System.out.println(expr);
 		assertEquals(Kind.EXPONENTIATION, expr.getKind());
