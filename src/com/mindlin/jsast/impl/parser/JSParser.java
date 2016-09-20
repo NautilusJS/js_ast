@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 
+import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
@@ -17,6 +18,7 @@ import com.mindlin.jsast.impl.tree.AbstractGotoTree;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
+import com.mindlin.jsast.impl.tree.BinaryTypeTree;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
@@ -833,8 +835,13 @@ public class JSParser {
 	
 	protected TypeTree parseType(JSLexer src, Context context) {
 		TypeTree type = parseImmediateType(src.nextToken(), src, context);
-		
-		return type;
+		Token next = src.nextTokenIf(TokenPredicate.TYPE_CONTINUATION);
+		if (next == null)
+			return type;
+		boolean union = next.getValue() == JSOperator.BITWISE_OR;
+		TypeTree left = type;
+		TypeTree right = parseType(src, context);
+		return new BinaryTypeTree(left.getStart(), right.getEnd(), false, left, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, right);
 	}
 	
 	
