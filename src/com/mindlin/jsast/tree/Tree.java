@@ -153,7 +153,7 @@ public interface Tree {
 
 		// Array stuff
 		IN(BinaryTree.class),
-		SPREAD(SpreadTree.class),
+		SPREAD(UnaryTree.class),
 
 		// Method invocation
 		NEW(NewTree.class),

@@ -43,7 +43,6 @@ import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
 import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
-import com.mindlin.jsast.impl.tree.SpreadTreeImpl;
 import com.mindlin.jsast.impl.tree.StringLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.SuperExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
@@ -88,7 +87,6 @@ import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.SequenceTree;
-import com.mindlin.jsast.tree.SpreadTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
@@ -1276,7 +1274,7 @@ public class JSParser {
 			if (!identifier.isIdentifier()) {
 				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 					Token spread = identifier;
-					SpreadTree expr = this.parseSpread(spread, src, context);
+					UnaryTree expr = this.parseSpread(spread, src, context);
 					
 					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null)
 						throw new JSSyntaxException("Rest parameters cannot be optional", src.getPosition());
@@ -1429,10 +1427,11 @@ public class JSParser {
 		}
 	}
 	
-	protected SpreadTree parseSpread(Token spreadToken, JSLexer src, Context context) {
+	protected UnaryTree parseSpread(Token spreadToken, JSLexer src, Context context) {
 		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, context);
-		ExpressionTree expr = parseNextExpression(src, context);
-		return new SpreadTreeImpl(spreadToken, expr);
+		dialect.require("js.operator.spread", spreadToken.getStart());
+		final ExpressionTree expr = parseAssignment(null, src, context);
+		return new UnaryTreeImpl(spreadToken.getStart(), expr.getEnd(), expr, Kind.SPREAD);
 	}
 
 	protected ExpressionTree parseNew(Token newKeywordToken, JSLexer src, Context context) {
