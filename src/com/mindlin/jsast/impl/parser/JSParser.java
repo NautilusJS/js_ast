@@ -1174,21 +1174,24 @@ public class JSParser {
 		
 		final Stack<Token> operators = new Stack<>();
 		final Stack<ExpressionTree> stack = new Stack<>();
+		int lastPrecedence = precedence;
 		
 		stack.add(expr);
 		operators.add(token);
 		stack.add(parseExponentiation(src.nextToken(), src, context));
 		
 		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
-			while ((!operators.isEmpty()) && (precedence <= binaryPrecedence(operators.peek()))) {
+			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
 				final ExpressionTree right = stack.pop();
 				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
 				final ExpressionTree left = stack.pop();
 				stack.add(new BinaryTreeImpl(kind, left, right));
+				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek());
 			}
 			//Shift top onto stack
 			token = src.nextToken();
 			operators.add(token);
+			lastPrecedence = binaryPrecedence(token);
 			stack.add(parseExponentiation(src.nextToken(), src, context));
 		}
 		
