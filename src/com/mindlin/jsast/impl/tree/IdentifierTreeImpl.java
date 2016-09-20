@@ -12,7 +12,7 @@ public class IdentifierTreeImpl extends AbstractTree implements IdentifierTree {
 	}
 	
 	public IdentifierTreeImpl(Token token) {
-		this(token.getStart(), token.getEnd(), (String)token.getValue());
+		this(token.getStart(), token.getEnd(), token.getValue().toString());
 	}
 
 	@Override
