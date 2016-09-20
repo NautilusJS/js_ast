@@ -9,6 +9,8 @@ import static org.junit.Assert.*;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 
+import org.junit.Assert;
+
 public class IdentifierTest {
 	
 	@Test
