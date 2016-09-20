@@ -1277,8 +1277,8 @@ public class JSParser {
 		stack.add(parseExponentiation(src.nextToken(), src, context));
 		
 		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
-			while (stack.size() > 2 && (precedence <= binaryPrecedence(operators.peek()))) {
-				right = stack.pop();
+			while ((!operators.isEmpty()) && (precedence <= binaryPrecedence(operators.peek()))) {
+				final ExpressionTree right = stack.pop();
 				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
 				final ExpressionTree left = stack.pop();
 				stack.add(new BinaryTreeImpl(kind, left, right));
