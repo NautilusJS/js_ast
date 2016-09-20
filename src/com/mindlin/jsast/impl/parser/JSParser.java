@@ -1270,19 +1270,17 @@ public class JSParser {
 		context.isBindingElement(false);
 		
 		final Stack<Token> operators = new Stack<>();
-		operators.add(token);
-		
-		ExpressionTree left = expr;
-		ExpressionTree right = parseExponentiation(src.nextToken(), src, context);
-		
 		final Stack<ExpressionTree> stack = new Stack<>();
-		stack.add(left);
-		stack.add(right);
+		
+		stack.add(expr);
+		operators.add(token);
+		stack.add(parseExponentiation(src.nextToken(), src, context));
+		
 		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
 			while (stack.size() > 2 && (precedence <= binaryPrecedence(operators.peek()))) {
 				right = stack.pop();
 				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
-				left = stack.pop();
+				final ExpressionTree left = stack.pop();
 				stack.add(new BinaryTreeImpl(kind, left, right));
 			}
 			//Shift top onto stack
@@ -1290,6 +1288,7 @@ public class JSParser {
 			operators.add(token);
 			stack.add(parseExponentiation(src.nextToken(), src, context));
 		}
+		
 		expr = stack.pop();
 		
 		//Final reduce
@@ -1297,10 +1296,9 @@ public class JSParser {
 //		System.out.println("Stack: " + stack);
 //		System.out.println("Ops: " + operators);
 		while (!stack.isEmpty()) {
-			left = stack.pop();
+			final ExpressionTree left = stack.pop();
 			final Kind kind = this.mapTokenToBinaryTree(operators.pop());
-			right = expr;
-			expr = new BinaryTreeImpl(kind, left, right);
+			expr = new BinaryTreeImpl(kind, left, expr);
 		}
 		if (!stack.isEmpty()) {
 			System.err.println("Stack: " + stack);
