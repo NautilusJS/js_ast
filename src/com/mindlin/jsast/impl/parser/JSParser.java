@@ -805,7 +805,7 @@ public class JSParser {
 	}
 	
 	protected TypeTree parseImmediateType(Token startToken, JSLexer src, Context context) {
-		if (startToken.isIdentifier() || startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID) || startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+		if (startToken.isIdentifier() || startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
 			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
 			List<TypeTree> generics;
 			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LESS_THAN) != null) {
@@ -818,6 +818,8 @@ public class JSParser {
 				generics = Collections.emptyList();
 			}
 			return  new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
+		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
+			return new VoidTypeTreeImpl(startToken);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION)) {
 			//Function
 			return parseFunctionType(src, context);
