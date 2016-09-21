@@ -13,6 +13,7 @@ import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
+import com.mindlin.jsast.impl.util.Characters;
 
 public class JSLexerTest {
 	
@@ -38,11 +39,39 @@ public class JSLexerTest {
 	}
 	
 	@Test
-	public void testStringLiteralLatin1HexEscape() {
+	public void testStringLiteralEASCIIHexEscape() {
 		JSLexer lexer = new JSLexer("'\\x1F'");
 		String next = lexer.nextStringLiteral();
 		//Java doesn't support hex escapes, but 0o37 == 0x1F
 		assertEquals("\37", next);
+	}
+	
+	@Test
+	public void testStringLiteralEASCIIOctalEscape() {
+		JSLexer lexer = new JSLexer("'\\1\\12\\123\\129'");
+		String next = lexer.nextStringLiteral();
+		assertEquals("Unexpected string literal length", 5, next.length());
+		assertEquals(Characters.SOH, next.charAt(0));
+		assertEquals(Characters.LF, next.charAt(1));
+		assertEquals('S', next.charAt(2));
+		assertEquals(Characters.LF, next.charAt(3));
+		assertEquals('9', next.charAt(4));
+	}
+	
+	@Test
+	public void testStringLiteralUnicodeEscape() {
+		//U+2603 SNOWMAN
+		JSLexer lexer = new JSLexer("'\\u2603'");
+		String next = lexer.nextStringLiteral();
+		assertEquals("\u2603", next);
+	}
+	
+	@Test
+	public void testStringLiteralUnicodeEscapeCP() {
+		//U+10600 LINEAR A SIGN AB001
+		JSLexer lexer = new JSLexer("'\\u{10600}'");
+		String next = lexer.nextStringLiteral();
+		assertEquals("\uD801\uDE00", next);
 	}
 	
 	@Test
