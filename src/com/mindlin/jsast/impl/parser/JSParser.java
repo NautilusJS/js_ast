@@ -1190,7 +1190,8 @@ public class JSParser {
 				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
 					return 3;
 				case QUESTION_MARK:
-					return 4;
+//					return 4;
+					return -1;
 				case LOGICAL_OR:
 					return 5;
 				case LOGICAL_AND:
@@ -1303,9 +1304,19 @@ public class JSParser {
 	
 	protected ExpressionTree parseConditional(Token startToken, JSLexer src, Context context) {
 		ExpressionTree expr = this.parseBinaryExpression(startToken, src, context.pushed());
+		
+		src.mark();
 		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
+		//Shortcut to optional property w/type
+		if (next != null && context.inBinding() && src.peek().matches(TokenKind.OPERATOR, JSOperator.COLON)) {
+			src.reset();
+			return expr;
+		}
+		src.unmark();
+		
 		if (next == null)
 			return expr;
+		
 		
 		context.push();
 		context.allowIn(true);
@@ -1384,10 +1395,7 @@ public class JSParser {
 			
 			boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
 			
-			Token colon = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
-			TypeTree type = null;
-			if (colon != null)
-				type = this.parseTypeStatement(null, src, context);
+			TypeTree type = this.parseTypeMaybe(src, context, false);
 			
 			Token assignment = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT);
 			ExpressionTree defaultValue = null;
@@ -1430,88 +1438,111 @@ public class JSParser {
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 			expectOperator(JSOperator.LAMBDA, src, context);
 			return finishFunctionBody(leftParenToken.getStart(), null, param, true, false, src, context);
-		} else {
-			ExpressionTree expr = parseAssignment(next, src, context);
+		}
+		ExpressionTree expr = parseAssignment(next, src, context);
+		
+		if ((next = src.nextTokenIf(TokenPredicate.PARAMETER_TYPE_START)) != null) {
+			//Lambda expression where the first parameter has an explicit type/is optional
+			boolean optional = next.getValue() == JSOperator.QUESTION_MARK;
+			if (optional)
+				dialect.require("ts.parameter.optional", next.getStart());
 			
-			//There are multiple expressions here
-			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null) {
-				List<Tree> expressions = new ArrayList<>();
-				expressions.add(expr);
-				
-				next = src.nextToken();
-				do {
-					if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
-						dialect.require("js.parameter.rest", leftParenToken.getStart());
-						//Rest parameter. Must be lambda expression
-						expressions.add(parseSpread(next, src, context));
-						
+			//Parse type declaration, if exists
+			TypeTree type = next.getValue() == JSOperator.COLON ? this.parseType(src, context) : this.parseTypeMaybe(src, context, false);
+			if (type != null && !type.isImplicit())
+				dialect.require("ts.types", type.getStart());
+			
+			//Parse default value, if exists
+			ExpressionTree defaultValue = ((!optional && type == null) || src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null) ? this.parseAssignment(null, src, context) : null;
+			
+			ArrayList<ParameterTree> parameters = new ArrayList<>();
+			parameters.add(new ParameterTreeImpl(expr.getStart(), src.getPosition(), (IdentifierTree)expr, false, optional, type, defaultValue));
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null)
+				parameters.addAll(this.parseParameters(src, context));
+			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+			parameters.trimToSize();
+			return finishFunctionBody(leftParenToken.getStart(), null, parameters, true, false, src, context);
+		}
+		
+		//There are multiple expressions here
+		if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null) {
+			List<Tree> expressions = new ArrayList<>();
+			expressions.add(expr);
+			
+			next = src.nextToken();
+			do {
+				if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+					dialect.require("js.parameter.rest", leftParenToken.getStart());
+					//Rest parameter. Must be lambda expression
+					expressions.add(parseSpread(next, src, context));
+					
+					//Upgrade to lambda
+					dialect.require("js.function.lambda", leftParenToken.getStart());
+					List<ParameterTree> params = new ArrayList<>(expressions.size());
+					for (ExpressionTree expression : (List<ExpressionTree>)(List<?>)expressions)
+						params.add(reinterpretExpressionAsParameter(expression));
+					//The rest parameter must be the last one
+					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+					expectOperator(JSOperator.LAMBDA, src, context);
+					return this.finishFunctionBody(leftParenToken.getStart(), null, params, true, false, src, context);
+				} else {
+					final ExpressionTree expression = parseNextExpression(next, src, context);
+					// Check for declared types (means its a lambda param)
+					boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+					Token colonToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+					if (optional || colonToken != null) {
 						//Upgrade to lambda
 						dialect.require("js.function.lambda", leftParenToken.getStart());
 						List<ParameterTree> params = new ArrayList<>(expressions.size());
-						for (ExpressionTree expression : (List<ExpressionTree>)(List<?>)expressions)
-							params.add(reinterpretExpressionAsParameter(expression));
-						//The rest parameter must be the last one
+						for (ExpressionTree x : (List<ExpressionTree>)(List<?>)expressions)
+							params.add(reinterpretExpressionAsParameter(x));
+						
+						if (expression.getKind() != Kind.IDENTIFIER)
+							//TODO support destructured parameters
+							throw new JSUnexpectedTokenException(colonToken);
+						
+						//Parse type declaration
+						TypeTree type = parseType(src, context);
+						
+						params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, optional, type, null));
+						
+						if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null)
+							params.addAll(this.parseParameters(src, context));
+						
 						expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 						expectOperator(JSOperator.LAMBDA, src, context);
+						
 						return this.finishFunctionBody(leftParenToken.getStart(), null, params, true, false, src, context);
-					} else {
-						final ExpressionTree expression = parseNextExpression(next, src, context);
-						// Check for declared types (means its a lambda param)
-						Token colonToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
-						if (colonToken != null) {
-							//Upgrade to lambda
-							dialect.require("js.function.lambda", leftParenToken.getStart());
-							List<ParameterTree> params = new ArrayList<>(expressions.size());
-							for (ExpressionTree x : (List<ExpressionTree>)(List<?>)expressions)
-								params.add(reinterpretExpressionAsParameter(x));
-							
-							if (expression.getKind() != Kind.IDENTIFIER)
-								//TODO support destructured parameters
-								throw new JSUnexpectedTokenException(colonToken);
-							
-							//Parse type declaration
-							TypeTree type = parseType(src, context);
-							
-							params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, false, type, null));
-							
-							if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null)
-								params.addAll(this.parseParameters(src, context));
-							
-							expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-							expectOperator(JSOperator.LAMBDA, src, context);
-							
-							return this.finishFunctionBody(leftParenToken.getStart(), null, params, true, false, src, context);
-						}
-						expressions.add(expression);
 					}
-					next = src.nextToken();
-					if (!next.matches(TokenKind.OPERATOR, JSOperator.COMMA))
-						break;
-					next = src.nextToken();
-				} while (!src.isEOF());
-				
-				//Ensure that it exited the loop with a closing paren
-				context.pop();
-				if (!next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
-					throw new JSUnexpectedTokenException(next);
-				
-				//Sequence, but not lambda
-				return new ParenthesizedTreeImpl(leftParenToken.getStart(), next.getEnd(), new SequenceTreeImpl((List<ExpressionTree>)(List<?>)expressions));
-			}
+					expressions.add(expression);
+				}
+				next = src.nextToken();
+				if (!next.matches(TokenKind.OPERATOR, JSOperator.COMMA))
+					break;
+				next = src.nextToken();
+			} while (!src.isEOF());
+			
+			//Ensure that it exited the loop with a closing paren
 			context.pop();
-			//Only one expression
-			if (!(next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			if (!next.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 				throw new JSUnexpectedTokenException(next);
 			
-			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA)) != null) {
-				//Upgrade to lambda
-				dialect.require("js.function.lambda", leftParenToken.getStart());
-				List<ParameterTree> params = this.reinterpretExpressionAsParameterList(expr);
-				return finishFunctionBody(leftParenToken.getStart(), null, params, true, false, src, context);
-			}
-			//Not a lambda, just some parentheses around some expression.
-			return expr;
+			//Sequence, but not lambda
+			return new ParenthesizedTreeImpl(leftParenToken.getStart(), next.getEnd(), new SequenceTreeImpl((List<ExpressionTree>)(List<?>)expressions));
 		}
+		context.pop();
+		//Only one expression
+		if (!(next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			throw new JSUnexpectedTokenException(next);
+		
+		if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA)) != null) {
+			//Upgrade to lambda
+			dialect.require("js.function.lambda", leftParenToken.getStart());
+			List<ParameterTree> params = this.reinterpretExpressionAsParameterList(expr);
+			return finishFunctionBody(leftParenToken.getStart(), null, params, true, false, src, context);
+		}
+		//Not a lambda, just some parentheses around some expression.
+		return expr;
 	}
 	
 	protected UnaryTree parseSpread(Token spreadToken, JSLexer src, Context context) {
