@@ -1333,6 +1333,13 @@ public class JSParser {
 	}
 	
 	PatternTree reinterpretExpressionAsPattern(ExpressionTree expr) {
+		if (expr.getKind() == Kind.OBJECT_LITERAL) {
+			ObjectLiteralTree obj = (ObjectLiteralTree) expr;
+			//ArrayList<ObjectPatternPropertyTree> properties = new ArrayList<>();
+			for (ObjectLiteralPropertyTree property : obj.getProperties()) {
+				
+			}
+		}
 		throw new UnsupportedOperationException();
 	}
 	
