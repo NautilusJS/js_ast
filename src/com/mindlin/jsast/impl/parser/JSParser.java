@@ -1659,19 +1659,19 @@ public class JSParser {
 				context.isAssignmentTarget(true);
 				ExpressionTree property = parseNextExpression(src, context.pushed());
 				expect(TokenKind.BRACKET, ']', src, context);
-				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
+				expr = new BinaryTreeImpl(expr.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 				//Function call
 				context.isBindingElement(false);
 				context.isAssignmentTarget(false);
 				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed());
-				expr = new FunctionCallTreeImpl(t.getStart(), src.getPosition(), expr, arguments);
+				expr = new FunctionCallTreeImpl(expr.getStart(), src.getPosition(), expr, arguments);
 			} else if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
 				//Static member access
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
 				ExpressionTree property = parseIdentifier(null, src, context.pushed());
-				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
+				expr = new BinaryTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
 			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
 				//TODO Tagged template literal
 				throw new UnsupportedOperationException();
