@@ -488,7 +488,7 @@ public class JSLexer implements Supplier<Token> {
 		return sb.toString();
 	}
 	
-	public String nextComment(boolean singleLine) {
+	public String nextComment(final boolean singleLine) {
 		StringBuilder sb = new StringBuilder();
 		while (true) {
 			if (!chars.hasNext()) {
@@ -497,10 +497,11 @@ public class JSLexer implements Supplier<Token> {
 				throw new JSEOFException(chars.position());
 			}
 			char c = chars.next();
-			if (singleLine && (c == '\n' ||c == '\r'))
-				break;
-			else if (c == '*' && chars.hasNext() && chars.peek() == '/') {
-				chars.next();
+			if (singleLine) {
+				if (c == '\n' ||c == '\r')
+					break;
+			} else if (c == '*' && chars.hasNext() && chars.peek() == '/') {
+				chars.next(2);
 				break;
 			}
 			sb.append(c);
