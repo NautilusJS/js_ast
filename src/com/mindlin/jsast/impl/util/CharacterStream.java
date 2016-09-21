@@ -51,6 +51,8 @@ public interface CharacterStream {
 	CharacterStream mark();
 
 	CharacterStream resetToMark();
+	
+	CharacterStream unmark();
 
 	default CharacterStream skipTo(final char c) {
 		while (next() != c)

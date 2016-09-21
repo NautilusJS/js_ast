@@ -31,4 +31,10 @@ public abstract class AbstractCharacterStream implements CharacterStream {
 		position(pos);
 		return this;
 	}
+	
+	@Override
+	public AbstractCharacterStream unmark() {
+		marks.pop();
+		return this;
+	}
 }
