@@ -46,7 +46,7 @@ public class JSParserTest {
 	
 	protected static void assertExceptionalExpression(String expr, String errorMsg) {
 		try {
-			parseExpression(expr);
+			parseExpression(expr, null);
 			fail(errorMsg);
 		} catch (JSSyntaxException e) {
 			
@@ -69,5 +69,12 @@ public class JSParserTest {
 	@SuppressWarnings("unchecked")
 	protected static <T extends ExpressionTree> T parseExpression(String expr) {
 		return (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected static <T extends ExpressionTree> T parseExpression(String expr, Kind kind) {
+		T result = (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
+		assertEquals(kind, result.getKind());
+		return result;
 	}
 }

@@ -7,27 +7,32 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.Tree.Kind;
 
 import org.junit.Assert;
 
 public class IdentifierTest {
-	
+	static void testIdentifier(String expected, String identifier) {
+		IdentifierTree id = parseExpression(identifier, Kind.IDENTIFIER);
+		assertIdentifier(expected, id);
+	}
 	@Test
 	public void testSimpleIdentifier() {
-		assertIdentifier("a", parseExpression("a"));
+		testIdentifier("a", "a");
 	}
 	
 	@Test
 	public void testNumbersInIdentifier() {
-		assertIdentifier("s1234567890", parseExpression("s1234567890"));
+		testIdentifier("s1234567890", "s1234567890");
 	}
 	
 	@Test
 	public void test$InIdentifier() {
-		assertIdentifier("$", parseExpression("$"));
-		assertIdentifier("$foo", parseExpression("$foo"));
-		assertIdentifier("bar$", parseExpression("bar$"));
+		testIdentifier("$", "$");
+		testIdentifier("$foo", "$foo");
+		testIdentifier("bar$", "bar$");
 	}
 	
 	@Test

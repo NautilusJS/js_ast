@@ -18,8 +18,7 @@ import com.mindlin.jsast.tree.Tree.Kind;
 public class BinaryExpressionTest {
 	@Test
 	public void testBinaryExpression() {
-		ExpressionTree expr = parseExpression("a>b");
-		assertEquals(Kind.GREATER_THAN, expr.getKind());
+		ExpressionTree expr = parseExpression("a>b", Kind.GREATER_THAN);
 		BinaryTree binary = (BinaryTree) expr;
 		assertIdentifier("a", binary.getLeftOperand());
 		assertIdentifier("b", binary.getRightOperand());
@@ -28,9 +27,7 @@ public class BinaryExpressionTest {
 	@Test
 	public void testNormalLTR() {
 		// Non-commutative ltr associativity
-		BinaryTree expr = parseExpression("a<<b<<c");
-		System.out.println(expr);
-		assertEquals(Kind.LEFT_SHIFT, expr.getKind());
+		BinaryTree expr = parseExpression("a<<b<<c", Kind.LEFT_SHIFT);
 		assertIdentifier("c", expr.getRightOperand());
 		assertEquals(Kind.LEFT_SHIFT, expr.getLeftOperand().getKind());
 		BinaryTree left = (BinaryTree) expr.getLeftOperand();
@@ -40,14 +37,18 @@ public class BinaryExpressionTest {
 
 	@Test
 	public void testExponentiationRTL() {
-		BinaryTree expr = parseExpression("a**b**c");
-		System.out.println(expr);
+		BinaryTree expr = parseExpression("a**b**c", Kind.EXPONENTIATION);
 		assertEquals(Kind.EXPONENTIATION, expr.getKind());
 		assertIdentifier("a", expr.getLeftOperand());
 		assertEquals(Kind.EXPONENTIATION, expr.getRightOperand().getKind());
 		BinaryTree right = (BinaryTree) expr.getRightOperand();
 		assertIdentifier("b", right.getLeftOperand());
 		assertIdentifier("c", right.getRightOperand());
+	}
+	
+	@Test
+	public void testMemberAccess() {
+		BinaryTree expr = parseExpression("a[b]", Kind.ARRAY_ACCESS);
 	}
 	
 	@Ignore ("Profiling only")

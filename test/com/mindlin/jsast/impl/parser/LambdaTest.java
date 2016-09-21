@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.Tree.Kind;
 
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
 
@@ -20,27 +21,27 @@ public class LambdaTest {
 	
 	@Test
 	public void testSingleParamNoParen() {
-		ExpressionTree lambda = parseExpression("x=>x");
+		FunctionExpressionTree lambda = parseExpression("x=>x", Kind.FUNCTION_EXPRESSION);
 	}
 	
 	@Test
 	public void testSingleParanWithParen() {
-		ExpressionTree lambda = parseExpression("(x)=>x");
+		FunctionExpressionTree lambda = parseExpression("(x)=>x", Kind.FUNCTION_EXPRESSION);
 	}
 	
 	@Test
 	public void testSingleRestParam() {
-		ExpressionTree lambda = parseExpression("(...x)=>x");
+		FunctionExpressionTree lambda = parseExpression("(...x)=>x", Kind.FUNCTION_EXPRESSION);
 	}
 	
 	@Test
 	public void testMultipleParams() {
-		ExpressionTree lambda = parseExpression("(x,y)=>x");
+		FunctionExpressionTree lambda = parseExpression("(x,y)=>x", Kind.FUNCTION_EXPRESSION);
 	}
 	
 	@Test
 	public void testBracketedBody() {
-		ExpressionTree lambda = parseExpression("()=>{}");
+		FunctionExpressionTree lambda = parseExpression("()=>{}", Kind.FUNCTION_EXPRESSION);
 	}
 	
 	@Test
