@@ -1460,6 +1460,7 @@ public class JSParser {
 			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null)
 				parameters.addAll(this.parseParameters(src, context));
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+			expectOperator(JSOperator.LAMBDA, src, context);
 			parameters.trimToSize();
 			return finishFunctionBody(leftParenToken.getStart(), null, parameters, true, false, src, context);
 		}
