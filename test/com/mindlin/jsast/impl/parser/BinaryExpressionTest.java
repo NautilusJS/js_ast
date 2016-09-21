@@ -47,8 +47,17 @@ public class BinaryExpressionTest {
 	}
 	
 	@Test
-	public void testMemberAccess() {
+	public void testArrayAccess() {
 		BinaryTree expr = parseExpression("a[b]", Kind.ARRAY_ACCESS);
+		assertIdentifier("a", expr.getLeftOperand());
+		assertIdentifier("b", expr.getRightOperand());
+	}
+	
+	@Test
+	public void testMemberSelect() {
+		BinaryTree expr = parseExpression("a.b", Kind.MEMBER_SELECT);
+		assertIdentifier("a", expr.getLeftOperand());
+		assertIdentifier("b", expr.getRightOperand());
 	}
 	
 	@Ignore ("Profiling only")
