@@ -690,7 +690,7 @@ public class JSParser {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (!(keywordToken.getValue() == JSKeyword.RETURN || keywordToken.getValue() == JSKeyword.THROW))
 			throw new JSUnexpectedTokenException(keywordToken);
-		ExpressionTree expr = parseNextExpression(null, src, context);
+		ExpressionTree expr = parseNextExpression(src, context);
 		if (keywordToken.getValue() == JSKeyword.RETURN)
 			return new ReturnTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
 		else
@@ -1129,9 +1129,6 @@ public class JSParser {
 	 * @return
 	 */
 	protected ExpressionTree parseNextExpression(Token t, JSLexer src, Context context) {
-		if (t == null)
-			t = src.nextToken();
-		
 		ExpressionTree result = this.parseAssignment(t, src, context.pushed());
 		
 		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null)
@@ -1570,7 +1567,7 @@ public class JSParser {
 				//Computed member access expressions
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
-				ExpressionTree property = parseNextExpression(null, src, context.pushed());
+				ExpressionTree property = parseNextExpression(src, context.pushed());
 				expect(TokenKind.BRACKET, ']', src, context);
 				expr = new BinaryTreeImpl(t.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
@@ -1624,16 +1621,17 @@ public class JSParser {
 	//Function stuff
 
 	FunctionExpressionTree finishFunctionBody(long startPos, IdentifierTree identifier, List<ParameterTree> parameters, boolean isLambda, boolean isGenerator, JSLexer src, Context ctx) {
-		Token startBodyToken = src.nextToken();
+		Token startBodyToken = src.peek();
 		ctx.push().enterFunction();
 		StatementTree body;
 		if (startBodyToken.matches(TokenKind.BRACKET, '{')) {
+			src.skip(startBodyToken);
 			body = parseBlock(startBodyToken, src, ctx);
 		} else {
-			ExpressionTree expr = parseNextExpression(startBodyToken, src, ctx);
+			ExpressionTree expr = parseNextExpression(src, ctx);
 			//Unwrap parentheses
 			while (expr.getKind() == Kind.PARENTHESIZED && ((ParenthesizedTree)expr).getExpression().getKind() != Kind.SEQUENCE)
-				expr = parseNextExpression(startBodyToken, src, ctx);
+				expr = parseNextExpression(src, ctx);
 			body = new ReturnTreeImpl(expr);
 		}
 		//TODO infer name from syntax
