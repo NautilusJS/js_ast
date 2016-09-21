@@ -25,7 +25,7 @@ public class ConditionalExpressionTreeImpl extends AbstractTree implements Condi
 	}
 
 	@Override
-	public ExpressionTree getTrueExcpression() {
+	public ExpressionTree getTrueExpression() {
 		return this.trueExpr;
 	}
 
