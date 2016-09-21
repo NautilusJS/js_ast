@@ -17,6 +17,26 @@ import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.impl.util.Characters;
 
 public class JSLexer implements Supplier<Token> {
+	
+	/**
+	 * Converts a character to a hexdecimal digit. If passed character is not a
+	 * hexdecimal character (not <code>[0-9a-fA-F]</code>), this method returns
+	 * -1.
+	 * 
+	 * @param c
+	 *            Digit character to parse
+	 * @return Value of hex digit (<code>0-16</code>), or -1 if invalid.
+	 */
+	protected static int asHexDigit(char c) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		if (c >= 'a' && c <= 'f')
+			return c - 'a' + 10;
+		if (c >= 'A' && c <= 'F')
+			return c - 'A' + 10;
+		return -1;
+	}
+	
 	protected final CharacterStream chars;
 	protected Token lookahead = null;
 	
@@ -118,23 +138,26 @@ public class JSLexer implements Supplier<Token> {
 							int val = 0;
 							d = chars.next();
 							do {
-								int digit = (d > '0' && d < '9') ? (d - '0') : (d - 'A' + 10);
-								if (d < 0 || d > 0xF)
+								int digit = asHexDigit(d);
+								if (d < 0)
 									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
-								if (val > 0x10FFF)
+								if (val<<4 < val)
 									throw new JSSyntaxException("Invalid Unicode code point " + val, chars.position());
 								val = (val << 4) | digit;
 							} while ((d = chars.next()) != '}');
 							sb.append(new String(new int[] { val }, 0, 1));
 						} else {
-							int val = 0;
-							for (int i = 0; i < 4; i++) {
-								int digit = (d > '0' && d < '9') ? (d - '0') : ((d > 'a' && d < 'f') ? (d - 'a' + 10) : (d - 'A' + 10));
-								if (d < 0 || d > 0xF)
+							int val = asHexDigit(d);
+							if (val < 0)
+								throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
+							for (int i = 0; i < 3; i++) {
+								int digit = asHexDigit(d = chars.next());
+								if (digit < 0)
 									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
 								val = (val << 4) | digit;
 							}
-							sb.append(new String(new int[] { val }, 0, 1));
+							String t = new String(new int[] { val }, 0, 1);
+							sb.append(t);
 						}
 						break;
 					}
