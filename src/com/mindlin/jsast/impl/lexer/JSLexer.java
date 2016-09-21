@@ -108,11 +108,34 @@ public class JSLexer implements Supplier<Token> {
 						if (chars.hasNext() && chars.peek() == '\n')
 							chars.skip(1);
 						break;
-					case 'u':
+					case 'u': {
 						//Unicode escape
-						//TODO finish
 						//See mathiasbynens.be/notes/javascript-escapes
-						throw new UnsupportedOperationException("Unicode escape sequences aren't supported yet.");
+						char d = chars.next();
+						if (d == '{') {
+							//Max unicode code point is 0x10FFFF, which fits within a 32-bit integer
+							int val = 0;
+							d = chars.next();
+							do {
+								int digit = (d > '0' && d < '9') ? (d - '0') : (d - 'A' + 10);
+								if (d < 0 || d > 0xF)
+									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
+								val = (val << 4) | digit;
+							} while ((d = chars.next()) != '}');
+							sb.append(new String(new int[] { val }, 0, 1));
+						} else {
+							int val = 0;
+							for (int i = 0; i < 4; i++) {
+								int digit = (d > '0' && d < '9') ? (d - '0') : ((d > 'a' && d < 'f') ? (d - 'a' + 10) : (d - 'A' + 10));
+								if (d < 0 || d > 0xF)
+									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
+								val = (val << 4) | digit;
+							}
+							sb.append(new String(new int[] { val }, 0, 1));
+						}
+						break;
+					}
+						//TODO finish
 					case 'x':
 						//Latin-1 character escape
 						if (!chars.hasNext(2))
