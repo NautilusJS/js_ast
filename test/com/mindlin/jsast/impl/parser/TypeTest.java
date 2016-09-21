@@ -68,8 +68,21 @@ public class TypeTest {
 	}
 	
 	@Test
+	public void testIntersectionTypeWithGenerics() {
+		IntersectionTypeTree type = parseType("A<T> & B<R>", Kind.TYPE_INTERSECTION);
+		assertIdentifierType("A", 1, type.getLeftType());
+		assertIdentifierType("T", 0, ((IdentifierTypeTree)type.getLeftType()).getGenerics().get(0));
+		assertIdentifierType("B", 1, type.getRightType());
+		assertIdentifierType("R", 0, ((IdentifierTypeTree)type.getRightType()).getGenerics().get(0));
+	}
+	
+	@Test
 	public void testInlineInterfaceType() {
 		TypeTree type = parseType("{a:string}", Kind.INTERFACE_TYPE);
 	}
 	
+	@Test
+	public void testTupleType() {
+		TypeTree type = parseType("[string, number]", Kind.TUPLE_TYPE);
+	}
 }
