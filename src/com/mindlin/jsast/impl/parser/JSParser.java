@@ -928,8 +928,7 @@ public class JSParser {
 			else
 				elseStatement = parseStatement(src, context);
 		} else {
-			next = expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
-			elseStatement = new EmptyStatementTreeImpl(next);
+			elseStatement = new EmptyStatementTreeImpl(src.getPosition(), src.getPosition());
 		}
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
