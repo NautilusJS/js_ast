@@ -21,11 +21,12 @@ public final class Characters {
 		//SPACE = '\u0020',
 		;
 	public static final char[] JS_WHITESPACE = new char[] {
-			'\r',
-			'\n',
-			' ',
+			TAB,
+			LF,
 			VT, // tabulation line
 			FF, // ff (ctrl-l)
+			CR,
+			' ',
 			'\u00a0', // Latin-1 space
 			'\u1680', // Ogham space mark
 			'\u180e', // separator, Mongolian vowel
