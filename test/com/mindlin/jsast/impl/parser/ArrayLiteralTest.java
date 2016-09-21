@@ -64,17 +64,6 @@ public class ArrayLiteralTest {
 	}
 	
 	@Test
-	public void testTmp() {
-		/*
-		JSParser parser = new JSParser();
-		JSLexer lexer = new JSLexer("[1][0]");
-		System.out.println(parser.parseArrayInitializer(null, lexer, new JSParser.Context()));
-		System.out.println(lexer.peek());
-		System.out.println(parser.parseArrayInitializer(null, lexer, new JSParser.Context()));*/
-		System.out.println(parseExpression("[a[b]]").toString());
-	}
-	
-	@Test
 	public void testNestedObjectLiteral() {
 		ArrayLiteralTree arr = parseExpression("[{}]");
 		assertEquals(1, arr.getElements().size());

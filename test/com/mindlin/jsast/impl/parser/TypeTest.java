@@ -20,7 +20,6 @@ public class TypeTest {
 	static <T extends TypeTree> T parseType(String expr, Kind expectedKind) {
 		JSLexer lexer = new JSLexer(expr);
 		T result = (T) new JSParser().parseType(lexer, new Context());
-		System.out.println(result);
 		assertTrue("Did not read whole statement", lexer.isEOF());
 		assertEquals(expectedKind, result.getKind());
 		return result;

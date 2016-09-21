@@ -14,7 +14,7 @@ public class ToStringTest {
 	@Test
 	public void test() {
 		ForEachLoopTree loop = new ForEachLoopTreeImpl(0, 1, true, null, null, null);
-		System.out.println(loop.toString());
+//		System.out.println(loop.toString());
 //		fail("Not yet implemented");
 	}
 	

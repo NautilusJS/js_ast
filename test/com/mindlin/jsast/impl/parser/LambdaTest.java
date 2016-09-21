@@ -67,8 +67,19 @@ public class LambdaTest {
 	}
 	
 	@Test
-	public void testSingleParamOptional() {
+	public void testSingleParamOptionalTyped() {
 		FunctionExpressionTree lambda = parseExpression("(x?:string)=>x", Kind.FUNCTION_EXPRESSION);
+	}
+	
+	@Test
+	public void testSingleParamOptional() {
+		FunctionExpressionTree lambda = parseExpression("(x?)=>x", Kind.FUNCTION_EXPRESSION);
+	}
+	
+	@Test
+	public void testMultipleParamsOptional() {
+		FunctionExpressionTree lambda = parseExpression("(x?, y?)=>x", Kind.FUNCTION_EXPRESSION);
+		lambda = parseExpression("(x, y?)=>x", Kind.FUNCTION_EXPRESSION);
 	}
 	
 	@Test

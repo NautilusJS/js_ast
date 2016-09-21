@@ -1320,7 +1320,7 @@ public class JSParser {
 		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 		//Shortcut to optional property w/type
 		//The only time ?: will occur is paramName?:type
-		if (next != null && context.isMaybeParam() && src.peek().matches(TokenKind.OPERATOR, JSOperator.COLON)) {
+		if (next != null && context.isMaybeParam() && src.peek().isOperator() && (src.peek().getValue() == JSOperator.COLON || src.peek().getValue() == JSOperator.COMMA || src.peek().getValue() == JSOperator.RIGHT_PARENTHESIS)) {
 			src.reset();
 			return expr;
 		}
@@ -1513,7 +1513,13 @@ public class JSParser {
 					expectOperator(JSOperator.LAMBDA, src, context);
 					return this.finishFunctionBody(leftParenToken.getStart(), null, params, true, false, src, context);
 				} else {
-					final ExpressionTree expression = parseNextExpression(next, src, context);
+					final ExpressionTree expression;
+					{
+						final boolean maybeParam = context.isMaybeParam();
+						context.isMaybeParam(true);
+						expression = parseNextExpression(next, src, context);
+						context.isMaybeParam(maybeParam);
+					}
 					// Check for declared types (means its a lambda param)
 					boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
 					Token colonToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);

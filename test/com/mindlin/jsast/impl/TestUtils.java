@@ -24,7 +24,6 @@ public class TestUtils {
 		StackTraceElement[] result = new StackTraceElement[trace.length - offset];
 		for (int i = 0, l = result.length; i < l; i++)
 			result[i] = trace[i + offset];
-		System.out.println(Arrays.toString(result));
 		return result;
 	}
 }
