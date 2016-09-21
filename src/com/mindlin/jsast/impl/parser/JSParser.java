@@ -41,6 +41,7 @@ import com.mindlin.jsast.impl.tree.ImportTreeImpl;
 import com.mindlin.jsast.impl.tree.IndexTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
+import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
@@ -737,23 +738,9 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
-		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
-		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
-		Token next = src.nextToken();
-		expect(next, TokenKind.IDENTIFIER);
-		IdentifierTree name = parseIdentifier(next, src, context);
-		List<TypeTree> superClasses;
-		if ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.EXTENDS)) != null) {
-			superClasses = new ArrayList<>();
-			do {
-				superClasses.add(parseType(src, context));
-			} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
-		} else {
-			superClasses = Collections.emptyList();
-		}
-		expect(src.nextToken(), TokenKind.BRACKET, '{');
-		List<InterfacePropertyTree> properties = new ArrayList<>();
+	List<InterfacePropertyTree> parseInterfaceBody(JSLexer src, Context context) {
+		ArrayList<InterfacePropertyTree> properties = new ArrayList<>();
+		Token next;
 		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
 			IdentifierTree propname;
 			boolean optional;
@@ -779,7 +766,33 @@ public class JSParser {
 			}
 			properties.add(new InterfacePropertyTreeImpl(next.getStart(), src.getPosition(), propname, optional, type));
 		}
-		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), next.getEnd(), name, superClasses, properties);
+		
+		if (properties.isEmpty())
+			return Collections.emptyList();
+		properties.trimToSize();
+		return properties;
+	}
+	
+	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
+		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
+		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
+		Token next = src.nextToken();
+		expect(next, TokenKind.IDENTIFIER);
+		IdentifierTree name = parseIdentifier(next, src, context);
+		List<TypeTree> superClasses;
+		if ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.EXTENDS)) != null) {
+			superClasses = new ArrayList<>();
+			do {
+				superClasses.add(parseType(src, context));
+			} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+		} else {
+			superClasses = Collections.emptyList();
+		}
+		
+		expect(src.nextToken(), TokenKind.BRACKET, '{');
+		List<InterfacePropertyTree> properties = parseInterfaceBody(src, context);
+		
+		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, superClasses, properties);
 	}
 	
 	protected EnumDeclarationTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
@@ -806,7 +819,8 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
-	protected TypeTree parseImmediateType(Token startToken, JSLexer src, Context context) {
+	protected TypeTree parseImmediateType(JSLexer src, Context context) {
+		Token startToken = src.nextToken();
 		if (startToken.isIdentifier() || startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
 			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
 			List<TypeTree> generics;
@@ -827,7 +841,8 @@ public class JSParser {
 			return parseFunctionType(src, context);
 		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
 			//Inline interface
-			
+			List<InterfacePropertyTree> properties = this.parseInterfaceBody(src, context);
+			return new InterfaceTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
 			//Tuple
 			List<TypeTree> slots;
@@ -851,7 +866,7 @@ public class JSParser {
 	}
 	
 	protected TypeTree parseType(JSLexer src, Context context) {
-		TypeTree type = parseImmediateType(src.nextToken(), src, context);
+		TypeTree type = parseImmediateType(src, context);
 		Token next = src.nextTokenIf(TokenPredicate.TYPE_CONTINUATION);
 		if (next == null)
 			return type;
