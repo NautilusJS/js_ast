@@ -284,6 +284,8 @@ public class JSParser {
 				else if (token.<Character>getValue() == '[')
 					return this.parseNextExpression(token, src, context);
 			case OPERATOR:
+				if (token.getValue() == JSOperator.LEFT_PARENTHESIS)
+					return this.parseNextExpression(token, src, context);
 				return this.parseUnaryExpression(token, src, context);
 			case SPECIAL:
 				switch (token.<JSSpecialGroup>getValue()) {
