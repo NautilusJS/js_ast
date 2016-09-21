@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.lexer;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -52,7 +53,7 @@ public class JSLexer implements Supplier<Token> {
 		boolean isEscaped = false;
 		while (true) {
 			if (!chars.hasNext())
-				throw new JSSyntaxException("Unexpected EOF while parsing a string literal", getPosition());
+				throw new JSEOFException("Unexpected EOF while parsing a string literal", getPosition());
 			char c = chars.next();
 			if (isEscaped) {
 				isEscaped = false;
@@ -89,7 +90,7 @@ public class JSLexer implements Supplier<Token> {
 					case '5':
 					case '6':
 					case '7':
-						//Latin-1 octal escape
+						//EASCII octal escape
 						{
 							int val = c - '0';
 							if (chars.peek() >= '0' && chars.peek() <= '7') {
@@ -97,7 +98,7 @@ public class JSLexer implements Supplier<Token> {
 								if (val < 32 && chars.peek() >= '0' && chars.peek() <= '7')
 									val = (val << 3) | (chars.next() - '0');
 							}
-							sb.append(new String(new byte[]{(byte)val}, 0, 1, StandardCharsets.ISO_8859_1));
+							sb.append(Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte)val})).toString());
 						}
 						break;
 					case '\n':
@@ -120,6 +121,8 @@ public class JSLexer implements Supplier<Token> {
 								int digit = (d > '0' && d < '9') ? (d - '0') : (d - 'A' + 10);
 								if (d < 0 || d > 0xF)
 									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
+								if (val > 0x10FFF)
+									throw new JSSyntaxException("Invalid Unicode code point " + val, chars.position());
 								val = (val << 4) | digit;
 							} while ((d = chars.next()) != '}');
 							sb.append(new String(new int[] { val }, 0, 1));
@@ -135,15 +138,14 @@ public class JSLexer implements Supplier<Token> {
 						}
 						break;
 					}
-						//TODO finish
 					case 'x':
-						//Latin-1 character escape
+						//EASCII hexdecimal character escape
 						if (!chars.hasNext(2))
-							throw new JSSyntaxException("Invalid Latin-1 escape sequence (EOF)", getPosition() - 2);
+							throw new JSEOFException("Invalid Extended ASCII escape sequence (EOF)", getPosition() - 2);
 						try {
-							sb.append(new String(new byte[]{Byte.parseByte(chars.copyNext(2), 16)}, 0, 1, StandardCharsets.ISO_8859_1));
+							sb.append(Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{Byte.parseByte(chars.copyNext(2), 16)})).toString());
 						} catch (NumberFormatException e) {
-							throw new JSSyntaxException("Invalid Latin-1 escape sequence (\\x" + chars.copy(chars.position() - 2, 2) + ")", getPosition() - 4);
+							throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 2, 2) + ")", getPosition() - 4);
 						}
 						break;
 					default:
@@ -619,7 +621,7 @@ public class JSLexer implements Supplier<Token> {
 	public void unmark() {
 		chars.unmark();
 	}
-
+	
 	@Override
 	public Token get() {
 		return nextToken();
