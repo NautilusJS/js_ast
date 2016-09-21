@@ -545,7 +545,7 @@ public class JSLexer implements Supplier<Token> {
 			chars.next();
 		} else if (c == '/' && chars.hasNext(2) && (chars.peek(2) == '/' || chars.peek(2) == '*')) {
 			kind = TokenKind.COMMENT;
-			value = this.nextComment(c == '/');
+			value = this.nextComment(chars.peek(2) == '/');
 		} else if ((value = nextOperator()) != null) {
 			kind = TokenKind.OPERATOR;
 		} else {
