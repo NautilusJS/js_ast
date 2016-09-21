@@ -63,6 +63,7 @@ import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
+import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
@@ -1271,9 +1272,17 @@ public class JSParser {
 		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
 			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
 				final ExpressionTree right = stack.pop();
-				final Kind kind = this.mapTokenToBinaryTree(operators.pop());
+				final Token operator = operators.pop();
+				final Kind kind = this.mapTokenToBinaryTree(operator);
 				final ExpressionTree left = stack.pop();
-				stack.add(new BinaryTreeImpl(kind, left, right));
+				
+				BinaryTree binary;
+				if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
+					binary = new AssignmentTreeImpl(kind, left, right);
+				else
+					binary = new BinaryTreeImpl(kind, left, right);
+				stack.add(binary);
+				
 				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek());
 			}
 			//Shift top onto stack
@@ -1287,12 +1296,14 @@ public class JSParser {
 		
 		//Final reduce
 
-//		System.out.println("Stack: " + stack);
-//		System.out.println("Ops: " + operators);
 		while (!stack.isEmpty()) {
 			final ExpressionTree left = stack.pop();
-			final Kind kind = this.mapTokenToBinaryTree(operators.pop());
-			expr = new BinaryTreeImpl(kind, left, expr);
+			final Token operator = operators.pop();
+			final Kind kind = this.mapTokenToBinaryTree(operator);
+			if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
+				expr = new AssignmentTreeImpl(kind, left, expr);
+			else
+				expr = new BinaryTreeImpl(kind, left, expr);
 		}
 		if (!stack.isEmpty()) {
 			System.err.println("Stack: " + stack);
@@ -1371,7 +1382,7 @@ public class JSParser {
 		
 		
 		final ExpressionTree right = this.parseAssignment(null, src, context.pushed());
-		return new AssignmentTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
+		return new BinaryTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
 	}
 	
 	protected List<ParameterTree> parseParameters(JSLexer src, Context context) {
