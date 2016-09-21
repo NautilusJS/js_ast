@@ -13,10 +13,11 @@ public class LambdaTest {
 	
 	@Test
 	public void testInvalid() {
-		assertExceptionalExpression("()=>()", "Invalid lambda was parsed");
-		assertExceptionalExpression("x=>()", "Invalid lambda was parsed");
-		assertExceptionalExpression("(x,y)=>()", "Invalid lambda was parsed");
-		assertExceptionalExpression("...x=>()", "Invalid lambda was parsed");
+		assertExceptionalExpression("()=>()", "Empty parentheses aren't a valid lambda body");
+		assertExceptionalExpression("x=>()", "Empty parentheses aren't a valid lambda body");
+		assertExceptionalExpression("(x,y)=>()", "Empty parentheses aren't a valid lambda body");
+		assertExceptionalExpression("...x=>()", "Rest parameters aren't allowed without parentheses");
+		assertExceptionalExpression("x:void=>()", "Types aren't allowed without parentheses");
 	}
 	
 	@Test
