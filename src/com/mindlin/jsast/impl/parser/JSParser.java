@@ -306,12 +306,12 @@ public class JSParser {
 		Tree next = parseNext(src, context);
 		if (next == null)
 			return null;
-		expectSemicolon(src, context);
 		if (next.getKind().isStatement())
 			return (StatementTree)next;
-		else if (next.getKind().isExpression())
-			return new ExpressionStatementTreeImpl((ExpressionTree)next);
-		else if (next.getKind().isType())
+		else if (next.getKind().isExpression()) {
+			expectSemicolon(src, context);
+			return new ExpressionStatementTreeImpl(next.getStart(), src.getPosition(), (ExpressionTree)next);
+		} else if (next.getKind().isType())
 			throw new JSSyntaxException("Unexpected TypeTree when parsing statement: " + next);
 		throw new JSSyntaxException("Unexpected Tree when parsing statement: " + next);
 	}
