@@ -82,10 +82,6 @@ public class JSLexer implements Supplier<Token> {
 						sb.append('\f');
 						break;
 					case '0':
-						if (chars.hasNext() && (chars.peek() < '0' || chars.peek() > '7')) {
-							sb.append(Characters.NULL);
-							break;
-						}
 					case '1':
 					case '2':
 					case '3':
@@ -94,12 +90,14 @@ public class JSLexer implements Supplier<Token> {
 					case '6':
 					case '7':
 						//Latin-1 octal escape
-						if (!chars.hasNext(2))
-							throw new JSEOFException(chars.position());
-						try {
-							sb.append(new String(new byte[]{Byte.parseByte(new String(new char[]{c, chars.next(), chars.next()}), 8)}, 0, 1, StandardCharsets.ISO_8859_1));
-						} catch (NumberFormatException e) {
-							throw new JSSyntaxException("Invalid Latin-1 escape sequence (\\" + chars.copy(chars.position() - 3, 3) + ")", getPosition() - 3);
+						{
+							int val = c - '0';
+							if (chars.peek() >= '0' && chars.peek() <= '7') {
+								val = (val << 3) | (chars.next() - '0');
+								if (val < 32 && chars.peek() >= '0' && chars.peek() <= '7')
+									val = (val << 3) | (chars.next() - '0');
+							}
+							sb.append(new String(new byte[]{(byte)val}, 0, 1, StandardCharsets.ISO_8859_1));
 						}
 						break;
 					case '\n':
