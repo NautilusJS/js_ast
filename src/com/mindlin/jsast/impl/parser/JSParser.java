@@ -253,12 +253,8 @@ public class JSParser {
 					case YIELD:
 					case YIELD_GENERATOR:
 					case SUPER:
-					case THIS: {
-						ExpressionTree expr = parseUnaryExpression(token, src, context);
-						if (expr.getKind().isStatement())
-							return (StatementTree) expr;
-						return new ExpressionStatementTreeImpl(expr);
-					}
+					case THIS:
+						return parseUnaryExpression(token, src, context);
 					case CASE:
 					case CATCH:
 					case FINALLY:
