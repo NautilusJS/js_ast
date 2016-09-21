@@ -1,8 +1,7 @@
 package com.mindlin.jsast.impl.parser;
 
 import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -18,8 +17,10 @@ import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
+import junit.framework.Assert;
+
 @RunWith(Suite.class)
-@SuiteClasses({ArrayLiteralTest.class, BinaryExpressionTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, LambdaTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
+@SuiteClasses({ArrayLiteralTest.class, BinaryExpressionTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, LambdaTest.class, OperatorTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
 public class JSParserTest {
 	
 	protected static final void assertLiteral(ExpressionTree expr, String value) {
@@ -46,8 +47,10 @@ public class JSParserTest {
 	
 	protected static void assertExceptionalExpression(String expr, String errorMsg) {
 		try {
-			parseExpression(expr, null);
-			fail(errorMsg);
+			JSLexer lexer = new JSLexer(expr);
+			new JSParser().parseNextExpression(lexer, new Context());
+			if (lexer.isEOF())
+				fail(errorMsg);
 		} catch (JSSyntaxException e) {
 			
 		}
@@ -67,8 +70,16 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected static <T extends ExpressionTree> T parseExpression(String expr) {
+	protected static <T extends ExpressionTree> T parseExpressionIncomplete(String expr) {
 		return (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected static <T extends ExpressionTree> T parseExpression(String expr) {
+		JSLexer lexer = new JSLexer(expr);
+		T result = (T) new JSParser().parseNextExpression(lexer, new Context());
+		assertTrue("Not all of expression was consumed. Read until " + lexer.getPosition(), lexer.isEOF());
+		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
