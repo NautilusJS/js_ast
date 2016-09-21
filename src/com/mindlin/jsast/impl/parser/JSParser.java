@@ -1308,7 +1308,8 @@ public class JSParser {
 		src.mark();
 		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 		//Shortcut to optional property w/type
-		if (next != null && context.inBinding() && src.peek().matches(TokenKind.OPERATOR, JSOperator.COLON)) {
+		//The only time ?: will occur is paramName?:type
+		if (next != null && context.isMaybeParam() && src.peek().matches(TokenKind.OPERATOR, JSOperator.COLON)) {
 			src.reset();
 			return expr;
 		}
@@ -1446,7 +1447,14 @@ public class JSParser {
 			expectOperator(JSOperator.LAMBDA, src, context);
 			return finishFunctionBody(leftParenToken.getStart(), null, param, true, false, src, context);
 		}
-		ExpressionTree expr = parseAssignment(next, src, context);
+		
+		ExpressionTree expr;
+		{
+			final boolean maybeParam = context.isMaybeParam();
+			context.isMaybeParam(true);
+			expr = parseAssignment(next, src, context);
+			context.isMaybeParam(maybeParam);
+		}
 		
 		if ((next = src.nextTokenIf(TokenPredicate.PARAMETER_TYPE_START)) != null) {
 			//Lambda expression where the first parameter has an explicit type/is optional
@@ -1938,6 +1946,10 @@ public class JSParser {
 		public boolean isAssignmentTarget() {
 			return data.isAssignmentTarget;
 		}
+		
+		public boolean isMaybeParam() {
+			return data.isMaybeParam;
+		}
 
 		/**
 		 * Marks this level of the context as being in a function body. Allows
@@ -1999,6 +2011,11 @@ public class JSParser {
 			return this;
 		}
 		
+		public Context isMaybeParam(boolean value) {
+			data.isMaybeParam = value;
+			return this;
+		}
+		
 		static class ContextData {
 			boolean isStrict = false;
 			/**
@@ -2021,6 +2038,7 @@ public class JSParser {
 			boolean inNamedBlock = false;
 			boolean isBindingElement = false;
 			boolean allowIn = true;
+			boolean isMaybeParam = false;
 			final ContextData parent;
 
 			public ContextData() {
@@ -2036,6 +2054,7 @@ public class JSParser {
 				this.isAssignmentTarget = parent.isAssignmentTarget;
 				this.isBindingElement = parent.isBindingElement;
 				this.allowIn = parent.allowIn;
+				this.isMaybeParam = parent.isMaybeParam;
 				this.parent = parent;
 			}
 		}
