@@ -568,6 +568,18 @@ public class JSLexer implements Supplier<Token> {
 		chars.position(token.getEnd());
 		return token;
 	}
+	
+	public void mark() {
+		chars.mark();
+	}
+	
+	public void reset() {
+		chars.resetToMark();
+	}
+	
+	public void unmark() {
+		chars.unmark();
+	}
 
 	@Override
 	public Token get() {
