@@ -20,7 +20,7 @@ public class FunctionCallTreeImpl extends AbstractTree implements FunctionCallTr
 	}
 
 	@Override
-	public ExpressionTree getFunctionSelect() {
+	public ExpressionTree getCallee() {
 		return this.functionSelect;
 	}
 	

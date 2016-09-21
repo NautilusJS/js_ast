@@ -6,8 +6,10 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
@@ -43,5 +45,22 @@ public class OperatorTest {
 		NewTree newExpr = parseExpression("new X", Kind.NEW);
 		assertIdentifier("X", newExpr.getCallee());
 		assertEquals(0, newExpr.getArguments().size());
+	}
+	
+	@Test
+	public void testFunctionCall() {
+		FunctionCallTree expr = parseExpression("a(b)", Kind.FUNCTION_INVOCATION);
+		assertIdentifier("a", expr.getCallee());
+	}
+	
+	@Test
+	public void testFunctionCallWithSelect() {
+		FunctionCallTree expr = parseExpression("foo.bar(baz)", Kind.FUNCTION_INVOCATION);
+		assertEquals(Kind.MEMBER_SELECT, expr.getCallee().getKind());
+		BinaryTree callee = (BinaryTree) expr.getCallee();
+		assertIdentifier("foo", callee.getLeftOperand());
+		assertIdentifier("bar", callee.getRightOperand());
+		assertEquals(1, expr.getArguments().size());
+		assertIdentifier("baz", expr.getArguments().get(0));
 	}
 }
