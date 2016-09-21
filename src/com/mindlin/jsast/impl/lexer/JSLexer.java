@@ -630,7 +630,7 @@ public class JSLexer implements Supplier<Token> {
 		if (token.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
 			throw new IllegalStateException("Cannot skip EOF token " + token);
 		this.lookahead = null;
-		chars.position(token.getEnd());
+		chars.position(token.getEnd() - 1);
 		return token;
 	}
 	
