@@ -103,6 +103,7 @@ import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.TupleTypeTreeImpl;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
@@ -826,8 +827,21 @@ public class JSParser {
 			return parseFunctionType(src, context);
 		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
 			//Inline interface
+			
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
 			//Tuple
+			List<TypeTree> slots;
+			if (src.nextTokenIf(TokenKind.BRACKET, ']') == null) {
+				slots = new ArrayList<>();
+				do {
+					slots.add(parseType(src, context));
+				} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+			} else {
+				slots = Collections.emptyList();
+			}
+			
+			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
+			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), false, slots);
 		} else if (startToken.isLiteral()) {
 			//String literal
 		} else {
