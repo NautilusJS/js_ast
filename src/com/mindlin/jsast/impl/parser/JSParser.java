@@ -1743,6 +1743,7 @@ public class JSParser {
 		
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 		List<ParameterTree> params = parseParameters(src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		return finishFunctionBody(functionKeywordToken.getStart(), identifier, params, false, generator, src, context);
 	}
