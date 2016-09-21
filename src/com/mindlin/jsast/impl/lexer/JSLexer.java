@@ -82,7 +82,25 @@ public class JSLexer implements Supplier<Token> {
 						sb.append('\f');
 						break;
 					case '0':
-						sb.append(Characters.NULL);
+						if (chars.hasNext() && (chars.peek() < '0' || chars.peek() > '7')) {
+							sb.append(Characters.NULL);
+							break;
+						}
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+						//Latin-1 octal escape
+						if (!chars.hasNext(2))
+							throw new JSEOFException(chars.position());
+						try {
+							sb.append(new String(new byte[]{Byte.parseByte(new String(new char[]{c, chars.next(), chars.next()}), 8)}, 0, 1, StandardCharsets.ISO_8859_1));
+						} catch (NumberFormatException e) {
+							throw new JSSyntaxException("Invalid Latin-1 escape sequence (\\" + chars.copy(chars.position() - 3, 3) + ")", getPosition() - 3);
+						}
 						break;
 					case '\n':
 						if (chars.hasNext() && chars.peek() == '\r')
@@ -102,7 +120,7 @@ public class JSLexer implements Supplier<Token> {
 						if (!chars.hasNext(2))
 							throw new JSSyntaxException("Invalid Latin-1 escape sequence (EOF)", getPosition() - 2);
 						try {
-							sb.append(new String(new byte[]{(byte)Integer.parseInt(chars.copyNext(2), 16)}, 0, 1, StandardCharsets.ISO_8859_1));
+							sb.append(new String(new byte[]{Byte.parseByte(chars.copyNext(2), 16)}, 0, 1, StandardCharsets.ISO_8859_1));
 						} catch (NumberFormatException e) {
 							throw new JSSyntaxException("Invalid Latin-1 escape sequence (\\x" + chars.copy(chars.position() - 2, 2) + ")", getPosition() - 4);
 						}
