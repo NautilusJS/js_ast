@@ -9,7 +9,7 @@ public interface JSDialect {
 			throw new JSUnsupportedException(feature, position);
 	}
 	default boolean supportsTypes() {
-		return supports("extension.types");
+		return supports("ts.types");
 	}
 	default boolean supportsLambdas() {
 		return supports("js.function.lambda");
