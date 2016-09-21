@@ -16,7 +16,6 @@ import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 
 public class JSLexerTest {
 	
-	
 	@Test
 	public void testSimpleStringLiteral() {
 		JSLexer lexer = new JSLexer("\"Hello, world\"");
@@ -32,6 +31,21 @@ public class JSLexerTest {
 	}
 	
 	@Test
+	public void testStringLiteralNullEscape() {
+		JSLexer lexer = new JSLexer("'\\09'");
+		String next = lexer.nextStringLiteral();
+		assertEquals("\09", next);
+	}
+	
+	@Test
+	public void testStringLiteralLatin1HexEscape() {
+		JSLexer lexer = new JSLexer("'\\x1F'");
+		String next = lexer.nextStringLiteral();
+		//Java doesn't support hex escapes, but 0o37 == 0x1F
+		assertEquals("\37", next);
+	}
+	
+	@Test
 	public void testStringLiteralComplexNewline() {
 		JSLexer lexer = new JSLexer(new StringBuilder()
 				.append('"').append('\\').append('\n').append('"')
@@ -44,6 +58,7 @@ public class JSLexerTest {
 		assertEquals("", lexer.nextStringLiteral());
 		assertEquals("", lexer.nextStringLiteral());
 	}
+	
 	@Test
 	public void testStringLiteralComplexQuotes() {
 		JSLexer lexer = new JSLexer(new StringBuilder(10)
@@ -53,8 +68,6 @@ public class JSLexerTest {
 		assertEquals("'f'", lexer.nextStringLiteral());
 		assertEquals("\"g\"", lexer.nextStringLiteral());
 	}
-	
-	
 	
 	@Test
 	public void testNumericLiteralBinary() {
