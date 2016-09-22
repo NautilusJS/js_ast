@@ -8,7 +8,6 @@ public enum JSKeyword {
 	CATCH,
 	CLASS,
 	CONST,
-	CONSTRUCTOR,
 	CONTINUE,
 	DEBUGGER,
 	DEFAULT,
