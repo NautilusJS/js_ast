@@ -653,7 +653,7 @@ public class JSLexer implements Supplier<Token> {
 				}
 			}
 		}
-		return new Token(start, kind, chars.copy(start + 1, chars.position() - start), value);
+		return new Token(start + 1, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
 	public Token nextTokenIf(TokenKind kind, Object value) {
