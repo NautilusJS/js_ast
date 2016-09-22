@@ -1,4 +1,7 @@
 import "types.ts";
+import "types.ts";
+import {Permissions} from "permissions.ts";
+
 export interface NavigatorID {
 	appCodeName: string;
 	appName: string;
@@ -36,6 +39,14 @@ interface Navigator extends NavigatorConcurrentHardware,
 			NavigatorOnLine,
 			NavigatorPlugins,
 			NavigatorStorageUtils {
+	battery: BatteryManager;
+	connection: NetworkInformation;
+	geolocation: Geolocation;
+	oscpu: string;
+	permissions: Permissions;
+	platform: string;
+	userAgent: string;
+	serviceWorker: ServiceWorkerContainer;
 }
 
 export var navigator : Navigator;
