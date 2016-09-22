@@ -1710,7 +1710,7 @@ public class JSParser {
 	
 	//Function stuff
 
-	FunctionExpressionTree finishFunctionBody(long startPos, IdentifierTree identifier, List<ParameterTree> parameters, boolean isLambda, boolean isGenerator, JSLexer src, Context ctx) {
+	FunctionExpressionTree finishFunctionBody(long startPos, IdentifierTree identifier, List<ParameterTree> parameters, boolean arrow, boolean generator, JSLexer src, Context ctx) {
 		Token startBodyToken = src.peek();
 		ctx.push().enterFunction();
 		StatementTree body;
@@ -1725,7 +1725,7 @@ public class JSParser {
 			body = new ReturnTreeImpl(expr);
 		}
 		//TODO infer name from syntax
-		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), parameters, null, true, body, ctx.isStrict(), isGenerator);
+		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), parameters, identifier, arrow, body, ctx.isStrict(), generator);
 		ctx.pop();
 		return result;
 	}
