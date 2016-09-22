@@ -20,7 +20,7 @@ public interface Tree {
 	public static enum Kind {
 		// Data structures
 		COMPILATION_UNIT(CompilationUnitTree.class),
-		FUNCTION,
+		FUNCTION(FunctionExpressionTree.class, false, true, true, false),
 		FUNCTION_EXPRESSION(FunctionExpressionTree.class),
 
 		// Loops
@@ -92,7 +92,7 @@ public interface Tree {
 		BOOLEAN_LITERAL(BooleanLiteralTree.class),
 		NULL_LITERAL(NullLiteralTree.class),
 		NUMERIC_LITERAL(NumericLiteralTree.class),
-		REGEXP_LITERAL,
+		REGEXP_LITERAL(RegExpLiteralTree.class),
 		STRING_LITERAL(StringLiteralTree.class),
 		TEMPLATE_LITERAL,
 		ARRAY_LITERAL(ArrayLiteralTree.class),
@@ -200,6 +200,14 @@ public interface Tree {
 			this.expr = litr || ExpressionTree.class.isAssignableFrom(clazz);//literals are expressions
 			this.stmt = StatementTree.class.isAssignableFrom(clazz);
 			this.typ = TypeTree.class.isAssignableFrom(clazz);
+		}
+		
+		Kind(Class<? extends Tree> clazz, boolean litr, boolean expr, boolean stmt, boolean typ) {
+			this.iface = clazz;
+			this.litr = litr;
+			this.expr = expr;
+			this.stmt = stmt;
+			this.typ = typ;
 		}
 
 		public Class<? extends Tree> asInterface() {
