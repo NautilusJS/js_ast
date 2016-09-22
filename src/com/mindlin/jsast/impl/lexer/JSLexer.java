@@ -488,6 +488,74 @@ public class JSLexer implements Supplier<Token> {
 		return sb.toString();
 	}
 	
+	protected String scanRegExpBody(String st) {
+		StringBuffer sb = new StringBuffer();
+		boolean escaped = false;
+		int classes = 0;
+		int groups = 0;
+		for (int i = 1, l = st.length(); i < l; i++) {
+			char ch = st.charAt(i);
+			if (ch == '\\')
+				escaped = true;
+			sb.append(ch);
+		}
+		while (!isEOF()) {
+			char ch = chars.next();
+			if (!escaped && ch == '/')
+				break;
+			sb.append(ch);
+			if (escaped) {
+				escaped = false;
+				continue;
+			}
+			switch (ch) {
+				case '\\':
+					escaped = true;
+					break;
+				case '[':
+					classes++;
+					break;
+				case '(':
+					groups++;
+					break;
+				case ']':
+					if (--classes < 0)
+						throw new JSSyntaxException("Illegal regular expression character class end", chars.position());
+					break;
+				case ')':
+					if (--groups < 0)
+						throw new JSSyntaxException("Illegal regular expression group end", chars.position());
+					break;
+				default:
+					break;
+			}
+		}
+		if (chars.current() != '/')
+			throw new JSEOFException("Unexpected EOF in regex literal", chars.position());
+		return sb.toString();
+	}
+	
+	protected String scanRegExpFlags() {
+		long start = chars.position();
+		while (!isEOF()) {
+			char c = chars.next();
+			if (c != 'g' && c!= 'i' && c!= 'm' && c != 'y')
+				break;
+		}
+		return chars.copy(start, chars.position() - start);
+	}
+	
+	public Token finishRegExpLiteral(Token start) {
+		if (start == null)
+			start = this.nextToken();
+		if (start.getValue() != JSOperator.DIVISION && start.getValue() != JSOperator.DIVISION_ASSIGNMENT)
+			throw new JSSyntaxException("Regular expression must start with a slash", start.getStart());
+		long intermediateStart = getPosition();
+		String body = scanRegExpBody(start.text);
+		String flags = scanRegExpFlags();
+		return new Token(start.getStart(), TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), new String[]{body, flags});
+	}
+	
 	public String nextComment(final boolean singleLine) {
 		StringBuilder sb = new StringBuilder();
 		while (true) {

@@ -515,9 +515,12 @@ public class JSParser {
 						context.isBindingElement(false);
 						return this.parseGroupExpression(t, src, context.pushed());
 					case DIVISION:
-					case DIVISION_ASSIGNMENT:
-						//TODO finish (parse regex literal)
-						throw new UnsupportedOperationException();
+					case DIVISION_ASSIGNMENT: {
+						context.isAssignmentTarget(false);
+						context.isBindingElement(false);
+						Token regex = src.finishRegExpLiteral(t);
+						return this.parseLiteral(regex, src, context);
+					}
 					default:
 						throw new JSUnexpectedTokenException(t);
 				}
