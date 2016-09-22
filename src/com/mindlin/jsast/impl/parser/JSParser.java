@@ -1806,11 +1806,57 @@ public class JSParser {
 	
 	protected ObjectLiteralTree parseObjectInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '{', src, context);
-		ArrayList<? extends ObjectLiteralPropertyTree> properties = new ArrayList<>();
+		
+		ArrayList<ObjectLiteralPropertyTree> properties = new ArrayList<>();
+		
 		Token next;
-		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
-			
+		if ((next = src.nextTokenIf(TokenKind.BRACKET, '}')) == null) {
+			while (!src.isEOF()) {
+				next = src.nextToken();
+				if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION) || next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) {
+					boolean generator = next.getValue() == JSOperator.MULTIPLICATION;
+					boolean getter = !(generator || next.getValue().equals("set"));
+					MethodDefinitionType type = generator ? MethodDefinitionType.METHOD : getter ? MethodDefinitionType.GETTER : MethodDefinitionType.SETTER;
+					
+					IdentifierTree name = parseIdentifier(null, src, context);
+					
+					expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+					List<ParameterTree> params = this.parseParameters(src, context);
+					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+					
+					FunctionExpressionTree fn = this.finishFunctionBody(name.getStart(), name, params, false, generator, src, context);
+					properties.add(new MethodDefinitionTreeImpl(next.getStart(), fn.getEnd(), name, false, fn, type));
+				} else if (next.isIdentifier()) {
+					boolean constructor = next.getValue().equals("constructor");
+					IdentifierTree name = parseIdentifier(next, null, context);
+					if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
+						List<ParameterTree> params = this.parseParameters(src, context);
+						expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+						
+						FunctionExpressionTree fn = this.finishFunctionBody(name.getStart(), name, params, false, true, src, context);
+						
+						MethodDefinitionType type = constructor ? MethodDefinitionType.CONSTRUCTOR : MethodDefinitionType.METHOD;
+						properties.add(new MethodDefinitionTreeImpl(next.getStart(), fn.getEnd(), name, false, fn, type));
+					} else if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON)) != null) {
+						ExpressionTree expr = this.parseAssignment(null, src, context);
+						properties.add(new ObjectLiteralPropertyTreeImpl(name.getStart(), expr.getEnd(), name, expr));
+					} else {
+						throw new JSUnexpectedTokenException(next);
+					}
+				} else {
+					throw new JSUnexpectedTokenException(next);
+				}
+				
+				System.out.println(properties);
+				
+				if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null) {
+					next = expect(TokenKind.BRACKET, '}', src, context);
+					break;
+				}
+			}
 		}
+		expect(next, TokenKind.BRACKET, '}');
+		
 		properties.trimToSize();
 		return new ObjectLiteralTreeImpl(startToken.getStart(), next.getEnd(), properties);
 	}
