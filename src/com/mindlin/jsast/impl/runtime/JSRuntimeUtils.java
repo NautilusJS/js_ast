@@ -88,6 +88,7 @@ public class JSRuntimeUtils {
 		throw new JSTypeError("Cannot access slot " + slot + " on " + target);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void setMember(Object target, String member, Object value) {
 		if (target instanceof JSObject)
 			((JSObject) target).setMember(member, value);
@@ -96,6 +97,7 @@ public class JSRuntimeUtils {
 		throw new JSTypeError("Cannot set member " + member + " on " + target);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void setMember(Object target, Symbol member, Object value) {
 		if (target instanceof JSObject)
 			((JSObject) target).setMember(member, value);
