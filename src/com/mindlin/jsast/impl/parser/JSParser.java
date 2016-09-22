@@ -48,6 +48,7 @@ import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
+import com.mindlin.jsast.impl.tree.RegExpLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
 import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
 import com.mindlin.jsast.impl.tree.StringLiteralTreeImpl;
@@ -1765,8 +1766,9 @@ public class JSParser {
 				return new BooleanLiteralTreeImpl(literalToken);
 			case NULL_LITERAL:
 				return new NullLiteralTreeImpl(literalToken);
-			case TEMPLATE_LITERAL:
 			case REGEX_LITERAL:
+				return new RegExpLiteralTreeImpl(literalToken);
+			case TEMPLATE_LITERAL:
 				//TODO finish parsing
 				throw new UnsupportedOperationException();
 			default:
