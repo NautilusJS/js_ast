@@ -27,7 +27,14 @@
 		<testOutputDirectory>bin/test-classes</testOutputDirectory>
 		<sourceDirectory>src</sourceDirectory>
 		<testSourceDirectory>test</testSourceDirectory>
-		<resources></resources>
+		<resources>
+			<resource>
+				<directory>src</directory>
+				<includes>
+					<include>META-INF/services/java.nio.charset.spi.CharsetProvider</include>
+				</includes>
+			</resource>
+		</resources>
 		<testResources></testResources>
 		<plugins>
 			<plugin>
