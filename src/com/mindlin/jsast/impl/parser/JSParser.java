@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 
-import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.lexer.JSLexer;
@@ -42,9 +41,11 @@ import com.mindlin.jsast.impl.tree.IndexTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectLiteralPropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
@@ -91,6 +92,7 @@ import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
+import com.mindlin.jsast.tree.MethodDefinitionTree.MethodDefinitionType;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParameterTree;
@@ -1416,6 +1418,9 @@ public class JSParser {
 	}
 	
 	protected List<ParameterTree> parseParameters(JSLexer src, Context context) {
+		if (src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
+			return Collections.emptyList();
+		
 		ArrayList<ParameterTree> result = new ArrayList<>();
 		
 		do {
