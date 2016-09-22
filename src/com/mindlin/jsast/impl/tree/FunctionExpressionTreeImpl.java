@@ -7,14 +7,16 @@ import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.jsast.tree.Tree;
 
-public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree {
+public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree, StatementTree {
 	protected final StatementTree body;
 	protected final IdentifierTree name;
 	protected final List<ParameterTree> parameters;
 	protected final boolean strict;
 	protected final boolean arrow;
 	protected final boolean generator;
+	protected final boolean isStmt;
 
 	public FunctionExpressionTreeImpl(long start, long end, List<ParameterTree> parameters, IdentifierTree name, boolean arrow,
 			StatementTree body, boolean strict, boolean generator) {
@@ -25,6 +27,7 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 		this.body = body;
 		this.strict = strict;
 		this.generator = generator;
+		this.isStmt = generator || (name != null);
 	}
 
 	@Override
@@ -57,4 +60,8 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 		return generator;
 	}
 
+	@Override
+	public Tree.Kind getKind() {
+		return isStmt ? Kind.FUNCTION : Kind.FUNCTION_EXPRESSION;
+	}
 }
