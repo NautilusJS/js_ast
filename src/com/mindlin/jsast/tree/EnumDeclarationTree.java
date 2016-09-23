@@ -6,7 +6,7 @@ public interface EnumDeclarationTree extends ExpressionTree {
 
 	IdentifierTree getIdentifier();
 
-	Set<ObjectLiteralPropertyTree> getValues();
+	Set<ObjectPropertyTree> getValues();
 
 	@Override
 	default Tree.Kind getKind() {

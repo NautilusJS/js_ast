@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
+import com.mindlin.jsast.tree.ObjectPropertyTree;
 
 public class ObjectLiteralPropertyTreeImpl extends AbstractTree implements ObjectLiteralPropertyTree {
 	protected final IdentifierTree name;

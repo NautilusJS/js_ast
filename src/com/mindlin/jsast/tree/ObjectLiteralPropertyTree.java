@@ -1,8 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface ObjectLiteralPropertyTree extends Tree {
-	IdentifierTree getKey();
-	
+public interface ObjectLiteralPropertyTree extends ObjectPropertyTree {
 	ExpressionTree getValue();
 
 	@Override
