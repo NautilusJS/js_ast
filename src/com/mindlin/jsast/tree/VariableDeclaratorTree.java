@@ -18,7 +18,7 @@ public interface VariableDeclaratorTree extends Tree {
 	 */
 	TypeTree getType();
 	
-	IdentifierTree getIdentifier();
+	PatternTree getIdentifier();
 
 	@Override
 	default Tree.Kind getKind() {

@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface IdentifierTree extends ExpressionTree {
+public interface IdentifierTree extends ExpressionTree, PatternTree {
 	String getName();
 
 	@Override

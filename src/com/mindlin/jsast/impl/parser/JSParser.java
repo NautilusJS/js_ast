@@ -15,6 +15,8 @@ import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
+import com.mindlin.jsast.impl.tree.AssignmentPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTypeTree;
@@ -47,6 +49,8 @@ import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectLiteralPropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectPatternPropertyTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.RegExpLiteralTreeImpl;
@@ -95,6 +99,8 @@ import com.mindlin.jsast.tree.LoopTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree.MethodDefinitionType;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
+import com.mindlin.jsast.tree.ObjectPatternPropertyTree;
+import com.mindlin.jsast.tree.ObjectPropertyTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -1383,14 +1389,30 @@ public class JSParser {
 	}
 	
 	PatternTree reinterpretExpressionAsPattern(ExpressionTree expr) {
-		if (expr.getKind() == Kind.OBJECT_LITERAL) {
-			ObjectLiteralTree obj = (ObjectLiteralTree) expr;
-			//ArrayList<ObjectPatternPropertyTree> properties = new ArrayList<>();
-			for (ObjectLiteralPropertyTree property : obj.getProperties()) {
-				
+		switch (expr.getKind()) {
+			case OBJECT_LITERAL: {
+				ObjectLiteralTree obj = (ObjectLiteralTree) expr;
+				ArrayList<ObjectPatternPropertyTree> properties = new ArrayList<>();
+				for (ObjectLiteralPropertyTree property : obj.getProperties())
+					properties.add(new ObjectPatternPropertyTreeImpl(property.getStart(), property.getEnd(), property.getKey(), reinterpretExpressionAsPattern(property.getValue())));
+				properties.trimToSize();
+				return new ObjectPatternTreeImpl(obj.getStart(), obj.getEnd(), properties);
 			}
+			case IDENTIFIER:
+				return (IdentifierTree) expr;
+			case ARRAY_LITERAL: {
+				ArrayList<PatternTree> elements = new ArrayList<>();
+				for (ExpressionTree elem : ((ArrayLiteralTree)expr).getElements())
+					elements.add(elem == null ? null : reinterpretExpressionAsPattern(elem));
+				elements.trimToSize();
+				return new ArrayPatternTreeImpl(expr.getStart(), expr.getEnd(), elements);
+			}
+			case ASSIGNMENT:
+				return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), reinterpretExpressionAsPattern(((AssignmentTree)expr).getLeftOperand()), reinterpretExpressionAsPattern(((AssignmentTree)expr).getRightOperand()));
+			default:
+				break;
 		}
-		throw new UnsupportedOperationException();
+		throw new JSSyntaxException("Cannot reinterpret " + expr + " as a pattern.", expr.getStart());
 	}
 	
 	protected ExpressionTree parseAssignment(Token startToken, JSLexer src, Context context) {
