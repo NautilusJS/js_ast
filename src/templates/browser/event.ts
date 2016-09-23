@@ -1,5 +1,24 @@
 import "types.ts";
 
+interface EventListenerOptions {
+	capture: boolean;
+}
+
+interface AddEventListenerOptions extends EventListenerOptions {
+	passive: boolean;
+	once: boolean;
+}
+
+interface EventListener {
+	(event : Event) : boolean | void;
+}
+
+interface EventTarget {
+	addEventListener(type : string, callback? : EventListener, options? : AddEventListenerOptions) : void;
+	removeEventListener(type : string, callback? : EventListener, options? : EventListenerOptions) : void;
+	dispatchEvent(event : Event) : void;
+}
+
 interface Event {
 	type : string;
 	target? : EventTarget;
@@ -21,6 +40,19 @@ interface Event {
 	defaultPrevented : boolean;
 	composed : boolean;
 
-	boolean isTrusted : boolean;
+	isTrusted : boolean;
 	timeStamp : TimeStamp;
 }
+
+
+interface EventInit {
+	bubbles? : boolean;
+	cancelable? : boolean;
+}
+
+interface UIEventInit extends EventInit {
+	view? : Window;
+	detail? : number;
+}
+
+interface 
