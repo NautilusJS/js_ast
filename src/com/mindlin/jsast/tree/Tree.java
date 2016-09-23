@@ -184,8 +184,10 @@ public interface Tree {
 		COMMENT(CommentNode.class),
 		
 		//Destructuring patterns
-		OBJECT_PATTERN,
-		ARRAY_PATTERN,
+		OBJECT_PATTERN(ObjectPatternTree.class),
+		OBJECT_PATTERN_PROPERTY(ObjectPatternPropertyTree.class),
+		ARRAY_PATTERN(ArrayPatternTree.class),
+		ASSIGNMENT_PATTERN(AssignmentPatternTree.class),
 		;
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt, typ;
