@@ -1077,11 +1077,17 @@ public class JSParser {
 			}
 			initializer = declarations;
 		} else {
-			ExpressionTree expr = this.parseLeftSideExpression(next, src, context, true);
+			context.push();
+			context.allowIn(false);
+			ExpressionTree expr = this.parseAssignment(next, src, context);
+			context.pop();
 			
 			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
 				boolean isOf = next.getValue() == JSKeyword.OF;
-				throw new UnsupportedOperationException();
+				PatternTree left = this.reinterpretExpressionAsPattern(expr);
+				ExpressionTree right = isOf ? this.parseAssignment(null, src, context) : this.parseNextExpression(src, context);
+				this.parsePartialForEachLoopTree(forKeywordToken, isOf, null, src, context);
+				throw new UnsupportedOperationException("" + src.getPosition());
 			}
 			
 			initializer = new ExpressionStatementTreeImpl(expr);
