@@ -1086,8 +1086,7 @@ public class JSParser {
 				if (declarations.getDeclarations().get(0).getIntitializer() != null)
 					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getIntitializer().getStart());
 				
-//				return parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, null, src, context);
-				throw new UnsupportedOperationException("" + src.getPosition());
+				return parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, src, context);
 			}
 			initializer = declarations;
 		} else {
@@ -1099,8 +1098,7 @@ public class JSParser {
 			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
 				boolean isOf = next.getValue() == JSKeyword.OF;
 				PatternTree left = this.reinterpretExpressionAsPattern(expr);
-				ExpressionTree right = isOf ? this.parseAssignment(null, src, context) : this.parseNextExpression(src, context);
-				return this.parsePartialForEachLoopTree(forKeywordToken, left, isOf, right, src, context);
+				return this.parsePartialForEachLoopTree(forKeywordToken, left, isOf, src, context);
 			}
 			
 			initializer = new ExpressionStatementTreeImpl(expr);
@@ -1148,7 +1146,8 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, PatternTree pattern, boolean isForEach, ExpressionTree right, JSLexer src, Context context) {
+	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, PatternTree pattern, boolean isForEach, JSLexer src, Context context) {
+		final ExpressionTree right = isForEach ? this.parseAssignment(null, src, context) : this.parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = this.parseStatement(src, context);
 		return new ForEachLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), pattern, isForEach, right, statement);

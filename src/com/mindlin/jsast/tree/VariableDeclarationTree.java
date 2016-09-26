@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-public interface VariableDeclarationTree extends StatementTree {
+public interface VariableDeclarationTree extends StatementTree, PatternTree {
 	List<VariableDeclaratorTree> getDeclarations();
 
 	/**
