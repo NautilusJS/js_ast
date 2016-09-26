@@ -300,6 +300,8 @@ public class JSParser {
 					return this.parseBlock(token, src, context);
 				else if (token.<Character>getValue() == '[')
 					return this.parseNextExpression(token, src, context);
+				else
+					throw new JSUnexpectedTokenException(token);
 			case OPERATOR:
 				if (token.getValue() == JSOperator.LEFT_PARENTHESIS)
 					return this.parseNextExpression(token, src, context);
@@ -715,7 +717,12 @@ public class JSParser {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (!(keywordToken.getValue() == JSKeyword.RETURN || keywordToken.getValue() == JSKeyword.THROW))
 			throw new JSUnexpectedTokenException(keywordToken);
-		ExpressionTree expr = parseNextExpression(src, context);
+		ExpressionTree expr;
+		if (keywordToken.getValue() == JSKeyword.RETURN && src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+			expr = new UnaryTreeImpl.VoidTreeImpl(src.getPosition(), src.getPosition(), null);
+		else
+			expr = parseNextExpression(src, context);
+		
 		if (keywordToken.getValue() == JSKeyword.RETURN)
 			return new ReturnTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
 		else
