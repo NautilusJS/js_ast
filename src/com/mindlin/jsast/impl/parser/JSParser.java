@@ -1102,7 +1102,7 @@ public class JSParser {
 		} else {
 			context.push();
 			context.allowIn(false);
-			ExpressionTree expr = this.parseAssignment(next, src, context);
+			ExpressionTree expr = this.parseNextExpression(next, src, context);
 			context.pop();
 			
 			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
