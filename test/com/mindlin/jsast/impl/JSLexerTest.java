@@ -173,6 +173,16 @@ public class JSLexerTest {
 			assertNumberEquals(1019L, lexer.nextNumericLiteral(), null);
 		}
 		{
+			//Check decimals starting with 0
+			JSLexer lexer = new JSLexer("0.1");
+			assertNumberEquals(0.1, lexer.nextNumericLiteral(), null);
+		}
+		{
+			//Check octal upgrade with decimal
+			JSLexer lexer = new JSLexer("0101.");
+			assertNumberEquals(101, lexer.nextNumericLiteral(), null);
+		}
+		{
 			//Check all digits are supported
 			JSLexer lexer = new JSLexer("1234567890");
 			assertNumberEquals(1234567890L, lexer.nextNumericLiteral());

@@ -245,8 +245,10 @@ public class JSLexer implements Supplier<Token> {
 		while (chars.hasNext()) {
 			c = chars.next();
 			if (c == '.') {
-				if (type == NumericLiteralType.DECIMAL && !hasDecimal) {
+				if ((type == NumericLiteralType.DECIMAL || type == NumericLiteralType.OCTAL_IMPLICIT) && !hasDecimal) {
 					hasDecimal = true;
+					//Possibly upgrade from OCTAL_IMPLICIT
+					type = NumericLiteralType.DECIMAL;
 					continue;
 				}
 				throw new JSSyntaxException("Unexpected number", chars.position());
