@@ -987,8 +987,6 @@ public class JSParser {
 			expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 			IdentifierTree param = parseIdentifier(src.nextToken(), src, context);
 			
-			Token t = src.nextToken();
-			expect(t, TokenKind.OPERATOR);
 			//Optional param type
 			TypeTree type = this.parseTypeMaybe(src, context, false);
 			
