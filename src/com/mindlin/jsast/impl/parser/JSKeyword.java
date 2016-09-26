@@ -5,7 +5,6 @@ public enum JSKeyword {
 	AWAIT,
 	BREAK,
 	CASE,
-	CATCH,
 	CLASS,
 	CONST,
 	CONTINUE,

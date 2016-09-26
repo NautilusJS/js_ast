@@ -265,7 +265,6 @@ public class JSParser {
 					case THIS:
 						return parseNextExpression(token, src, context);
 					case CASE:
-					case CATCH:
 					case FINALLY:
 					case DEFAULT:
 					case ELSE:
@@ -994,7 +993,7 @@ public class JSParser {
 		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
 		
 		Token next;
-		while ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.CATCH)) != null) {
+		while ((next = src.nextTokenIf(TokenKind.IDENTIFIER, "catch")) != null) {
 			expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 			IdentifierTree param = parseIdentifier(src.nextToken(), src, context);
 			
@@ -1452,6 +1451,7 @@ public class JSParser {
 		
 		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
 			return expr;
+		
 		if (!context.isAssignmentTarget())
 			throw new JSSyntaxException("Not assignment target", src.getPosition());
 		
@@ -1973,7 +1973,7 @@ public class JSParser {
 				switch (operatorToken.<JSKeyword>getValue()) {
 					case VOID:
 						if (src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON) != null)
-							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
+							return new UnaryTreeImpl.VoidTreeImpl(operatorToken.getStart(), src.getPosition(), null);
 						kind = Tree.Kind.VOID;
 						break;
 					case TYPEOF:
