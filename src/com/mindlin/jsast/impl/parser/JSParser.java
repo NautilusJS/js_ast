@@ -462,6 +462,8 @@ public class JSParser {
 					return Tree.Kind.YIELD_GENERATOR;
 				case IN:
 					return Tree.Kind.IN;
+				case INSTANCEOF:
+					return Tree.Kind.INSTANCEOF;
 				default:
 					break;
 			}
