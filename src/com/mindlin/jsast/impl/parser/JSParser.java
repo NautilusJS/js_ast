@@ -1124,7 +1124,8 @@ public class JSParser {
 	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src, Context context) {
 		ExpressionTree condition = parseNextExpression(src, context);
 		expectSemicolon(src, context);
-		ExpressionTree update = parseNextExpression(src, context);
+		//TODO check if commas in update work
+		ExpressionTree update = src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS) ? null : parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = parseStatement(src, context);
 		return new ForLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), initializer, condition, update,
