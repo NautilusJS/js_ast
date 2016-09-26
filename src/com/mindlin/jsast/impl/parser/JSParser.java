@@ -228,7 +228,6 @@ public class JSParser {
 						return this.parseDoWhileLoop(token, src, context);
 					case AWAIT:
 					case ENUM:
-					case TYPE:
 						throw new UnsupportedOperationException();
 					case EXPORT:
 						return this.parseExportStatement(token, src, context);
@@ -276,6 +275,12 @@ public class JSParser {
 						throw new JSSyntaxException("Unexpected keyword " + token.getValue(), token.getStart());
 				}
 			case IDENTIFIER: {
+				switch (token.<String>getValue()) {
+					case "type":
+						throw new UnsupportedOperationException();
+					default:
+						break;
+				}
 				Token lookahead = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
 				if (lookahead != null)
 					return this.parseLabeledStatement(this.parseIdentifier(token, src, context), lookahead, src, context);
