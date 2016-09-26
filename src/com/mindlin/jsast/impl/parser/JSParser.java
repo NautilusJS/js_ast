@@ -568,10 +568,10 @@ public class JSParser {
 	
 	protected List<ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
 		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
-		 List<ExpressionTree> result = new ArrayList<>();
 		 t = src.nextToken();
 		 if (t.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
-			 return result;
+			 return Collections.emptyList();
+		 List<ExpressionTree> result = new ArrayList<>();
 		 while (true) {
 			 ExpressionTree expr;
 			 if (t.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
