@@ -459,6 +459,8 @@ public class JSParser {
 					return Tree.Kind.YIELD;
 				case YIELD_GENERATOR:
 					return Tree.Kind.YIELD_GENERATOR;
+				case IN:
+					return Tree.Kind.IN;
 				default:
 					break;
 			}
@@ -1214,7 +1216,7 @@ public class JSParser {
 		return new BinaryTreeImpl(expr.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
 	}
 	
-	int binaryPrecedence(Token t) {
+	int binaryPrecedence(Token t, Context context) {
 		if (t.isOperator())
 			switch (t.<JSOperator>getValue()) {
 				case COMMA:
@@ -1282,6 +1284,8 @@ public class JSParser {
 				case YIELD_GENERATOR:
 					return 2;
 				case IN:
+					if (!context.allowIn())
+						return -1;
 				case INSTANCEOF:
 					return 11;
 				default:
@@ -1299,7 +1303,7 @@ public class JSParser {
 		context.pop();
 		
 		Token token = src.peek();
-		int precedence = binaryPrecedence(token);
+		int precedence = binaryPrecedence(token, context);
 		if (precedence < 0)
 			return expr;
 		
@@ -1315,7 +1319,7 @@ public class JSParser {
 		operators.add(token);
 		stack.add(parseExponentiation(src.nextToken(), src, context));
 		
-		while ((precedence = binaryPrecedence(src.peek())) >= 0) {
+		while ((precedence = binaryPrecedence(src.peek(), context)) >= 0) {
 			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
 				final ExpressionTree right = stack.pop();
 				final Token operator = operators.pop();
@@ -1329,12 +1333,12 @@ public class JSParser {
 					binary = new BinaryTreeImpl(kind, left, right);
 				stack.add(binary);
 				
-				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek());
+				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek(), context);
 			}
 			//Shift top onto stack
 			token = src.nextToken();
 			operators.add(token);
-			lastPrecedence = binaryPrecedence(token);
+			lastPrecedence = binaryPrecedence(token, context);
 			stack.add(parseExponentiation(src.nextToken(), src, context));
 		}
 		
@@ -1881,8 +1885,6 @@ public class JSParser {
 				} else {
 					throw new JSUnexpectedTokenException(next);
 				}
-				
-				System.out.println(properties);
 				
 				if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null) {
 					next = expect(TokenKind.BRACKET, '}', src, context);
