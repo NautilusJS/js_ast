@@ -25,7 +25,7 @@ public interface JSDialect {
 			@Override
 			public boolean supports(String feature) {
 				switch (feature) {
-					case "js.accessors":
+					case "js.accessor":
 					case "js.strict":
 					case "js.json":
 						return true;
@@ -46,7 +46,7 @@ public interface JSDialect {
 					case "js.desctructuring":
 					case "js.forOf":
 					case "js.function.lambda":
-					case "js.generator":
+					case "js.function.generator":
 					case "js.iterator":
 					case "js.literal.binary":
 					case "js.literal.object.methodProperties":
@@ -60,6 +60,8 @@ public interface JSDialect {
 					case "js.operator.spread":
 					case "js.parameter.default":
 					case "js.parameter.rest":
+					case "js.property.shorthand":
+					case "js.method.shorthand":
 					case "js.symbol":
 					case "js.variable.const":
 					case "js.variable.scoped":
