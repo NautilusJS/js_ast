@@ -1084,7 +1084,8 @@ public class JSParser {
 				if (declarations.getDeclarations().get(0).getIntitializer() != null)
 					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getIntitializer().getStart());
 				
-				return parsePartialForEachLoopTree(forKeywordToken, isOf, declarations, src, context);
+//				return parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, null, src, context);
+				throw new UnsupportedOperationException("" + src.getPosition());
 			}
 			initializer = declarations;
 		} else {
@@ -1097,8 +1098,7 @@ public class JSParser {
 				boolean isOf = next.getValue() == JSKeyword.OF;
 				PatternTree left = this.reinterpretExpressionAsPattern(expr);
 				ExpressionTree right = isOf ? this.parseAssignment(null, src, context) : this.parseNextExpression(src, context);
-				this.parsePartialForEachLoopTree(forKeywordToken, isOf, null, src, context);
-				throw new UnsupportedOperationException("" + src.getPosition());
+				return this.parsePartialForEachLoopTree(forKeywordToken, left, isOf, right, src, context);
 			}
 			
 			initializer = new ExpressionStatementTreeImpl(expr);
@@ -1146,13 +1146,10 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, boolean isForEach,
-			VariableDeclarationTree variable, JSLexer src, Context context) {
-		ExpressionTree expression = this.parseNextExpression(src, context);
+	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, PatternTree pattern, boolean isForEach, ExpressionTree right, JSLexer src, Context context) {
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = this.parseStatement(src, context);
-		return new ForEachLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), isForEach, variable, expression,
-				statement);
+		return new ForEachLoopTreeImpl(forKeywordToken.getStart(), src.getPosition(), pattern, isForEach, right, statement);
 	}
 	
 	
