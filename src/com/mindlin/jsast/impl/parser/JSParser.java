@@ -278,7 +278,9 @@ public class JSParser {
 			case IDENTIFIER: {
 				switch (token.<String>getValue()) {
 					case "type":
-						throw new UnsupportedOperationException();
+						if (src.peek().getKind() != TokenKind.IDENTIFIER)
+							break;
+						throw new UnsupportedOperationException(""+token.getStart());
 					default:
 						break;
 				}
