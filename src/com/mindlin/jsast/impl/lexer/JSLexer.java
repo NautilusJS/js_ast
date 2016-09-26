@@ -369,6 +369,8 @@ public class JSLexer implements Supplier<Token> {
 				return JSOperator.MULTIPLICATION;
 			case '/':
 				return JSOperator.DIVISION;
+			case '%':
+				return JSOperator.REMAINDER;
 			case '<':
 				if (d == '<') {
 					if (e == '=')
