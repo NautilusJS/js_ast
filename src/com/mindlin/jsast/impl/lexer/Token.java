@@ -79,7 +79,11 @@ public class Token {
 	}
 
 	public boolean matches(TokenKind kind, Object value) {
-		return getKind() == kind && getValue() == value;
+		if (getKind() != kind)
+			return false;
+		if (getValue() == value)
+			return true;
+		return getValue() != null && getValue().equals(value);
 	}
 
 	public Token reinterpretAsIdentifier() {
