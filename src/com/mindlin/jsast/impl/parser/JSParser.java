@@ -25,6 +25,7 @@ import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
+import com.mindlin.jsast.impl.tree.ComputedPropertyKeyTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
@@ -100,7 +101,7 @@ import com.mindlin.jsast.tree.MethodDefinitionTree.MethodDefinitionType;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternPropertyTree;
-import com.mindlin.jsast.tree.ObjectPropertyTree;
+import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -1398,8 +1399,14 @@ public class JSParser {
 			case OBJECT_LITERAL: {
 				ObjectLiteralTree obj = (ObjectLiteralTree) expr;
 				ArrayList<ObjectPatternPropertyTree> properties = new ArrayList<>();
-				for (ObjectLiteralPropertyTree property : obj.getProperties())
-					properties.add(new ObjectPatternPropertyTreeImpl(property.getStart(), property.getEnd(), property.getKey(), reinterpretExpressionAsPattern(property.getValue())));
+				for (ObjectLiteralPropertyTree property : obj.getProperties()) {
+					ObjectPropertyKeyTree key = property.getKey();
+					if (key.isComputed())
+						throw new JSSyntaxException("Cannot reinterpret computed property named " + key + " as a pattern.", property.getStart(), property.getEnd());
+					if (property.getKind() == Kind.METHOD_DEFINITION)
+						throw new JSSyntaxException("Cannot reinterpret method definition " + key + " as a pattern.", property.getStart(), property.getEnd());
+					properties.add(new ObjectPatternPropertyTreeImpl(property.getStart(), property.getEnd(), key, reinterpretExpressionAsPattern(property.getValue())));
+				}
 				properties.trimToSize();
 				return new ObjectPatternTreeImpl(obj.getStart(), obj.getEnd(), properties);
 			}
