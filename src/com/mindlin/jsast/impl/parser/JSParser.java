@@ -1198,7 +1198,7 @@ public class JSParser {
 		expressions.add(result);
 		
 		do {
-			expressions.add(parseAssignment(t, src, context));
+			expressions.add(parseAssignment(null, src, context));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 			
 		expressions.trimToSize();
