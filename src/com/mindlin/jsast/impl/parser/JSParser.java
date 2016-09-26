@@ -1874,12 +1874,15 @@ public class JSParser {
 				MethodDefinitionType methodType = null;
 				boolean generator = false;
 				Token modifierToken = null;
-				if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION) || next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) {
-					if (generator = next.getValue() == JSOperator.MULTIPLICATION)
-						dialect.require("js.method.generator", next.getStart());
-					else
-						dialect.require("js.accessor", next.getStart());
-					methodType = generator ? MethodDefinitionType.METHOD : next.getValue().equals("set") ? MethodDefinitionType.GETTER : MethodDefinitionType.SETTER;
+				if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+					generator = true;
+					dialect.require("js.method.generator", next.getStart());
+					methodType = MethodDefinitionType.METHOD;
+					modifierToken = next;
+					next = src.nextToken();
+				} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && (src.peek().getKind() == TokenKind.IDENTIFIER || src.peek().matches(TokenKind.BRACKET, '['))) {
+					dialect.require("js.accessor", next.getStart());
+					methodType = next.getValue().equals("set") ? MethodDefinitionType.SETTER : MethodDefinitionType.GETTER;
 					modifierToken = next;
 					next = src.nextToken();
 				}
