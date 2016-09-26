@@ -6,8 +6,6 @@ public interface MethodDefinitionTree extends ObjectLiteralPropertyTree {
 
 	MethodDefinitionType getPropertyType();
 
-	boolean isStatic();
-	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.METHOD_DEFINITION;

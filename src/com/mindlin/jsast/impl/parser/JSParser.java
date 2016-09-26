@@ -1851,39 +1851,82 @@ public class JSParser {
 		if ((next = src.nextTokenIf(TokenKind.BRACKET, '}')) == null) {
 			while (!src.isEOF()) {
 				next = src.nextToken();
+				final long startPos = next.getStart();
+				
+				MethodDefinitionType methodType = null;
+				boolean generator = false;
+				Token modifierToken = null;
 				if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION) || next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) {
-					boolean generator = next.getValue() == JSOperator.MULTIPLICATION;
-					boolean getter = !(generator || next.getValue().equals("set"));
-					MethodDefinitionType type = generator ? MethodDefinitionType.METHOD : getter ? MethodDefinitionType.GETTER : MethodDefinitionType.SETTER;
-					
-					IdentifierTree name = parseIdentifier(null, src, context);
-					
-					expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-					List<ParameterTree> params = this.parseParameters(src, context);
-					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-					
-					FunctionExpressionTree fn = this.finishFunctionBody(name.getStart(), name, params, false, generator, src, context);
-					properties.add(new MethodDefinitionTreeImpl(next.getStart(), fn.getEnd(), name, false, fn, type));
-				} else if (next.isIdentifier()) {
-					boolean constructor = next.getValue().equals("constructor");
-					IdentifierTree name = parseIdentifier(next, null, context);
-					if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
-						List<ParameterTree> params = this.parseParameters(src, context);
-						expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-						
-						FunctionExpressionTree fn = this.finishFunctionBody(name.getStart(), name, params, false, true, src, context);
-						
-						MethodDefinitionType type = constructor ? MethodDefinitionType.CONSTRUCTOR : MethodDefinitionType.METHOD;
-						properties.add(new MethodDefinitionTreeImpl(next.getStart(), fn.getEnd(), name, false, fn, type));
-					} else if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON)) != null) {
-						ExpressionTree expr = this.parseAssignment(null, src, context);
-						properties.add(new ObjectLiteralPropertyTreeImpl(name.getStart(), expr.getEnd(), name, expr));
-					} else {
-						throw new JSUnexpectedTokenException(next);
-					}
+					if (generator = next.getValue() == JSOperator.MULTIPLICATION)
+						dialect.require("js.method.generator", next.getStart());
+					else
+						dialect.require("js.accessor", next.getStart());
+					methodType = generator ? MethodDefinitionType.METHOD : next.getValue().equals("set") ? MethodDefinitionType.GETTER : MethodDefinitionType.SETTER;
+					modifierToken = next;
+					next = src.nextToken();
+				}
+
+				ObjectPropertyKeyTree key;
+				boolean computed = false;
+				if (next.isIdentifier()) {
+					key = parseIdentifier(next, null, context);
+				} else if (next.getKind() == TokenKind.STRING_LITERAL) {
+					key = (StringLiteralTree) parseLiteral(next, null, context);
+				} else if (next.matches(TokenKind.BRACKET, '[')) {
+					//Computed ID
+					computed = true;
+					ExpressionTree expr = parseNextExpression(src, context);
+					Token closeBracket = expect(TokenKind.BRACKET, ']', src, context);
+					key = new ComputedPropertyKeyTreeImpl(next.getStart(), closeBracket.getEnd(), expr);
 				} else {
 					throw new JSUnexpectedTokenException(next);
 				}
+				
+				ObjectLiteralPropertyTree prop;
+				if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) != null) {
+					if (!computed && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("contructor")) {
+						if (methodType != null || generator) {
+							String modifierName;
+							if (generator)
+								modifierName = "generator";
+							else if (methodType == MethodDefinitionType.GETTER)
+								modifierName = "getter";
+							else if (methodType == MethodDefinitionType.SETTER)
+								modifierName = "setter";
+							else
+								modifierName = "unknown";
+							
+							throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
+						}
+						methodType = MethodDefinitionType.CONSTRUCTOR;
+					} else if (methodType == null) {
+						methodType = MethodDefinitionType.METHOD;
+					}
+					
+					List<ParameterTree> params = this.parseParameters(src, context);
+					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+					
+					FunctionExpressionTree fn = this.finishFunctionBody(startPos, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, false, generator, src, context);
+					
+					prop = new MethodDefinitionTreeImpl(startPos, src.getPosition(), key, fn, methodType);
+				} else if (methodType != null || generator) {
+					throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
+				} else if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null) {
+					ExpressionTree value = this.parseAssignment(null, src, context);
+					prop = new ObjectLiteralPropertyTreeImpl(startPos, value.getEnd(), key, value);
+				} else if ((next = src.nextTokenIf(t->t.matches(TokenKind.OPERATOR, JSOperator.COMMA)||t.matches(TokenKind.BRACKET, '}'))) != null){
+					//ES6 shorthand 
+					dialect.require("js.property.shorthand", key.getStart());
+					properties.add(new ObjectLiteralPropertyTreeImpl(startPos, key.getEnd(), key, key));
+					
+					if (next.getValue() != TokenKind.OPERATOR)
+						break;
+					continue;
+				} else {
+					throw new JSUnexpectedTokenException(src.peek());
+				}
+				
+				properties.add(prop);
 				
 				if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null) {
 					next = expect(TokenKind.BRACKET, '}', src, context);
