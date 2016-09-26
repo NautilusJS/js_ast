@@ -1891,8 +1891,8 @@ public class JSParser {
 				boolean computed = false;
 				if (next.isIdentifier()) {
 					key = parseIdentifier(next, null, context);
-				} else if (next.getKind() == TokenKind.STRING_LITERAL) {
-					key = (StringLiteralTree) parseLiteral(next, null, context);
+				} else if (next.getKind() == TokenKind.STRING_LITERAL || next.getKind() == TokenKind.NUMERIC_LITERAL) {
+					key = (ObjectPropertyKeyTree) parseLiteral(next, null, context);
 				} else if (next.matches(TokenKind.BRACKET, '[')) {
 					//Computed ID
 					computed = true;
