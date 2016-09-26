@@ -7,7 +7,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.mindlin.jsast.impl.parser.JSParserTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({ CharacterStreamTest.class, JSKeywordTest.class, JSLexerTest.class, ToStringTest.class, JSParserTest.class })
+@SuiteClasses({ CharacterStreamTest.class, JSKeywordTest.class, JSLexerTest.class, JSParserTest.class })
 public class AllTests {
 
 }
