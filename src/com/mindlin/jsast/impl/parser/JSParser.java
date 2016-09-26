@@ -1045,6 +1045,7 @@ public class JSParser {
 		StatementTree statement = parseStatement(src, context);
 		context.pop();
 		
+		expect(TokenKind.KEYWORD, JSKeyword.WHILE, src, context);
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 		ExpressionTree condition = parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
