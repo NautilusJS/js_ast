@@ -263,7 +263,7 @@ public class JSParser {
 					case YIELD_GENERATOR:
 					case SUPER:
 					case THIS:
-						return parseUnaryExpression(token, src, context);
+						return parseNextExpression(token, src, context);
 					case CASE:
 					case CATCH:
 					case FINALLY:
