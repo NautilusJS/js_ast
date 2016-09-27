@@ -58,14 +58,7 @@ public class CharacterStreamTest {
 	public void testWhitespace() {
 		assertTrue(Characters.isJsWhitespace(' '));
 	}
-	@Test
-	public void testSkipComments() {
-		CharacterArrayStream chars = new CharacterArrayStream("0//slc\n1");
-		assertEquals('0', chars.skipComments().next());
-		assertEquals('1', chars.skipComments().next());
-		//assertEquals('2', chars.skipComments().next());
-		//assertEquals('3', chars.skipComments().next());
-	}
+	
 	@Test
 	public void testSkipWhitespace() {
 		CharacterArrayStream chars = new CharacterArrayStream("1  23  4\r5");

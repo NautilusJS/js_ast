@@ -76,23 +76,14 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	public char peek(long offset) {
 		return data[(int) (position + offset)];
 	}
-	
+
 	@Override
-	public CharacterStream skipComments() {
-		while (true) {
-			skipWhitespace();
-			if (peek() != '/')
-				break;
-			if (peek(2) == '/') {
-				skip(2);
-				while (hasNext() && current() != '\r' && current() != '\n')
-					next();
-				if (hasNext()
-						&& ((current() == '\r' && peek() == '\n') || (current() == '\n' && peek() == '\r')))
-					next();
-			} else
-				break;
-		}
-		return this;
+	public String copyFromMark() {
+		final long mark = this.marks.pop();
+		final int len = (int) (position() - mark);
+		char[] buf = new char[len];
+		System.arraycopy(this.data, (int)mark + 1, buf, 0, len);
+		return new String(buf, 0, len);
 	}
+	
 }

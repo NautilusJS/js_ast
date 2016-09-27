@@ -46,8 +46,6 @@ public interface CharacterStream {
 
 	CharacterStream skipWhitespace();
 
-	CharacterStream skipComments();
-
 	CharacterStream mark();
 
 	CharacterStream resetToMark();
@@ -63,4 +61,6 @@ public interface CharacterStream {
 	String copyNext(long len);
 
 	String copy(long start, long len);
+	
+	String copyFromMark();
 }
