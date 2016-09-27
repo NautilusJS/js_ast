@@ -564,6 +564,8 @@ public class JSParser {
 						return parseThis(t, src, context);
 					case CLASS:
 						return this.parseClass(t, src, context);
+					case INTERFACE:
+						return this.parseInterface(t, src, context);
 					default:
 						throw new JSUnexpectedTokenException(t);
 				}
@@ -642,6 +644,13 @@ public class JSParser {
 	
 	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {
 		exportKeywordToken = expect(exportKeywordToken, TokenKind.KEYWORD, JSKeyword.EXPORT, src, context);
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+			expect(TokenKind.KEYWORD, JSKeyword.FROM, src, context);
+		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.DEFAULT)) {
+			
+		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS)) {
+			
+		}
 		ExpressionTree expr = parseNextExpression(src, context);
 		// TODO finish
 		throw new UnsupportedOperationException();
@@ -789,6 +798,12 @@ public class JSParser {
 				expectOperator(JSOperator.COLON, src, context);
 				TypeTree returnType = this.parseType(src, context);
 				type = new IndexTypeTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
+			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
+				List<ParameterTree> params = this.parseParameters(src, context);
+				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+				TypeTree returnType = this.parseTypeMaybe(src, context, false);
+				//TODO finish
+				throw new UnsupportedOperationException();
 			} else {
 				throw new JSUnexpectedTokenException(next);
 			}
