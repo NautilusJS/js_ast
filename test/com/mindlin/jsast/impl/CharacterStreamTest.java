@@ -54,6 +54,7 @@ public class CharacterStreamTest {
 		assertEquals("123ABC", chars.copy(0, 6));
 		assertFalse(chars.hasNext());
 	}
+	
 	@Test
 	public void testWhitespace() {
 		assertTrue(Characters.isJsWhitespace(' '));

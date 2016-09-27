@@ -7,7 +7,7 @@ import com.mindlin.jsast.impl.tree.LineMap;
 public interface CompilationUnitTree extends Tree {
 	LineMap getLineMap();
 
-	List<? extends Tree> getSourceElements();
+	List<StatementTree> getSourceElements();
 
 	String getSourceName();
 

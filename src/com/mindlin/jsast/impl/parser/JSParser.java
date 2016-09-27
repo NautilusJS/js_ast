@@ -197,8 +197,8 @@ public class JSParser {
 	}
 	
 	public CompilationUnitTree apply(String unitName, JSLexer src) {
-		List<Tree> elements = new ArrayList<>();
-		Tree value;
+		List<StatementTree> elements = new ArrayList<>();
+		StatementTree value;
 		Context context = new Context();
 		context.setScriptName(unitName);
 		while ((value = parseStatement(src, context)) != null)
