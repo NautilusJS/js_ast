@@ -24,4 +24,9 @@ public interface VariableDeclaratorTree extends Tree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.VARIABLE_DECLARATOR;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		throw new UnsupportedOperationException();
+	}
 }

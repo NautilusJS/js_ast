@@ -1,6 +1,12 @@
 package com.mindlin.jsast.tree;
 
 public interface UnaryTree extends ExpressiveExpressionTree {
+	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitUnary(this, data);
+	}
+	
 	/**
 	 * VOID is treated as both an expression and a statement, which allows us to
 	 * convert expressions to statements (via <code>void([expression])</code>).
@@ -11,6 +17,11 @@ public interface UnaryTree extends ExpressiveExpressionTree {
 		@Override
 		default Tree.Kind getKind() {
 			return Tree.Kind.VOID;
+		}
+		
+		@Override
+		default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+			return visitor.visitVoid(this, data);
 		}
 	}
 }

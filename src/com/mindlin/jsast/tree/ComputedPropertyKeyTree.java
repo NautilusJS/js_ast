@@ -11,4 +11,9 @@ public interface ComputedPropertyKeyTree extends ExpressiveExpressionTree, Objec
 	default Kind getKind() {
 		return Kind.OBJECT_LITERAL_PROPERTY;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitComputedPropertyKey(this, data);
+	}
 }

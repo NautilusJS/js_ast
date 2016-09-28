@@ -11,4 +11,9 @@ public interface CatchTree extends Tree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.CATCH;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitCatch(this, data);
+	}
 }

@@ -6,4 +6,9 @@ public interface SuperExpressionTree extends ExpressionTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.SUPER_EXPRESSION;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitSuper(this, data);
+	}
 }

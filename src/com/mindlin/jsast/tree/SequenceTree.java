@@ -9,4 +9,9 @@ public interface SequenceTree extends ExpressionTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.SEQUENCE;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitSequence(this, data);
+	}
 }

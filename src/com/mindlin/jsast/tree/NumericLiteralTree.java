@@ -11,4 +11,9 @@ public interface NumericLiteralTree extends LiteralTree<Number>, ObjectPropertyK
 	default Tree.Kind getKind() {
 		return Tree.Kind.NUMERIC_LITERAL;
 	}
+	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitNumericLiteral(this, data);
+	}
 }

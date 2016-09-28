@@ -6,4 +6,9 @@ public interface RegExpLiteralTree extends LiteralTree<String[]> {
 	default Kind getKind() {
 		return Kind.REGEXP_LITERAL;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitRegExpLiteral(this, data);
+	}
 }

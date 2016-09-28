@@ -13,4 +13,9 @@ public interface InterfaceDeclarationTree extends ExpressionTree, StatementTree 
 	default Tree.Kind getKind() {
 		return Tree.Kind.INTERFACE_DECLARATION;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitInterfaceDeclaration(this, data);
+	}
 }

@@ -5,4 +5,9 @@ public interface NullLiteralTree extends LiteralTree<Void> {
 	default Tree.Kind getKind() {
 		return Tree.Kind.NULL_LITERAL;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitNull(this, data);
+	}
 }

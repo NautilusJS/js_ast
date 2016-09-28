@@ -11,4 +11,9 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	List<TypeTree> getImplementing();
 
 	List<ClassPropertyTree> getProperties();
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitClassDeclaration(this, data);
+	}
 }

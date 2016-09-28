@@ -23,4 +23,9 @@ public interface VariableDeclarationTree extends StatementTree, PatternTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.VARIABLE_DECLARATION;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitVariableDeclaration(this, data);
+	}
 }

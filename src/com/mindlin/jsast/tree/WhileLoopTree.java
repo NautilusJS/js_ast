@@ -5,4 +5,9 @@ public interface WhileLoopTree extends ConditionalLoopTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.WHILE_LOOP;
 	}
+	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitWhileLoop(this, data);
+	}
 }

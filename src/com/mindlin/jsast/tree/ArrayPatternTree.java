@@ -9,4 +9,9 @@ public interface ArrayPatternTree extends PatternTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.ARRAY_PATTERN;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitArrayPattern(this, data);
+	}
 }

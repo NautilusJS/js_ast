@@ -11,4 +11,9 @@ public interface ImportTree extends StatementTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.IMPORT;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitImport(this, data);
+	}
 }

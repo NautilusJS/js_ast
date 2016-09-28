@@ -12,4 +12,9 @@ public interface InterfacePropertyTree extends Tree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.INTERFACE_PROPERTY;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -11,6 +11,11 @@ public interface MethodDefinitionTree extends ObjectLiteralPropertyTree {
 		return Tree.Kind.METHOD_DEFINITION;
 	}
 
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitMethodDefinition(this, data);
+	}
+
 	public static enum MethodDefinitionType {
 		GETTER,
 		SETTER,

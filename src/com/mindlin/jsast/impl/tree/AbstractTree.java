@@ -8,7 +8,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TreeVisitor;
 
 public abstract class AbstractTree implements Tree {
 	public static String writeJSON(Object value) {
@@ -49,12 +48,6 @@ public abstract class AbstractTree implements Tree {
 	@Override
 	public long getEnd() {
 		return this.end;
-	}
-
-	@Override
-	public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

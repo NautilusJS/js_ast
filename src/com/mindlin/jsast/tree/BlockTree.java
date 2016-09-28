@@ -11,4 +11,9 @@ public interface BlockTree extends StatementTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.BLOCK;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitBlock(this, data);
+	}
 }

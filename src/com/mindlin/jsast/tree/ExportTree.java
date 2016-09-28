@@ -5,4 +5,9 @@ public interface ExportTree extends ExpressiveStatementTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.EXPORT;
 	}
+	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitExport(this, data);
+	}
 }

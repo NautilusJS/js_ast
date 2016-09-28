@@ -9,4 +9,9 @@ public interface AssignmentTree extends BinaryTree, StatementTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.ASSIGNMENT;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitAssignment(this, data);
+	}
 }

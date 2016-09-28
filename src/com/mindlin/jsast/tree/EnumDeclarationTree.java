@@ -12,4 +12,9 @@ public interface EnumDeclarationTree extends ExpressionTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.ENUM_DECLARATION;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitEnumDeclaration(this, data);
+	}
 }

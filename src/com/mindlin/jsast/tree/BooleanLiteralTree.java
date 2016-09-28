@@ -5,4 +5,9 @@ public interface BooleanLiteralTree extends LiteralTree<Boolean> {
 	default Tree.Kind getKind() {
 		return Tree.Kind.BOOLEAN_LITERAL;
 	}
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitBooleanLiteral(this, data);
+	}
 }
