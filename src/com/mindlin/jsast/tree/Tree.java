@@ -105,8 +105,8 @@ public interface Tree {
 		INSTANCEOF(BinaryTree.class),
 
 		// Member access
-		ARRAY_ACCESS(ArrayAccessTree.class),
-		MEMBER_SELECT(MemberSelectTree.class),
+		ARRAY_ACCESS(BinaryTree.class),
+		MEMBER_SELECT(BinaryTree.class),
 
 		// Control structures
 		BLOCK(BlockTree.class),
