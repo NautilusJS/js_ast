@@ -49,11 +49,13 @@ import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.ReturnTree;
 import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
 import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
+import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeTree;
@@ -124,7 +126,8 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 		@Override
 		public Writer append(char c) {
 			try {
-				return parent.append(c);
+				parent.append(c);
+				return this;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -132,15 +135,17 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 		@Override
 		public Writer append(CharSequence csq, int start, int end) {
 			try {
-				return parent.append(csq, start, end);
+				parent.append(csq, start, end);
+				return this;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
 		@Override
-		public Writer append(CharSequence csq) {
+		public WriterHelper append(CharSequence csq) {
 			try {
-				return parent.append(csq);
+				parent.append(csq);
+				return this;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -161,6 +166,7 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 			parent.write(str, off, len);
 		}
 		@Override
+		@Deprecated
 		public void write(String str) {
 			try {
 				parent.write(str);
@@ -210,8 +216,73 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 	@Override
 	public Void visitBinary(BinaryTree node, WriterHelper d) {
 		node.getLeftOperand().accept(this, d);
+		String operator;
 		switch (node.getKind()) {
-			
+			case ADDITION:
+				d.append('+');
+				break;
+			case SUBTRACTION:
+				d.append('-');
+			case MULTIPLICATION:
+				d.append('*');
+				break;
+			case DIVISION:
+				d.append('/');
+				break;
+			case REMAINDER:
+				d.append('%');
+				break;
+			case EXPONENTIATION:
+				d.append("**");
+				break;
+			case LEFT_SHIFT:
+				d.append("<<");
+				break;
+			case RIGHT_SHIFT:
+				d.append(">>");
+				break;
+			case UNSIGNED_RIGHT_SHIFT:
+				d.append(">>>");
+				break;
+			case BITWISE_AND:
+				d.append('&');
+				break;
+			case BITWISE_OR:
+				d.append('|');
+				break;
+			case BITWISE_XOR:
+				d.append('^');
+				break;
+			case EQUAL:
+				d.append("==");
+				break;
+			case NOT_EQUAL:
+				d.append("!=");
+				break;
+			case STRICT_EQUAL:
+				d.append("===");
+				break;
+			case STRICT_NOT_EQUAL:
+				d.append("!==");
+				break;
+			case GREATER_THAN:
+				d.append('>');
+				break;
+			case LESS_THAN:
+				d.append('<');
+				break;
+			case GREATER_THAN_EQUAL:
+				d.append(">=");
+				break;
+			case LESS_THAN_EQUAL:
+				d.append("<=");
+				break;
+			case LOGICAL_AND:
+				d.append("&&");
+				break;
+			case LOGICAL_OR:
+				d.append("||");
+				break;
 		}
 		node.getRightOperand().accept(this, d);
 		return null;
@@ -219,19 +290,24 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitBlock(BlockTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append('{');
+		for (StatementTree statement : node.getStatements())
+			statement.accept(this, d);
+		d.append('}');
 		return null;
 	}
 
 	@Override
 	public Void visitBooleanLiteral(BooleanLiteralTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append(node.getValue().toString());
 		return null;
 	}
 
 	@Override
 	public Void visitBreak(BreakTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		if (node.getLabel() == null) {
+			d.append("break;");
+		}
 		return null;
 	}
 
@@ -261,7 +337,8 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitCompilationUnit(CompilationUnitTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		for (StatementTree statement : node.getSourceElements())
+			statement.accept(this, d);
 		return null;
 	}
 
@@ -273,25 +350,33 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitConditionalExpression(ConditionalExpressionTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		node.getCondition().accept(this, d);
+		d.append('?');
+		node.getTrueExpression().accept(this, d);
+		d.append(':');
+		node.getFalseExpression().accept(this, d);
 		return null;
 	}
 
 	@Override
 	public Void visitContinue(ContinueTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		if (node.getLabel() == null) {
+			d.append("continue;");
+			return null;
+		}
+		d.append("continue ").append(node.getLabel()).append(';');
 		return null;
 	}
 
 	@Override
 	public Void visitDebugger(DebuggerTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("debugger;");
 		return null;
 	}
 
 	@Override
 	public Void visitDoWhileLoop(DoWhileLoopTree node, WriterHelper d) {
-		d.write("do{");
+		d.append("do{");
 		node.getStatement().accept(this, d);
 		d.append("}while(");
 		node.getCondition().accept(this, d);
@@ -301,7 +386,6 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitEmptyStatement(EmptyStatementTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -319,19 +403,37 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitExpressionStatement(ExpressionStatementTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		node.getExpression().accept(this, d);
+		d.append(';');
 		return null;
 	}
 
 	@Override
 	public Void visitForEachLoop(ForEachLoopTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("for(");
+		node.getVariable().accept(this, d);
+		if (node.getKind() == Tree.Kind.FOR_IN_LOOP) {
+			d.append(" in ");
+		} else if (node.getKind() == Tree.Kind.FOR_OF_LOOP) {
+			d.append(" of ");
+		} else {
+			throw new IllegalArgumentException("Can only process for/in and for/of loops");
+		}
+		node.getExpression().accept(this, d);
+		d.append(')');
+		node.getStatement().accept(this, d);
 		return null;
 	}
 
 	@Override
 	public Void visitForLoop(ForLoopTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("for(");
+		node.getInitializer().accept(this, d);
+		node.getCondition().accept(this, d);
+		d.append(';');
+		node.getUpdate().accept(this, d);
+		d.append(')');
+		node.getStatement().accept(this, d);
 		return null;
 	}
 
@@ -470,7 +572,7 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitLabeledStatement(LabeledStatementTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		node.getName().accept(this, d);
 		return null;
 	}
 
@@ -494,19 +596,31 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitNew(NewTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("new ");
+		node.getCallee().accept(this, d);
+		d.append('(');
+		boolean isFirst = true;
+		for (ExpressionTree expr : node.getArguments()) {
+			if (!isFirst)
+				d.append(',');
+			isFirst = false;
+			expr.accept(this, d);
+		}
+		d.append(')');
 		return null;
 	}
 
 	@Override
 	public Void visitNull(NullLiteralTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("null");
 		return null;
 	}
 
 	@Override
 	public Void visitNumericLiteral(NumericLiteralTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		Number value = node.getValue();
+		//TODO compress hex numbers, if possible
+		d.append(value.toString());
 		return null;
 	}
 
@@ -536,7 +650,9 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitParentheses(ParenthesizedTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append('(');
+		node.getExpression().accept(this, d);
+		d.append(')');
 		return null;
 	}
 
@@ -560,7 +676,15 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitSequence(SequenceTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append('(');
+		boolean isFirst = true;
+		for (ExpressionTree expr : node.getExpressions()) {
+			if (!isFirst)
+				d.append(',');
+			isFirst = false;
+			expr.accept(this, d);
+		}
+		d.append(')');
 		return null;
 	}
 
@@ -611,7 +735,7 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitThis(ThisExpressionTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("this");
 		return null;
 	}
 
@@ -624,7 +748,15 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitTry(TryTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		d.append("try");
+		node.getBlock().accept(this, d);
+		if (!node.getCatches().isEmpty())
+			for (CatchTree ct : node.getCatches())
+				ct.accept(this, d);
+		if (node.getFinallyBlock() != null) {
+			d.append("finally");
+			node.getFinallyBlock().accept(this, d);
+		}
 		return null;
 	}
 
@@ -700,13 +832,21 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitVoid(VoidTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		if (node.getExpression() == null) {
+			d.append("void");
+			return null;
+		}
+		d.append("void(");
+		node.getExpression().accept(this, d);
+		d.append(")");
 		return null;
 	}
 
 	@Override
 	public Void visitVoidType(VoidTypeTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
+		if (node.isImplicit())
+			return null;
+		d.append("void");
 		return null;
 	}
 
@@ -721,9 +861,9 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitWith(WithTree node, WriterHelper d) {
-		d.write("with(");
+		d.append("with(");
 		node.getScope().accept(this, d);
-		d.write(")");
+		d.append(")");
 		node.getStatement().accept(this, d);
 		return null;
 	}
