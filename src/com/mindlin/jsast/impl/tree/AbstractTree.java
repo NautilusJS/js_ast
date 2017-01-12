@@ -4,9 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.mindlin.jsast.exception.JSMutabilityException;
 import com.mindlin.jsast.tree.Tree;
 
 public abstract class AbstractTree implements Tree {
@@ -36,9 +36,23 @@ public abstract class AbstractTree implements Tree {
 		return sb.toString();
 	}
 	protected final long start, end;
+	protected boolean mutable = true;
 	public AbstractTree(long start, long end) {
 		this.start = start;
 		this.end = end;
+	}
+	
+	public boolean isMutable() {
+		return this.mutable;
+	}
+	
+	public void setMutable(boolean mutable) {
+		this.mutable = mutable;
+	}
+	
+	protected void assertMutable() {
+		if (!this.mutable)
+			throw new JSMutabilityException();
 	}
 	@Override
 	public long getStart() {
@@ -62,32 +76,31 @@ public abstract class AbstractTree implements Tree {
 		if (treeType.endsWith("Impl"))
 			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
 		sb.append("class:\"").append(treeType).append("\",");
-		//TODO combine loops
-		Set<Method> getters = new LinkedHashSet<>();
+		
 		Set<String> getterNames = new HashSet<>();
+		getterNames.add("getClass");
 		Class<?> clazz = getClass();
 		do {
-			for (Method m : clazz.getMethods())
-				if (m.getParameterCount() == 0 && getterNames.add(m.getName()) && (m.getName().startsWith("get") || m.getName().startsWith("is")) && !m.getName().equals("getClass"))
-					getters.add(m);
-		} while ((clazz = clazz.getSuperclass()) != null);
-		for (Method getter : getters) {
-			Object value;
-			try {
-				value = getter.invoke(this, new Object[0]);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
-				e.printStackTrace();
-				continue;
+			for (Method getter : clazz.getMethods()) {
+				if (getter.getParameterCount() > 0 || !getterNames.add(getter.getName()) || !(getter.getName().startsWith("get") || getter.getName().startsWith("is")))
+					continue;
+				Object value;
+				try {
+					value = getter.invoke(this, new Object[0]);
+				} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+					e.printStackTrace();
+					continue;
+				}
+				String name = getter.getName();
+				if (name.startsWith("get"))
+					name = name.substring(3);
+				else if (name.startsWith("is"))
+					name = name.substring(2);
+				sb.append(name.substring(0,1).toLowerCase()).append(name.substring(1)).append(':');
+				sb.append(AbstractTree.writeJSON(value));
+				sb.append(',');
 			}
-			String name = getter.getName();
-			if (name.startsWith("get"))
-				name = name.substring(3);
-			else if (name.startsWith("is"))
-				name = name.substring(2);
-			sb.append(name.substring(0,1).toLowerCase()).append(name.substring(1)).append(':');
-			sb.append(AbstractTree.writeJSON(value));
-			sb.append(',');
-		}
+		} while ((clazz = clazz.getSuperclass()) != null);
 		sb.setLength(sb.length() - 1);
 		sb.append('}');
 		return sb.toString();
