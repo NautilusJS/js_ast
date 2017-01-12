@@ -140,7 +140,8 @@ public interface Tree {
 		CLASS_DECLARATION(ClassDeclarationTree.class),
 		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
 		ENUM_DECLARATION(EnumDeclarationTree.class),
-		METHOD_DEFINITION,
+		CLASS_PROPERTY(ClassPropertyTree.class),
+		METHOD_DEFINITION(MethodDefinitionTree.class),
 
 		// Type stuff
 		ANY_TYPE(AnyTypeTree.class),

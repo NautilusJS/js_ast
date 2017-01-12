@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface LabeledStatementTree extends StatementTree {
+public interface LabeledStatementTree extends ControlStatementTree {
 	IdentifierTree getName();
 	
 	@Override

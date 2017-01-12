@@ -14,6 +14,6 @@ public interface CatchTree extends Tree {
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitCatch(this, data);
+		throw new UnsupportedOperationException();
 	}
 }

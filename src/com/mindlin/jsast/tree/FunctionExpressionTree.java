@@ -8,6 +8,8 @@ public interface FunctionExpressionTree extends ExpressionTree {
 	IdentifierTree getName();
 
 	List<ParameterTree> getParameters();
+	
+	TypeTree getReturnType();
 
 	boolean isStrict();
 	

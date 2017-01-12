@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface ThrowTree extends ExpressionStatementTree {
+public interface ThrowTree extends ExpressiveStatementTree {
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.THROW;

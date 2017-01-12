@@ -18,10 +18,5 @@ public interface UnaryTree extends ExpressiveExpressionTree {
 		default Tree.Kind getKind() {
 			return Tree.Kind.VOID;
 		}
-		
-		@Override
-		default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-			return visitor.visitVoid(this, data);
-		}
 	}
 }
