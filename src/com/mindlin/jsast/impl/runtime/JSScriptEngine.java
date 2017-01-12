@@ -30,6 +30,7 @@ public class JSScriptEngine implements ScriptEngine, Compilable {
 
 	@Override
 	public Object eval(String script) throws ScriptException {
+		CompilationUnitTree ast = parser.apply(null, script);
 		// TODO Auto-generated method stub
 		return null;
 	}
