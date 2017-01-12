@@ -27,9 +27,7 @@ public interface TreeVisitor<R, D> {
 	R visitBlock(BlockTree node, D d);
 	R visitBooleanLiteral(BooleanLiteralTree node, D d);
 	R visitBreak(BreakTree node, D d);
-	R visitCatch(CatchTree node, D d);
 	R visitClassDeclaration(ClassDeclarationTree node, D d);
-	R visitClassProperty(ClassPropertyTree node, D d);
 	R visitComment(CommentNode node, D d);
 	R visitCompilationUnit(CompilationUnitTree node, D d);
 	R visitComputedPropertyKey(ComputedPropertyKeyTree node, D d);
@@ -52,7 +50,6 @@ public interface TreeVisitor<R, D> {
 	R visitIdentifierType(IdentifierTypeTree node, D d);
 	R visitIf(IfTree node, D d);
 	R visitImport(ImportTree node, D d);
-	R visitImportSpecifier(ImportSpecifierTree node, D d);
 	R visitIndexType(IndexTypeTree node, D d);
 	R visitInterfaceDeclaration(InterfaceDeclarationTree node, D d);
 	R visitInterfaceType(InterfaceTypeTree node, D d);
@@ -82,7 +79,6 @@ public interface TreeVisitor<R, D> {
 	R visitUnary(UnaryTree node, D d);
 	R visitUnionType(UnionTypeTree node, D d);
 	R visitVariableDeclaration(VariableDeclarationTree node, D d);
-	R visitVoid(VoidTree node, D d);
 	R visitVoidType(VoidTypeTree node, D d);
 	R visitWhileLoop(WhileLoopTree node, D d);
 	R visitWith(WithTree node, D d);
