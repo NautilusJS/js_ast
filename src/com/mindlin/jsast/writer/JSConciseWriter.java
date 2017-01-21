@@ -17,6 +17,7 @@ import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
+import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
@@ -337,7 +338,7 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 		}
 		
 		out.write('{');
-		for (ClassPropertyTree property : node.getProperties()) {
+		for (ClassPropertyTree<?> property : node.getProperties()) {
 			//TODO finish
 			throw new UnsupportedOperationException();
 		}
@@ -647,9 +648,9 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 				FunctionExpressionTree fn = method.getValue();
 				if (fn.isGenerator())
 					out.write("* ");
-				else if (method.getPropertyType() == MethodDefinitionType.GETTER)
+				else if (method.getDeclarationType() == PropertyDeclarationType.GETTER)
 					out.write("get ");
-				else if (method.getPropertyType() == MethodDefinitionType.SETTER)
+				else if (method.getDeclarationType() == PropertyDeclarationType.SETTER)
 					out.write("set ");
 				method.getKey().accept(this, out);
 				out.write('(');
