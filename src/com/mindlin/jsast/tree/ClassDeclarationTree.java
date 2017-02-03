@@ -12,6 +12,8 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	
 	List<ClassPropertyTree<?>> getProperties();
 	
+	boolean isAbstract();
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.CLASS_DECLARATION;

@@ -942,7 +942,7 @@ public class JSParser {
 			}
 		}
 		expect(next, TokenKind.BRACKET, '}', src, context);
-		return new ClassDeclarationTreeImpl(classKeywordToken.getStart(), src.getPosition(), classIdentifier, superClass, interfaces, properties);
+		return new ClassDeclarationTreeImpl(classStartPos, src.getPosition(), isClassAbstract, classIdentifier, superClass, interfaces, properties);
 	}
 	
 	List<InterfacePropertyTree> parseInterfaceBody(JSLexer src, Context context) {
