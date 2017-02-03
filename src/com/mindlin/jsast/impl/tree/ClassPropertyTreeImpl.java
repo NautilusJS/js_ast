@@ -11,10 +11,10 @@ public class ClassPropertyTreeImpl<T extends Tree> extends AbstractTypedProperty
 	protected final AccessModifier access;
 	protected final PropertyDeclarationType declaration;
 	
-	public ClassPropertyTreeImpl(long start, long end, boolean readonly, boolean isStatic, AccessModifier access, PropertyDeclarationType declaration, ObjectPropertyKeyTree key, TypeTree type, T value) {
+	public ClassPropertyTreeImpl(long start, long end, AccessModifier access, boolean readonly, boolean isStatic, PropertyDeclarationType declaration, ObjectPropertyKeyTree key, TypeTree type, T value) {
 		super(start, end, readonly, key, type);
-		this.isStatic = isStatic;
 		this.access = access;
+		this.isStatic = isStatic;
 		this.declaration = declaration;
 		this.value = value;
 	}

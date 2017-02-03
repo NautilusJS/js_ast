@@ -8,6 +8,11 @@ public interface UnionTypeTree extends TypeTree {
 	TypeTree getLeftType();
 
 	TypeTree getRightType();
+	
+	@Override
+	default boolean isImplicit() {
+		return getLeftType().isImplicit() && getRightType().isImplicit();
+	}
 
 	@Override
 	default Tree.Kind getKind() {
