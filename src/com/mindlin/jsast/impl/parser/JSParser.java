@@ -3,9 +3,11 @@ package com.mindlin.jsast.impl.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Stack;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
@@ -25,6 +27,7 @@ import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.ClassPropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
 import com.mindlin.jsast.impl.tree.ComputedPropertyKeyTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
@@ -79,6 +82,8 @@ import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
+import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
@@ -100,7 +105,6 @@ import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
-import com.mindlin.jsast.tree.MethodDefinitionTree.MethodDefinitionType;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternPropertyTree;
@@ -124,6 +128,7 @@ import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.type.FunctionTypeTree;
 
 public class JSParser {
 	/**
@@ -1023,6 +1028,7 @@ public class JSParser {
 	 * Uses the colon (<kbd>:</kbd>) to detect if there should be a type.
 	 * @param src The source
 	 * @param context
+	 * @param canBeFunction Whether the parsed type can be a function
 	 * @return
 	 */
 	protected TypeTree parseTypeMaybe(JSLexer src, Context context, boolean canBeFunction) {
@@ -1085,7 +1091,9 @@ public class JSParser {
 	}
 	
 	protected TypeTree parseType(JSLexer src, Context context) {
+		//TODO support parentheses
 		TypeTree type = parseImmediateType(src, context);
+		//See if it's a union/intersection type
 		Token next = src.nextTokenIf(TokenPredicate.TYPE_CONTINUATION);
 		if (next == null)
 			return type;
@@ -2060,18 +2068,18 @@ public class JSParser {
 				next = src.nextToken();
 				final long startPos = next.getStart();
 				
-				MethodDefinitionType methodType = null;
+				PropertyDeclarationType methodType = null;
 				boolean generator = false;
 				Token modifierToken = null;
 				if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
 					generator = true;
 					dialect.require("js.method.generator", next.getStart());
-					methodType = MethodDefinitionType.METHOD;
+					methodType = PropertyDeclarationType.METHOD;
 					modifierToken = next;
 					next = src.nextToken();
 				} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && (src.peek().getKind() == TokenKind.IDENTIFIER || src.peek().matches(TokenKind.BRACKET, '['))) {
 					dialect.require("js.accessor", next.getStart());
-					methodType = next.getValue().equals("set") ? MethodDefinitionType.SETTER : MethodDefinitionType.GETTER;
+					methodType = next.getValue().equals("set") ? PropertyDeclarationType.SETTER : PropertyDeclarationType.GETTER;
 					modifierToken = next;
 					next = src.nextToken();
 				}
@@ -2099,18 +2107,18 @@ public class JSParser {
 							String modifierName;
 							if (generator)
 								modifierName = "generator";
-							else if (methodType == MethodDefinitionType.GETTER)
+							else if (methodType == PropertyDeclarationType.GETTER)
 								modifierName = "getter";
-							else if (methodType == MethodDefinitionType.SETTER)
+							else if (methodType == PropertyDeclarationType.SETTER)
 								modifierName = "setter";
 							else
 								modifierName = "unknown";
 							
 							throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
 						}
-						methodType = MethodDefinitionType.CONSTRUCTOR;
+						methodType = PropertyDeclarationType.CONSTRUCTOR;
 					} else if (methodType == null) {
-						methodType = MethodDefinitionType.METHOD;
+						methodType = PropertyDeclarationType.METHOD;
 					}
 					
 					List<ParameterTree> params = this.parseParameters(src, context);
@@ -2120,7 +2128,9 @@ public class JSParser {
 					
 					FunctionExpressionTree fn = this.finishFunctionBody(startPos, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
 					
-					prop = new MethodDefinitionTreeImpl(startPos, src.getPosition(), key, fn, methodType);
+					//XXX finish
+					throw new UnsupportedOperationException();
+					//prop = new MethodDefinitionTreeImpl(startPos, src.getPosition(), key, fn, methodType);
 				} else if (methodType != null || generator) {
 					throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 				} else if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null) {
@@ -2414,6 +2424,17 @@ public class JSParser {
 			return this;
 		}
 		
+		public Context registerGenericParam(String name, long position) throws JSSyntaxException {
+			for (ContextData data = this.data; data != null; data = data.parent)
+				if (data.genericNames != null && data.genericNames.contains(name))
+					throw new JSSyntaxException("Duplicate generic parameter '" + name + "'", position);
+			if (this.data.genericNames == null)
+				//TODO maybe carry some names from parent to decrease average traversal distance
+				this.data.genericNames = new HashSet<>();
+			this.data.genericNames.add(name);
+			return this;
+		}
+		
 		static class ContextData {
 			boolean isStrict = false;
 			/**
@@ -2438,6 +2459,10 @@ public class JSParser {
 			boolean allowIn = true;
 			boolean isMaybeParam = false;
 			final ContextData parent;
+			/**
+			 * Set of generic names
+			 */
+			Set<String> genericNames;
 
 			public ContextData() {
 				this.parent = null;
