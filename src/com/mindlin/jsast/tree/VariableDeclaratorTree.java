@@ -7,14 +7,14 @@ public interface VariableDeclaratorTree extends Tree {
 	 * default value. An empty Optional means that there was no
 	 * initializer/default value.
 	 * 
-	 * @return
+	 * @return initializer
 	 */
 	ExpressionTree getIntitializer();
 
 	/**
 	 * Get the type of this variable. Return null for any.
 	 * 
-	 * @return
+	 * @return type (or null)
 	 */
 	TypeTree getType();
 	

@@ -10,7 +10,7 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	
 	List<TypeTree> getImplementing();
 	
-	List<ClassPropertyTree> getProperties();
+	List<ClassPropertyTree<?>> getProperties();
 	
 	@Override
 	default Tree.Kind getKind() {

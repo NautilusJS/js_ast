@@ -2,7 +2,15 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+/**
+ * A tree representing an array literal
+ * @author mailmindlin
+ */
 public interface ArrayLiteralTree extends ExpressionTree {
+	/**
+	 * Get list of elements in literal, in order
+	 * @return elements
+	 */
 	List<? extends ExpressionTree> getElements();
 
 	@Override

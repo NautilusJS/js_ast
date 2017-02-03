@@ -5,6 +5,10 @@ import java.util.List;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TypeTree;
 
+/**
+ * 
+ * @author mailmindlin
+ */
 public interface FunctionTypeTree extends TypeTree {
 	List<ParameterTypeTree> getParameters();
 

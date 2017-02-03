@@ -4,7 +4,7 @@ public interface ClassPropertyTree<T> extends TypedPropertyTree {
 	T getValue();
 
 	boolean isStatic();
-
+	
 	AccessModifier getAccess();
 
 	PropertyDeclarationType getDeclarationType();
