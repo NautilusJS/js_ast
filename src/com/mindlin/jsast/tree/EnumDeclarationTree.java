@@ -1,12 +1,12 @@
 package com.mindlin.jsast.tree;
 
-import java.util.Set;
+import java.util.List;
 
 public interface EnumDeclarationTree extends ExpressionTree {
 
 	IdentifierTree getIdentifier();
 
-	Set<ObjectPropertyTree> getValues();
+	List<ObjectPropertyTree> getValues();
 
 	@Override
 	default Tree.Kind getKind() {
