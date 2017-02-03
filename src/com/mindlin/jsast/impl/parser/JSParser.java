@@ -745,32 +745,198 @@ public class JSParser {
 	protected ClassDeclarationTree parseClass(Token classKeywordToken, JSLexer src, Context context) {
 		if (classKeywordToken == null)
 			classKeywordToken = src.nextToken();
-		//TODO fix for abstract classes
-		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
-		IdentifierTree classIdentifier = null;
-		TypeTree superClass = null;
-		List<TypeTree> interfaces = new ArrayList<>();
 		
+		final long classStartPos = classKeywordToken.getStart();
+		
+		//Support abstract classes
+		boolean isClassAbstract = false;
+		if (classKeywordToken.matches(TokenKind.IDENTIFIER, "abstract")) {
+			classKeywordToken = src.nextToken();
+			isClassAbstract = true;
+		}
+		
+		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
+		
+		IdentifierTree classIdentifier = null;
 		Token next = src.nextToken();
 		if (next.isIdentifier()) {
 			classIdentifier = this.parseIdentifier(next, src, context);
 			next = src.nextToken();
+			//TODO support generic params on class identifier
 		}
-		for (int i = 0; i < 1; i++) {
-			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS) && superClass == null) {
+		
+		TypeTree superClass = null;
+		List<TypeTree> interfaces = new ArrayList<>();
+		//We don't care in which order the 'extends' and 'implements' clauses come in
+		for (int i = 0; i < 2 && next.isKeyword(); i++) {
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS)) {
+				if (superClass != null)
+					throw new JSSyntaxException("Classes may not extend multiple classes", next.getStart(), next.getEnd());
 				superClass = this.parseType(src, context);
 				next = src.nextToken();
 			}
-			if (next.matches(TokenKind.KEYWORD, JSKeyword.IMPLEMENTS) && interfaces.isEmpty()) {
+			if (next.matches(TokenKind.KEYWORD, JSKeyword.IMPLEMENTS)) {
+				if (!interfaces.isEmpty())
+					throw new JSUnexpectedTokenException(next);
+				//We can add multiple interfaces here
 				do {
 					interfaces.add(parseType(src, context));
 				} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
 			}
 		}
+		
 		expect(next, TokenKind.BRACKET, '{', src, context);
-		ArrayList<ClassPropertyTree> properties = new ArrayList<>();
-		//TODO finish
-		expect(TokenKind.BRACKET, '}', src, context);
+		ArrayList<ClassPropertyTree<?>> properties = new ArrayList<>();
+		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
+			//Start position of our next index
+			final long propertyStartPos = next.getStart();
+			
+			//Aspects of property
+			PropertyDeclarationType methodType = null;
+			AccessModifier accessModifier = AccessModifier.PUBLIC;
+			boolean readonly = false;//Readonly modifier
+			boolean generator = false;
+			boolean isStatic = false;
+			boolean isPropertyAbstract = false;
+			Token modifierToken = null;//Store token of modifier for later error stuff
+			
+			//We can have up to 3 modifiers (ex. 'public static readonly')
+			for (int i = 0; i < 3; i++) {
+				//Check for 'readonly' modifier
+				if (next.matches(TokenKind.IDENTIFIER, "readonly")) {
+					if (readonly)//Readonly already set
+						throw new JSUnexpectedTokenException(next);
+					readonly = true;
+				} else if (next.matches(TokenKind.IDENTIFIER, "abstract")) {
+					//Check for 'abstract' keyword
+					if (isPropertyAbstract)
+						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", next.getStart(), next.getEnd());
+					if (isPropertyAbstract)
+						throw new JSUnexpectedTokenException(next);
+					isPropertyAbstract = true;
+				} else if (next.isKeyword()) {
+					JSKeyword keyword = next.getValue();
+					
+					if (keyword == JSKeyword.STATIC) {
+						if (isStatic)
+							throw new JSUnexpectedTokenException(next);
+						isStatic = true;
+					} else if (keyword == JSKeyword.PUBLIC || next.getValue() == JSKeyword.PROTECTED || next.getValue() == JSKeyword.PRIVATE) {
+						//Check that there weren't other access modifiers.
+						//TODO This doesn't protect against 'public public x'
+						if (accessModifier != AccessModifier.PUBLIC)
+							throw new JSUnexpectedTokenException(next);
+						
+						if (keyword == JSKeyword.PROTECTED)
+							accessModifier = AccessModifier.PROTECTED;
+						else if (keyword == JSKeyword.PRIVATE)
+							accessModifier = AccessModifier.PRIVATE;
+					} else {
+						//next isn't a modifier
+						break;
+					}
+				} else {
+					//next isn't a modifier
+					break;
+				}
+				next = src.nextToken();
+			}
+			
+			//Now check if it's a generator/getter/setter
+			if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+				//Generator function
+				dialect.require("js.method.generator", next.getStart());
+				generator = true;
+				methodType = PropertyDeclarationType.METHOD;
+				
+				modifierToken = next;
+				next = src.nextToken();
+			} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && (src.peek().getKind() == TokenKind.IDENTIFIER || src.peek().matches(TokenKind.BRACKET, '['))) {
+				//Getter/setter method
+				dialect.require("js.accessor", next.getStart());
+				methodType = next.getValue().equals("set") ? PropertyDeclarationType.SETTER : PropertyDeclarationType.GETTER;
+				
+				modifierToken = next;
+				next = src.nextToken();
+			}
+			
+			//Parse property key
+			//I'm not sure if this is *correct* js/ts, but let's go with it.
+			ObjectPropertyKeyTree key;
+			boolean computed = false;
+			if (next.isIdentifier()) {
+				//The key is an identifier
+				key = parseIdentifier(next, null, context);
+			} else if (next.getKind() == TokenKind.STRING_LITERAL || next.getKind() == TokenKind.NUMERIC_LITERAL) {
+				//We have a string or number as an identifier. Should this work? No. But does this work...
+				key = (ObjectPropertyKeyTree) parseLiteral(next, null, context);
+			} else if (next.matches(TokenKind.BRACKET, '[')) {
+				//ES6 computed ID. Also should probably be illegal
+				computed = true;
+				ExpressionTree expr = parseNextExpression(src, context);
+				Token closeBracket = expect(TokenKind.BRACKET, ']', src, context);
+				key = new ComputedPropertyKeyTreeImpl(next.getStart(), closeBracket.getEnd(), expr);
+			} else {
+				throw new JSUnexpectedTokenException(next);
+			}
+			
+			ClassPropertyTree<?> property;
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) != null) {
+				//Some type of method
+				
+				if (!computed && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
+					//Promote to constructor
+					if (methodType != null || generator) {
+						String modifierName;
+						if (generator)
+							modifierName = "generator";
+						else if (methodType == PropertyDeclarationType.GETTER)
+							modifierName = "getter";
+						else if (methodType == PropertyDeclarationType.SETTER)
+							modifierName = "setter";
+						else
+							modifierName = "unknown";
+						
+						throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
+					}
+					methodType = PropertyDeclarationType.CONSTRUCTOR;
+				} else if (methodType == null) {//It's a not a getter/setter
+					methodType = PropertyDeclarationType.METHOD;
+				}
+				
+				//Parse method
+				List<ParameterTree> params = this.parseParameters(src, context);
+				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+				
+				TypeTree returnType = this.parseTypeMaybe(src, context, false);
+				FunctionTypeTree functionType = null;//TODO finish
+				
+				FunctionExpressionTree fn = this.finishFunctionBody(propertyStartPos, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
+				
+				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
+			} else if (methodType != null || generator || isPropertyAbstract) {
+				//TODO also check for fields named 'constructor'
+				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
+			} else {
+				//Field with (optional) type
+				TypeTree fieldType = this.parseTypeMaybe(src, context, false);
+				//Optional value expression
+				ExpressionTree value = null;
+				if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
+					value = this.parseAssignment(null, src, context);
+				//Fields end with a semicolon
+				src.expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
+				property = new ClassPropertyTreeImpl<ExpressionTree>(propertyStartPos, src.getPosition(), accessModifier, readonly, isStatic, methodType, key, fieldType, value);
+			}
+			
+			properties.add(property);
+			
+			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null) {
+				next = expect(TokenKind.BRACKET, '}', src, context);
+				break;
+			}
+		}
+		expect(next, TokenKind.BRACKET, '}', src, context);
 		return new ClassDeclarationTreeImpl(classKeywordToken.getStart(), src.getPosition(), classIdentifier, superClass, interfaces, properties);
 	}
 	
@@ -778,10 +944,21 @@ public class JSParser {
 		ArrayList<InterfacePropertyTree> properties = new ArrayList<>();
 		Token next;
 		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
+			long start = next.getStart();
+			
+			boolean readonly = false;
 			IdentifierTree propname;
 			boolean optional;
 			TypeTree type;
+			
+			if (next.matches(TokenKind.IDENTIFIER, "readonly")) {
+				//Starts with 'readonly' keyword
+				readonly = true;
+				next = src.nextToken();
+			}
+			
 			if (next.isIdentifier()) {
+				//Is simple identifier => property/method
 				propname = new IdentifierTreeImpl(next);
 				optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
 				type = this.parseTypeMaybe(src, context, true);
@@ -806,7 +983,7 @@ public class JSParser {
 			} else {
 				throw new JSUnexpectedTokenException(next);
 			}
-			properties.add(new InterfacePropertyTreeImpl(next.getStart(), src.getPosition(), propname, optional, type));
+			properties.add(new InterfacePropertyTreeImpl(start, src.getPosition(), readonly, propname, optional, type));
 		}
 		
 		if (properties.isEmpty())
