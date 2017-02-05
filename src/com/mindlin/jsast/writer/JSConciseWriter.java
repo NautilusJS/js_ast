@@ -602,7 +602,39 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 
 	@Override
 	public Void visitMethodDefinition(MethodDefinitionTree node, PrintWriter out) {
-		// TODO Auto-generated method stub
+		//Write access modifier; public is implied
+		if (node.getAccess() == AccessModifier.PROTECTED)
+			out.write("protected ");
+		else if (node.getAccess() == AccessModifier.PRIVATE)
+			out.write("private ");
+		
+		if (node.isStatic())
+			out.write("static ");
+
+		//Pretty sure that 'readonly' isn't valid
+		
+		
+		switch (node.getDeclarationType()) {
+			case CONSTRUCTOR:
+				out.write("constructor");
+				break;
+			case GETTER:
+				out.write("get ");
+				break;
+			case SETTER:
+				out.write("set ");
+				break;
+			case METHOD:
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+		
+		if (node.getDeclarationType() != PropertyDeclarationType.CONSTRUCTOR)
+			node.getKey().accept(this, out);
+		
+		//TODO check that this is right
+		node.getValue().accept(this, out);
 		return null;
 	}
 
