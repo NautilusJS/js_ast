@@ -732,7 +732,13 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 
 	@Override
 	public Void visitParameterType(ParameterTypeTree node, PrintWriter out) {
-		// TODO Auto-generated method stub
+		node.getName().accept(this, out);
+		if (node.isOptional())
+			out.append("?");
+		if (node.getType() != null && !node.getType().isImplicit()) {
+			out.append(':');
+			node.getType().accept(this, out);
+		}
 		return null;
 	}
 
