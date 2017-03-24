@@ -11,7 +11,10 @@ public interface JSONArrayInput extends SafelyCloseable, Iterator<Object> {
 	boolean readBoolean() throws JSONParseException;
 
 	default byte readByte() throws JSONParseException {
-		return (byte) readInt();
+		int iValue = readInt();
+		if ((((byte) iValue) & 0xFF) != iValue)
+			throw new JSONParseException("Cannot downgrade " + iValue + " to byte");
+		return (byte) iValue;
 	}
 
 	default char readChar() throws JSONParseException {
