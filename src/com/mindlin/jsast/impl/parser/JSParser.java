@@ -979,6 +979,12 @@ public class JSParser {
 		return new ClassDeclarationTreeImpl(classStartPos, src.getPosition(), isClassAbstract, classIdentifier, generics, superClass, interfaces, properties);
 	}
 	
+	/**
+	 * Parse the body of an interface, whether it be inline or a declaration
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	List<InterfacePropertyTree> parseInterfaceBody(JSLexer src, Context context) {
 		ArrayList<InterfacePropertyTree> properties = new ArrayList<>();
 		Token next;
@@ -1139,8 +1145,16 @@ public class JSParser {
 	 * Parse a type declaration
 	 */
 	protected TypeTree parseType(JSLexer src, Context context) {
-		//TODO support parentheses
-		TypeTree type = parseImmediateType(src, context);
+		//Support parentheses
+		TypeTree type;
+		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) != null) {
+			//Recurse
+			type = parseType(src, context);
+			expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
+		} else {
+			type = parseImmediateType(src, context);
+		}
+		
 		//See if it's a union/intersection type
 		Token next = src.nextTokenIf(TokenPredicate.TYPE_CONTINUATION);
 		if (next == null)

@@ -6,7 +6,6 @@ import java.util.Optional;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 
