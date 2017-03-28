@@ -312,19 +312,7 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 	}
 
 	@Override
-	public Void visitCatch(CatchTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Void visitClassDeclaration(ClassDeclarationTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Void visitClassProperty(ClassPropertyTree node, WriterHelper d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -534,12 +522,6 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 
 	@Override
 	public Void visitImport(ImportTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Void visitImportSpecifier(ImportSpecifierTree node, WriterHelper d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -827,18 +809,6 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 			declarator.accept(this, d);
 		}
 		d.append(';');
-		return null;
-	}
-
-	@Override
-	public Void visitVoid(VoidTree node, WriterHelper d) {
-		if (node.getExpression() == null) {
-			d.append("void");
-			return null;
-		}
-		d.append("void(");
-		node.getExpression().accept(this, d);
-		d.append(")");
 		return null;
 	}
 
