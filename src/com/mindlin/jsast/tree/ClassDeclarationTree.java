@@ -3,6 +3,8 @@ package com.mindlin.jsast.tree;
 import java.util.List;
 import java.util.Optional;
 
+import com.mindlin.jsast.tree.type.GenericTypeTree;
+
 public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	/**
 	 * Get class identifier name, else null if not set
@@ -23,6 +25,12 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	 * Get the properties for this class
 	 */
 	List<ClassPropertyTree<?>> getProperties();
+	
+	/**
+	 * Get the generic parameters on this class
+	 * @return
+	 */
+	List<GenericTypeTree> getGenerics();
 	
 	/**
 	 * Get if this class is abstract

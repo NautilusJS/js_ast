@@ -582,6 +582,15 @@ public class JSParser {
 		}
 	}
 	
+	protected List<GenericTypeTree> parseGenerics(Token openChevron, JSLexer src, Context context) {
+		openChevron = expect(openChevron, TokenKind.OPERATOR, JSOperator.LESS_THAN, src, context);
+		
+		ArrayList<GenericTypeTree> generics = new ArrayList<>();
+		//TODO finish
+		generics.trimToSize();
+		return generics;
+	}
+	
 	protected List<ExpressionTree> parseArguments(Token t, JSLexer src, Context context) {
 		 t = expect(t, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
 		 t = src.nextToken();
@@ -774,10 +783,16 @@ public class JSParser {
 		//Read optional class identifier
 		IdentifierTree classIdentifier = null;
 		Token next = src.nextToken();
+		List<GenericTypeTree> generics = Collections.emptyList();
 		if (next.isIdentifier()) {
 			classIdentifier = this.parseIdentifier(next, src, context);
 			next = src.nextToken();
-			//TODO support generic params on class identifier
+			
+			//Parse generics
+			if (next.matches(TokenKind.OPERATOR, JSOperator.LESS_THAN)) {
+				generics = parseGenerics(next, src, context);
+				next = src.nextToken();
+			}
 		}
 		
 		//Read 'extends' and 'implements' clauses
@@ -954,7 +969,7 @@ public class JSParser {
 			}
 		}
 		expect(next, TokenKind.BRACKET, '}', src, context);
-		return new ClassDeclarationTreeImpl(classStartPos, src.getPosition(), isClassAbstract, classIdentifier, superClass, interfaces, properties);
+		return new ClassDeclarationTreeImpl(classStartPos, src.getPosition(), isClassAbstract, classIdentifier, generics, superClass, interfaces, properties);
 	}
 	
 	List<InterfacePropertyTree> parseInterfaceBody(JSLexer src, Context context) {
