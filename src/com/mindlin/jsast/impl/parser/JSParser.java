@@ -1209,11 +1209,11 @@ public class JSParser {
 		ExpressionTree expression = this.parseNextExpression(src, context);
 		src.expect(JSOperator.RIGHT_PARENTHESIS);
 		src.expect(TokenKind.BRACKET, '{');
-		List<CaseTree> cases = new LinkedList<>();
+		
+		ArrayList<CaseTree> cases = new ArrayList<>();
 		Token next = src.nextToken();
 		while (next.isKeyword()) {
 			ExpressionTree caseExpr;
-			List<? extends StatementTree> statements = new LinkedList<>();
 			if (next.getValue() == JSKeyword.CASE)
 				caseExpr = this.parseNextExpression(src, context);
 			else if (next.getValue() == JSKeyword.DEFAULT)
@@ -1221,9 +1221,21 @@ public class JSParser {
 			else
 				throw new JSUnexpectedTokenException(next);
 			src.expect(JSOperator.COLON);
-			// TODO parse statements
+			
+			//Parse statements in case body
+			ArrayList<StatementTree> statements = new ArrayList<>();
+			while (true) {
+				Token lookahead = src.peek();
+				if (lookahead.matches(TokenKind.KEYWORD, JSKeyword.CASE) || lookahead.matches(TokenKind.KEYWORD, JSKeyword.DEFAULT) || lookahead.matches(TokenKind.BRACKET, '}'))
+						break;
+				statements.add(parseStatement(src, context));
+			}
+			statements.trimToSize();
+			
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
+		cases.trimToSize();
+		
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
 	}
 	
