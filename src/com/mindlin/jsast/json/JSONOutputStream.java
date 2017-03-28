@@ -23,18 +23,12 @@ public class JSONOutputStream implements JSONOutput {
 
 	@Override
 	public JSONObjectOutputStream makeObject() {
-		writeSafe("{");
-		JSONObjectOutputStream result = new JSONObjectOutputStream();
-		children.push(result);
-		return result;
+		return new JSONObjectOutputStream();
 	}
 
 	@Override
 	public JSONArrayOutputStream makeArray() {
-		writeSafe("[");
-		JSONArrayOutputStream result = new JSONArrayOutputStream();
-		children.push(result);
-		return result;
+		return new JSONArrayOutputStream();
 	}
 	
 	@Override
@@ -58,6 +52,8 @@ public class JSONOutputStream implements JSONOutput {
 	
 	@Override
 	public void close() throws IOException {
+		while (!this.children.isEmpty())
+			this.children.pop().close();
 		out.close();
 	}
 
@@ -132,6 +128,11 @@ public class JSONOutputStream implements JSONOutput {
 	protected class JSONObjectOutputStream implements JSONObjectOutput {
 		private boolean closed = false;
 		private boolean isStart = true;
+		
+		protected JSONObjectOutputStream() {
+			writeSafe("{");
+			JSONOutputStream.this.children.push(this);
+		}
 
 		private void writeSeparator() {
 			try {
@@ -255,11 +256,28 @@ public class JSONOutputStream implements JSONOutput {
 				throw new JSONSerializationException(e);
 			}
 		}
+
+		@Override
+		public JSONObjectOutput makeObject(String key) {
+			writeKey(key);
+			return null;
+		}
+
+		@Override
+		public JSONArrayOutput makeArray(String key) {
+			writeKey(key);
+			return null;
+		}
 	}
 	
 	protected class JSONArrayOutputStream implements JSONArrayOutput {
 		private boolean isStart = true;
 		private boolean closed = false;
+		
+		protected JSONArrayOutputStream() {
+			writeSafe("[");
+			JSONOutputStream.this.children.push(this);
+		}
 		
 		private void writeSeparator() {
 			try {

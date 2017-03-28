@@ -24,6 +24,10 @@ public interface JSONObjectOutput extends SafelyCloseable {
 	void writeObject(String key, Object value);
 
 	void write(Map<String, ? extends Object> entries);
+	
+	JSONObjectOutput makeObject(String key);
+	
+	JSONArrayOutput makeArray(String key);
 
 	void writeUnescaped(String data);
 
