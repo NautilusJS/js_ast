@@ -2,6 +2,7 @@ package com.mindlin.jsast.tree.type;
 
 import java.util.List;
 
+import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TypeTree;
 
@@ -10,7 +11,7 @@ import com.mindlin.jsast.tree.TypeTree;
  * @author mailmindlin
  */
 public interface FunctionTypeTree extends TypeTree {
-	List<ParameterTypeTree> getParameters();
+	List<ParameterTree> getParameters();
 
 	List<GenericTypeTree> getGenerics();
 

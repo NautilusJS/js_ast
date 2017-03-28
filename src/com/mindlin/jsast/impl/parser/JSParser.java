@@ -1007,11 +1007,14 @@ public class JSParser {
 				TypeTree returnType = this.parseType(src, context);
 				type = new IndexTypeTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
 			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
+				//Parse function type
 				List<ParameterTree> params = this.parseParameters(src, context);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
-				//TODO finish
-				throw new UnsupportedOperationException();
+				
+				type = new FunctionTypeTreeImpl(next.getStart(), src.getPosition(), false, params, null, returnType);
+				optional = false;
+				propname = null;//Correct?
 			} else {
 				throw new JSUnexpectedTokenException(next);
 			}
