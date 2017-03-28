@@ -33,6 +33,62 @@ public class JSONInputStream implements JSONInput {
 		return nextToken;
 	}
 	
+	private String readStringLiteral(char openQuote) throws IOException {
+		boolean escaped;
+		StringBuffer sb = new StringBuffer();
+		//TODO read in batches (ex. buffer of size 16)
+		//TODO refactor with JSTokenizer
+		boolean escaped = false;
+		while (in.ready()) {
+			int v = in.read();
+			if (v < 0)//EOS
+				throw new EOFException("Stream closed while reading string literal");
+			if (escaped) {
+				char escapedVal;
+				switch (v) {
+					case '\\':
+					case '"':
+					case '\'':
+					case '/':
+						escapedVal = (char) v;
+						break;
+					case 'b':
+						escapedVal = '\b';
+						break;
+					case 'f':
+						escapedVal = '\f';
+						break;
+					case 'n':
+						escapedVal = '\n';
+						break;
+					case 'r':
+						escapedVal = '\r';
+						break;
+					case 't':
+						escapedVal = '\t';
+						break;
+					case 'u':
+						//Unicode escape
+						char[] buf = new char[4];
+						if (in.read(buf) < 4)
+							throw new EOFException("Unexpected end of input in unicode escape sequence");
+						escapedVal = (char) Integer.valueOf(new String(buf), 16);
+						break;
+					default:
+						throw new IOException("Unknown escape sequence in JSON: \\" + ((char) v));
+				}
+				escaped = false;
+				sb.append(escapedVal);
+			} else if (v == openQuote)
+				break;
+			else if (v == '\\')
+				escaped = true;
+			else
+				sb.append((char) v);
+		}
+		return sb.toString();
+	}
+	
 	private String readToken() throws IOException {
 		int v = in.read();
 		if (v < 0)
@@ -70,17 +126,16 @@ public class JSONInputStream implements JSONInput {
 				return String.valueOf((char) v);
 			case '"':
 			case '\'':
-				//TODO read string literal
-				return null;
+				return readStringLiteral((char) v);
+			//TODO support numbers
+			//TODO support booleans
 		}
 		throw new UnsupportedOperationException("Not finished");
 	}
 
 	@Override
 	public JSONObjectInput readObject() throws IOException {
-		if (!"{".equals(nextToken()))
-			throw new IllegalStateException("Cannot read object");
-		return null;
+		return new JSONObjectInputStream();
 	}
 	
 	@Override
@@ -111,7 +166,15 @@ public class JSONInputStream implements JSONInput {
 	}
 	
 	protected class JSONObjectInputStream implements JSONObjectInput {
-		String currentKey;
+		protected String currentKey;
+		protected Object currentValue;
+		protected boolean open = true;
+		
+		protected JSONObjectInputStream() {
+			if (!"{".equals(nextToken()))
+				throw new IllegalStateException("Cannot read object");
+			children.push(this);
+		}
 		
 		@Override
 		public void close() {
