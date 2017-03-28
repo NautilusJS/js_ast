@@ -1,11 +1,13 @@
 package com.mindlin.jsast.json.api;
 
+import java.io.IOException;
+
 public interface JSONInput extends SafelyCloseable {
-	JSONObjectInput readObject();
+	JSONObjectInput readObject() throws IOException;
 	
-	<T> T readObject(Class<? extends T> clazz);
+	<T> T readObject(Class<? extends T> clazz) throws IOException;
 
-	JSONArrayInput readArray();
+	JSONArrayInput readArray() throws IOException;
 
-	SafelyCloseable mark();
+	SafelyCloseable mark() throws IOException;
 }

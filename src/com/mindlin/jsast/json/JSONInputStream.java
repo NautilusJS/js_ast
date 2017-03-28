@@ -1,6 +1,11 @@
 package com.mindlin.jsast.json;
 
+import java.io.IOException;
 import java.io.Reader;
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Stack;
@@ -10,6 +15,8 @@ import com.mindlin.jsast.json.api.JSONInput;
 import com.mindlin.jsast.json.api.JSONObjectInput;
 import com.mindlin.jsast.json.api.SafelyCloseable;
 
+import sun.reflect.ReflectionFactory;
+
 public class JSONInputStream implements JSONInput {
 	protected final Reader in;
 	protected final Stack<SafelyCloseable> children = new Stack<>();
@@ -17,21 +24,77 @@ public class JSONInputStream implements JSONInput {
 	public JSONInputStream(Reader in) {
 		this.in = in;
 	}
+	
+	private String nextToken;
+	
+	private String nextToken() throws IOException {
+		if (nextToken == null)
+			nextToken = readToken();
+		return nextToken;
+	}
+	
+	private String readToken() throws IOException {
+		int v = in.read();
+		if (v < 0)
+			return null;//EOS
+		if (Character.isWhitespace(v)) {
+			//Skip whitespace
+			if (in.markSupported()) {
+				//Skip whitespace, in batches
+				while (true) {
+					char[] buf = new char[16];
+					in.mark(16);
+					int len = in.read(buf);
+					if (len < 0)
+						return null;//EOS
+					int offset;
+					for (offset = 0; offset < len && Character.isWhitespace(buf[offset]); offset++);
+					if (offset < len) {
+						in.reset();
+						in.skip(offset);//TODO check for off-by-one problems
+						break;
+					}
+				}
+			} else {
+				//Skip whitespace, character-by-character
+				while ((v = in.read()) >= 0 && Character.isWhitespace(v));
+			}
+		}
+		switch (v) {
+			case '{':
+			case '}':
+			case '[':
+			case ']':
+			case ',':
+			case ':':
+				return String.valueOf((char) v);
+			case '"':
+			case '\'':
+				//TODO read string literal
+				return null;
+		}
+		throw new UnsupportedOperationException("Not finished");
+	}
 
 	@Override
-	public JSONObjectInput readObject() {
-		// TODO Auto-generated method stub
+	public JSONObjectInput readObject() throws IOException {
+		if (!"{".equals(nextToken()))
+			throw new IllegalStateException("Cannot read object");
 		return null;
 	}
 	
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
-		
+		this.nextToken = null;
+		try {
+			this.in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public <T> T readObject(Class<? extends T> clazz) {
+	public <T> T readObject(Class<? extends T> clazz) throws IOException {
 		return readObject().mapTo(clazz);
 	}
 
@@ -80,9 +143,51 @@ public class JSONInputStream implements JSONInput {
 			return null;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T mapTo(Class<? extends T> clazz) {
-			// TODO Auto-generated method stub
+			if (clazz == null)
+				throw new NullPointerException("Class may not be null");
+			if (clazz.isAssignableFrom(Serializable.class)) {
+				Constructor<? extends T> ctor;
+				try {
+					//Get constructor via fun reflection
+					ctor = (Constructor<? extends T>) ReflectionFactory.getReflectionFactory()
+							.newConstructorForSerialization(clazz);
+				} catch (SecurityException e) {
+					//Get constructor via boring reflection
+					try {
+						ctor = clazz.getConstructor(new Class[0]);
+					} catch (NoSuchMethodException | SecurityException e1) {
+						e1.printStackTrace();
+						e1.addSuppressed(e1);
+						throw new RuntimeException(e1);
+					}
+				}
+				T result;
+				try {
+					result = ctor.newInstance(new Object[0]);
+				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+						| InvocationTargetException e) {
+					e.printStackTrace();
+					throw new RuntimeException("Unable to instantiate object", e);
+				}
+				while (this.hasNext()) {
+					String key = this.nextKey();
+					Field field;
+					try {
+						field = clazz.getField(key);
+					} catch (NoSuchFieldException | SecurityException e) {
+						try {
+							field = clazz.getDeclaredField(key);
+						} catch (NoSuchFieldException | SecurityException e1) {
+							e1.addSuppressed(e);
+							throw new RuntimeException("Cannot map field name: " + key, e1);
+						}
+					}
+					
+				}
+			}
 			return null;
 		}
 
@@ -196,6 +301,24 @@ public class JSONInputStream implements JSONInput {
 
 		@Override
 		public <C> Optional<C> optObject(Class<? extends C> clazz) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean canReadArray() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public JSONArrayInput getArray() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Optional<JSONArrayInput> optArray() {
 			// TODO Auto-generated method stub
 			return null;
 		}
