@@ -1264,8 +1264,7 @@ public class JSParser {
 			catchBlocks.add(new CatchTreeImpl(next.getStart(), block.getEnd(), block, param, type));
 		}
 
-		//Optional finally block
-		//TODO does the finally block have to come after all catch blocks?
+		//Optional finally block (must come after any & all catch blocks)
 		BlockTree finallyBlock = null;
 		if (src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.FINALLY) != null)
 			finallyBlock = parseBlock(null, src, context);
@@ -1397,7 +1396,6 @@ public class JSParser {
 	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src, Context context) {
 		ExpressionTree condition = parseNextExpression(src, context);
 		expectSemicolon(src, context);
-		//TODO check if commas in update work
 		ExpressionTree update = src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS) ? null : parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = parseStatement(src, context);
@@ -2389,7 +2387,7 @@ public class JSParser {
 	protected UnaryTree parseYield(Token yieldKeywordToken, JSLexer src, Context context) {
 		yieldKeywordToken = expect(yieldKeywordToken, TokenKind.KEYWORD, src, context);
 		
-		dialect.require("js.yield");
+		dialect.require("js.yield", src.getPosition());
 		
 		//Check if it's a 'yield*'
 		boolean delegates = yieldKeywordToken.getValue() == JSKeyword.YIELD_GENERATOR;
