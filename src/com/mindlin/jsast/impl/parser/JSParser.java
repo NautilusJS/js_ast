@@ -39,6 +39,7 @@ import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
+import com.mindlin.jsast.impl.tree.FunctionTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
@@ -129,6 +130,7 @@ import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
+import com.mindlin.jsast.tree.type.GenericTypeTree;
 
 public class JSParser {
 	/**
@@ -825,7 +827,7 @@ public class JSParser {
 			
 			//Aspects of property
 			PropertyDeclarationType methodType = null;
-			AccessModifier accessModifier = AccessModifier.PUBLIC;
+			AccessModifier accessModifier = null;//Defaults to PUBLIC
 			boolean readonly = false;//Readonly modifier
 			boolean generator = false;
 			boolean isStatic = false;
@@ -855,10 +857,11 @@ public class JSParser {
 						isStatic = true;
 					} else if (keyword == JSKeyword.PUBLIC || next.getValue() == JSKeyword.PROTECTED || next.getValue() == JSKeyword.PRIVATE) {
 						//Check that there weren't other access modifiers.
-						//TODO This doesn't protect against 'public public x'
-						if (accessModifier != AccessModifier.PUBLIC)
+						if (accessModifier != null)
 							throw new JSUnexpectedTokenException(next);
 						
+						if (keyword == JSKeyword.PUBLIC)
+							accessModifier = AccessModifier.PUBLIC;
 						if (keyword == JSKeyword.PROTECTED)
 							accessModifier = AccessModifier.PROTECTED;
 						else if (keyword == JSKeyword.PRIVATE)
@@ -873,6 +876,10 @@ public class JSParser {
 				}
 				next = src.nextToken();
 			}
+			
+			//Default accessModifier to PUBLIC if not set
+			if (accessModifier == null)
+				accessModifier = AccessModifier.PUBLIC;
 			
 			//Now check if it's a generator/getter/setter
 			if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
