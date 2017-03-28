@@ -477,8 +477,11 @@ public class JSParser {
 	}
 	
 	List<ParameterTree> reinterpretExpressionAsParameterList(ExpressionTree expr) {
+		//Unwrap parentheses
 		if (expr.getKind() == Kind.PARENTHESIZED)
 			return reinterpretExpressionAsParameterList(((ParenthesizedTree)expr).getExpression());
+		
+		//Convert a sequence tree to a list of parameters
 		if (expr.getKind() == Kind.SEQUENCE) {
 			List<ExpressionTree> exprs= ((SequenceTree)expr).getExpressions();
 			ArrayList<ParameterTree> params = new ArrayList<>(exprs.size());
@@ -487,6 +490,8 @@ public class JSParser {
 			params.trimToSize();
 			return params;
 		}
+		
+		//Return parameter list of size one
 		return Arrays.asList(reinterpretExpressionAsParameter(expr));
 	}
 	
@@ -741,11 +746,15 @@ public class JSParser {
 	}
 
 	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, Token colon, JSLexer src, Context ctx) {
+		//TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
 	//Type structures
 	
+	/**
+	 * Parse a class declaration
+	 */
 	@JSKeywordParser(JSKeyword.CLASS)
 	protected ClassDeclarationTree parseClass(Token classKeywordToken, JSLexer src, Context context) {
 		if (classKeywordToken == null)
@@ -762,6 +771,7 @@ public class JSParser {
 		
 		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
 		
+		//Read optional class identifier
 		IdentifierTree classIdentifier = null;
 		Token next = src.nextToken();
 		if (next.isIdentifier()) {
@@ -770,6 +780,7 @@ public class JSParser {
 			//TODO support generic params on class identifier
 		}
 		
+		//Read 'extends' and 'implements' clauses
 		TypeTree superClass = null;
 		List<TypeTree> interfaces = new ArrayList<>();
 		//We don't care in which order the 'extends' and 'implements' clauses come in
@@ -790,6 +801,7 @@ public class JSParser {
 			}
 		}
 		
+		//Read class body
 		expect(next, TokenKind.BRACKET, '{', src, context);
 		ArrayList<ClassPropertyTree<?>> properties = new ArrayList<>();
 		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
@@ -997,6 +1009,9 @@ public class JSParser {
 		return properties;
 	}
 	
+	/**
+	 * Parse an interface declaration
+	 */
 	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
 		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
 		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
@@ -1019,7 +1034,11 @@ public class JSParser {
 		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, superClasses, properties);
 	}
 	
+	/**
+	 * Parse an enum declaration
+	 */
 	protected EnumDeclarationTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
+		//TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
@@ -1041,6 +1060,7 @@ public class JSParser {
 	}
 	
 	protected TypeTree parseFunctionType(JSLexer src, Context context) {
+		//TODO finish
 		throw new UnsupportedOperationException();
 	}
 	
@@ -1090,6 +1110,9 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * Parse a type declaration
+	 */
 	protected TypeTree parseType(JSLexer src, Context context) {
 		//TODO support parentheses
 		TypeTree type = parseImmediateType(src, context);
@@ -1121,6 +1144,9 @@ public class JSParser {
 		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
 	}
 	
+	/**
+	 * Parse a {@code break} or {@code continue} statement, with optional label.
+	 */
 	protected GotoTree parseGotoStatement(Token keywordToken, JSLexer src, Context context) {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
@@ -1186,9 +1212,16 @@ public class JSParser {
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
 	}
 	
+	/**
+	 * Parse a try/catch, try/finally, or try/catch/finally statement
+	 */
 	protected TryTree parseTryStatement(Token tryKeywordToken, JSLexer src, Context context) {
 		tryKeywordToken = expect(tryKeywordToken, TokenKind.KEYWORD, JSKeyword.TRY, src, context);
+		
+		//Read the block that is in the try part
 		BlockTree tryBlock = parseBlock(null, src, context);
+		
+		//Read all catch blocks
 		ArrayList<CatchTree> catchBlocks = new ArrayList<>();
 		
 		Token next;
@@ -1205,6 +1238,7 @@ public class JSParser {
 		}
 
 		//Optional finally block
+		//TODO does the finally block have to come after all catch blocks?
 		BlockTree finallyBlock = null;
 		if (src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.FINALLY) != null)
 			finallyBlock = parseBlock(null, src, context);
@@ -1236,13 +1270,16 @@ public class JSParser {
 	protected WhileLoopTree parseWhileLoop(Token whileKeywordToken, JSLexer src, Context context) {
 		if (whileKeywordToken == null)
 			whileKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.WHILE, src, context);
+		
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 		ExpressionTree condition = parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
+		//Parse loop statement
 		context.push().enterLoop();
 		StatementTree statement = parseStatement(src, context);
 		context.pop();
+		
 		return new WhileLoopTreeImpl(whileKeywordToken.getStart(), src.getPosition(), condition, statement);
 	}
 	
@@ -1425,6 +1462,9 @@ public class JSParser {
 		return new BinaryTreeImpl(expr.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
 	}
 	
+	/**
+	 * Look up precedence for various binary operators
+	 */
 	int binaryPrecedence(Token t, Context context) {
 		if (t.isOperator())
 			switch (t.<JSOperator>getValue()) {
@@ -1492,6 +1532,7 @@ public class JSParser {
 				case IN:
 					if (!context.allowIn())
 						return -1;
+					//Fallthrough intentional
 				case INSTANCEOF:
 					return 11;
 				default:
@@ -1517,6 +1558,7 @@ public class JSParser {
 		context.isAssignmentTarget(false);
 		context.isBindingElement(false);
 		
+		//Accumulate-reduce binary trees on stack
 		final Stack<Token> operators = new Stack<>();
 		final Stack<ExpressionTree> stack = new Stack<>();
 		int lastPrecedence = precedence;
@@ -1561,6 +1603,8 @@ public class JSParser {
 			else
 				expr = new BinaryTreeImpl(kind, left, expr);
 		}
+		
+		//Reduction failed
 		if (!stack.isEmpty()) {
 			System.err.println("Stack: " + stack);
 			System.err.println("Ops: " + operators);
@@ -1663,16 +1707,27 @@ public class JSParser {
 		return new BinaryTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
 	}
 	
+	/**
+	 * Parse function parameters. This method will consume all parameters up to a closing (right)
+	 * parenthesis (which will also be consumed).
+	 * 
+	 * Note: parameters are in the function <i>declaration</i>, while arguments are used when
+	 * invoking a function.
+	 */
 	protected List<ParameterTree> parseParameters(JSLexer src, Context context) {
 		if (src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 			return Collections.emptyList();
 		
 		ArrayList<ParameterTree> result = new ArrayList<>();
 		
+		//Flag to remember that all parameters after the first optional parameter must also be
+		// optional
+		boolean prevOptional = false;
 		do {
 			Token identifier = src.nextToken();
 			if (!identifier.isIdentifier()) {
 				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+					//We have ourselves a rest parameter.
 					Token spread = identifier;
 					UnaryTree expr = this.parseSpread(spread, src, context);
 					
@@ -1684,6 +1739,7 @@ public class JSParser {
 					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
 						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
 					
+					//Rest parameters must be at the end
 					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 						throw new JSSyntaxException("Rest parameter must be the last", src.getPosition());
 					
@@ -1693,10 +1749,16 @@ public class JSParser {
 				throw new JSUnexpectedTokenException(identifier);
 			}
 			
+			//Check if it's an optional parameter
 			boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+			if (prevOptional && !optional)
+				throw new JSSyntaxException("A required parameter cannot follow an optional parameter", src.getPosition());
+			prevOptional |= optional;
 			
+			//Parse optional parameter type
 			TypeTree type = this.parseTypeMaybe(src, context, false);
 			
+			//Parse optional default value
 			Token assignment = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT);
 			ExpressionTree defaultValue = null;
 			if (assignment != null)
@@ -1704,10 +1766,14 @@ public class JSParser {
 			
 			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+		
+		//Expect to end with a right paren
 		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+		//Compress ArrayList (not strictly needed, but why not?)
 		result.trimToSize();
 		return result;
 	}
+	
 	/**
 	 * Parse an expression starting with <kbd>(</kbd>, generating either a
 	 * ParenthesizedTree or a FunctionExpressionTree (if a lambda expression)
@@ -1939,10 +2005,25 @@ public class JSParser {
 		return expr;
 	}
 	
+	/**
+	 * Parse a function call expression, in the form of {@code [expr]([expr],...,[expr])}.
+	 * @param functionSelectExpression
+	 *     Expression that contains the expression of the function that is being called
+	 * @param openParenToken
+	 *     Token for the open parenthesis of the call expression (should be immediately after functionSelectExpression).
+	 *     May be null (in this case, it will be read)
+	 * @param src
+	 * @param context
+	 * @returns AST for function call expression
+	 */
 	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken,
 			JSLexer src, Context context) {
+		//Make sure that we have the token for the open paren of the function call
 		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
+		
+		//Read function arguments (also consumes closing token)
 		List<? extends ExpressionTree> arguments = parseArguments(openParenToken, src, context);
+		
 		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), functionSelectExpression, arguments);
 	}
 	
@@ -2029,6 +2110,9 @@ public class JSParser {
 		}
 	}
 	
+	/**
+	 * Parse array literal.
+	 */
 	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
 		
@@ -2057,6 +2141,9 @@ public class JSParser {
 		return new ArrayLiteralTreeImpl(startToken.getStart(), next.getEnd(), values);
 	}
 	
+	/**
+	 * Parse object literal.
+	 */
 	protected ObjectLiteralTree parseObjectInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '{', src, context);
 		
@@ -2164,6 +2251,10 @@ public class JSParser {
 	
 	//Unary ops
 	
+	/**
+	 * Parse an unary expression (in form of {@code {OP} {EXPR}} or {@code {EXPR} {OP}}).
+	 * 
+	 */
 	protected ExpressionTree parseUnaryExpression(Token operatorToken, JSLexer src, Context context) {
 		if (operatorToken == null)
 			operatorToken = src.nextToken();
@@ -2205,6 +2296,7 @@ public class JSParser {
 						kind = Tree.Kind.LOGICAL_NOT;
 						break;
 					case SPREAD:
+						//Special handling for spread operator
 						return parseSpread(operatorToken, src, context);
 					case INCREMENT:
 						kind = Tree.Kind.PREFIX_INCREMENT;
@@ -2263,13 +2355,23 @@ public class JSParser {
 		return new UnaryTreeImpl(expr.getStart(), operatorToken.getEnd(), expr, kind);
 	}
 	
+	/**
+	 * Handles {@code yield} and {@code yield*} expressions.
+	 *
+	 */
 	protected UnaryTree parseYield(Token yieldKeywordToken, JSLexer src, Context context) {
 		yieldKeywordToken = expect(yieldKeywordToken, TokenKind.KEYWORD, src, context);
 		
+		dialect.require("js.yield");
+		
+		//Check if it's a 'yield*'
 		boolean delegates = yieldKeywordToken.getValue() == JSKeyword.YIELD_GENERATOR;
+		
+		//Make sure that our keywork is, in fact, either 'yield' or 'yield*'
 		if (!delegates && yieldKeywordToken.getValue() != JSKeyword.YIELD)
 			throw new JSUnexpectedTokenException(yieldKeywordToken);
 		
+		//Parse RHS of expression
 		ExpressionTree argument = delegates
 				|| !(src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)
 				|| src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)
