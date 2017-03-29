@@ -8,4 +8,8 @@ public interface SourceFile {
 	 * Get path to file location. May return null
 	 */
 	Path getPath();
+	
+	CharacterStream getSourceStream();
+	
+	String getName();
 }
