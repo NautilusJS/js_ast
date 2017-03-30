@@ -40,6 +40,7 @@ import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.GenericTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
@@ -49,6 +50,7 @@ import com.mindlin.jsast.impl.tree.IndexTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
@@ -588,7 +590,24 @@ public class JSParser {
 		openChevron = expect(openChevron, TokenKind.OPERATOR, JSOperator.LESS_THAN, src, context);
 		
 		ArrayList<GenericTypeTree> generics = new ArrayList<>();
-		//TODO finish
+		Token next;
+		if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.GREATER_THAN)) != null)
+			return generics;
+		
+		do {
+			IdentifierTree identifier = this.parseIdentifier(null, src, context);
+			
+			context.registerGenericParam(identifier.getName(), identifier.getStart());
+			
+			TypeTree supertype = null;
+			if ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.EXTENDS)) != null)
+				//TODO support keyof
+				supertype = this.parseType(src, context);
+			generics.add(new GenericTypeTreeImpl(identifier.getStart(), src.getPosition(), false, identifier, supertype));
+		} while ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null);
+		
+		expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
+		
 		generics.trimToSize();
 		return generics;
 	}
@@ -676,8 +695,13 @@ public class JSParser {
 	}
 	
 	TypeTree reinterpretAsType(Token typeToken) {
-		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
+		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
 			return new VoidTypeTreeImpl(typeToken);
+		if (typeToken.getKind() == TokenKind.IDENTIFIER) {
+			switch (typeToken.getValue().toString()) {
+				case "any":
+				case "never":
+			}
 		}
 		//TODO fix identifiers
 		throw new JSUnexpectedTokenException(typeToken);
@@ -756,9 +780,10 @@ public class JSParser {
 			return new ThrowTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
 	}
 
-	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, Token colon, JSLexer src, Context ctx) {
-		//TODO finish
-		throw new UnsupportedOperationException();
+	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, Token colon, JSLexer src, Context context) {
+		StatementTree statement = this.parseStatement(src, context);
+		context.registerStatementLabel(identifier.getName(), identifier.getStart());
+		return new LabeledStatementTreeImpl(identifier.getStart(), src.getPosition(), identifier, statement);
 	}
 	
 	//Type structures
@@ -934,7 +959,7 @@ public class JSParser {
 						else if (methodType == PropertyDeclarationType.SETTER)
 							modifierName = "setter";
 						else
-							modifierName = "unknown";
+							modifierName = "[unknown]";
 						
 						throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
 					}
@@ -953,8 +978,8 @@ public class JSParser {
 				FunctionExpressionTree fn = this.finishFunctionBody(propertyStartPos, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
 				
 				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
-			} else if (methodType != null || generator || isPropertyAbstract) {
-				//TODO also check for fields named 'constructor'
+			} else if (methodType != null || generator || isPropertyAbstract || ((key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
+				//TODO also check for fields named 'new'?
 				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 			} else {
 				//Field with (optional) type
@@ -2586,6 +2611,17 @@ public class JSParser {
 			return this;
 		}
 		
+		public Context registerStatementLabel(String name, long position) {
+			for (ContextData data = this.data; data != null; data = data.parent)
+				if (data.labels != null && data.labels.contains(name))
+					throw new JSSyntaxException("Duplicate statement label '" + name + "'", position);
+			if (this.data.labels == null)
+				//TODO maybe carry some names from parent to decrease average traversal distance
+				this.data.labels = new HashSet<>();
+			this.data.labels.add(name);
+			return this;
+		}
+		
 		static class ContextData {
 			boolean isStrict = false;
 			/**
@@ -2614,6 +2650,10 @@ public class JSParser {
 			 * Set of generic names
 			 */
 			Set<String> genericNames;
+			/**
+			 * Set of statement labels
+			 */
+			Set<String> labels;
 
 			public ContextData() {
 				this.parent = null;
