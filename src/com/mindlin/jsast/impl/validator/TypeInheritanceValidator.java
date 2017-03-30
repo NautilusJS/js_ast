@@ -1,5 +1,10 @@
 package com.mindlin.jsast.impl.validator;
 
+import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.UnionTypeTree;
+
 /**
  * Computes type inheritance calculations
  */
