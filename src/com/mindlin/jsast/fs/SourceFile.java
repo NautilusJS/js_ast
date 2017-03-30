@@ -1,0 +1,34 @@
+package com.mindlin.jsast.fs;
+
+import java.nio.file.Path;
+import java.util.Arrays;
+
+import com.mindlin.jsast.impl.util.CharacterStream;
+
+/**
+ * Abstract away a JS source
+ */
+public interface SourceFile {
+	/**
+	 * Get path to file location. May return null
+	 */
+	Path getPath();
+	
+	CharacterStream getSourceStream();
+	
+	String getName();
+	
+	long[] lineOffsets();
+	
+	Path getOriginalPath();
+	
+	boolean isExtern();
+	
+	default int getLineOffset(long offset) {
+		long[] offsets = lineOffsets();
+		int idx = Arrays.binarySearch(offsets, offset);
+		if (idx < 0)
+			idx = 1 - idx;
+		return idx;
+	}
+}
