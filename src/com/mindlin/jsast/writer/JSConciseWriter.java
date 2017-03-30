@@ -474,7 +474,27 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 
 	@Override
 	public Void visitFunctionExpression(FunctionExpressionTree node, PrintWriter out) {
-		// TODO Auto-generated method stub
+		if (!node.isArrow()) {
+			out.append("function");
+			if (node.getName() != null) {
+				out.append(' ');
+				node.getName().accept(this, out);
+			}
+		}
+		out.append('(');
+		boolean isFirst = true;
+		for (ParameterTree arg : node.getParameters()) {
+			if (!isFirst)
+				out.append(',');
+			isFirst = false;
+			arg.accept(this, out);
+		}
+		out.append(')');
+		if (node.isArrow()) {
+			out.append("=>");
+			//TODO finish
+		}
+		node.getBody().accept(this, out);
 		return null;
 	}
 
@@ -498,6 +518,7 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 
 	@Override
 	public Void visitIdentifier(IdentifierTree node, PrintWriter out) {
+		//TODO check validity
 		out.write(node.getName());
 		return null;
 	}
@@ -584,7 +605,7 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 		out.write(':');
 		StatementTree stmt = node.getStatement();
 		node.getStatement().accept(this, out);
-		out.write(';');
+		out.write(';');//TODO is this redundant?
 		return null;
 	}
 
@@ -663,7 +684,8 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 
 	@Override
 	public Void visitNumericLiteral(NumericLiteralTree node, PrintWriter out) {
-		out.write("" + node.getValue().doubleValue());
+		//TODO optimize, check that Java toString() is compatible with JS
+		out.write(node.getValue().toString());
 		return null;
 	}
 
@@ -940,7 +962,7 @@ public class JSConciseWriter implements JSWriter, TreeVisitor<Void, PrintWriter>
 				out.write("--");
 				return null;
 			default:
-				throw new UnsupportedOperationException();
+				throw new IllegalArgumentException("Unknown operator type: " + node.getKind());
 		}
 		node.getExpression().accept(this, out);
 		return null;

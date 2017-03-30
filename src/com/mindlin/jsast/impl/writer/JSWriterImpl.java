@@ -14,7 +14,6 @@ import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
-import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
@@ -33,7 +32,6 @@ import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
-import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
@@ -60,7 +58,6 @@ import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
-import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
@@ -79,8 +76,15 @@ import com.mindlin.jsast.tree.type.ParameterTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.tree.type.VoidTypeTree;
+import com.mindlin.jsast.writer.JSWriter;
+import com.mindlin.jsast.writer.JSWriterOptions;
 
-public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWriter.WriterHelper> {
+public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.WriterHelper> {
+	protected final JSWriterOptions options;
+	public JSWriterImpl(JSWriterOptions options) {
+		//TODO clone
+		this.options = options;
+	}
 	
 	@Override
 	public void write(CompilationUnitTree tree, Writer output) throws IOException {
@@ -177,6 +181,24 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 		
 	}
 
+	protected String stringify(Number value) {
+		double dValue = value.doubleValue();
+		if (!Double.isFinite(dValue)) {
+			if (Double.isNaN(dValue))
+				return "NaN";
+			if (Double.isInfinite(dValue))
+				return (dValue == Double.POSITIVE_INFINITY) ? "Infinity" : "-Infinity";
+			throw new IllegalArgumentException("Unknown non-finite value " + value);
+		}
+		
+		String result = value.toString();
+		if (result.length() < 3)
+			return result;
+		
+		//TODO finish
+		return result;
+	}
+	
 	@Override
 	public Void visitAnyType(AnyTypeTree node, WriterHelper d) {
 		d.append("any");
@@ -494,7 +516,7 @@ public class ConciseJSWriter implements JSWriter, TreeVisitor<Void, ConciseJSWri
 	@Override
 	public Void visitIdentifierType(IdentifierTypeTree node, WriterHelper d) {
 		if (node.getGenerics().isEmpty())
-			return visitIdentifier(node.getIdentifier(), d);
+			return node.getIdentifier().accept(this, d);
 		node.getIdentifier().accept(this, d);
 		d.append('<');
 		boolean isFirst = true;
