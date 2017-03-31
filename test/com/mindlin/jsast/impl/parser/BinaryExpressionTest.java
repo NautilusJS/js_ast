@@ -13,6 +13,7 @@ import org.junit.Test;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 public class BinaryExpressionTest {
@@ -58,6 +59,33 @@ public class BinaryExpressionTest {
 		BinaryTree expr = parseExpression("a.b", Kind.MEMBER_SELECT);
 		assertIdentifier("a", expr.getLeftOperand());
 		assertIdentifier("b", expr.getRightOperand());
+	}
+	
+	@Test
+	public void testOrderOfOperationsSimple() {
+		//(a+(b*c))
+		BinaryTree expr = parseExpression("a+b*c");
+		
+		assertEquals(Tree.Kind.ADDITION, expr.getKind());
+		assertIdentifier("a", expr.getLeftOperand());
+		
+		BinaryTree right = (BinaryTree) expr.getRightOperand();
+		assertEquals(Tree.Kind.MULTIPLICATION, right.getKind());
+		assertIdentifier("b", right.getLeftOperand());
+		assertIdentifier("c", right.getRightOperand());
+	}
+	
+	@Test
+	public void testOrderOfOperationsParentheses() {
+		BinaryTree expr = parseExpression("(a+b)*c");
+		
+		assertEquals(Tree.Kind.MULTIPLICATION, expr.getKind());
+		assertIdentifier("c", expr.getRightOperand());
+		
+		BinaryTree left = (BinaryTree) expr.getLeftOperand();
+		assertEquals(Tree.Kind.ADDITION, left.getKind());
+		assertIdentifier("a", left.getLeftOperand());
+		assertIdentifier("b", left.getRightOperand());
 	}
 	
 	@Ignore ("Profiling only")
