@@ -2,8 +2,8 @@ package com.mindlin.jsast.impl.writer;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.List;
 
 import com.mindlin.jsast.impl.util.Characters;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
@@ -18,6 +18,8 @@ import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
+import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
@@ -61,6 +63,7 @@ import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeTree;
@@ -69,9 +72,6 @@ import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
-import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
-import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
@@ -123,6 +123,14 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		public void endRegion(long srcEnd) {
+			
+		}
+		
+		public void pushIndent() {
+			
+		}
+		
+		public void popIndent() {
 			
 		}
 		
@@ -393,8 +401,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitBlock(BlockTree node, WriterHelper out) {
 		out.append('{');
+		out.pushIndent();
 		for (StatementTree statement : node.getStatements())
 			statement.accept(this, out);
+		out.popIndent();
 		out.append('}');
 		return null;
 	}
@@ -577,6 +587,31 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		return null;
 	}
 
+	protected void writeFunctionParameters(FunctionExpressionTree node, WriterHelper out) {
+		List<ParameterTree> params = node.getParameters();
+		if (node.isArrow() && params.size() == 1) {
+			ParameterTree param0 = params.get(0);
+			if (!param0.isOptional() && param0.getInitializer() == null && !param0.isRest() && (param0.getType() == null || param0.getType().isImplicit())) {
+				//We don't have to write parentheses
+				param0.accept(this, out);
+				return;
+			}
+		}
+		out.append('(');
+		boolean isFirst = true;
+		for (ParameterTree param : params) {
+			if (!isFirst)
+				out.append(',');
+			isFirst = false;
+			param.accept(this, out);
+		}
+		out.append(')');
+	}
+	
+	protected void writeFunctionBody(BlockTree body, WriterHelper out) {
+		
+	}
+	
 	@Override
 	public Void visitFunctionExpression(FunctionExpressionTree node, WriterHelper out) {
 		if (!node.isArrow()) {
@@ -586,15 +621,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				node.getName().accept(this, out);
 			}
 		}
-		out.append('(');
-		boolean isFirst = true;
-		for (ParameterTree arg : node.getParameters()) {
-			if (!isFirst)
-				out.append(',');
-			isFirst = false;
-			arg.accept(this, out);
-		}
-		out.append(')');
+		
+		//Write parameters
+		this.writeFunctionParameters(node, out);
+		
 		if (node.isArrow()) {
 			out.append("=>");
 			//TODO finish
@@ -843,6 +873,8 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitParameter(ParameterTree node, WriterHelper out) {
+		if (node.isRest())
+			out.append("...");
 		node.getIdentifier().accept(this, out);
 		if (node.isOptional())
 			out.append('?');
