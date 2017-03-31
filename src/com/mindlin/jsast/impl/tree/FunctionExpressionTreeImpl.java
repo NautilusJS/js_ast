@@ -17,11 +17,13 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	protected final boolean strict;
 	protected final boolean arrow;
 	protected final boolean generator;
+	protected final boolean isAsync;
 	protected final boolean isStmt;
 
-	public FunctionExpressionTreeImpl(long start, long end, IdentifierTree name, List<ParameterTree> parameters, TypeTree returnType,  boolean arrow,
+	public FunctionExpressionTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
 			StatementTree body, boolean strict, boolean generator) {
 		super(start, end);
+		this.isAsync = isAsync;
 		this.name = name;
 		this.parameters = parameters;
 		this.returnType = returnType;
@@ -68,8 +70,12 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	}
 
 	@Override
+	public boolean isAsync() {
+		return this.isAsync;
+	}
+
+	@Override
 	public TypeTree getReturnType() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.returnType;
 	}
 }

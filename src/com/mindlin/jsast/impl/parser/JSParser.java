@@ -2158,7 +2158,8 @@ public class JSParser {
 			body = new ReturnTreeImpl(expr);
 		}
 		//TODO infer name from syntax
-		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), identifier, parameters, returnType, arrow, body, ctx.isStrict(), generator);
+		//TODO support async functions
+		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), false, identifier, parameters, returnType, arrow, body, ctx.isStrict(), generator);
 		ctx.pop();
 		return result;
 	}

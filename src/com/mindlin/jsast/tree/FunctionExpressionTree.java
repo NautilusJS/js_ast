@@ -11,11 +11,21 @@ public interface FunctionExpressionTree extends ExpressionTree {
 	
 	TypeTree getReturnType();
 
+	/**
+	 * Return if this function is marked as strict
+	 * @return
+	 */
 	boolean isStrict();
 	
+	/**
+	 * Return if this is an arrow function
+	 * @return
+	 */
 	boolean isArrow();
 	
 	boolean isGenerator();
+	
+	boolean isAsync();
 	
 	@Override
 	default Tree.Kind getKind() {
