@@ -1695,10 +1695,13 @@ public class JSParser {
 		src.mark();
 		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 		//Shortcut to optional property w/type
-		//The only time ?: will occur is paramName?:type
-		if (next != null && context.isMaybeParam() && src.peek().isOperator() && (src.peek().getValue() == JSOperator.COLON || src.peek().getValue() == JSOperator.COMMA || src.peek().getValue() == JSOperator.RIGHT_PARENTHESIS)) {
-			src.reset();
-			return expr;
+		//The only time when the sequences '?:', '?,', or '?)' will occur are in a function definition
+		if (next != null && context.isMaybeParam()) {
+			Token lookahead = src.peek();
+			if (lookahead.matches(TokenKind.OPERATOR, JSOperator.COLON) || lookahead.matches(TokenKind.OPERATOR, JSOperator.COMMA) || lookahead.matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS)) {
+				src.reset();
+				return expr;
+			}
 		}
 		src.unmark();
 		
@@ -1897,7 +1900,9 @@ public class JSParser {
 		}
 		
 		if ((next = src.nextTokenIf(TokenPredicate.PARAMETER_TYPE_START)) != null) {
-			//Lambda expression where the first parameter has an explicit type/is optional
+			//Lambda expression where the first parameter has an explicit type/is optional/has default value
+			//TODO refactor some shared code into own method
+			
 			boolean optional = next.getValue() == JSOperator.QUESTION_MARK;
 			if (optional)
 				dialect.require("ts.parameter.optional", next.getStart());
@@ -1954,11 +1959,13 @@ public class JSParser {
 						context.isMaybeParam(maybeParam);
 					}
 					// Check for declared types (means its a lambda param)
-					boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+					boolean optional = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 					Token colonToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
 					if (optional || colonToken != null) {
 						//Upgrade to lambda
 						dialect.require("js.function.lambda", leftParenToken.getStart());
+						//TODO refactor some shared code into own method
+						
 						List<ParameterTree> params = new ArrayList<>(expressions.size());
 						for (ExpressionTree x : (List<ExpressionTree>)(List<?>)expressions)
 							params.add(reinterpretExpressionAsParameter(x));
@@ -1968,11 +1975,15 @@ public class JSParser {
 							throw new JSUnexpectedTokenException(colonToken);
 						
 						//Parse type declaration
-						TypeTree type = parseType(src, context);
+						TypeTree type = null;
+						if (colonToken != null)
+							type = parseType(src, context);
 						
-						params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, optional, type, null));
+						ExpressionTree initializer = (!optional && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(null, src, context) : null;
 						
-						if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null)
+						params.add(new ParameterTreeImpl(expression.getStart(), expression.getEnd(), (IdentifierTree)expression, false, optional, type, initializer));
+						
+						if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
 							params.addAll(this.parseParameters(src, context));
 						
 						expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
