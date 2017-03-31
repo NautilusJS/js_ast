@@ -75,7 +75,7 @@ public abstract class AbstractTree implements Tree {
 		String treeType = getClass().getSimpleName();
 		if (treeType.endsWith("Impl"))
 			treeType = treeType.substring(0, treeType.length() - 4);//Remove 'Impl' at the end of the string
-		sb.append("class:\"").append(treeType).append("\",");
+		sb.append("\"class\":\"").append(treeType).append("\",");
 		
 		Set<String> getterNames = new HashSet<>();
 		getterNames.add("getClass");
@@ -96,7 +96,7 @@ public abstract class AbstractTree implements Tree {
 					name = name.substring(3);
 				else if (name.startsWith("is"))
 					name = name.substring(2);
-				sb.append(name.substring(0,1).toLowerCase()).append(name.substring(1)).append(':');
+				sb.append('"' + name.substring(0,1).toLowerCase()).append(name.substring(1)).append("\":");
 				sb.append(AbstractTree.writeJSON(value));
 				sb.append(',');
 			}

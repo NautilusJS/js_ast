@@ -112,8 +112,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		type.accept(this, out);
 	}
 	
-	protected static class WriterHelper implements Closeable {
+	protected class WriterHelper implements Closeable {
 		protected final Writer parent;
+		protected int indentLevel = options.baseIndent;
+		private String indent = "";
 		public WriterHelper(Writer parent) {
 			this.parent = parent;
 		}
@@ -127,11 +129,16 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		public void pushIndent() {
-			
+			indentLevel++;
+			indent += options.indentStyle;
 		}
 		
 		public void popIndent() {
-			
+			if (--indentLevel < options.baseIndent) {
+				indentLevel++;
+				return;
+			}
+			indent = indent.substring(0, indent.length() - options.indentStyle.length());
 		}
 		
 		@Override
@@ -185,6 +192,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
+		}
+		
+		public WriterHelper newline() {
+			return append("\n" + indent);
 		}
 	}
 
