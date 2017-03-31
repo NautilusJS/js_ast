@@ -12,6 +12,7 @@ import java.util.Stack;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
+import com.mindlin.jsast.fs.SourceFile;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
@@ -214,7 +215,8 @@ public class JSParser {
 		context.setScriptName(unitName);
 		while ((value = parseStatement(src, context)) != null)
 			elements.add(value);
-		return new CompilationUnitTreeImpl(0, src.getPosition(), unitName, null, elements, false);
+		SourceFile source = null;
+		return new CompilationUnitTreeImpl(0, src.getPosition(), source, null, elements, false);
 	}
 	
 	public Tree parseNext(JSLexer src, Context context) {

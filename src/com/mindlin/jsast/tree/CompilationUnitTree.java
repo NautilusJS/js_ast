@@ -2,6 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+import com.mindlin.jsast.fs.SourceFile;
 import com.mindlin.jsast.impl.tree.LineMap;
 
 public interface CompilationUnitTree extends Tree {
@@ -9,7 +10,7 @@ public interface CompilationUnitTree extends Tree {
 	
 	List<StatementTree> getSourceElements();
 	
-	String getSourceName();
+	SourceFile getSourceFile();
 	
 	boolean isStrict();
 	
