@@ -717,6 +717,7 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public void reset() {
+		this.lookahead = null;
 		chars.resetToMark();
 	}
 	

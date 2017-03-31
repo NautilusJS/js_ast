@@ -61,11 +61,6 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	}
 	
 	@Override
-	public boolean isWhitespace() {
-		return Characters.isJsWhitespace(current());
-	}
-	
-	@Override
 	public CharacterStream skipWhitespace() {
 		while (hasNext() && Characters.isJsWhitespace(data[1 + position]))
 			position++;

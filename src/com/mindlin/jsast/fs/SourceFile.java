@@ -14,8 +14,16 @@ public interface SourceFile {
 	 */
 	Path getPath();
 	
+	/**
+	 * Get stream of source
+	 * @return
+	 */
 	CharacterStream getSourceStream();
 	
+	/**
+	 * Get unique source file name
+	 * @return source file name
+	 */
 	String getName();
 	
 	long[] lineOffsets();

@@ -42,7 +42,9 @@ public interface CharacterStream {
 
 	boolean isEOL();
 
-	boolean isWhitespace();
+	default boolean isWhitespace() {
+		return Characters.isJsWhitespace(current());
+	}
 
 	CharacterStream skipWhitespace();
 
