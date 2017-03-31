@@ -980,7 +980,7 @@ public class JSParser {
 				FunctionExpressionTree fn = this.finishFunctionBody(propertyStartPos, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
 				
 				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
-			} else if (methodType != null || generator || isPropertyAbstract || ((key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
+			} else if (methodType != null || generator || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
 				//TODO also check for fields named 'new'?
 				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 			} else {
@@ -1756,10 +1756,16 @@ public class JSParser {
 	protected ExpressionTree parseAssignment(Token startToken, JSLexer src, Context context) {
 		if (startToken == null)
 			startToken = src.nextToken();
+		
+		//Check if this could possibly start a parameter
+		if (context.isMaybeParam() && !TokenPredicate.START_OF_PARAMETER.test(startToken))
+			context.isMaybeParam(false);
+		
 		if (context.allowYield() && startToken.matches(TokenKind.KEYWORD, JSKeyword.YIELD))
 			return this.parseYield(startToken, src, context);
 		
 		ExpressionTree expr = this.parseConditional(startToken, src, context);
+		
 		//Upgrade to lambda
 		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA) != null)
 			return this.finishFunctionBody(expr.getStart(), null, this.reinterpretExpressionAsParameterList(expr), null, true, false, src, context);
@@ -1902,15 +1908,19 @@ public class JSParser {
 				dialect.require("ts.types", type.getStart());
 			
 			//Parse default value, if exists
-			ExpressionTree defaultValue = ((!optional && type == null) || src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null) ? this.parseAssignment(null, src, context) : null;
+			ExpressionTree defaultValue = ((!optional && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(null, src, context) : null;
 			
 			ArrayList<ParameterTree> parameters = new ArrayList<>();
 			parameters.add(new ParameterTreeImpl(expr.getStart(), src.getPosition(), (IdentifierTree)expr, false, optional, type, defaultValue));
-			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null)
+			
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
 				parameters.addAll(this.parseParameters(src, context));
+			
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 			expectOperator(JSOperator.LAMBDA, src, context);
+			
 			parameters.trimToSize();
+			
 			return finishFunctionBody(leftParenToken.getStart(), null, parameters, null, true, false, src, context);
 		}
 		
