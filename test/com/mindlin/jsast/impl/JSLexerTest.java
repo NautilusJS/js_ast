@@ -17,6 +17,11 @@ import com.mindlin.jsast.impl.util.Characters;
 
 public class JSLexerTest {
 	
+	protected void assertToken(TokenKind kind, Object value, Token token) {
+		assertEquals(kind, token.getKind());
+		assertEquals(value, token.getValue());
+	}
+	
 	@Test
 	public void testSimpleStringLiteral() {
 		JSLexer lexer = new JSLexer("\"Hello, world\"");
@@ -352,8 +357,7 @@ public class JSLexerTest {
 	public void testGenerator() {
 		JSLexer lexer = new JSLexer("function function* function *");
 		Token next = lexer.nextToken();
-		assertEquals(TokenKind.KEYWORD, next.getKind());
-		assertEquals(JSKeyword.FUNCTION, next.getValue());
+		assertToken(TokenKind.KEYWORD, JSKeyword.FUNCTION, next);
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
@@ -362,5 +366,21 @@ public class JSLexerTest {
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
 		assertEquals(JSKeyword.FUNCTION, next.getValue());
+	}
+	
+	@Test
+	public void testMarkReset() {
+		JSLexer lexer = new JSLexer("1 2 3 4");
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.peek());
+		
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.nextToken());
+		
+		lexer.mark();
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.nextToken());
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek());
+		lexer.reset();
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
+		
 	}
 }
