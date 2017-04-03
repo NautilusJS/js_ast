@@ -74,6 +74,19 @@ public interface JSDialect {
 				return false;
 			}
 		},
+		ES2017 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "js.function.async":
+						//TODO finish
+						return true;
+				}
+				if (ES6.supports(feature))
+					return true;
+				return false;
+			}
+		}
 		TYPESCRIPT {
 			@Override
 			public boolean supports(String feature) {
@@ -85,7 +98,7 @@ public interface JSDialect {
 					case "ts.types.cast":
 						return true;
 				}
-				if (JSStandardDialect.ES6.supports(feature))
+				if (JSStandardDialect.ES2017.supports(feature))
 					return true;
 				return false;
 			}

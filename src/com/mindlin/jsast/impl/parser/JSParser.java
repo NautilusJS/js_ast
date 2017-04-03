@@ -542,18 +542,9 @@ public class JSParser {
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
 		switch (t.getKind()) {
 			case IDENTIFIER:
-				switch (t.<String>getValue()) {
-					case "type":
-						//TODO support
-						break;
-					case "async":
-						//Async function
-						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
-							return this.parseFunctionExpression(t, src, context);
-						break;//Not async function
-					default:
-						break;
-				}
+				if (t.<String>getValue().equals("async") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
+					//Async function
+					return this.parseFunctionExpression(t, src, context);
 				return parseIdentifier(t, src, context);
 			case NUMERIC_LITERAL:
 				if (context.isStrict()) {
@@ -1008,7 +999,6 @@ public class JSParser {
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
-				FunctionTypeTree functionType = null;//TODO finish
 				
 				FunctionExpressionTree fn = this.finishFunctionBody(propertyStartPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
 				
@@ -2218,6 +2208,7 @@ public class JSParser {
 		//The first token could be an async modifier
 		boolean async = false;
 		if (functionKeywordToken.matches(TokenKind.IDENTIFIER, "async")) {
+			dialect.require("js.function.async", functionKeywordToken.getStart());
 			async = true;
 			functionKeywordToken = src.nextToken();
 		}
