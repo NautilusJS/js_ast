@@ -101,7 +101,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		try {
 			tree.accept(this, new WriterHelper(output));
 		} catch (RuntimeException e) {
-			throw (IOException) e.getCause();
+			if (e.getCause() != null)
+				throw (IOException) e.getCause();
+			throw e;
 		}
 	}
 	
@@ -574,10 +576,17 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitForLoop(ForLoopTree node, WriterHelper out) {
 		out.append("for(");
-		node.getInitializer().accept(this, out);
-		node.getCondition().accept(this, out);
+		StatementTree initializer = node.getInitializer();
+		if (initializer != null)
+			initializer.accept(this, out);
 		out.append(';');
-		node.getUpdate().accept(this, out);
+		ExpressionTree condition = node.getCondition();
+		if (condition != null)
+			condition.accept(this, out);
+		out.append(';');
+		ExpressionTree update = node.getUpdate();
+		if (update != null)
+			update.accept(this, out);
 		out.append(')');
 		node.getStatement().accept(this, out);
 		return null;
@@ -1046,8 +1055,18 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append("try");
 		node.getBlock().accept(this, out);
 		if (!node.getCatches().isEmpty())
-			for (CatchTree ct : node.getCatches())
-				ct.accept(this, out);
+			for (CatchTree ct : node.getCatches()) {
+				out.append("catch(");
+				ct.getParameter().accept(this, out);
+				TypeTree ctParamType = ct.getType();
+				if (ctParamType != null && !ctParamType.isImplicit()) {
+					out.append(':');
+					ctParamType.accept(this, out);
+				}
+				out.append(')');
+				
+				ct.getBlock().accept(this, out);
+			}
 		if (node.getFinallyBlock() != null) {
 			out.append("finally");
 			node.getFinallyBlock().accept(this, out);
@@ -1071,6 +1090,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitUnary(UnaryTree node, WriterHelper out) {
+		//TODO replace out.append(x) with a variable
 		switch (node.getKind()) {
 			case PREFIX_INCREMENT:
 				out.append("++");
@@ -1096,6 +1116,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				break;
 			case UNARY_MINUS:
 				out.append('-');
+				break;
+			case LOGICAL_NOT:
+				out.append('!');
+				break;
+			case BITWISE_NOT:
+				out.append('~');
 				break;
 			case POSTFIX_INCREMENT:
 				node.getExpression().accept(this, out);
@@ -1135,7 +1161,20 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				out.append(',');
 			}
 			isFirstDeclaration = false;
-			declarator.accept(this, out);
+			
+			declarator.getIdentifier().accept(this, out);
+			
+			TypeTree type = declarator.getType();
+			if (type != null && !type.isImplicit()) {
+				out.append(':');
+				type.accept(this, out);
+			}
+			
+			ExpressionTree initializer = declarator.getIntitializer();
+			if (initializer != null) {
+				out.append('=');
+				initializer.accept(this, out);
+			}
 		}
 		out.append(';');
 		return null;
