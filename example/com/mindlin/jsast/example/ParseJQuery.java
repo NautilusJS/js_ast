@@ -9,7 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.mindlin.jsast.impl.parser.JSParser;
+import com.mindlin.jsast.impl.writer.JSWriterImpl;
 import com.mindlin.jsast.tree.CompilationUnitTree;
+import com.mindlin.jsast.writer.JSWriter;
+import com.mindlin.jsast.writer.JSWriterOptions;
 
 public class ParseJQuery {
 	protected static final String JQUERY_URL = "https://code.jquery.com/jquery-3.2.1.js";
@@ -31,6 +34,13 @@ public class ParseJQuery {
 		
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("jquery-3.2.1.js.json"))) {
 			bw.write(ast.toString());
+		}
+		
+		JSWriterOptions options = new JSWriterOptions();
+		options.indentStyle = "\t";
+		JSWriter writer = new JSWriterImpl(options);
+		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("jquery-3.2.1.js"))) {
+			writer.write(ast, bw);
 		}
 	}
 }
