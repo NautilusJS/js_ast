@@ -312,8 +312,8 @@ public class JSLexer implements Supplier<Token> {
 		long result = Long.parseLong(nmb, type.getExponent());
 		if (result > Integer.MIN_VALUE && result < Integer.MAX_VALUE)
 			//Downgrade to an int if possible
-			return (int) result;
-		return result;
+			return (Integer) (int) result;
+		return (Long) result;
 	}
 	
 	public JSOperator peekOperator() {

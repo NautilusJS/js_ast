@@ -541,7 +541,7 @@ public class JSParser {
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
 		switch (t.getKind()) {
 			case IDENTIFIER:
-				switch (t.getValue()) {
+				switch (t.<String>getValue()) {
 					case "type":
 						//TODO support
 						break;
@@ -1148,7 +1148,23 @@ public class JSParser {
 	
 	protected TypeTree parseImmediateType(JSLexer src, Context context) {
 		Token startToken = src.nextToken();
-		if (startToken.isIdentifier() || startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+		if (startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+			//'this' type
+			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
+			//No generics on 'this'
+			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, Collections.emptyList());
+		} else if (startToken.isIdentifier()) {
+			//Check for 'keyof X'
+			if ("keyof".matches(startToken.getValue())) {
+				TypeTree baseType = parseType(src, context);
+				return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), false, baseType);
+			}
+			
+			//Array<X> => X[]
+			if ("Array".matches(startToken.getValue())) {
+				
+			}
+			
 			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
 			List<TypeTree> generics;
 			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LESS_THAN) != null) {
@@ -1167,11 +1183,12 @@ public class JSParser {
 			//Function
 			return parseFunctionType(src, context);
 		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
-			//Inline interface
+			//Inline interface (or object type '{}')
 			List<InterfacePropertyTree> properties = this.parseInterfaceBody(src, context);
 			return new InterfaceTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
-			//Tuple
+			//Tuple (of array type '[]')
+			//TODO fix for '[]'
 			List<TypeTree> slots;
 			if (src.nextTokenIf(TokenKind.BRACKET, ']') == null) {
 				slots = new ArrayList<>();
@@ -1185,6 +1202,7 @@ public class JSParser {
 			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
 			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), false, slots);
 		} else if (startToken.isLiteral()) {
+			
 			//String literal
 		} else {
 			throw new JSUnexpectedTokenException(startToken);
