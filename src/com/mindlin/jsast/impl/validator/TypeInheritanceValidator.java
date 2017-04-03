@@ -15,7 +15,7 @@ public class TypeInheritanceValidator {
 			case ANY_TYPE:
 				return true;
 			case VOID_TYPE:
-				
+				return child.getKind() == Tree.Kind.VOID_TYPE;
 			case TYPE_UNION: {
 				UnionTypeTree union = (UnionTypeTree) base;
 				//TODO fix generic param binding
@@ -30,7 +30,6 @@ public class TypeInheritanceValidator {
 					return false;
 				return canExtend(((ArrayTypeTree)base).getBaseType(), ((ArrayTypeTree)child).getBaseType());
 			}
-			
 			default:
 				throw new IllegalArgumentException("Unsupported type: " + base.getKind());
 		}

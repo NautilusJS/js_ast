@@ -95,7 +95,7 @@ public interface Tree {
 		NUMERIC_LITERAL(NumericLiteralTree.class),
 		REGEXP_LITERAL(RegExpLiteralTree.class),
 		STRING_LITERAL(StringLiteralTree.class),
-		TEMPLATE_LITERAL,
+		TEMPLATE_LITERAL(TemplateLiteralTree.class),
 		ARRAY_LITERAL(ArrayLiteralTree.class),
 		OBJECT_LITERAL(ObjectLiteralTree.class),
 		OBJECT_LITERAL_PROPERTY(ObjectLiteralPropertyTree.class),
@@ -179,6 +179,7 @@ public interface Tree {
 		TYPEOF(UnaryTree.class),
 
 		ERROR(ErroneousTree.class),
+		TEMPLATE_ELEMENT(TemplateElementTree.class),
 		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
 		OTHER,
 		VOID(VoidTree.class),

@@ -71,6 +71,7 @@ public interface TreeVisitor<R, D> {
 	R visitStringLiteral(StringLiteralTree node, D d);
 	R visitSuper(SuperExpressionTree node, D d);
 	R visitSwitch(SwitchTree node, D d);
+	R visitTemplateLiteral(TemplateLiteralTree node, D d);
 	R visitThis(ThisExpressionTree node, D d);
 	R visitThrow(ThrowTree node, D d);
 	R visitTry(TryTree node, D d);

@@ -13,7 +13,7 @@ public class ReaderCharacterStream extends AbstractCharacterStream {
 	protected long position = -1;
 	
 	//In case our reader can't support buffers
-	protected long bufferStart;
+	protected long bufferStart = -1;
 	protected CharBuffer buffer;
 	
 	protected char current;
@@ -41,6 +41,15 @@ public class ReaderCharacterStream extends AbstractCharacterStream {
 	
 	@Override
 	public char peek(long offset) {
+		if (offset == 0)
+			return current();
+		
+		if (in.markSupported()) {
+			
+		} else if (bufferStart > -1) {
+			
+		} else {
+		}
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -63,11 +72,7 @@ public class ReaderCharacterStream extends AbstractCharacterStream {
 	
 	@Override
 	public CharacterStream position(long pos) {
-		if (pos < this.position) {
-			
-		}
-		// TODO Auto-generated method stub
-		return null;
+		return skip(pos - this.position);
 	}
 	
 	@Override
