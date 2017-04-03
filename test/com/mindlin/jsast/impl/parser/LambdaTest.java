@@ -137,6 +137,21 @@ public class LambdaTest {
 	@Test
 	public void testMultipleParamsWithType() {
 		FunctionExpressionTree lambda = parseExpression("(x:string, y:number)=>x", Kind.FUNCTION_EXPRESSION);
+		
+		List<ParameterTree> params = lambda.getParameters();
+		assertEquals(2, params.size());
+		
+		ParameterTree param0 = params.get(0);
+		assertFalse(param0.isRest());
+		assertFalse(param0.isOptional());
+		assertNull(param0.getInitializer());
+		assertIdentifier("x", param0.getIdentifier());
+		
+		ParameterTree param1 = params.get(1);
+		assertFalse(param1.isRest());
+		assertFalse(param1.isOptional());
+		assertNull(param1.getInitializer());
+		assertIdentifier("y", param1.getIdentifier());
 	}
 	
 	@Test
@@ -156,11 +171,43 @@ public class LambdaTest {
 	@Test
 	public void testSingleParamOptionalTyped() {
 		FunctionExpressionTree lambda = parseExpression("(x?:string)=>x", Kind.FUNCTION_EXPRESSION);
+		
+		List<ParameterTree> params = lambda.getParameters();
+		assertEquals(1, params.size());
+		
+		ParameterTree param0 = params.get(0);
+		assertFalse(param0.isRest());
+		assertTrue(param0.isOptional());
+		assertNull(param0.getInitializer());
+		assertIdentifier("x", param0.getIdentifier());
+	}
+	
+	@Test
+	public void testSingleParamTypedDefault() {
+		FunctionExpressionTree lambda = parseExpression("(x:number=5)=>x", Kind.FUNCTION_EXPRESSION);
+		
+		List<ParameterTree> params = lambda.getParameters();
+		assertEquals(1, params.size());
+		
+		ParameterTree param0 = params.get(0);
+		assertFalse(param0.isRest());
+		assertFalse(param0.isOptional());
+		assertLiteral(5, param0.getInitializer());
+		assertIdentifier("x", param0.getIdentifier());
 	}
 	
 	@Test
 	public void testSingleParamOptional() {
 		FunctionExpressionTree lambda = parseExpression("(x?)=>x", Kind.FUNCTION_EXPRESSION);
+		
+		List<ParameterTree> params = lambda.getParameters();
+		assertEquals(1, params.size());
+		
+		ParameterTree param0 = params.get(0);
+		assertFalse(param0.isRest());
+		assertTrue(param0.isOptional());
+		assertNull(param0.getInitializer());
+		assertIdentifier("x", param0.getIdentifier());
 	}
 	
 	@Test
@@ -184,7 +231,7 @@ public class LambdaTest {
 		
 		
 		lambda = parseExpression("(x, y?)=>x", Kind.FUNCTION_EXPRESSION);
-
+		
 		params = lambda.getParameters();
 		assertEquals(2, params.size());
 		
@@ -219,5 +266,30 @@ public class LambdaTest {
 		assertFalse(param1.isOptional());
 		assertLiteral(6, param1.getInitializer());
 		assertIdentifier("y", param1.getIdentifier());
+	}
+	
+	@Test
+	public void testNested() {
+		FunctionExpressionTree lambda = parseExpression("x=>y=>x", Kind.FUNCTION_EXPRESSION);
+		
+		List<ParameterTree> params = lambda.getParameters();
+		assertEquals(1, params.size());
+		
+		ParameterTree param0 = params.get(0);
+		assertFalse(param0.isRest());
+		assertFalse(param0.isOptional());
+		assertNull(param0.getInitializer());
+		assertIdentifier("x", param0.getIdentifier());
+		
+		//TODO Finish
+		/*FunctionExpressionTree lambda1 = (FunctionExpressionTree) lambda.getBody();
+		List<ParameterTree> params1 = lambda1.getParameters();
+		assertEquals(1, params1.size());
+		
+		ParameterTree param1 = params1.get(0);
+		assertFalse(param1.isRest());
+		assertFalse(param1.isOptional());
+		assertLiteral(6, param1.getInitializer());
+		assertIdentifier("y", param1.getIdentifier());*/
 	}
 }

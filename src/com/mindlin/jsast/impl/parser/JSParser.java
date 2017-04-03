@@ -51,6 +51,7 @@ import com.mindlin.jsast.impl.tree.IndexTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.KeyofTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
@@ -606,12 +607,20 @@ public class JSParser {
 		}
 	}
 	
+	/**
+	 * Parse a list of generic type parameters
+	 * @param openChevron
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	protected List<GenericTypeTree> parseGenerics(Token openChevron, JSLexer src, Context context) {
 		openChevron = expect(openChevron, TokenKind.OPERATOR, JSOperator.LESS_THAN, src, context);
 		
 		ArrayList<GenericTypeTree> generics = new ArrayList<>();
-		Token next;
-		if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.GREATER_THAN)) != null)
+		
+		//There are no generics (empty '<>')
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
 			return generics;
 		
 		do {
@@ -620,11 +629,11 @@ public class JSParser {
 			context.registerGenericParam(identifier.getName(), identifier.getStart());
 			
 			TypeTree supertype = null;
-			if ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.EXTENDS)) != null)
-				//TODO support keyof
+			if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
 				supertype = this.parseType(src, context);
+			
 			generics.add(new GenericTypeTreeImpl(identifier.getStart(), src.getPosition(), false, identifier, supertype));
-		} while ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA)) != null);
+		} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 		
 		expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
 		
@@ -2023,7 +2032,7 @@ public class JSParser {
 					// Check for declared types (means its a lambda param)
 					Token lookahead = src.peek();
 					if (lookahead.matches(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) || lookahead.matches(TokenKind.OPERATOR, JSOperator.COLON))
-						return upgradeGroupToLambdaFunction(leftParenToken.getStart(), (List<ExpressionTree>)(List<?>)expressions, expr, src, context);
+						return upgradeGroupToLambdaFunction(leftParenToken.getStart(), (List<ExpressionTree>)(List<?>)expressions, expression, src, context);
 					
 					
 					expressions.add(expression);
