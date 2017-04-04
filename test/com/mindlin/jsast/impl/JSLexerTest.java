@@ -125,16 +125,6 @@ public class JSLexerTest {
 			}
 		}
 		{
-			//Check decimals (unsupported in binary numbers)
-			JSLexer lexer = new JSLexer("0b1010.0");
-			try {
-				lexer.nextNumericLiteral();
-				fail("Failed to throw exception on invalid syntax");
-			} catch (JSSyntaxException e) {
-				//Expected
-			}
-		}
-		{
 			//Check termination
 			JSLexer lexer = new JSLexer("0b0001 0b0010;0b0011\n0b0100\r0b0101\r0b0110");
 			assertEquals(0b0001, lexer.nextNumericLiteral().intValue());
