@@ -60,6 +60,7 @@ import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
 import com.mindlin.jsast.tree.SwitchTree;
+import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree;
@@ -1203,6 +1204,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		node.getScope().accept(this, out);
 		out.append(")");
 		node.getStatement().accept(this, out);
+		return null;
+	}
+
+	@Override
+	public Void visitTemplateLiteral(TemplateLiteralTree node, WriterHelper d) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }
