@@ -1,5 +1,7 @@
 package com.mindlin.jsast.tree;
 
+import java.util.List;
+
 public interface TemplateLiteralTree extends LiteralTree<String>, ObjectPropertyKeyTree {
 	
 	List<TemplateElementTree> getQuasis();

@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface TemplateLiteralTree extends Tree {
+public interface TemplateElementTree extends Tree {
 	
 	String getRaw();
 	

@@ -147,6 +147,7 @@ public interface Tree {
 		// Type stuff
 		ANY_TYPE(AnyTypeTree.class),
 		VOID_TYPE(VoidTypeTree.class),
+		NEVER_TYPE,
 		ARRAY_TYPE(ArrayTypeTree.class),
 		KEYOF_TYPE(KeyofTypeTree.class),
 		TUPLE_TYPE(TupleTypeTree.class),
