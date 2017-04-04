@@ -1521,8 +1521,11 @@ public class JSParser {
 	 * @return
 	 */
 	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src, Context context) {
-		ExpressionTree condition = parseNextExpression(src, context);
-		expectSemicolon(src, context);
+		ExpressionTree condition = null;
+		if (!src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
+			condition = parseNextExpression(src, context);
+			expectSemicolon(src, context);
+		}
 		ExpressionTree update = src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS) ? null : parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = parseStatement(src, context);
