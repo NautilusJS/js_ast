@@ -109,6 +109,13 @@ public class UnaryOperatorTest {
 	}
 	
 	@Test
+	public void testLonelyVoid() {
+		UnaryTree expr = parseExpression("void;");
+		assertEquals(Kind.VOID, expr.getKind());
+		assertNull(expr.getExpression());
+	}
+	
+	@Test
 	public void testSpread() {
 		UnaryTree expr = parseExpression("...a");
 		assertEquals(Kind.SPREAD, expr.getKind());
@@ -126,5 +133,7 @@ public class UnaryOperatorTest {
 		assertExceptionalExpression("4++", msg);
 		assertExceptionalExpression("true++", msg);
 		assertExceptionalExpression("null++", msg);
+		
+		assertExceptionalExpression("delete foo", "Cannot delete unqualified identifier in strict mode", true);
 	}
 }

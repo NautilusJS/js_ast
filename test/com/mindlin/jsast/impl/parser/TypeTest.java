@@ -7,9 +7,14 @@ import org.junit.Test;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
+import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
+import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
+import com.mindlin.jsast.tree.InterfacePropertyTree;
+import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
@@ -39,9 +44,31 @@ public class TypeTest {
 	
 	@Test
 	public void testIdentifierTypeWithGeneric() {
-		IdentifierTypeTree type = parseType("Array<T>", Kind.IDENTIFIER_TYPE);
-		assertIdentifierType("Array", 1, type);
+		IdentifierTypeTree type = parseType("Foo<T>", Kind.IDENTIFIER_TYPE);
+		assertIdentifierType("Foo", 1, type);
 		assertIdentifierType("T", 0, type.getGenerics().get(0));
+	}
+	
+	@Test
+	public void testArrayType() {
+		ArrayTypeTree type = parseType("T[]", Kind.ARRAY_TYPE);
+		assertIdentifierType("T", 0, type.getBaseType());
+	}
+	
+	@Test
+	public void testNestedArrayType() {
+		ArrayTypeTree type = parseType("T[][]", Kind.ARRAY_TYPE);
+		
+		assertEquals(Kind.ARRAY_TYPE, type.getBaseType().getKind());
+		
+		ArrayTypeTree base1 = (ArrayTypeTree) type.getBaseType();
+		assertIdentifierType("T", 0, base1.getBaseType());
+	}
+	
+	@Test
+	public void testGenericArrayType() {
+		ArrayTypeTree type = parseType("Array<T>", Kind.ARRAY_TYPE);
+		assertIdentifierType("T", 0, type.getBaseType());
 	}
 	
 	@Test
@@ -76,12 +103,33 @@ public class TypeTest {
 	}
 	
 	@Test
-	public void testInlineInterfaceType() {
-		TypeTree type = parseType("{a:string}", Kind.INTERFACE_TYPE);
+	public void testSimpleInlineInterfaceType() {
+		InterfaceTypeTree type = parseType("{a:string}", Kind.INTERFACE_TYPE);
+		assertEquals(1, type.getProperties().size());
+		
+		InterfacePropertyTree prop0 = type.getProperties().get(0);
+		ObjectPropertyKeyTree key0 = prop0.getKey();
+		assertFalse(key0.isComputed());
+		assertIdentifier("a", key0);
+		assertIdentifierType("string", 0, prop0.getType());
 	}
 	
 	@Test
 	public void testTupleType() {
-		TypeTree type = parseType("[string, number]", Kind.TUPLE_TYPE);
+		TupleTypeTree type = parseType("[string, number]", Kind.TUPLE_TYPE);
+		assertEquals(2, type.getSlotTypes().size());
+		assertIdentifierType("string", 0, type.getSlotTypes().get(0));
+		assertIdentifierType("number", 0, type.getSlotTypes().get(1));
+	}
+	
+	@Test
+	public void testParentheticalType() {
+		IntersectionTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
+		assertIdentifierType("A", 0, intersection.getLeftType());
+		
+		assertEquals(Kind.TYPE_UNION, intersection.getRightType().getKind());
+		UnionTypeTree union = (UnionTypeTree) intersection.getRightType();
+		assertIdentifierType("B", 0, union.getLeftType());
+		assertIdentifierType("C", 0, union.getRightType());
 	}
 }

@@ -25,6 +25,7 @@ public class LambdaTest {
 		assertExceptionalExpression("x:void=>()", "Types aren't allowed without parentheses");
 		assertExceptionalExpression("x?=>()", "Optional parameters not allowed without parentheses");
 		assertExceptionalExpression("(x?=5)=>()", "Initializers not allowed for optional parameters");
+		assertExceptionalExpression("(x?, y)=>()", "Required parameters may not follow an optional parameter");
 	}
 	
 	@Test

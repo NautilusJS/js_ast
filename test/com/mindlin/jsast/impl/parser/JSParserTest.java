@@ -46,13 +46,20 @@ public class JSParserTest {
 	}
 	
 	protected static void assertExceptionalExpression(String expr, String errorMsg) {
+		assertExceptionalExpression(expr, errorMsg, false);
+	}
+	
+	protected static void assertExceptionalExpression(String expr, String errorMsg, boolean strict) {
 		try {
 			JSLexer lexer = new JSLexer(expr);
-			new JSParser().parseNextExpression(lexer, new Context());
+			Context ctx = new Context();
+			if (strict)
+				ctx.enterStrict();
+			new JSParser().parseNextExpression(lexer, ctx);
 			if (lexer.isEOF())
 				fail(errorMsg);
 		} catch (JSSyntaxException e) {
-			
+			//Expected
 		}
 	}
 	
