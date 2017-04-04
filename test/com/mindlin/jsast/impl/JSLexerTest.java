@@ -104,6 +104,12 @@ public class JSLexerTest {
 	}
 	
 	@Test
+	public void testNumericLiteralZero() {
+		JSLexer lexer = new JSLexer("0");
+		assertEquals(0, lexer.nextNumericLiteral().intValue());
+	}
+	
+	@Test
 	public void testNumericLiteralBinary() {
 		{
 			JSLexer lexer = new JSLexer("0b1010");

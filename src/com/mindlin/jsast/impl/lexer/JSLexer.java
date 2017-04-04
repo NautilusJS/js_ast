@@ -276,20 +276,23 @@ public class JSLexer implements Supplier<Token> {
 			chars.next();
 		}
 		
-		if ((c = chars.peek()) == '0') {
-			chars.next();
-			switch (c = chars.peek()) {
+		if (chars.peek() == '0') {
+			if (!chars.hasNext(2))
+				//Is '0'
+				return 0;
+			
+			switch (chars.peek(2)) {
 				case 'X':
 				case 'x':
-					chars.next();
+					chars.next(2);
 					return nextHexLiteral();
 				case 'b':
 				case 'B':
-					chars.next();
+					chars.next(2);
 					return nextBinaryLiteral();
 				case 'o':
 				case 'O':
-					chars.next();
+					chars.next(2);
 					return nextOctalLiteral();
 				default:
 					//Number starts with a '0', but can be upgraded to a DECIMAL type
