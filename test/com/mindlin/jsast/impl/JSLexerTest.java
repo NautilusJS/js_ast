@@ -147,7 +147,7 @@ public class JSLexerTest {
 			JSLexer lexer = new JSLexer("10A");
 			try {
 				lexer.nextNumericLiteral();
-				fail("Failed to throw exception on invalid syntax");
+				fail("Failed to throw exception on invalid character in decimal literal");
 			} catch (JSSyntaxException e) {
 				//Expected
 			}
@@ -243,7 +243,17 @@ public class JSLexerTest {
 			JSLexer lexer = new JSLexer("0x10AG");
 			try {
 				lexer.nextNumericLiteral();
-				fail("Failed to throw exception on invalid syntax");
+				fail("Failed to throw exception on invalid character in hex literal");
+			} catch (JSSyntaxException e) {
+				//Expected
+			}
+		}
+		{
+			//Check header only
+			JSLexer lexer = new JSLexer("0x");
+			try {
+				lexer.nextNumericLiteral();
+				fail("Failed to throw exception on hex literal body missing");
 			} catch (JSSyntaxException e) {
 				//Expected
 			}
