@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.writer;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.List;
 
 import com.mindlin.jsast.impl.util.Characters;
@@ -199,6 +200,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		public WriterHelper newline() {
 			return append("\n" + indent);
+		}
+		
+		public WriterHelper spaceMaybe() {
+			return append(options.space);
 		}
 	}
 
@@ -416,9 +421,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitBlock(BlockTree node, WriterHelper out) {
 		out.append('{');
 		out.pushIndent();
+		out.newline();
 		for (StatementTree statement : node.getStatements())
 			statement.accept(this, out);
 		out.popIndent();
+		out.newline();
 		out.append('}');
 		return null;
 	}
@@ -472,7 +479,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitComment(CommentNode node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -539,7 +546,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append('{');
 		// TODO Auto-generated method stub
 		out.append('}');
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -554,6 +561,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitExpressionStatement(ExpressionStatementTree node, WriterHelper out) {
 		node.getExpression().accept(this, out);
 		out.append(';');
+		out.newline();
 		return null;
 	}
 
@@ -646,8 +654,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		//Write parameters
 		this.writeFunctionParameters(node, out);
 		
+		out.spaceMaybe();
+		
 		if (node.isArrow()) {
 			out.append("=>");
+			out.spaceMaybe();
 			//TODO finish
 		}
 		node.getBody().accept(this, out);
@@ -656,20 +667,20 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitFunctionType(FunctionTypeTree node, WriterHelper out) {
+		throw new UnsupportedOperationException();
 		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
 	public Void visitGenericRefType(GenericRefTypeTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Void visitGenericType(GenericTypeTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -723,25 +734,25 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitImport(ImportTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Void visitIndexType(IndexTypeTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Void visitInterfaceDeclaration(InterfaceDeclarationTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Void visitInterfaceType(InterfaceTypeTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -765,13 +776,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitLiteral(LiteralTree<?> node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Void visitMemberType(MemberTypeTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -889,7 +900,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitObjectPattern(ObjectPatternTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -929,7 +940,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitRegExpLiteral(RegExpLiteralTree node, WriterHelper out) {
-		// TODO Auto-generated method stub
+		System.out.println(Arrays.toString(node.getValue()));
+		//TODO escape correctly
+		out.append('/');
+		out.append(node.getValue()[0]);
+		out.append(node.getValue()[1]);
 		return null;
 	}
 
@@ -1210,6 +1225,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitTemplateLiteral(TemplateLiteralTree node, WriterHelper d) {
 		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 }
