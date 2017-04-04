@@ -17,8 +17,10 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
+import com.mindlin.jsast.impl.tree.AnyTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
+import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
@@ -598,6 +600,28 @@ public class JSParser {
 		}
 	}
 	
+	protected List<TypeTree> parseGenericArguments(Token openChevron, JSLexer src, Context context) {
+		if (openChevron == null)
+			if ((openChevron = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LESS_THAN)) == null)
+				return Collections.emptyList();
+		
+		//No generic args (empty '<>')
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
+			return Collections.emptyList();
+		
+		ArrayList<TypeTree> arguments = new ArrayList<>();
+		
+		//Read in arguments
+		do {
+			arguments.add(this.parseType(src, context));
+		} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
+		
+		expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
+		
+		arguments.trimToSize();
+		return arguments;
+	}
+	
 	/**
 	 * Parse a list of generic type parameters
 	 * @param openChevron
@@ -605,7 +629,7 @@ public class JSParser {
 	 * @param context
 	 * @return
 	 */
-	protected List<GenericTypeTree> parseGenerics(Token openChevron, JSLexer src, Context context) {
+	protected List<GenericTypeTree> parseGenericParameters(Token openChevron, JSLexer src, Context context) {
 		openChevron = expect(openChevron, TokenKind.OPERATOR, JSOperator.LESS_THAN, src, context);
 		
 		ArrayList<GenericTypeTree> generics = new ArrayList<>();
@@ -772,7 +796,7 @@ public class JSParser {
 			
 			//Check if an initializer is available
 			ExpressionTree initializer = null;
-			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
 				initializer = parseAssignment(null, src, context);
 			else if (isConst)
 				//No initializer
@@ -839,7 +863,7 @@ public class JSParser {
 			
 			//Parse generics
 			if (next.matches(TokenKind.OPERATOR, JSOperator.LESS_THAN)) {
-				generics = parseGenerics(next, src, context);
+				generics = parseGenericParameters(next, src, context);
 				next = src.nextToken();
 			}
 		}
@@ -1002,6 +1026,8 @@ public class JSParser {
 				
 				FunctionExpressionTree fn = this.finishFunctionBody(propertyStartPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
 				
+				FunctionTypeTree functionType = new FunctionTypeTreeImpl(propertyStartPos, fn.getEnd(), true, fn.getParameters(), Collections.emptyList(), fn.getReturnType());
+				
 				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
 			} else if (methodType != null || generator || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
 				//TODO also check for fields named 'new'?
@@ -1011,7 +1037,7 @@ public class JSParser {
 				TypeTree fieldType = this.parseTypeMaybe(src, context, false);
 				//Optional value expression
 				ExpressionTree value = null;
-				if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
+				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
 					value = this.parseAssignment(null, src, context);
 				//Fields end with a semicolon
 				src.expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
@@ -1020,7 +1046,7 @@ public class JSParser {
 			
 			properties.add(property);
 			
-			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null) {
+			if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)) {
 				next = expect(TokenKind.BRACKET, '}', src, context);
 				break;
 			}
@@ -1055,7 +1081,7 @@ public class JSParser {
 			if (next.isIdentifier()) {
 				//Is simple identifier => property/method
 				propname = new IdentifierTreeImpl(next);
-				optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+				optional = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 				type = this.parseTypeMaybe(src, context, true);
 			} else if (next.matches(TokenKind.BRACKET, '[')) {
 				//Parse index type
@@ -1132,7 +1158,7 @@ public class JSParser {
 	 * @return
 	 */
 	protected TypeTree parseTypeMaybe(JSLexer src, Context context, boolean canBeFunction) {
-		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) == null) {
+		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON)) {
 			if (canBeFunction && src.peek().matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS))
 				return parseFunctionType(src, context);
 			return null;
@@ -1161,20 +1187,24 @@ public class JSParser {
 			
 			//Array<X> => X[]
 			if ("Array".matches(startToken.getValue())) {
+				List<TypeTree> arrayGenericArgs = this.parseGenericArguments(null, src, context);
+				if (arrayGenericArgs.size() > 1)
+					throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
 				
+				TypeTree arrayBaseType = null;
+				if (arrayGenericArgs.size() == 1)
+					arrayBaseType = arrayGenericArgs.get(0);
+				else
+					//Fall back on 'any[]'
+					arrayBaseType = new AnyTypeTreeImpl(-1, -1, true);
+				
+				return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
 			}
 			
 			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
-			List<TypeTree> generics;
-			if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LESS_THAN) != null) {
-				generics = new ArrayList<>();
-				do {
-					generics.add(parseType(src, context));
-				} while ((startToken = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
-				expect(startToken, TokenKind.OPERATOR, JSOperator.GREATER_THAN);
-			} else {
-				generics = Collections.emptyList();
-			}
+			
+			List<TypeTree> generics = this.parseGenericArguments(null, src, context);
+			
 			return  new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
 			return new VoidTypeTreeImpl(startToken);
@@ -1189,11 +1219,11 @@ public class JSParser {
 			//Tuple (of array type '[]')
 			//TODO fix for '[]'
 			List<TypeTree> slots;
-			if (src.nextTokenIf(TokenKind.BRACKET, ']') == null) {
+			if (!src.nextTokenIs(TokenKind.BRACKET, ']')) {
 				slots = new ArrayList<>();
 				do {
 					slots.add(parseType(src, context));
-				} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+				} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 			} else {
 				slots = Collections.emptyList();
 			}
@@ -1215,12 +1245,18 @@ public class JSParser {
 	protected TypeTree parseType(JSLexer src, Context context) {
 		//Support parentheses
 		TypeTree type;
-		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) != null) {
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 			//Recurse
 			type = parseType(src, context);
 			expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 		} else {
 			type = parseImmediateType(src, context);
+		}
+		
+		//Support array types in form of 'X[]'
+		while (src.nextTokenIs(TokenKind.BRACKET, '[')) {
+			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
+			type = new ArrayTypeTreeImpl(type.getStart(), endToken.getEnd(), false, type);
 		}
 		
 		//See if it's a union/intersection type
@@ -1281,11 +1317,10 @@ public class JSParser {
 		StatementTree elseStatement = null;
 		Token next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.ELSE);
 		if (next != null) {
-			next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.ELSE);
 			// This if statement isn't really needed, but it speeds up 'else if'
 			// statements by a bit, and else if statements are more common than
 			// else statements (IMHO)
-			if (next != null)
+			if ((next = src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.IF)) != null)
 				elseStatement = parseIfStatement(next, src, context);
 			else
 				elseStatement = parseStatement(src, context);
@@ -1543,7 +1578,7 @@ public class JSParser {
 	protected ExpressionTree parseNextExpression(Token t, JSLexer src, Context context) {
 		ExpressionTree result = this.parseAssignment(t, src, context.pushed());
 		
-		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) == null)
+		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
 			return result;
 		
 		ArrayList<ExpressionTree> expressions = new ArrayList<>();
@@ -1811,7 +1846,7 @@ public class JSParser {
 		ExpressionTree expr = this.parseConditional(startToken, src, context);
 		
 		//Upgrade to lambda
-		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA) != null)
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LAMBDA))
 			return this.finishFunctionBody(expr.getStart(), false, null, this.reinterpretExpressionAsParameterList(expr), null, true, false, src, context);
 		
 		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
@@ -2105,7 +2140,7 @@ public class JSParser {
 			expr = parsePrimaryExpression(t, src, context);
 		
 		while (true) {
-			if ((t = src.nextTokenIf(TokenKind.BRACKET, '[')) != null) {
+			if (src.nextTokenIs(TokenKind.BRACKET, '[')) {
 				//Computed member access expressions
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
@@ -2118,7 +2153,7 @@ public class JSParser {
 				context.isAssignmentTarget(false);
 				List<ExpressionTree> arguments = parseArguments(t, src, context.pushed());
 				expr = new FunctionCallTreeImpl(expr.getStart(), src.getPosition(), expr, arguments);
-			} else if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
+			} else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
 				//Static member access
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
@@ -2413,7 +2448,7 @@ public class JSParser {
 			case KEYWORD:
 				switch (operatorToken.<JSKeyword>getValue()) {
 					case VOID:
-						if (src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON) != null)
+						if (src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
 							return new UnaryTreeImpl.VoidTreeImpl(operatorToken.getStart(), src.getPosition(), null);
 						kind = Tree.Kind.VOID;
 						break;
