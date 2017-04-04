@@ -62,6 +62,19 @@ public final class Characters {
 	    }
 	    return false;
 	}
+	
+	public static boolean isDecimalDigit(char c) {
+		return '0' <= c && c <= '9';
+	}
+	
+	public static boolean canStartNumber(char c) {
+		return isDecimalDigit(c) || (c == '.') || (c == '+') || (c == '-');
+	}
+	
+	public static boolean isHexDigit(char c) {
+		return ('0' <= c) && ((c <= '9') || (('a' <= c) && (c <= 'f')) || (('A' <= c) && (c <= 'F'))); 
+	}
+	
 	public static boolean canStartIdentifier(final char c) {
 		return Character.isJavaIdentifierStart(c);
 	}
