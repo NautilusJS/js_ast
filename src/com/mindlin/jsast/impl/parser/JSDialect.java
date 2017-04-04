@@ -79,6 +79,7 @@ public interface JSDialect {
 			public boolean supports(String feature) {
 				switch (feature) {
 					case "js.function.async":
+					case "js.await":
 						//TODO finish
 						return true;
 				}
@@ -86,7 +87,7 @@ public interface JSDialect {
 					return true;
 				return false;
 			}
-		}
+		},
 		TYPESCRIPT {
 			@Override
 			public boolean supports(String feature) {
