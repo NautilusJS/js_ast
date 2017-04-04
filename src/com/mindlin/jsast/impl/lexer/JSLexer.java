@@ -202,16 +202,21 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	protected long nextHexLiteral() throws JSSyntaxException {
+		boolean isEmpty = true;
 		long result = 0;
 		while (chars.hasNext()) {
 			char lookahead = chars.peek();
 			if (!Characters.isHexDigit(lookahead)) {
-				if (Characters.canStartIdentifier(lookahead))
+				if (Characters.canStartIdentifier(lookahead) || isEmpty)
 					throw new JSSyntaxException("Unexpected token", chars.position());
 				break;
 			}
+			isEmpty = false;
 			result = (result << 4) | asHexDigit(chars.next());
 		}
+		if (isEmpty)
+			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
+		return result;
 		return result;
 	}
 	
