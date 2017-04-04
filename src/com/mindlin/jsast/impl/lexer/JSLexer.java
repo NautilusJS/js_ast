@@ -703,9 +703,10 @@ public class JSLexer implements Supplier<Token> {
 			kind = TokenKind.SPECIAL;
 			value = JSSpecialGroup.SEMICOLON;
 			chars.next();
-		} else if (c == '/' && chars.hasNext(2) && (chars.peek(2) == '/' || chars.peek(2) == '*')) {
+		} else if ((c == '/' && chars.hasNext(2) && (chars.peek(2) == '/' || chars.peek(2) == '*')) ||
+				(c == '<' && chars.hasNext(4) && chars.peek(2) == '!' && chars.peek(3) == '-' && chars.peek(4) == '-')) {
 			kind = TokenKind.COMMENT;
-			value = this.nextComment(chars.peek(2) == '/');
+			value = this.nextComment(chars.peek(2) != '*');
 			return nextToken();
 		} else if ((value = nextOperator()) != null) {
 			kind = TokenKind.OPERATOR;
