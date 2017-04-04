@@ -217,6 +217,41 @@ public class JSLexer implements Supplier<Token> {
 		if (isEmpty)
 			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
 		return result;
+	}
+	
+	protected long nextBinaryLiteral() throws JSSyntaxException {
+		boolean isEmpty = true;
+		long result = 0;
+		while (chars.hasNext()) {
+			char lookahead = chars.peek();
+			if (lookahead != '0' && lookahead != '1') {
+				if (Characters.canStartIdentifier(lookahead) || Characters.isDecimalDigit(lookahead) || isEmpty)
+					throw new JSSyntaxException("Unexpected token", chars.position());
+				break;
+			}
+			isEmpty = false;
+			result = (result << 1) | (chars.next() - '0');
+		}
+		if (isEmpty)
+			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
+		return result;
+	}
+	
+	protected long nextOctalLiteral() throws JSSyntaxException {
+		boolean isEmpty = true;
+		long result = 0;
+		while (chars.hasNext()) {
+			char lookahead = chars.peek();
+			if (lookahead < '0' || '7' < lookahead) {
+				if (Characters.canStartIdentifier(lookahead) || Characters.isDecimalDigit(lookahead) || isEmpty)
+					throw new JSSyntaxException("Unexpected token", chars.position());
+				break;
+			}
+			isEmpty = false;
+			result = (result << 3) | (chars.next() - '0');
+		}
+		if (isEmpty)
+			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
 		return result;
 	}
 	
@@ -242,14 +277,12 @@ public class JSLexer implements Supplier<Token> {
 					return nextHexLiteral();
 				case 'b':
 				case 'B':
-					type = NumericLiteralType.BINARY;
-					c = chars.next();
-					break;
+					chars.next();
+					return nextBinaryLiteral();
 				case 'o':
 				case 'O':
-					type = NumericLiteralType.OCTAL;
-					c = chars.next();
-					break;
+					chars.next();
+					return nextOctalLiteral();
 				default:
 					//Number starts with a '0', but can be upgraded to a DECIMAL type
 					chars.skip(-1);
