@@ -77,6 +77,13 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
+	protected static <T extends StatementTree> T parseStatement(String stmt, Kind kind) {
+		T result = (T) new JSParser().parseStatement(new JSLexer(stmt), new Context());
+		assertEquals(kind, result.getKind());
+		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
 	protected static <T extends ExpressionTree> T parseExpressionIncomplete(String expr) {
 		return (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
 	}
