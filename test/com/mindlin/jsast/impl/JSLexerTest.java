@@ -215,6 +215,14 @@ public class JSLexerTest {
 	}
 	
 	@Test
+	public void testDecimalLiteralExponent() {
+		JSLexer lexer = new JSLexer("1.0e3 .1e4 1e3");
+		assertEquals(1.0e3, lexer.nextNumericLiteral().doubleValue(), .0001);
+		assertEquals(1.0e3, lexer.nextNumericLiteral().doubleValue(), .0001);
+		assertEquals(1.0e3, lexer.nextNumericLiteral().doubleValue(), .0001);
+	}
+	
+	@Test
 	public void testOctalUpgrade() {
 		//Test implicit octal
 		assertEquals("Incorrectly nextd implicit octal", 076543210, new JSLexer("076543210").nextNumericLiteral().intValue());
