@@ -183,6 +183,11 @@ public class JSLexerTest {
 			assertNumberEquals(0.1, lexer.nextNumericLiteral(), null);
 		}
 		{
+			//Check decimals starting with '.'
+			JSLexer lexer = new JSLexer(".1");
+			assertNumberEquals(0.1, lexer.nextNumericLiteral(), null);
+		}
+		{
 			//Check octal upgrade with decimal
 			JSLexer lexer = new JSLexer("0101.");
 			assertNumberEquals(101, lexer.nextNumericLiteral(), null);
