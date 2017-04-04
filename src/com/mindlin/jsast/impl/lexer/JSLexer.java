@@ -261,19 +261,27 @@ public class JSLexer implements Supplier<Token> {
 		boolean isPositive = true;
 		if (!chars.hasNext())
 			throw new JSEOFException(chars.position());
-		char c = chars.next();
+		
+		char c;
 		//skip non-number stuff
 		//TODO check if this is correct
-		while (c == ';' || !Character.isJavaIdentifierPart(c))
-			c = chars.next();
-		if (c == '-') {
+		while (!Characters.canStartNumber(chars.peek()))
+			chars.next();
+		
+		if ((c = chars.peek()) == '-') {
 			isPositive = false;
-			c = chars.next();
+			chars.next();
+		} else if (c == '+') {
+			//Ignore
+			chars.next();
 		}
-		if (c == '0') {
-			switch (c = chars.next()) {
+		
+		if ((c = chars.peek()) == '0') {
+			chars.next();
+			switch (c = chars.peek()) {
 				case 'X':
 				case 'x':
+					chars.next();
 					return nextHexLiteral();
 				case 'b':
 				case 'B':
@@ -285,14 +293,17 @@ public class JSLexer implements Supplier<Token> {
 					return nextOctalLiteral();
 				default:
 					//Number starts with a '0', but can be upgraded to a DECIMAL type
-					chars.skip(-1);
 					type = NumericLiteralType.OCTAL_IMPLICIT;
 					break;
 			}
 		}
-		final long startNmbPos = chars.position();
+		
+		
+		chars.mark();
 		boolean hasDecimal = false;
-		chars.skip(-1);
+		boolean hasExponent = false;
+		
+		outer:
 		while (chars.hasNext()) {
 			c = chars.next();
 			if (c == '.') {
@@ -302,6 +313,7 @@ public class JSLexer implements Supplier<Token> {
 					type = NumericLiteralType.DECIMAL;
 					continue;
 				}
+				chars.unmark();
 				throw new JSSyntaxException("Unexpected number", chars.position());
 			}
 			
@@ -328,25 +340,38 @@ public class JSLexer implements Supplier<Token> {
 						isValid = c <= '7';
 						break;
 					case HEXDECIMAL:
-						if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-							isValid = true;
-							break;
-						}
-						//Fallthrough intentional
-					case DECIMAL:
-						isValid = c <= '9';
+						isValid = (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c <= '9');
 						break;
+					case DECIMAL:
+						if (isValid = (c <= '9'))
+							break;
+						if (c == 'e' || c == 'E') {
+							hasExponent = true;
+							//Parse exponent
+							//TODO optimize with single pass
+							//Read optional '+' or '-' at start of exponent
+							if ((c = chars.peek()) == '-')
+								chars.next();
+							else if (c == '+')
+								chars.next();
+							
+							while (chars.hasNext() && (c = chars.peek()) >= '0' && c <= '9')
+								chars.next();
+							break outer;
+						}
 				}
 			}
-			if (!isValid)
+			if (!isValid) {
+				chars.unmark();
 				throw new JSSyntaxException("Unexpected identifier in numeric literal (" + type + "): " + Character.getName(c), chars.position());
+			}
 		}
 		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
 		//but it causes problems with OCTAL_IMPLICIT upgrades.
-		String nmb = (isPositive ? "" : "-") + chars.copy(startNmbPos, chars.position() - startNmbPos + 1);
+		String nmb = (isPositive ? "" : "-") + chars.copyFromMark();
 		
 		//Return number. Tries to cast down to the smallest size that it can losslessly
-		if (hasDecimal) {
+		if (hasDecimal || hasExponent) {
 			double result = Double.parseDouble(nmb);
 			//TODO reorder return options
 			long lResult = (long) result;
@@ -431,10 +456,11 @@ public class JSLexer implements Supplier<Token> {
 					return JSOperator.LEFT_SHIFT;
 				}
 				return JSOperator.LESS_THAN;
-			case '>':
-				if (d == '>') {
-					if (e == '>') {
-						if (chars.hasNext(4) && chars.peek(4) == '=')
+			case '>':// '>'
+				if (d == '>') {// '>>'
+					// '>=' already handled
+					if (e == '>') {// '>>='
+						if (chars.hasNext(4) && chars.peek(4) == '=')// '>>>='
 							return JSOperator.UNSIGNED_RIGHT_SHIFT_ASSIGNMENT;
 						return JSOperator.UNSIGNED_RIGHT_SHIFT;
 					} else if (e == '=') {
@@ -634,15 +660,21 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public Token nextToken() {
+		//Return lookahead if available
 		if (this.lookahead != null) {
 			Token result = this.lookahead;
 			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
 				skip(result);
 			return result;
 		}
+		
+		//Skip whitespace until token
 		chars.skipWhitespace();
+		
+		//Special EOF token
 		if (isEOF())
 			return this.lookahead = new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+		
 		final long start = Math.max(chars.position(), -1);
 		char c = chars.peek();
 		Object value = null;
@@ -655,8 +687,8 @@ public class JSLexer implements Supplier<Token> {
 		} else if (c == '`') {
 			value = nextStringLiteral();
 			kind = TokenKind.TEMPLATE_LITERAL;
-		//Check if it's a numeric literal (the first letter of all numbers must be /[0-9]/)
-		} else if (c >= '0' && c <= '9') {
+		//Check if it's a numeric literal (the first letter of all numbers must be /[\.0-9]/)
+		} else if (Characters.isDecimalDigit(c) || (c == '.' && chars.hasNext(2) && Characters.isDecimalDigit(chars.peek(2)))) {
 			value = nextNumericLiteral();
 			kind = TokenKind.NUMERIC_LITERAL;
 		//Check if it's a bracket
