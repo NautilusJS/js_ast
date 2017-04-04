@@ -1,9 +1,5 @@
 package com.mindlin.jsast.impl;
 
-import java.util.Arrays;
-
-import org.junit.ComparisonFailure;
-
 public class TestUtils {
 	public static final void assertNumberEquals(Number expected, Number actual, String message) {
 		if (expected.longValue() != actual.longValue() && Math.abs(expected.doubleValue() - actual.doubleValue()) > .0001)
