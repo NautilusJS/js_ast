@@ -42,5 +42,16 @@ public class ParseJQuery {
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("jquery-3.2.1.js"))) {
 			writer.write(ast, bw);
 		}
+		
+		//Re-read it
+		try (BufferedReader br = Files.newBufferedReader(Paths.get("jquery-3.2.1.js"))) {
+			StringBuilder sb = new StringBuilder();
+			while (br.ready()) {
+				sb.append(br.readLine());
+				sb.append("\n");
+			}
+			text = sb.toString();
+		}
+		CompilationUnitTree ast2 = parser.apply("jquery-3.2.1b.js", text);
 	}
 }
