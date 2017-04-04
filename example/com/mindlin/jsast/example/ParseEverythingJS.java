@@ -14,10 +14,10 @@ import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.writer.JSWriter;
 import com.mindlin.jsast.writer.JSWriterOptions;
 
-public class ParseJQuery {
-	protected static final String JQUERY_URL = "https://code.jquery.com/jquery-3.2.1.js";
+public class ParseEverythingJS {
+	protected static final String EVERYTHINGJS_URL = "https://rawgit.com/michaelficarra/everything.js/master/es2015-script.js";
 	public static void main(String...fred) throws IOException {
-		URL url = new URL(JQUERY_URL);
+		URL url = new URL(EVERYTHINGJS_URL);
 		String text;
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()))) {
 			StringBuilder sb = new StringBuilder();
@@ -29,22 +29,22 @@ public class ParseJQuery {
 		}
 		JSParser parser = new JSParser();
 		System.out.println("Parsing...");
-		CompilationUnitTree ast = parser.apply("jquery-3.2.1.js", text);
+		CompilationUnitTree ast = parser.apply("everything.js", text);
 		System.out.println("Done");
 		
-		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("jquery-3.2.1.js.json"))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("everything.js.json"))) {
 			bw.write(ast.toString());
 		}
 		
 		JSWriterOptions options = new JSWriterOptions();
 		options.indentStyle = "\t";
 		JSWriter writer = new JSWriterImpl(options);
-		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("jquery-3.2.1.js"))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("everything.js"))) {
 			writer.write(ast, bw);
 		}
 		
 		//Re-read it
-		try (BufferedReader br = Files.newBufferedReader(Paths.get("jquery-3.2.1.js"))) {
+		try (BufferedReader br = Files.newBufferedReader(Paths.get("everything.js"))) {
 			StringBuilder sb = new StringBuilder();
 			while (br.ready()) {
 				sb.append(br.readLine());
@@ -52,6 +52,6 @@ public class ParseJQuery {
 			}
 			text = sb.toString();
 		}
-		CompilationUnitTree ast2 = parser.apply("jquery-3.2.1b.js", text);
+		CompilationUnitTree ast2 = parser.apply("everything.1.js", text);
 	}
 }
