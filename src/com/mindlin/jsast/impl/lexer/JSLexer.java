@@ -201,8 +201,23 @@ public class JSLexer implements Supplier<Token> {
 		return !chars.hasNext();
 	}
 	
+	protected long nextHexLiteral() throws JSSyntaxException {
+		long result = 0;
+		while (chars.hasNext()) {
+			char lookahead = chars.peek();
+			if (!Characters.isHexDigit(lookahead)) {
+				if (Characters.canStartIdentifier(lookahead))
+					throw new JSSyntaxException("Unexpected token", chars.position());
+				break;
+			}
+			result = (result << 4) | asHexDigit(chars.next());
+		}
+		return result;
+	}
+	
 	public Number nextNumericLiteral() throws JSSyntaxException {
 		NumericLiteralType type = NumericLiteralType.DECIMAL;
+		
 		boolean isPositive = true;
 		if (!chars.hasNext())
 			throw new JSEOFException(chars.position());
@@ -219,9 +234,7 @@ public class JSLexer implements Supplier<Token> {
 			switch (c = chars.next()) {
 				case 'X':
 				case 'x':
-					type = NumericLiteralType.HEXDECIMAL;
-					c = chars.next();
-					break;
+					return nextHexLiteral();
 				case 'b':
 				case 'B':
 					type = NumericLiteralType.BINARY;
