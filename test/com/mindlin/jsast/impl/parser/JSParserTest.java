@@ -20,7 +20,7 @@ import com.mindlin.jsast.tree.Tree.Kind;
 import junit.framework.Assert;
 
 @RunWith(Suite.class)
-@SuiteClasses({ArrayLiteralTest.class, BinaryExpressionTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, LambdaTest.class, OperatorTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
+@SuiteClasses({ArrayLiteralTest.class, BinaryExpressionTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, LambdaTest.class, OperatorTest.class, StatementTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
 public class JSParserTest {
 	
 	protected static final void assertLiteral(ExpressionTree expr, String value) {

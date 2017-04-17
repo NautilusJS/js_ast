@@ -1338,8 +1338,8 @@ public class JSParser {
 		src.expect(TokenKind.BRACKET, '{');
 		
 		ArrayList<CaseTree> cases = new ArrayList<>();
-		Token next = src.nextToken();
-		while (next.isKeyword()) {
+		Token next;
+		while ((next = src.nextToken()).isKeyword()) {
 			ExpressionTree caseExpr;
 			if (next.getValue() == JSKeyword.CASE)
 				caseExpr = this.parseNextExpression(src, context);
@@ -1361,6 +1361,7 @@ public class JSParser {
 			
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
+		expect(next, TokenKind.BRACKET, '}');
 		cases.trimToSize();
 		
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);

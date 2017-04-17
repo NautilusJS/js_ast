@@ -68,4 +68,9 @@ public class ForLoopTest {
 		assertNull(declarator.getIntitializer());
 		assertIdentifier("i", declarator.getIdentifier());
 	}
+	
+	@Test
+	public void testInvalidForLoop() {
+		assertExceptionalExpression("for(var x;);", "Incomplete for loop");
+	}
 }
