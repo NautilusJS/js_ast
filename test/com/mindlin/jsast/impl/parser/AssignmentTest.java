@@ -9,7 +9,7 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 public class AssignmentTest {
-//	@Test
+	@Test
 	public void testAssignment() {
 		AssignmentTree assignment = parseExpression("x=y", Kind.ASSIGNMENT);
 		assertIdentifier("x", assignment.getLeftOperand());
@@ -28,7 +28,7 @@ public class AssignmentTest {
 		assertIdentifier("z", yzAssignment.getRightOperand());
 	}
 	
-//	@Test
+	@Test
 	public void testAssignmentToLiteral() {
 		String errorMessagePrefix = "Assignment may not be made to ";
 //		assertExceptionalExpression("y++=x", errorMessagePrefix + "numeric literals");

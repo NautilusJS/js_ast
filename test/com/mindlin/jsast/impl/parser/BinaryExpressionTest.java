@@ -88,7 +88,7 @@ public class BinaryExpressionTest {
 		assertIdentifier("b", left.getRightOperand());
 	}
 	
-	@Ignore ("Profiling only")
+	/*@Ignore ("Profiling only")
 	@Test
 	public void profile() {
 		String[] exprs = new String[100];
@@ -138,5 +138,5 @@ public class BinaryExpressionTest {
 		}
 		stddev = Math.sqrt(stddev/sorted.length);
 		System.out.println("Stddev: " + stddev);
-	}
+	}*/
 }

@@ -1,12 +1,10 @@
 package com.mindlin.jsast.impl.parser;
 
-import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 import static org.junit.Assert.*;
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
@@ -42,12 +40,7 @@ public class VariableDeclarationTest {
 	public void testConstVariableDeclaration() {
 		
 		//We have to have an initializer
-		try {
-			parseStatement("const x;");
-			fail("Did not throw exception for const declaration with no initializer");
-		} catch (JSSyntaxException e) {
-			
-		}
+		assertExceptionalExpression("const x;", "Did not throw exception for const declaration with no initializer");
 		
 		VariableDeclarationTree declaration = parseStatement("const x = 5;", Kind.VARIABLE_DECLARATION);
 		assertTrue(declaration.isConst());

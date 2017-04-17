@@ -7,7 +7,11 @@ import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
+import com.mindlin.jsast.tree.BreakTree;
+import com.mindlin.jsast.tree.ContinueTree;
+import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.SwitchTree;
+import com.mindlin.jsast.tree.Tree;
 
 public class StatementTest {
 	
@@ -50,4 +54,35 @@ public class StatementTest {
 		assertExceptionalStatement("switch(foo){notCaseOrDefault:}", "Parsed invalid switch statement");
 		assertExceptionalStatement("switch(foo){var:}", "Parsed invalid switch statement");
 	}
+	
+	@Test
+	public void testDebuggerStatement() {
+		DebuggerTree debugger = parseStatement("debugger;", Tree.Kind.DEBUGGER);
+	}
+	
+	@Test
+	public void testUnlabeledBreak() {
+		BreakTree breakTree = parseStatement("break;", Tree.Kind.BREAK);
+		assertNull(breakTree.getLabel());
+	}
+	
+	@Test
+	public void testUnlabeledContinue() {
+		ContinueTree continueTree = parseStatement("continue;", Tree.Kind.CONTINUE);
+		assertNull(continueTree.getLabel());
+	}
+	
+	@Test
+	public void testLabeledBreak() {
+		BreakTree breakTree = parseStatement("break everything;", Tree.Kind.BREAK);
+		assertEquals("everything", breakTree.getLabel());
+	}
+	
+	@Test
+	public void testLabeledContinue() {
+		ContinueTree continueTree = parseStatement("continue later;", Tree.Kind.CONTINUE);
+		assertEquals("later", continueTree.getLabel());
+	}
+	
+	
 }
