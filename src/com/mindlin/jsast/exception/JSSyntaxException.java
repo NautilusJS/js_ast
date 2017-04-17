@@ -14,4 +14,8 @@ public class JSSyntaxException extends JSException {
 	public JSSyntaxException(String message, long start, long end) {
 		this(message + " at " + start + ":" + end);
 	}
+	
+	public JSSyntaxException(String message, long position, Throwable cause) {
+		super(message + " at " + position, cause);
+	}
 }

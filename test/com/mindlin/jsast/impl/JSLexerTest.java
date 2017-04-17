@@ -45,10 +45,9 @@ public class JSLexerTest {
 	
 	@Test
 	public void testStringLiteralEASCIIHexEscape() {
-		JSLexer lexer = new JSLexer("'\\x1F'");
-		String next = lexer.nextStringLiteral();
+		JSLexer lexer = new JSLexer("'\\x1f'");
 		//Java doesn't support hex escapes, but 0o37 == 0x1F
-		assertEquals("\37", next);
+		assertEquals("\37", lexer.nextStringLiteral());
 	}
 	
 	@Test
@@ -105,7 +104,16 @@ public class JSLexerTest {
 	
 	@Test
 	public void testNumericLiteralZero() {
-		JSLexer lexer = new JSLexer("0");
+		JSLexer lexer = new JSLexer("0 00 0e0 00e0 00e999");
+		//0
+		assertEquals(0, lexer.nextNumericLiteral().intValue());
+		//00
+		assertEquals(0, lexer.nextNumericLiteral().intValue());
+		//0e0
+		assertEquals(0, lexer.nextNumericLiteral().intValue());
+		//00e0
+		assertEquals(0, lexer.nextNumericLiteral().intValue());
+		//00e999
 		assertEquals(0, lexer.nextNumericLiteral().intValue());
 	}
 	
