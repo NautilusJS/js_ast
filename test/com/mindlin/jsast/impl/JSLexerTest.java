@@ -167,16 +167,6 @@ public class JSLexerTest {
 			}
 		}
 		{
-			//Check multiple decimals
-			JSLexer lexer = new JSLexer("10.0.0");
-			try {
-				lexer.nextNumericLiteral();
-				fail("Failed to throw exception on invalid syntax");
-			} catch (JSSyntaxException e) {
-				//Expected
-			}
-		}
-		{
 			//Check octal upgrade
 			JSLexer lexer = new JSLexer("01019");
 			assertNumberEquals(1019L, lexer.nextNumericLiteral(), null);
