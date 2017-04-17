@@ -21,6 +21,13 @@ public class CharacterStreamTest {
 	}
 	
 	@Test
+	public void testNBSP() {
+		CharacterStream chars = new CharacterArrayStream("\u00a0 \n\r1");
+		chars.skipWhitespace();
+		assertEquals('1', chars.next());
+	}
+	
+	@Test
 	public void testNextCurrent() {
 		CharacterStream chars = new CharacterArrayStream("123456789");
 		assertEquals('1', chars.next());
