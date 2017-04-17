@@ -547,6 +547,9 @@ public class JSParser {
 				if (t.<String>getValue().equals("async") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 					//Async function
 					return this.parseFunctionExpression(t, src, context);
+				else if (t.<String>getValue().equals("abstract") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.CLASS))
+					//Abstract class
+					return this.parseClass(t, src, context);
 				return parseIdentifier(t, src, context);
 			case NUMERIC_LITERAL:
 				if (context.isStrict()) {
