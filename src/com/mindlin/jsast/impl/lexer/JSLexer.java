@@ -18,25 +18,6 @@ import com.mindlin.jsast.impl.util.Characters;
 
 public class JSLexer implements Supplier<Token> {
 	
-	/**
-	 * Converts a character to a hexdecimal digit. If passed character is not a
-	 * hexdecimal character (not <code>[0-9a-fA-F]</code>), this method returns
-	 * -1.
-	 * 
-	 * @param c
-	 *            Digit character to parse
-	 * @return Value of hex digit (<code>0-16</code>), or -1 if invalid.
-	 */
-	protected static int asHexDigit(char c) {
-		if (c >= '0' && c <= '9')
-			return c - '0';
-		if (c >= 'a' && c <= 'f')
-			return c - 'a' + 10;
-		if (c >= 'A' && c <= 'F')
-			return c - 'A' + 10;
-		return -1;
-	}
-	
 	protected final CharacterStream chars;
 	protected Token lookahead = null;
 	
@@ -65,7 +46,49 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public String nextStringLiteral() {
-		return nextStringLiteral(chars.next());
+		chars.skipWhitespace();
+		if (chars.hasNext())
+			return nextStringLiteral(chars.next());
+		return null;
+	}
+	
+	/**
+	 * Read an escape sequence in the form of either {@code uXXXX} or {@code u{X...XXX}}.
+	 * 
+	 * It is expected that the 'u' at the start of the escape sequence has already been consumed.
+	 * 
+	 * @return character read
+	 * @see <a href="https://tc39.github.io/ecma262/#prod-UnicodeEscapeSequence">ECMAScript 262 &sect; 11.8.4</a>
+	 */
+	protected char readUnicodeEscapeSequence() {
+		if (chars.peek() == '{') {
+			chars.skip(1);
+			//Max unicode code point is 0x10FFFF, which fits within a 32-bit integer
+			int val = 0;
+			char c = chars.next();
+			do {
+				int digit = Characters.asHexDigit(c);
+				if (c < 0)
+					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", chars.position());
+				//Overflow (value >= 0x10FFFF)
+				if ((val << 4) < val)
+					throw new JSSyntaxException("Invalid Unicode code point " + val, chars.position());
+				val = (val << 4) | digit;
+			} while ((c = chars.next()) != '}');
+			
+			return (char) val;
+		} else {
+			//Escape in uXXXX form
+			int value = 0;
+			for (int i = 0; i < 4; i++) {
+				char c = chars.next();
+				int digit = Characters.asHexDigit(c);
+				if (digit < 0)
+					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", chars.position());
+				value = (value << 4) | digit;
+			}
+			return (char) value;
+		}
 	}
 	
 	public String nextStringLiteral(final char startChar) {
@@ -73,7 +96,7 @@ public class JSLexer implements Supplier<Token> {
 		boolean isEscaped = false;
 		while (true) {
 			if (!chars.hasNext())
-				throw new JSEOFException("Unexpected EOF while parsing a string literal", getPosition());
+				throw new JSEOFException("Unexpected EOF while parsing a string literal (" + sb + ")", getPosition());
 			char c = chars.next();
 			if (isEscaped) {
 				isEscaped = false;
@@ -138,7 +161,7 @@ public class JSLexer implements Supplier<Token> {
 							int val = 0;
 							d = chars.next();
 							do {
-								int digit = asHexDigit(d);
+								int digit = Characters.asHexDigit(d);
 								if (d < 0)
 									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
 								if (val<<4 < val)
@@ -147,11 +170,11 @@ public class JSLexer implements Supplier<Token> {
 							} while ((d = chars.next()) != '}');
 							sb.append(new String(new int[] { val }, 0, 1));
 						} else {
-							int val = asHexDigit(d);
+							int val = Characters.asHexDigit(d);
 							if (val < 0)
 								throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
 							for (int i = 0; i < 3; i++) {
-								int digit = asHexDigit(d = chars.next());
+								int digit = Characters.asHexDigit(d = chars.next());
 								if (digit < 0)
 									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
 								val = (val << 4) | digit;
@@ -166,9 +189,10 @@ public class JSLexer implements Supplier<Token> {
 						if (!chars.hasNext(2))
 							throw new JSEOFException("Invalid Extended ASCII escape sequence (EOF)", getPosition() - 2);
 						try {
-							sb.append(Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{Byte.parseByte(chars.copyNext(2), 16)})).toString());
+							String s = chars.copyNext(2);
+							sb.append(Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte) Integer.parseInt(s, 16)})).toString());
 						} catch (NumberFormatException e) {
-							throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 2, 2) + ")", getPosition() - 4);
+							throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", getPosition() - 4, e);
 						}
 						break;
 					default:
@@ -201,6 +225,8 @@ public class JSLexer implements Supplier<Token> {
 		return !chars.hasNext();
 	}
 	
+	//Numeric literals
+	
 	protected long nextHexLiteral() throws JSSyntaxException {
 		boolean isEmpty = true;
 		long result = 0;
@@ -212,7 +238,7 @@ public class JSLexer implements Supplier<Token> {
 				break;
 			}
 			isEmpty = false;
-			result = (result << 4) | asHexDigit(chars.next());
+			result = (result << 4) | Characters.asHexDigit(chars.next());
 		}
 		if (isEmpty)
 			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
@@ -255,6 +281,10 @@ public class JSLexer implements Supplier<Token> {
 		return result;
 	}
 	
+	protected Number nextDecimalLiteral() throws JSSyntaxException {
+		return null;
+	}
+	
 	public Number nextNumericLiteral() throws JSSyntaxException {
 		NumericLiteralType type = NumericLiteralType.DECIMAL;
 		
@@ -284,14 +314,17 @@ public class JSLexer implements Supplier<Token> {
 			switch (chars.peek(2)) {
 				case 'X':
 				case 'x':
+					type = NumericLiteralType.HEXDECIMAL;
 					chars.next(2);
 					return nextHexLiteral();
 				case 'b':
 				case 'B':
+					type = NumericLiteralType.BINARY;
 					chars.next(2);
 					return nextBinaryLiteral();
 				case 'o':
 				case 'O':
+					type = NumericLiteralType.OCTAL;
 					chars.next(2);
 					return nextOctalLiteral();
 				default:
@@ -310,11 +343,17 @@ public class JSLexer implements Supplier<Token> {
 		while (chars.hasNext()) {
 			c = chars.next();
 			if (c == '.') {
-				if ((type == NumericLiteralType.DECIMAL || type == NumericLiteralType.OCTAL_IMPLICIT) && !hasDecimal) {
-					hasDecimal = true;
-					//Possibly upgrade from OCTAL_IMPLICIT
-					type = NumericLiteralType.DECIMAL;
-					continue;
+				if ((type == NumericLiteralType.DECIMAL || type == NumericLiteralType.OCTAL_IMPLICIT)) {
+					if (!hasDecimal) {
+						hasDecimal = true;
+						//Possibly upgrade from OCTAL_IMPLICIT
+						type = NumericLiteralType.DECIMAL;
+						continue;
+					} else {
+						//TODO try to remove backwards skips
+						chars.skip(-1);
+						break;
+					}
 				}
 				chars.unmark();
 				throw new JSSyntaxException("Unexpected number", chars.position());
@@ -337,6 +376,20 @@ public class JSLexer implements Supplier<Token> {
 							type = NumericLiteralType.DECIMAL;
 							isValid = true;
 							break;
+						} else if (c == 'e' || c == 'E') {
+							hasExponent = true;
+							//Upgrade to decimal, parse exponent
+							//TODO refactor with other exponent-parsing code
+							//TODO optimize with single pass
+							//Read optional '+' or '-' at start of exponent
+							if ((c = chars.peek()) == '-')
+								chars.next();
+							else if (c == '+')
+								chars.next();
+							
+							while (chars.hasNext() && (c = chars.peek()) >= '0' && c <= '9')
+								chars.next();
+							break outer;
 						}
 						//Fallthrough intentional
 					case OCTAL:
@@ -539,16 +592,36 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public String nextIdentifier() {
-		StringBuilder sb = new StringBuilder();
-		char c;
-		if (!chars.hasNext() || !Character.isJavaIdentifierStart(c = chars.next()))
+		if (!chars.hasNext())
 			return null;
-		do {
-			sb.append(c);
-			if (!chars.hasNext())
-				return sb.toString();
-		} while (Character.isJavaIdentifierPart(c = chars.next()));
-		chars.skip(-1);
+		
+		StringBuilder sb = new StringBuilder();
+		
+		//Start character
+		{
+			char startChar = chars.peek();
+			if (Characters.canStartIdentifier(startChar)) {
+				chars.skip(1);
+				sb.append(startChar);
+			} else if (startChar == '\\' && chars.peek(2) == 'u') {
+				chars.skip(2);
+				sb.append(readUnicodeEscapeSequence());
+			} else
+				//Not start of identifier
+				return null;
+		}
+		
+		while (chars.hasNext()) {
+			char c = chars.peek();
+			if (Characters.isIdentifierPart(c)) {
+				chars.skip(1);
+				sb.append(c);
+			} else if (c == '\\'  && chars.peek(2) == 'u') {
+				chars.skip(2);
+				sb.append(readUnicodeEscapeSequence());
+			} else
+				break;
+		}
 		return sb.toString();
 	}
 	
