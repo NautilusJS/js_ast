@@ -96,6 +96,7 @@ import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
+import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ExpressiveStatementTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
@@ -194,6 +195,13 @@ public class JSParser {
 	
 	private static Token expectSemicolon(JSLexer src, Context context) {
 		return expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
+	}
+	
+	private static Token expectEOL(JSLexer src, Context context) {
+		Token t = src.nextToken();
+		if (t.isEOS() || t.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON) || t.matches(TokenKind.SPECIAL, JSSpecialGroup.EOL))
+			return t;
+		throw new JSSyntaxException("Illegal token " + t + "; expected EOL");
 	}
 	
 	//Parser properties
@@ -344,17 +352,132 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
-		Tree next = parseNext(src, context);
-		if (next == null)
-			return null;
-		if (next.getKind().isStatement())
-			return (StatementTree)next;
-		else if (next.getKind().isExpression()) {
-			expectSemicolon(src, context);
-			return new ExpressionStatementTreeImpl(next.getStart(), src.getPosition(), (ExpressionTree)next);
-		} else if (next.getKind().isType())
-			throw new JSSyntaxException("Unexpected TypeTree when parsing statement: " + next);
-		throw new JSSyntaxException("Unexpected Tree when parsing statement: " + next);
+		Token next = src.nextToken();
+		switch (next.getKind()) {
+			case KEYWORD: {
+				switch (next.<JSKeyword>getValue()) {
+					case BREAK:
+					case CONTINUE:
+						return this.parseGotoStatement(next, src, context);
+					case DEBUGGER:
+						return this.parseDebugger(next, src, context);
+					case CLASS:
+						return this.parseClass(next, src, context);
+					case CONST:
+					case LET:
+					case VAR:
+						return this.parseVariableDeclaration(next, src, context);
+					case DO:
+						return this.parseDoWhileLoop(next, src, context);
+					case AWAIT:
+					case ENUM:
+						throw new UnsupportedOperationException();
+					case EXPORT:
+						return this.parseExportStatement(next, src, context);
+					case FOR:
+						return this.parseForStatement(next, src, context);
+					case FUNCTION:
+					case FUNCTION_GENERATOR:
+						return this.finishExpressionStatement(this.parseFunctionExpression(next, src, context), src, context);
+					case IF:
+						return this.parseIfStatement(next, src, context);
+					case IMPORT:
+						return this.parseImportStatement(next, src, context);
+					case INTERFACE:
+						return this.parseInterface(next, src, context);
+					case RETURN:
+					case THROW:
+						return this.parseUnaryStatement(next, src, context);
+					case SWITCH:
+						return this.parseSwitchStatement(next, src, context);
+					case TRY:
+						return this.parseTryStatement(next, src, context);
+					case VOID:
+						return this.parseVoid(next, src, context);
+					case WHILE:
+						return this.parseWhileLoop(next, src, context);
+					case WITH:
+						return this.parseWithStatement(next, src, context);
+					case DELETE:
+					case NEW:
+					case TYPEOF:
+					case YIELD:
+					case YIELD_GENERATOR:
+					case SUPER:
+					case THIS:
+						return this.parseExpressionStatement(next, src, context);
+					case CASE:
+					case FINALLY:
+					case DEFAULT:
+					case ELSE:
+					case EXTENDS:
+					case IN:
+					case INSTANCEOF:
+					default:
+						throw new JSSyntaxException("Unexpected keyword " + next.getValue(), next.getStart());
+				}
+			}
+			case BRACKET:
+				if (next.<Character>getValue() == '{')
+					return this.parseBlock(next, src, context);
+				else
+					return this.parseExportStatement(next, src, context);
+			case OPERATOR:
+				return this.parseExportStatement(next, src, context);
+			case IDENTIFIER: {
+				switch (next.<String>getValue()) {
+					case "type":
+						if (src.peek().getKind() != TokenKind.IDENTIFIER)
+							break;
+						//type statements not yet supported
+						throw new UnsupportedOperationException("Type statements not yet supported: " + next.getStart());
+					case "async":
+						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
+							return this.finishExpressionStatement(this.parseFunctionExpression(next, src, context), src, context);
+						break;
+					default:
+						break;
+				}
+				Token lookahead = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
+				if (lookahead != null)
+					return this.parseLabeledStatement(this.parseIdentifier(next, src, context), lookahead, src, context);
+			}
+			//Fallthrough intentional
+			case BOOLEAN_LITERAL:
+			case NUMERIC_LITERAL:
+			case STRING_LITERAL:
+			case REGEX_LITERAL:
+			case TEMPLATE_LITERAL:
+			case NULL_LITERAL:
+				return this.parseExpressionStatement(next, src, context);
+			case SPECIAL:
+				switch (next.<JSSpecialGroup>getValue()) {
+					case EOF:
+						return null;
+					case EOL:
+					case SEMICOLON:
+						return new EmptyStatementTreeImpl(next);
+					default:
+						break;
+				}
+			case COMMENT:
+				break;
+			default:
+				break;
+			
+		}
+		return null;
+	}
+	
+	protected ExpressionStatementTree parseExpressionStatement(Token token, JSLexer src, Context context) {
+		return finishExpressionStatement(this.parseNextExpression(token, src, context), src, context);
+	}
+	
+	protected ExpressionStatementTree finishExpressionStatement(ExpressionTree expression, JSLexer src, Context context) {
+		long end = expression.getEnd();
+		if (src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+			end = src.getPosition();
+		return new ExpressionStatementTreeImpl(expression.getStart(), end, expression);
 	}
 	
 	//Helper methods
