@@ -41,11 +41,17 @@ public final class Characters {
 			'\u2008', // punctuation space
 			'\u2009', // thin space
 			'\u200a', // hair space
+			'\u2028',
+			'\u2029',
 			'\u202f', // narrow no-break space
 			'\u205f', // medium mathematical space
 			'\u3000', // ideographic space
 			'\ufeff' // byte order mark
 	};
+	
+	public static final int ZWNJ = 0x200C;
+	public static final int ZWJ = 0x200D;
+	
 	public static boolean isJsWhitespace(final char c) {
 		//binary search
 		int lo = 0;
@@ -75,7 +81,30 @@ public final class Characters {
 		return ('0' <= c) && ((c <= '9') || (('a' <= c) && (c <= 'f')) || (('A' <= c) && (c <= 'F'))); 
 	}
 	
-	public static boolean canStartIdentifier(final char c) {
+	public static boolean canStartIdentifier(final int c) {
 		return Character.isJavaIdentifierStart(c);
+	}
+	
+	public static boolean isIdentifierPart(final int c) {
+		return Character.isUnicodeIdentifierPart(c) || Character.getType(c) == Character.CURRENCY_SYMBOL || c == '_' || c == ZWNJ || c == ZWJ;
+	}
+
+	/**
+	 * Converts a character to a hexdecimal digit. If passed character is not a
+	 * hexdecimal character (not <code>[0-9a-fA-F]</code>), this method returns
+	 * -1.
+	 * 
+	 * @param c
+	 *            Digit character to parse
+	 * @return Value of hex digit (<code>0-16</code>), or -1 if invalid.
+	 */
+	public static int asHexDigit(char c) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		if (c >= 'a' && c <= 'f')
+			return c - 'a' + 10;
+		if (c >= 'A' && c <= 'F')
+			return c - 'A' + 10;
+		return -1;
 	}
 }
