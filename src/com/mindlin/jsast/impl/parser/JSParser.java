@@ -421,9 +421,9 @@ public class JSParser {
 				if (next.<Character>getValue() == '{')
 					return this.parseBlock(next, src, context);
 				else
-					return this.parseExportStatement(next, src, context);
+					return this.parseExpressionStatement(next, src, context);
 			case OPERATOR:
-				return this.parseExportStatement(next, src, context);
+				return this.parseExpressionStatement(next, src, context);
 			case IDENTIFIER: {
 				switch (next.<String>getValue()) {
 					case "type":
