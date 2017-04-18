@@ -23,9 +23,10 @@ public class ParseEverythingJS {
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
 				BufferedWriter bw = Files.newBufferedWriter(Paths.get("everything-base1.js"))) {
 			StringBuilder sb = new StringBuilder();
+			char[] buffer = new char[4096];
 			while (br.ready()) {
-				sb.append(br.readLine());
-				sb.append("\n");
+				int len = br.read(buffer, 0, buffer.length);
+				sb.append(buffer, 0, len);
 			}
 			text = sb.toString();
 			bw.write(text);
@@ -43,12 +44,13 @@ public class ParseEverythingJS {
 		JSParser parser = new JSParser();
 		System.out.println("Parsing...");
 		CompilationUnitTree ast = parser.apply("everything.js", text);
-		System.out.println("Done");
 		
+		System.out.println("Writing JSON...");
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("everything.js.json"))) {
 			bw.write(ast.toString());
 		}
 		
+		System.out.println("Writing JS...");
 		JSWriterOptions options = new JSWriterOptions();
 		options.indentStyle = "\t";
 		JSWriter writer = new JSWriterImpl(options);

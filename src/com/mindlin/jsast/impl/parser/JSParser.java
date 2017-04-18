@@ -172,6 +172,7 @@ public class JSParser {
 	
 	private static Token expect(TokenKind kind, Object value, JSLexer src, Context context) {
 		Token t = src.nextToken();
+		System.out.println(t);
 		expect(t, kind);
 		expect(t, value);
 		return t;
@@ -2218,6 +2219,7 @@ public class JSParser {
 			return finishFunctionBody(leftParenToken.getStart(), false, null, params, null, true, false, src, context);
 		}
 		//Not a lambda, just some parentheses around some expression.
+		//TODO probably needs to be wrapped with ParenthesizedTree
 		return expr;
 	}
 	

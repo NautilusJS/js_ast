@@ -727,7 +727,7 @@ public class JSLexer implements Supplier<Token> {
 				if (c == '\n' ||c == '\r')
 					break;
 			} else if (c == '*' && chars.hasNext() && chars.peek() == '/') {
-				chars.next(2);
+				chars.skip(1);
 				break;
 			}
 			sb.append(c);
