@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Stack;
 
 import com.mindlin.jsast.impl.util.Characters;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
@@ -120,8 +121,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		protected final Writer parent;
 		protected int indentLevel = options.baseIndent;
 		private String indent = "";
+		protected int newlineBacklog = 0;
+		protected Stack<WriterHelperContext> context = new Stack<>();
+		
 		public WriterHelper(Writer parent) {
 			this.parent = parent;
+			context.push(new WriterHelperContext());
 		}
 		
 		public void beginRegion(long srcStart) {
@@ -145,6 +150,26 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			indent = indent.substring(0, indent.length() - options.indentStyle.length());
 		}
 		
+		public void pushContext() {
+			this.context.push(new WriterHelperContext(this.context.peek()));
+		}
+		
+		public void popContext() {
+			this.context.pop();
+		}
+		
+		public void doFinishWithNewline(boolean enableNewline) {
+			this.context.peek().noNewline = !enableNewline;
+		}
+		
+		public void finishStatement(boolean semicolon) {
+			if (this.context.peek().noNewline)
+				return;
+			if (semicolon)
+				this.append(';');
+			this.newline();
+		}
+		
 		@Override
 		public void close() {
 			try {
@@ -155,6 +180,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 
 		public void flush() {
+			flushNewlines();
 			try {
 				parent.flush();
 			} catch (IOException e) {
@@ -163,6 +189,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		public WriterHelper append(long srcStart, long srcEnd, String s) {
+			flushNewlines();
 			try {
 				parent.append(s);
 			} catch (IOException e) {
@@ -172,6 +199,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 
 		public WriterHelper append(char c) {
+			flushNewlines();
 			try {
 				parent.append(c);
 				return this;
@@ -181,6 +209,22 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		public WriterHelper append(CharSequence csq, int start, int end) {
+			flushNewlines();
+			return doAppend(csq, start, end);
+		}
+		
+		public WriterHelper append(CharSequence csq) {
+			flushNewlines();
+			return doAppend(csq, 0, csq.length());
+		}
+		
+		protected void flushNewlines() {
+			String newline = "\n" + indent;
+			while (this.newlineBacklog-- > 0)
+				doAppend(newline, 0, newline.length());
+		}
+		
+		protected WriterHelper doAppend(CharSequence csq, int start, int end) {
 			try {
 				parent.append(csq, start, end);
 				return this;
@@ -189,21 +233,26 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			}
 		}
 		
-		public WriterHelper append(CharSequence csq) {
-			try {
-				parent.append(csq);
-				return this;
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
 		public WriterHelper newline() {
-			return append("\n" + indent);
+//			this.newlineBacklog++;
+			this.append("\n" + indent);
+			return this;
 		}
 		
 		public WriterHelper spaceMaybe() {
 			return append(options.space);
+		}
+		
+		protected class WriterHelperContext {
+			boolean noNewline = false;
+			
+			protected WriterHelperContext() {
+				
+			}
+			
+			protected WriterHelperContext(WriterHelperContext parent) {
+				this.noNewline = parent.noNewline;
+			}
 		}
 	}
 
@@ -427,6 +476,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.popIndent();
 		out.newline();
 		out.append('}');
+		out.finishStatement(false);
 		return null;
 	}
 
@@ -439,9 +489,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitBreak(BreakTree node, WriterHelper out) {
 		if (node.getLabel() == null)
-			out.append("break;");
+			out.append("break");
 		else
-			out.append("break " + node.getLabel() + ";");
+			out.append("break " + node.getLabel());
+		out.finishStatement(true);
 		return null;
 	}
 
@@ -510,10 +561,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitContinue(ContinueTree node, WriterHelper out) {
 		if (node.getLabel() == null) {
-			out.append("continue;");
+			out.append("continue");
+			out.finishStatement(true);
 			return null;
 		}
-		out.append("continue ").append(node.getLabel()).append(';');
+		out.append("continue ").append(node.getLabel());
+		out.finishStatement(true);
 		return null;
 	}
 
@@ -553,15 +606,14 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitExport(ExportTree node, WriterHelper out) {
 		out.append("export ");
 		node.getExpression().accept(this, out);
-		out.append(';');
+		out.finishStatement(true);
 		return null;
 	}
 
 	@Override
 	public Void visitExpressionStatement(ExpressionStatementTree node, WriterHelper out) {
 		node.getExpression().accept(this, out);
-		out.append(';');
-		out.newline();
+		out.finishStatement(true);
 		return null;
 	}
 
@@ -586,8 +638,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitForLoop(ForLoopTree node, WriterHelper out) {
 		out.append("for(");
 		StatementTree initializer = node.getInitializer();
-		if (initializer != null)
+		if (initializer != null) {
+			out.pushContext();
+			out.doFinishWithNewline(false);
 			initializer.accept(this, out);
+			out.popContext();
+		}
 		out.append(';');
 		ExpressionTree condition = node.getCondition();
 		if (condition != null)
@@ -962,7 +1018,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitSequence(SequenceTree node, WriterHelper out) {
-		out.append('(');
 		boolean isFirst = true;
 		for (ExpressionTree expr : node.getExpressions()) {
 			if (!isFirst)
@@ -970,7 +1025,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			isFirst = false;
 			expr.accept(this, out);
 		}
-		out.append(')');
 		return null;
 	}
 
