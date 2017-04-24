@@ -945,6 +945,8 @@ public class JSParser {
 		else
 			expr = parseNextExpression(src, context);
 		
+		expectSemicolon(src, context);
+		
 		if (keywordToken.getValue() == JSKeyword.RETURN)
 			return new ReturnTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
 		else
