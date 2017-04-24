@@ -2209,10 +2209,9 @@ public class JSParser {
 		}
 		context.pop();
 		//Only one expression
-		if (!(next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
-			throw new JSUnexpectedTokenException(next);
+		expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 		
-		if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LAMBDA)) != null) {
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LAMBDA)) {
 			//Upgrade to lambda
 			dialect.require("js.function.lambda", leftParenToken.getStart());
 			List<ParameterTree> params = this.reinterpretExpressionAsParameterList(expr);
