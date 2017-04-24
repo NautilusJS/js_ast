@@ -75,7 +75,7 @@ public enum JSOperator {
 	}
 
 	JSOperator(int precedence, int arity, String operator, String... allotropes) {
-		this(operator.endsWith("="), precedence, arity, operator, allotropes);
+		this(false, precedence, arity, operator, allotropes);
 	}
 
 	JSOperator(int arity, String operator, String... allotropes) {
