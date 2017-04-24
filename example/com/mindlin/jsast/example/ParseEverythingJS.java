@@ -58,6 +58,7 @@ public class ParseEverythingJS {
 			writer.write(ast, bw);
 		}
 		
+		System.out.println("Re-parsing...");
 		//Re-read it
 		try (BufferedReader br = Files.newBufferedReader(Paths.get("everything.js"))) {
 			StringBuilder sb = new StringBuilder();
