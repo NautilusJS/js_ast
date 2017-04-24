@@ -2220,7 +2220,7 @@ public class JSParser {
 		}
 		//Not a lambda, just some parentheses around some expression.
 		//TODO probably needs to be wrapped with ParenthesizedTree
-		return expr;
+		return new ParenthesizedTreeImpl(leftParenToken.getStart(), src.getPosition(), expr);
 	}
 	
 	protected UnaryTree parseSpread(Token spreadToken, JSLexer src, Context context) {
