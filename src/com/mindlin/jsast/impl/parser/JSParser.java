@@ -37,6 +37,7 @@ import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
+import com.mindlin.jsast.impl.tree.ExportTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
@@ -856,13 +857,18 @@ public class JSParser {
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
 			expect(TokenKind.KEYWORD, JSKeyword.FROM, src, context);
 		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.DEFAULT)) {
-			
+			// TODO finish
+			throw new UnsupportedOperationException();
 		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS)) {
-			
+			// TODO finish
+			throw new UnsupportedOperationException();
 		}
 		ExpressionTree expr = parseNextExpression(src, context);
-		// TODO finish
-		throw new UnsupportedOperationException();
+		
+		//Optionally consume semicolon
+		src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
+		
+		return new ExportTreeImpl(expr.getStart(), src.getPosition(), expr);
 	}
 	
 	TypeTree reinterpretAsType(Token typeToken) {
@@ -1217,6 +1223,7 @@ public class JSParser {
 				Token id = src.nextToken();
 				expect(id, TokenKind.IDENTIFIER);
 				propname = new IdentifierTreeImpl(id);
+				
 				optional = false;
 				expectOperator(JSOperator.COLON, src, context);
 				TypeTree idxType = this.parseType(src, context);
@@ -1236,8 +1243,14 @@ public class JSParser {
 			} else {
 				throw new JSUnexpectedTokenException(next);
 			}
+			
+			//Optionally consume semicolon at end
+			src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
+			
 			properties.add(new InterfacePropertyTreeImpl(start, src.getPosition(), readonly, propname, optional, type));
 		}
+		
+		expect(next, TokenKind.BRACKET, '}');
 		
 		if (properties.isEmpty())
 			return Collections.emptyList();
@@ -1250,7 +1263,9 @@ public class JSParser {
 	 */
 	protected InterfaceDeclarationTree parseInterface(Token interfaceKeywordToken, JSLexer src, Context context) {
 		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
+		
 		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
+		
 		Token next = src.nextToken();
 		expect(next, TokenKind.IDENTIFIER);
 		IdentifierTree name = parseIdentifier(next, src, context);
