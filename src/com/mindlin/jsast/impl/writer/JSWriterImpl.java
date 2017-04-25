@@ -812,8 +812,57 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitInterfaceDeclaration(InterfaceDeclarationTree node, WriterHelper out) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		
+		out.append("interface");
+		if (node.getIdentifier() != null) {
+			out.append(options.space);
+			node.getIdentifier().accept(this, out);
+		}
+		//TODO what if no identifier but yes supertypes
+		if (node.getSupertypes() != null && !node.getSupertypes().isEmpty()) {
+			out.append(options.space).append("extends");
+			out.append(options.space);
+			boolean isFirst = true;
+			for (TypeTree superType : node.getSupertypes()) {
+				if (!isFirst)
+					out.append(',').optionalSpace();
+				isFirst = false;
+				superType.accept(this, out);
+			}
+		}
+		out.optionalSpace().append('{');
+		out.pushIndent();
+		out.newline();
+		for (InterfacePropertyTree property : node.getProperties()) {
+			if (property.isReadonly())
+				out.append("readonly").append(options.space);
+			
+			if (property.getKey() == null) {
+				//Is function interface
+				out.append('(');
+				FunctionTypeTree type = (FunctionTypeTree) property.getType();
+				boolean isFirst = true;
+				for (ParameterTree param : type.getParameters()) {
+					if (!isFirst)
+						out.append(',').optionalSpace();
+					isFirst = false;
+					param.accept(this, out);
+				}
+				out.append(')').append(':').optionalSpace();
+				type.getReturnType().accept(this, out);
+			} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
+				//TODO finish
+				throw new UnsupportedOperationException();
+			} else {
+				//TODO finish
+				throw new UnsupportedOperationException();
+			}
+		}
+		out.popIndent();
+		out.newline();
+		out.append('}');
+		out.finishStatement(false);
+		return null;
 	}
 
 	@Override
