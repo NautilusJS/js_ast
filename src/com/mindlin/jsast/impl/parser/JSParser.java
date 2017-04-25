@@ -2023,7 +2023,7 @@ public class JSParser {
 		
 		
 		final ExpressionTree right = this.parseAssignment(null, src, context.pushed());
-		return new BinaryTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
+		return new AssignmentTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
 	}
 	
 	/**
