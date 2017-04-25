@@ -42,6 +42,7 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
@@ -113,7 +114,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	void writeTypeMaybe(TypeTree type, WriterHelper out) {
 		if (type == null || type.isImplicit())
 			return;
-		out.append(':');
+		out.append(':').optionalSpace();
 		type.accept(this, out);
 	}
 	
@@ -160,6 +161,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		public void doFinishWithNewline(boolean enableNewline) {
 			this.context.peek().noNewline = !enableNewline;
+		}
+		
+		public WriterHelper optionalSpace() {
+			this.append(options.space);
+			return this;
 		}
 		
 		public void finishStatement(boolean semicolon) {
@@ -604,8 +610,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitExport(ExportTree node, WriterHelper out) {
-		out.append("export ");
+		out.append("export").append(options.space);
+		
+		out.pushContext();
+		out.doFinishWithNewline(false);
 		node.getExpression().accept(this, out);
+		out.popContext();
+		
 		out.finishStatement(true);
 		return null;
 	}
@@ -968,7 +979,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			out.append('?');
 		this.writeTypeMaybe(node.getType(), out);
 		if (node.getInitializer() != null) {
-			out.append('=');
+			out.optionalSpace().append('=').optionalSpace();
 			node.getInitializer().accept(this, out);
 		}
 		return null;
