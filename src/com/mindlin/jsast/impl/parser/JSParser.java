@@ -173,7 +173,6 @@ public class JSParser {
 	
 	private static Token expect(TokenKind kind, Object value, JSLexer src, Context context) {
 		Token t = src.nextToken();
-		System.out.println(t);
 		expect(t, kind);
 		expect(t, value);
 		return t;
@@ -248,7 +247,7 @@ public class JSParser {
 					case CONST:
 					case LET:
 					case VAR:
-						return this.parseVariableDeclaration(token, src, context);
+						return this.parseVariableDeclaration(token, src, context, false);
 					case DEBUGGER:
 						return this.parseDebugger(token, src, context);
 					case DO:
@@ -368,7 +367,7 @@ public class JSParser {
 					case CONST:
 					case LET:
 					case VAR:
-						return this.parseVariableDeclaration(next, src, context);
+						return this.parseVariableDeclaration(next, src, context, false);
 					case DO:
 						return this.parseDoWhileLoop(next, src, context);
 					case AWAIT:
@@ -901,8 +900,11 @@ public class JSParser {
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * @param inFor If this variable declaration is in a for loop
+	 */
 	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
-	protected VariableDeclarationTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context) {
+	protected VariableDeclarationTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context, boolean inFor) {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		boolean isConst = keywordToken.getValue() == JSKeyword.CONST;
 		boolean isScoped = isConst || keywordToken.getValue() == JSKeyword.LET;//Const's are also scoped
@@ -938,7 +940,8 @@ public class JSParser {
 			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
-		expectSemicolon(src, context);
+		if (!inFor)
+			expectSemicolon(src, context);
 		
 		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
@@ -1161,9 +1164,11 @@ public class JSParser {
 				
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
 				
-				FunctionExpressionTree fn = this.finishFunctionBody(propertyStartPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
+				FunctionExpressionTree fn = null;
+				if (isPropertyAbstract)
+					fn = this.finishFunctionBody(propertyStartPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
 				
-				FunctionTypeTree functionType = new FunctionTypeTreeImpl(propertyStartPos, fn.getEnd(), true, fn.getParameters(), Collections.emptyList(), fn.getReturnType());
+				FunctionTypeTree functionType = new FunctionTypeTreeImpl(propertyStartPos, src.getPosition(), true, params, Collections.emptyList(), returnType);
 				
 				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
 			} else if (methodType != null || generator || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
@@ -1621,7 +1626,7 @@ public class JSParser {
 		StatementTree initializer = null;
 		if (TokenPredicate.VARIABLE_START.test(next)) {
 			context.push().allowIn(false);
-			VariableDeclarationTree declarations = parseVariableDeclaration(next, src, context);
+			VariableDeclarationTree declarations = parseVariableDeclaration(next, src, context, true);
 			context.pop();
 			
 			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
@@ -1650,7 +1655,8 @@ public class JSParser {
 			initializer = new ExpressionStatementTreeImpl(expr);
 		}
 		
-		expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON, src, context);
+		expectSemicolon(src, context);
+		
 		return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
 	}
 	
@@ -1788,7 +1794,8 @@ public class JSParser {
 				case LEFT_SHIFT_ASSIGNMENT:
 				case RIGHT_SHIFT_ASSIGNMENT:
 				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-					return 3;
+					//return 3;
+					return -1;
 				case QUESTION_MARK:
 //					return 4;
 					return -1;
@@ -1847,9 +1854,7 @@ public class JSParser {
 		if (startToken == null)
 			startToken = src.nextToken();
 		
-		context.push();
-		ExpressionTree expr = parseExponentiation(startToken, src, context);
-		context.pop();
+		ExpressionTree expr = parseExponentiation(startToken, src, context.coverGrammarIsolated());
 		
 		Token token = src.peek();
 		int precedence = binaryPrecedence(token, context);
@@ -1867,7 +1872,10 @@ public class JSParser {
 		
 		stack.add(expr);
 		operators.add(token);
+		context.push();
+		context.isAssignmentTarget(true);
 		stack.add(parseExponentiation(src.nextToken(), src, context));
+		context.pop();
 		
 		while ((precedence = binaryPrecedence(src.peek(), context)) >= 0) {
 			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
@@ -2381,6 +2389,9 @@ public class JSParser {
 		//TODO infer name from syntax
 		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, parameters, returnType, arrow, body, ctx.isStrict(), generator);
 		ctx.pop();
+		//You can't assign to a function
+		ctx.isAssignmentTarget(false);
+		ctx.isBindingElement(false);
 		return result;
 	}
 	
@@ -2427,14 +2438,24 @@ public class JSParser {
 			literalToken = src.nextToken();
 		switch (literalToken.getKind()) {
 			case STRING_LITERAL:
+					context.isAssignmentTarget(false);
+					context.isBindingElement(false);
 				return new StringLiteralTreeImpl(literalToken);
 			case NUMERIC_LITERAL:
+					context.isAssignmentTarget(false);
+					context.isBindingElement(false);
 				return new NumericLiteralTreeImpl(literalToken);
 			case BOOLEAN_LITERAL:
+					context.isAssignmentTarget(false);
+					context.isBindingElement(false);
 				return new BooleanLiteralTreeImpl(literalToken);
 			case NULL_LITERAL:
+					context.isAssignmentTarget(false);
+					context.isBindingElement(false);
 				return new NullLiteralTreeImpl(literalToken);
 			case REGEX_LITERAL:
+				context.isAssignmentTarget(false);
+				context.isBindingElement(false);
 				return new RegExpLiteralTreeImpl(literalToken);
 			case TEMPLATE_LITERAL:
 				//TODO finish parsing
@@ -2457,11 +2478,13 @@ public class JSParser {
 			if (next.matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
 				values.add(null);
 				continue;
-			}
-
-			if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD))
+			} else if (next.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 				values.add(parseSpread(next, src, context));
-			else
+				if (!src.peek().matches(TokenKind.BRACKET, ']')) {
+					context.isAssignmentTarget(false);
+					context.isBindingElement(false);
+				}
+			} else
 				values.add(parseAssignment(next, src, context));
 			
 			if (!src.peek().matches(TokenKind.BRACKET, ']'))
@@ -2743,6 +2766,13 @@ public class JSParser {
 		
 		public Context pushed() {
 			return new Context(new ContextData(data));
+		}
+		
+		public Context coverGrammarIsolated() {
+			Context result = pushed();
+			result.isAssignmentTarget(true);
+			result.isBindingElement(true);
+			return result;
 		}
 		
 		public Context pop() {
