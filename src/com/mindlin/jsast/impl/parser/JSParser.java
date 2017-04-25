@@ -938,6 +938,8 @@ public class JSParser {
 			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
+		expectSemicolon(src, context);
+		
 		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
 	
