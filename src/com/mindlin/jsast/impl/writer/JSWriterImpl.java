@@ -163,11 +163,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			this.context.peek().noNewline = !enableNewline;
 		}
 		
-		public WriterHelper optionalSpace() {
-			this.append(options.space);
-			return this;
-		}
-		
 		public void finishStatement(boolean semicolon) {
 			if (this.context.peek().noNewline)
 				return;
@@ -225,9 +220,14 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		protected void flushNewlines() {
+			if (this.newlineBacklog == 0)
+				return;
+			System.out.println("Backlog: " + this.newlineBacklog);
 			String newline = "\n" + indent;
-			while (this.newlineBacklog-- > 0)
+			while (this.newlineBacklog > 0) {
+				this.newlineBacklog--;
 				doAppend(newline, 0, newline.length());
+			}
 		}
 		
 		protected WriterHelper doAppend(CharSequence csq, int start, int end) {
@@ -240,13 +240,15 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		public WriterHelper newline() {
-//			this.newlineBacklog++;
-			this.append("\n" + indent);
+			this.newlineBacklog++;
+			System.out.println(this.newlineBacklog);
+//			this.append("\n" + indent);
 			return this;
 		}
 		
-		public WriterHelper spaceMaybe() {
-			return append(options.space);
+		public WriterHelper optionalSpace() {
+			append(options.space);
+			return this;
 		}
 		
 		protected class WriterHelperContext {
@@ -295,7 +297,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		boolean isFirst = true;
 		for (ExpressionTree element : node.getElements()) {
 			if (!isFirst)
-				out.append(',');
+				out.append(',').optionalSpace();
 			isFirst = false;
 			if (element != null)
 				element.accept(this, out);
@@ -330,7 +332,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitAssignment(AssignmentTree node, WriterHelper out) {
 		node.getLeftOperand().accept(this, out);
-		out.append('=');
+		out.optionalSpace().append('=').optionalSpace();
 		node.getRightOperand().accept(this, out);
 		return null;
 	}
@@ -347,6 +349,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitBinary(BinaryTree node, WriterHelper out) {
 		node.getLeftOperand().accept(this, out);
 		String operator;
+		boolean optionalSpace = true;
 		switch (node.getKind()) {
 			case ADDITION:
 				operator =  "+";
@@ -361,6 +364,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				return null;
 			case MEMBER_SELECT:
 				operator = ".";
+				optionalSpace = false;
 				break;
 			case BITWISE_AND:
 				operator = "&";
@@ -403,9 +407,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				break;
 			case IN:
 				operator = " in ";
+				optionalSpace = false;
 				break;
 			case INSTANCEOF:
 				operator = " instanceof ";
+				optionalSpace = false;
 				break;
 			case LEFT_SHIFT:
 				operator = "<<";
@@ -467,7 +473,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			default:
 				throw new IllegalArgumentException();
 		}
-		out.append(operator);
+		if (optionalSpace)
+			out.optionalSpace().append(operator).optionalSpace();
+		else
+			out.append(operator);
 		node.getRightOperand().accept(this, out);
 		return null;
 	}
@@ -477,12 +486,17 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append('{');
 		out.pushIndent();
 		out.newline();
+		
+		out.pushContext();
+		out.doFinishWithNewline(true);
 		for (StatementTree statement : node.getStatements())
 			statement.accept(this, out);
+		out.popContext();
+		
 		out.popIndent();
-		out.newline();
 		out.append('}');
 		out.finishStatement(false);
+		
 		return null;
 	}
 
@@ -557,9 +571,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitConditionalExpression(ConditionalExpressionTree node, WriterHelper out) {
 		node.getCondition().accept(this, out);
-		out.append('?');
+		out.optionalSpace().append('?').optionalSpace();
 		node.getTrueExpression().accept(this, out);
-		out.append(':');
+		out.optionalSpace().append(':').optionalSpace();
 		node.getFalseExpression().accept(this, out);
 		return null;
 	}
@@ -648,6 +662,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitForLoop(ForLoopTree node, WriterHelper out) {
 		out.append("for(");
+		
 		StatementTree initializer = node.getInitializer();
 		if (initializer != null) {
 			out.pushContext();
@@ -655,16 +670,23 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			initializer.accept(this, out);
 			out.popContext();
 		}
-		out.append(';');
+		out.append(';').optionalSpace();
+		
 		ExpressionTree condition = node.getCondition();
 		if (condition != null)
 			condition.accept(this, out);
-		out.append(';');
+		out.append(';').optionalSpace();
+		
 		ExpressionTree update = node.getUpdate();
 		if (update != null)
 			update.accept(this, out);
 		out.append(')');
-		node.getStatement().accept(this, out);
+		
+		StatementTree statement = node.getStatement();
+		if (statement.getKind() == Kind.BLOCK)//Optional space between ')' in for header and '{' in block
+			out.optionalSpace();
+		statement.accept(this, out);
+		
 		return null;
 	}
 
@@ -675,7 +697,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		boolean isFirst = true;
 		for (ExpressionTree arg : node.getArguments()) {
 			if (!isFirst)
-				out.append(',');
+				out.append(',').optionalSpace();
 			isFirst = false;
 			arg.accept(this, out);
 		}
@@ -721,14 +743,18 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		//Write parameters
 		this.writeFunctionParameters(node, out);
 		
-		out.spaceMaybe();
+		out.optionalSpace();
 		
 		if (node.isArrow()) {
 			out.append("=>");
-			out.spaceMaybe();
+			out.optionalSpace();
 			//TODO finish
 		}
+		
+		out.pushContext();
+		out.doFinishWithNewline(false);
 		node.getBody().accept(this, out);
+		out.popContext();
 		return null;
 	}
 
@@ -780,20 +806,37 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append("if(");
 		node.getExpression().accept(this, out);
 		out.append(')');
+		
 		StatementTree thenStmt = node.getThenStatement();
 		StatementTree elseStmt = node.getElseStatement();
-		if (elseStmt != null && thenStmt.getKind() == Kind.IF) {
-			out.append('{');
+		
+		if (elseStmt != null && elseStmt.getKind() == Kind.EMPTY_STATEMENT)
+			elseStmt = null;
+		
+		if (thenStmt.getKind() == Kind.BLOCK) {
+			out.optionalSpace();
+
+			out.pushContext();
+			if (elseStmt != null)
+				out.doFinishWithNewline(false);
+			
 			thenStmt.accept(this, out);
-			out.append('}');
+			
+			out.popContext();
+			
+			if (elseStmt != null)
+				out.optionalSpace();
 		} else {
 			thenStmt.accept(this, out);
 		}
+		
 		if (elseStmt == null || elseStmt.getKind() == Kind.EMPTY_STATEMENT)
 			return null;
 		out.append("else");
 		if (elseStmt.getKind() == Kind.IF)
-			out.append(' ');
+			out.append(options.space);
+		else if (elseStmt.getKind() == Kind.BLOCK)
+			out.optionalSpace();
 		elseStmt.accept(this, out);
 		return null;
 	}
@@ -1072,7 +1115,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		out.append("return ");
 		node.getExpression().accept(this, out);
-		out.append(';');
+		out.finishStatement(true);
 		return null;
 	}
 
@@ -1081,7 +1124,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		boolean isFirst = true;
 		for (ExpressionTree expr : node.getExpressions()) {
 			if (!isFirst)
-				out.append(',');
+				out.append(',').optionalSpace();
 			isFirst = false;
 			expr.accept(this, out);
 		}
@@ -1176,7 +1219,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitThrow(ThrowTree node, WriterHelper out) {
 		out.append("throw ");
 		node.getExpression().accept(this, out);
-		out.append(';');
+		out.finishStatement(true);
 		return null;
 	}
 
@@ -1287,9 +1330,8 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		boolean isFirstDeclaration = true;
 		for (VariableDeclaratorTree declarator : node.getDeclarations()) {
-			if (!isFirstDeclaration) {
-				out.append(',');
-			}
+			if (!isFirstDeclaration)
+				out.append(',').optionalSpace();
 			isFirstDeclaration = false;
 			
 			declarator.getIdentifier().accept(this, out);
@@ -1306,7 +1348,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				initializer.accept(this, out);
 			}
 		}
-		out.append(';');
+		out.finishStatement(true);
 		return null;
 	}
 
