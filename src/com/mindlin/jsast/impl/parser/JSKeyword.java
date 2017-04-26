@@ -2,7 +2,6 @@ package com.mindlin.jsast.impl.parser;
 
 public enum JSKeyword {
 	AS(true),
-	AWAIT,
 	BREAK,
 	CASE,
 	CLASS,

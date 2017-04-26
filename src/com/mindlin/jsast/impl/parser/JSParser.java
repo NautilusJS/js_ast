@@ -256,7 +256,6 @@ public class JSParser {
 						return this.parseDebugger(token, src, context);
 					case DO:
 						return this.parseDoWhileLoop(token, src, context);
-					case AWAIT:
 					case ENUM:
 						throw new UnsupportedOperationException();
 					case EXPORT:
@@ -314,6 +313,8 @@ public class JSParser {
 						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 							return this.parseFunctionExpression(token, src, context);
 						break;
+					case "await":
+						throw new UnsupportedOperationException("awaiting on await: " + token.getStart());
 					default:
 						break;
 				}
@@ -438,7 +439,8 @@ public class JSParser {
 					case "async":
 						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 							return this.finishExpressionStatement(this.parseFunctionExpression(next, src, context), src, context);
-						break;
+					case "await":
+						throw new UnsupportedOperationException("awaiting on await: " + next.getStart());
 					default:
 						break;
 				}
