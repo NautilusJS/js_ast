@@ -1853,13 +1853,14 @@ public class JSParser {
 				default:
 					return -1;
 			}
-		if (t.isKeyword())
+		} else if (t.isKeyword()) {
 			switch (t.<JSKeyword>getValue()) {
 				case IN:
 					if (!context.allowIn())
 						return -1;
 					//Fallthrough intentional
 				case INSTANCEOF:
+				case AS:
 					return 11;
 				default:
 					return -1;
@@ -1876,9 +1877,17 @@ public class JSParser {
 		ExpressionTree expr = parseExponentiation(startToken, src, context);
 		context.inheritCoverGrammar();
 		
+		/*
+		 * Consume all 'as' expressions at the start.
+		 * In practice, there is no good reason for there to be more than one,
+		 * but there *could" be.
+		 */
+		while (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS))
+			expr = new CastTreeImpl(expr, parseType(src, context));
+		
 		Token token = src.peek();
 		int precedence = binaryPrecedence(token, context);
-		if (precedence <= 0)
+		if (precedence < 0)
 			return expr;
 		
 		src.skip(token);
@@ -1898,6 +1907,20 @@ public class JSParser {
 		
 		
 		while ((precedence = binaryPrecedence(src.peek(), context)) >= 0) {
+			/*
+			 * Reduce expressions with precedences less than the latest operator.
+			 * For example, when the expression 'a * b / c + d' is where:
+			 *     stack = [(a * b), (c)]
+			 *     operators = [/]
+			 *     lastPrecedence = 14
+			 *     
+			 *     src.peek() == '+'
+			 *     precedence = 13
+			 * 
+			 * This loop will reduce it such that:
+			 *     stack = [((a * b) / c)]
+			 *     operators = []
+			 */
 			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
 				final ExpressionTree right = stack.pop();
 				final Token operator = operators.pop();
@@ -1914,16 +1937,38 @@ public class JSParser {
 				
 				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek(), context);
 			}
+			
+			
 			//Shift top onto stack
 			token = src.nextToken();
-			operators.add(token);
+			
+			if (token.matches(TokenKind.KEYWORD, JSKeyword.AS)) {
+				//Handle 'as' specially, because it's RHS argument is a type
+				ExpressionTree left = stack.pop();
+				TypeTree right = this.parseType(src, context);
+				stack.push(new CastTreeImpl(left, right));
+			} else {
+				//Push the newest operator/RHS argument onto their respective stacks
+				operators.add(token);
+				stack.add(this.parseExponentiation(src.nextToken(), src, context.coverGrammarIsolated()));
+			}
+			
 			lastPrecedence = binaryPrecedence(token, context);
-			stack.add(parseExponentiation(src.nextToken(), src, context.coverGrammarIsolated()));
 		}
 		
+		
+		/* 
+		 * Apply a final reduction, knowing that the expression tree is complete.
+		 * For example, when the expression 'a + b * c' is where:
+		 *     stack = [(a), (b), (c)]
+		 *     operators = [+, *]
+		 * 
+		 * This loop will reduce it such that:
+		 *     stack = [(a), (b), (c)] => [(a), (b * c)] => [(a + (b * c))]
+		 *     operators = [+,   *   ] => [    +       ] => [             ]
+		 */
 		expr = stack.pop();
 		
-		//Final reduce
 
 		while (!stack.isEmpty()) {
 			final ExpressionTree left = stack.pop();
@@ -1935,7 +1980,7 @@ public class JSParser {
 				expr = new BinaryTreeImpl(kind, left, expr);
 		}
 		
-		//Reduction failed
+		//Reduction failed (this should never happen)
 		if (!stack.isEmpty()) {
 			System.err.println("Stack: " + stack);
 			System.err.println("Ops: " + operators);

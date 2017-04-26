@@ -26,6 +26,7 @@ public interface TreeVisitor<R, D> {
 	R visitBlock(BlockTree node, D d);
 	R visitBooleanLiteral(BooleanLiteralTree node, D d);
 	R visitBreak(BreakTree node, D d);
+	R visitCast(CastTree node, D d);
 	R visitClassDeclaration(ClassDeclarationTree node, D d);
 	R visitComment(CommentNode node, D d);
 	R visitCompilationUnit(CompilationUnitTree node, D d);
