@@ -28,6 +28,7 @@ import com.mindlin.jsast.impl.tree.BinaryTypeTree;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
+import com.mindlin.jsast.impl.tree.CastTreeImpl;
 import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassPropertyTreeImpl;
@@ -953,7 +954,7 @@ public class JSParser {
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		if (!inFor)
-			expectSemicolon(src, context);
+			expectEOL(src, context);
 		
 		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
@@ -968,7 +969,7 @@ public class JSParser {
 		else
 			expr = parseNextExpression(src, context);
 		
-		expectSemicolon(src, context);
+		expectEOL(src, context);
 		
 		if (keywordToken.getValue() == JSKeyword.RETURN)
 			return new ReturnTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
@@ -1436,6 +1437,7 @@ public class JSParser {
 	
 	protected DebuggerTree parseDebugger(Token debuggerKeywordToken, JSLexer src, Context context) {
 		debuggerKeywordToken = expect(debuggerKeywordToken, TokenKind.KEYWORD, JSKeyword.DEBUGGER, src, context);
+		expectEOL(src, context);
 		return new DebuggerTreeImpl(debuggerKeywordToken.getStart(), debuggerKeywordToken.getEnd());
 	}
 	
@@ -1611,7 +1613,7 @@ public class JSParser {
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
 		ExpressionTree condition = parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-		expectSemicolon(src, context);
+		expectEOL(src, context);
 		
 		return new DoWhileLoopTreeImpl(doKeywordToken.getStart(), src.getPosition(), statement, condition);
 	}
@@ -1666,7 +1668,7 @@ public class JSParser {
 			initializer = new ExpressionStatementTreeImpl(expr);
 		}
 		
-		expectSemicolon(src, context);
+		expectEOL(src, context);
 		
 		return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
 	}
