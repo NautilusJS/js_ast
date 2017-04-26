@@ -10,6 +10,8 @@ import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
+import com.mindlin.jsast.tree.type.LiteralTypeTree;
+import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.tree.type.VoidTypeTree;
@@ -107,7 +109,7 @@ public interface Tree {
 
 		// Member access
 		ARRAY_ACCESS(BinaryTree.class),
-		MEMBER_SELECT(BinaryTree.class),
+		MEMBER_SELECT(ExpressionPatternTree.class),
 
 		// Control structures
 		BLOCK(BlockTree.class),
@@ -145,6 +147,8 @@ public interface Tree {
 		METHOD_DEFINITION(MethodDefinitionTree.class),
 
 		// Type stuff
+		CAST(CastTree.class),
+		
 		ANY_TYPE(AnyTypeTree.class),
 		VOID_TYPE(VoidTypeTree.class),
 		NEVER_TYPE,

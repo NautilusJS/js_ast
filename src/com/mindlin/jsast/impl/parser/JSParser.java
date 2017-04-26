@@ -39,6 +39,7 @@ import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ExportTreeImpl;
+import com.mindlin.jsast.impl.tree.ExpressionPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
@@ -373,7 +374,6 @@ public class JSParser {
 						return this.parseVariableDeclaration(next, src, context, false);
 					case DO:
 						return this.parseDoWhileLoop(next, src, context);
-					case AWAIT:
 					case ENUM:
 						throw new UnsupportedOperationException();
 					case EXPORT:
@@ -1934,13 +1934,14 @@ public class JSParser {
 				final Kind kind = this.mapTokenToBinaryTree(operator);
 				final ExpressionTree left = stack.pop();
 				
-				BinaryTree binary;
-				if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment()) {
-					binary = new AssignmentTreeImpl(kind, left, right);
-					System.out.println(expr + ";" + stack);
-				} else
-					binary = new BinaryTreeImpl(kind, left, right);
-				stack.add(binary);
+				ExpressionTree expression;
+				if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
+					expression = new ExpressionPatternTreeImpl(kind, left, right);
+				else if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
+					throw new JSSyntaxException("This shouldn't be happening", operator.getStart());
+				else
+					expression = new BinaryTreeImpl(kind, left, right);
+				stack.add(expression);
 				
 				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek(), context);
 			}
@@ -1976,7 +1977,6 @@ public class JSParser {
 		 */
 		expr = stack.pop();
 		
-
 		while (!stack.isEmpty()) {
 			final ExpressionTree left = stack.pop();
 			final Token operator = operators.pop();
@@ -2048,8 +2048,6 @@ public class JSParser {
 				properties.trimToSize();
 				return new ObjectPatternTreeImpl(obj.getStart(), obj.getEnd(), properties);
 			}
-			case IDENTIFIER:
-				return (IdentifierTree) expr;
 			case ARRAY_LITERAL: {
 				ArrayList<PatternTree> elements = new ArrayList<>();
 				for (ExpressionTree elem : ((ArrayLiteralTree)expr).getElements())
@@ -2059,6 +2057,12 @@ public class JSParser {
 			}
 			case ASSIGNMENT:
 				return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), reinterpretExpressionAsPattern(((AssignmentTree)expr).getLeftOperand()), reinterpretExpressionAsPattern(((AssignmentTree)expr).getRightOperand()));
+			case ASSIGNMENT_PATTERN:
+			case ARRAY_PATTERN:
+			case IDENTIFIER:
+			case ARRAY_ACCESS:
+			case MEMBER_SELECT:
+				return (PatternTree) expr;
 			default:
 				break;
 		}
@@ -2383,7 +2387,7 @@ public class JSParser {
 				context.isAssignmentTarget(true);
 				ExpressionTree property = parseNextExpression(src, context.coverGrammarIsolated());
 				expect(TokenKind.BRACKET, ']', src, context);
-				expr = new BinaryTreeImpl(expr.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
+				expr = new ExpressionPatternTreeImpl(expr.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 				//Function call
 				context.isBindingElement(false);
@@ -2395,7 +2399,7 @@ public class JSParser {
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
 				ExpressionTree property = parseIdentifier(null, src, context);
-				expr = new BinaryTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
+				expr = new ExpressionPatternTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
 			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
 				//TODO Tagged template literal
 				throw new UnsupportedOperationException();
