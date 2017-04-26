@@ -57,6 +57,8 @@ import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.KeyofTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
+import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
@@ -1394,12 +1396,10 @@ public class JSParser {
 			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
 			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), false, slots);
 		} else if (startToken.isLiteral()) {
-			
-			//String literal
+			return new LiteralTypeTreeImpl<>(parseLiteral(startToken, src, context), false);
 		} else {
 			throw new JSUnexpectedTokenException(startToken);
 		}
-		throw new UnsupportedOperationException();
 	}
 	
 	/**
@@ -1414,6 +1414,11 @@ public class JSParser {
 			expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 		} else {
 			type = parseImmediateType(src, context);
+		}
+		
+		//Suppoert member types in form of 'A.B'
+		while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
+			type = new MemberTypeTreeImpl(type, parseImmediateType(src, context), false);
 		}
 		
 		//Support array types in form of 'X[]'

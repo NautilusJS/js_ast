@@ -148,6 +148,8 @@ public interface Tree {
 		ANY_TYPE(AnyTypeTree.class),
 		VOID_TYPE(VoidTypeTree.class),
 		NEVER_TYPE,
+		LITERAL_TYPE(LiteralTypeTree.class),
+		MEMBER_TYPE(MemberTypeTree.class),
 		ARRAY_TYPE(ArrayTypeTree.class),
 		KEYOF_TYPE(KeyofTypeTree.class),
 		TUPLE_TYPE(TupleTypeTree.class),
