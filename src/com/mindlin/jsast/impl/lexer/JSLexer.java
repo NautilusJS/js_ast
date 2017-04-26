@@ -693,14 +693,14 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	protected String scanRegExpFlags() {
-		long start = chars.position();
+		chars.mark();
 		while (!isEOF()) {
 			char c = chars.peek();
 			if (c != 'g' && c!= 'i' && c!= 'm' && c != 'y')
 				break;
 			chars.next();
 		}
-		return chars.copy(start, chars.position() - start);
+		return chars.copyFromMark();
 	}
 	
 	public Token finishRegExpLiteral(Token start) {
