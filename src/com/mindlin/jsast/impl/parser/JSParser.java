@@ -17,7 +17,7 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
-import com.mindlin.jsast.impl.tree.AnyTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.SpecialTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
@@ -88,7 +88,6 @@ import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
-import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
@@ -480,9 +479,7 @@ public class JSParser {
 	}
 	
 	protected ExpressionStatementTree finishExpressionStatement(ExpressionTree expression, JSLexer src, Context context) {
-		long end = expression.getEnd();
-		if (src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
-			end = src.getPosition();
+		long end = expectEOL(src, context).getEnd();
 		return new ExpressionStatementTreeImpl(expression.getStart(), end, expression);
 	}
 	
@@ -2674,7 +2671,7 @@ public class JSParser {
 					
 					//XXX finish
 					throw new UnsupportedOperationException();
-					//prop = new MethodDefinitionTreeImpl(startPos, src.getPosition(), key, fn, methodType);
+//					prop = new MethodDefinitionTreeImpl(startPos, src.getPosition(), key, fn, methodType);
 				} else if (methodType != null || generator) {
 					throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 				} else if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null) {
@@ -2763,6 +2760,14 @@ public class JSParser {
 						kind = Tree.Kind.PREFIX_DECREMENT;
 						updates = false;
 						break;
+					case LESS_THAN: {
+						//Bracket casting
+						dialect.require("ts.types.cast", src.getPosition());
+						TypeTree type = this.parseType(src, context);
+						expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
+						ExpressionTree rhs = this.parseBinaryExpression(null, src, context);
+						return new CastTreeImpl(operatorToken.getStart(), src.getPosition(), rhs, type);
+					}
 					default:
 						break;
 				}
