@@ -535,25 +535,30 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitClassDeclaration(ClassDeclarationTree node, WriterHelper out) {
 		out.append("class");
 		if (node.getIdentifier() != null) {
-			out.append(' ');
+			out.append(options.space);
 			node.getIdentifier().accept(this, out);
 		}
 		if (node.getSuperType().isPresent()) {
-			out.append(" extends ");
+			out.append(options.space);
+			out.append("extends");
+			out.append(options.space);
 			node.getSuperType().get().accept(this, out);
 		}
 		if (!node.getImplementing().isEmpty()) {
-			out.append(" implements ");
+			out.append(options.space);
+			out.append("implements");
+			out.append(options.space);
+			
 			boolean isFirst = true;
 			for (TypeTree iface : node.getImplementing()) {
 				if (!isFirst)
-					out.append(',');
+					out.append(',').optionalSpace();
 				isFirst = false;
 				iface.accept(this, out);
 			}
 		}
 		
-		out.append('{');
+		out.optionalSpace().append('{');
 		for (ClassPropertyTree<?> property : node.getProperties()) {
 			//TODO finish
 			throw new UnsupportedOperationException();
@@ -595,12 +600,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitContinue(ContinueTree node, WriterHelper out) {
-		if (node.getLabel() == null) {
-			out.append("continue");
-			out.finishStatement(true);
-			return null;
-		}
-		out.append("continue ").append(node.getLabel());
+		out.append("continue");
+		if (node.getLabel() != null)
+			out.append(options.space).append(node.getLabel());
 		out.finishStatement(true);
 		return null;
 	}
@@ -755,7 +757,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		boolean isFirst = true;
 		for (ParameterTree param : params) {
 			if (!isFirst)
-				out.append(',');
+				out.append(',').optionalSpace();
 			isFirst = false;
 			param.accept(this, out);
 		}
@@ -771,7 +773,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		if (!node.isArrow()) {
 			out.append("function");
 			if (node.getName() != null) {
-				out.append(' ');
+				out.append(options.space);
 				node.getName().accept(this, out);
 			}
 		}
@@ -804,6 +806,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitFunctionType(FunctionTypeTree node, WriterHelper out) {
+		List<ParameterTree> parameters = node.getParameters();
+		List<GenericTypeTree> generics = node.getGenerics();
+		TypeTree returnType = node.getReturnType();
+
 		throw new UnsupportedOperationException();
 		// TODO Auto-generated method stub
 	}
@@ -837,7 +843,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		boolean isFirst = true;
 		for (TypeTree type : node.getGenerics()) {
 			if (!isFirst)
-				out.append(',');
+				out.append(',').optionalSpace();
 			isFirst = false;
 			type.accept(this, out);
 		}
@@ -874,19 +880,26 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			thenStmt.accept(this, out);
 		}
 		
+		
 		if (elseStmt == null || elseStmt.getKind() == Kind.EMPTY_STATEMENT)
 			return null;
+		
 		out.append("else");
+		
 		if (elseStmt.getKind() == Kind.IF)
 			out.append(options.space);
 		else if (elseStmt.getKind() == Kind.BLOCK)
 			out.optionalSpace();
+		
 		elseStmt.accept(this, out);
 		return null;
 	}
 
 	@Override
 	public Void visitImport(ImportTree node, WriterHelper out) {
+		List<ImportSpecifierTree> specifiers = node.getSpecifiers();
+		StringLiteralTree source = node.getSource();
+		
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}
@@ -954,6 +967,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitInterfaceType(InterfaceTypeTree node, WriterHelper out) {
+		List<InterfacePropertyTree> properties = node.getProperties();
+		if (properties.size() == 1) {
+			//Special case for function interfaces?
+		}
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}
@@ -983,8 +1000,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitMemberType(MemberTypeTree node, WriterHelper out) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		node.getBaseType().accept(this, out);
+		out.append('.');
+		node.getName().accept(this, out);
+		return null;
 	}
 
 	@Override
@@ -1014,7 +1033,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			case METHOD:
 				break;
 			default:
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Unknown declaration type: " + node.getDeclarationType());
 		}
 		
 		if (node.getDeclarationType() != PropertyDeclarationType.CONSTRUCTOR)
@@ -1027,7 +1046,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitNew(NewTree node, WriterHelper out) {
-		out.append("new ");
+		out.append("new").append(options.space);
 		node.getCallee().accept(this, out);
 		out.append('(');
 		boolean isFirst = true;
@@ -1078,7 +1097,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 					boolean isFirstParam = true;
 					for (ParameterTree param : fn.getParameters()) {
 						if (!isFirstParam)
-							out.append(',');
+							out.append(',').optionalSpace();
 						isFirstParam = false;
 						param.accept(this, out);
 					}
@@ -1090,7 +1109,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				ObjectPropertyKeyTree key = property.getKey();
 				key.accept(this, out);
 				if (!key.equals(property.getValue())) {
-					out.append(':');
+					out.append(':').optionalSpace();
 					property.getValue().accept(this, out);
 				}
 			}
@@ -1110,6 +1129,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		if (node.isRest())
 			out.append("...");
 		node.getIdentifier().accept(this, out);
+		
 		if (node.isOptional())
 			out.append('?');
 		this.writeTypeMaybe(node.getType(), out);
@@ -1124,7 +1144,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitParameterType(ParameterTypeTree node, WriterHelper out) {
 		node.getName().accept(this, out);
 		if (node.isOptional())
-			out.append("?");
+			out.append('?');
 		if (node.getType() != null && !node.getType().isImplicit()) {
 			out.append(':');
 			node.getType().accept(this, out);
@@ -1153,12 +1173,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitReturn(ReturnTree node, WriterHelper out) {
-		if (node.getExpression() == null) {
-			out.append("return").finishStatement(true);
-			return null;
+		out.append("return");
+		if (node.getExpression() != null) {
+			out.append(options.space);
+			node.getExpression().accept(this, out);
 		}
-		out.append("return ");
-		node.getExpression().accept(this, out);
 		out.finishStatement(true);
 		return null;
 	}
@@ -1231,25 +1250,27 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitSwitch(SwitchTree node, WriterHelper out) {
 		out.append("switch(");
 		node.getExpression().accept(this, out);
-		out.append("){");
+		out.append(')').optionalSpace().append('{');
 		
 		boolean isFirst = true;
 		for (CaseTree caseStmt : node.getCases()) {
 			if (!isFirst)
-				out.append(' ');
+				out.append(options.space);
 			isFirst = false;
 			ExpressionTree expr = caseStmt.getExpression();
 			if (expr == null) {
 				out.append("default:");
 			} else {
-				out.append("case ");
+				out.append("case").append(options.space);
 				expr.accept(this, out);
 				out.append(':');
 			}
+			out.newline();
 			for (StatementTree stmt : caseStmt.getStatements())
 				stmt.accept(this, out);
 		}
 		out.append('}');
+		out.finishStatement(false);
 		return null;
 	}
 
