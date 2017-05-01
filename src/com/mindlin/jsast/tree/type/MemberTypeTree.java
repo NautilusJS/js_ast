@@ -13,4 +13,9 @@ public interface MemberTypeTree extends TypeTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.MEMBER_TYPE;
 	}
+	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return visitor.visitMemberType(this, data);
+	}
 }
