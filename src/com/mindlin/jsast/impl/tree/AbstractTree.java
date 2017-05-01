@@ -42,6 +42,7 @@ public abstract class AbstractTree implements Tree {
 		this.end = end;
 	}
 	
+	@Override
 	public boolean isMutable() {
 		return this.mutable;
 	}

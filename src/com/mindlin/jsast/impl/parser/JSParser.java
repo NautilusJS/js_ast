@@ -1380,7 +1380,7 @@ public class JSParser {
 					arrayBaseType = arrayGenericArgs.get(0);
 				else
 					//Fall back on 'any[]'
-					arrayBaseType = new AnyTypeTreeImpl(-1, -1, true);
+					arrayBaseType = new SpecialTypeTreeImpl(-1, -1, true);
 				
 				return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
 			}

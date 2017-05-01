@@ -1,8 +1,10 @@
 package com.mindlin.jsast.impl.validator;
 
+import com.mindlin.jsast.impl.tree.BinaryTypeTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
@@ -14,10 +16,9 @@ import com.mindlin.jsast.tree.type.UnionTypeTree;
 public class TypeInheritanceValidator {
 	public static boolean canExtend(ASTContext context, TypeTree base, TypeTree child) {
 		switch (base.getKind()) {
-			case ANY_TYPE:
+			case SPECIAL_TYPE: {
 				return true;
-			case VOID_TYPE:
-				return child.getKind() == Tree.Kind.VOID_TYPE;
+			}
 			case TYPE_UNION: {
 				UnionTypeTree union = (UnionTypeTree) base;
 				//TODO fix generic param binding
@@ -44,5 +45,13 @@ public class TypeInheritanceValidator {
 			
 		}
 		return null;
+	}
+	
+	public static TypeTree union(ASTContext context, TypeTree a, TypeTree b) {
+		return new BinaryTypeTree(-1, -1, true, a, Kind.TYPE_UNION, b);
+	}
+	
+	public static TypeTree reduce(ASTContext context, TypeTree type) {
+		return type;
 	}
 }

@@ -1,7 +1,6 @@
 package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
@@ -12,9 +11,9 @@ import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
-import com.mindlin.jsast.tree.type.VoidTypeTree;
 
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
 //http://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/index.html
@@ -149,8 +148,7 @@ public interface Tree {
 		// Type stuff
 		CAST(CastTree.class),
 		
-		ANY_TYPE(AnyTypeTree.class),
-		VOID_TYPE(VoidTypeTree.class),
+		SPECIAL_TYPE(SpecialTypeTree.class),
 		NEVER_TYPE,
 		LITERAL_TYPE(LiteralTypeTree.class),
 		MEMBER_TYPE(MemberTypeTree.class),
@@ -249,6 +247,8 @@ public interface Tree {
 	long getStart();
 
 	long getEnd();
+	
+	boolean isMutable();
 
 	<R, D> R accept(TreeVisitor<R, D> visitor, D data);
 }
