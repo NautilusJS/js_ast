@@ -829,25 +829,34 @@ public class JSParser {
 	
 	protected ImportTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
 		importKeywordToken = expect(importKeywordToken, TokenKind.KEYWORD, JSKeyword.IMPORT, src, context);
-		List<ImportSpecifierTree> importSpecifiers = new ArrayList<>();
+		
+		ArrayList<ImportSpecifierTree> importSpecifiers = new ArrayList<>();
+		
 		Token t = src.nextToken();
 		if (t.isIdentifier()) {
+			//import defaultMember...
 			importSpecifiers.add(new ImportSpecifierTreeImpl(parseIdentifier(t, src, context)));
 			if (!(t = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA)) {
+				//import defaultMember from "module-name";
 				expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
 				StringLiteralTree source = (StringLiteralTree)parseLiteral(null, src, context);
+				expectEOL(src, context);
 				return new ImportTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
 			}
 			t = src.nextToken();
 		}
+		
 		if (t.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+			//import (defaultMember,)? * as name ...
 			IdentifierTree identifier = new IdentifierTreeImpl(t.getStart(), t.getEnd(), "*");
 			t = expect(TokenKind.KEYWORD, JSKeyword.AS, src, context);
 			IdentifierTree alias = parseIdentifier(null, src, context);
 			importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
 			t = src.nextToken();
 		} else if (t.matches(TokenKind.BRACKET, '{')) {
+			//import (defaultMember,)? {...} ...
 			do {
+				//member (as alias)?,
 				t = src.nextToken();
 				IdentifierTree identifier = parseIdentifier(t, src, context);
 				IdentifierTree alias = identifier;
@@ -860,12 +869,20 @@ public class JSParser {
 			expect(t, TokenKind.BRACKET, '}', src, context);
 			t = src.nextToken();
 		}
+		
+		// ... from "module-name";
+		
 		if (!importSpecifiers.isEmpty()) {
 			expect(t, TokenKind.KEYWORD, JSKeyword.FROM, src, context);
 			t = null;
 		}
+		
 		StringLiteralTree source = (StringLiteralTree)parseLiteral(t, src, context);
-		return new ImportTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
+		
+		expectEOL(src, context);
+		
+		importSpecifiers.trimToSize();
+		return new ImportTreeImpl(importKeywordToken.getStart(), src.getPosition(), importSpecifiers, source);
 	}
 	
 	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {

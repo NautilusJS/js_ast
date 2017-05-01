@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
@@ -41,6 +42,7 @@ import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
+import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
@@ -219,6 +221,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		public WriterHelper append(CharSequence csq) {
 			flushNewlines();
 			return doAppend(csq, 0, csq.length());
+		}
+		
+		public WriterHelper appendIsolated(CharSequence csq) {
+			append(options.space);
+			append(csq);
+			append(options.space);
+			return this;
 		}
 		
 		protected void flushNewlines() {
@@ -900,8 +909,52 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		List<ImportSpecifierTree> specifiers = node.getSpecifiers();
 		StringLiteralTree source = node.getSource();
 		
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		out.append("import").append(options.space);
+		
+		if (!specifiers.isEmpty()) {
+			Iterator<ImportSpecifierTree> si = specifiers.iterator();
+			ImportSpecifierTree specifier = si.next();
+			
+			if (specifier.isDefault()) {
+				specifier.getImported().accept(this, out);
+				if (si.hasNext()) {
+					out.append(',').optionalSpace();
+					specifier = si.next();
+				} else {
+					specifier = null;
+				}
+			}
+			
+			if (specifier.getImported().getName().equals("*")) {
+				out.append('*');
+				out.appendIsolated("as");
+				specifier.getAlias().accept(this, out);
+				//There shouldn't be any more specifiers
+				if (si.hasNext())
+					throw new IllegalStateException();
+			} else if (specifier != null) {
+				out.append('{');
+				do {
+					IdentifierTree imported = specifier.getImported();
+					IdentifierTree alias = specifier.getAlias();
+					imported.accept(this, out);
+					if (imported != alias && alias != null) {
+						out.appendIsolated("as");
+						alias.accept(this, out);
+					}
+					if (si.hasNext())
+						out.append(',').optionalSpace();
+				} while (si.hasNext());
+				out.append('}');
+			}
+			
+			out.appendIsolated("from");
+		}
+		
+		source.accept(this, out);
+		
+		out.finishStatement(true);
+		return null;
 	}
 
 	@Override
@@ -918,10 +971,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			out.append(options.space);
 			node.getIdentifier().accept(this, out);
 		}
+		
 		//TODO what if no identifier but yes supertypes
 		if (node.getSupertypes() != null && !node.getSupertypes().isEmpty()) {
-			out.append(options.space).append("extends");
-			out.append(options.space);
+			out.appendIsolated("extends");
 			boolean isFirst = true;
 			for (TypeTree superType : node.getSupertypes()) {
 				if (!isFirst)
@@ -951,15 +1004,31 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				out.append(')').append(':').optionalSpace();
 				type.getReturnType().accept(this, out);
 			} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
-				//TODO finish
-				throw new UnsupportedOperationException();
+				//Is index type (format: `[name: KeyType]: ValueType`)
+				out.append('[');
+				property.getKey().accept(this, out);
+
+				IndexTypeTree type = (IndexTypeTree) property.getType();
+				out.append(':').optionalSpace();
+				type.getIndexType().accept(this, out);
+				
+				out.append("]:").optionalSpace();
+				type.getReturnType().accept(this, out);
 			} else {
-				//TODO finish
-				throw new UnsupportedOperationException();
+				property.getKey().accept(this, out);
+				if (property.isOptional())
+					out.append('?');
+				
+				TypeTree type = property.getType();
+				if (type != null && !type.isImplicit()) {
+					out.append(':').optionalSpace();
+					type.accept(this, out);
+				}
 			}
+			out.append(';');
+			out.newline();
 		}
 		out.popIndent();
-		out.newline();
 		out.append('}');
 		out.finishStatement(false);
 		return null;
@@ -1080,7 +1149,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		boolean isFirst = true;
 		for (ObjectLiteralPropertyTree property : node.getProperties()) {
 			if (!isFirst)
-				out.append(',');
+				out.append(',').optionalSpace();
 			isFirst = false;
 			if (property.getKind() == Kind.METHOD_DEFINITION) {
 				MethodDefinitionTree method = (MethodDefinitionTree) property;
