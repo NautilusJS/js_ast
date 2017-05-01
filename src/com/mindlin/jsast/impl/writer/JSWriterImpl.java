@@ -17,6 +17,7 @@ import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
 import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.CaseTree;
+import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
@@ -103,7 +104,8 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public void write(CompilationUnitTree tree, Writer output) throws IOException {
 		try {
-			tree.accept(this, new WriterHelper(output));
+			WriterHelper wh = new WriterHelper(output);
+			tree.accept(this, wh);
 		} catch (RuntimeException e) {
 			if (e.getCause() != null)
 				throw (IOException) e.getCause();
@@ -222,7 +224,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		protected void flushNewlines() {
 			if (this.newlineBacklog == 0)
 				return;
-			System.out.println("Backlog: " + this.newlineBacklog);
 			String newline = "\n" + indent;
 			while (this.newlineBacklog > 0) {
 				this.newlineBacklog--;
@@ -241,7 +242,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		public WriterHelper newline() {
 			this.newlineBacklog++;
-			System.out.println(this.newlineBacklog);
 //			this.append("\n" + indent);
 			return this;
 		}
@@ -515,6 +515,21 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.finishStatement(true);
 		return null;
 	}
+	
+	@Override
+	public Void visitCast(CastTree node, WriterHelper out) {
+		ExpressionTree expression = node.getExpression();
+		TypeTree type = node.getType();
+		
+		expression.accept(this, out);
+		
+		if (type.isImplicit())
+			return null;
+		
+		out.append(options.space).append("as").append(options.space);
+		type.accept(this, out);
+		return null;
+	}
 
 	@Override
 	public Void visitClassDeclaration(ClassDeclarationTree node, WriterHelper out) {
@@ -592,23 +607,44 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitDebugger(DebuggerTree node, WriterHelper out) {
-		out.append("debugger;");
+		out.append("debugger").finishStatement(true);
 		return null;
 	}
 
 	@Override
 	public Void visitDoWhileLoop(DoWhileLoopTree node, WriterHelper out) {
-		out.append("do{");
-		node.getStatement().accept(this, out);
-		out.append("}while(");
+		out.append("do");
+		
+		StatementTree statement = node.getStatement();
+		
+		out.pushContext();
+		if (statement.getKind() == Kind.BLOCK) {
+			out.optionalSpace();
+			out.doFinishWithNewline(false);
+		} else {
+			out.newline();
+			out.pushIndent();
+		}
+		
+		statement.accept(this, out);
+		
+		if (statement.getKind() == Kind.BLOCK) {
+			out.optionalSpace();
+		} else {
+			out.popIndent();
+			out.newline();
+		}
+		out.popContext();
+		
+		out.append("while(");
 		node.getCondition().accept(this, out);
-		out.append(");");
+		out.append(")").finishStatement(true);
 		return null;
 	}
 
 	@Override
 	public Void visitEmptyStatement(EmptyStatementTree node, WriterHelper out) {
-		out.append(';');
+		out.finishStatement(true);
 		return null;
 	}
 
@@ -743,12 +779,20 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		//Write parameters
 		this.writeFunctionParameters(node, out);
 		
+		if (node.getReturnType() != null && !node.getReturnType().isImplicit()) {
+			out.optionalSpace().append(':').optionalSpace();
+			node.getReturnType().accept(this, out);
+		}
+		
 		out.optionalSpace();
 		
 		if (node.isArrow()) {
 			out.append("=>");
 			out.optionalSpace();
-			//TODO finish
+			if (node.getBody().getKind() == Kind.RETURN)
+				((ReturnTree) node.getBody()).getExpression().accept(this, out);
+			else
+				node.getBody().accept(this, out);
 		}
 		
 		out.pushContext();
@@ -927,8 +971,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		node.getName().accept(this, out);
 		out.append(':');
 		StatementTree stmt = node.getStatement();
-		node.getStatement().accept(this, out);
-		out.append(';');//TODO is this redundant?
+		stmt.accept(this, out);
 		return null;
 	}
 
@@ -1103,6 +1146,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		//TODO escape correctly
 		out.append('/');
 		out.append(node.getValue()[0]);
+		out.append('/');
 		out.append(node.getValue()[1]);
 		return null;
 	}
@@ -1110,7 +1154,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitReturn(ReturnTree node, WriterHelper out) {
 		if (node.getExpression() == null) {
-			out.append("return;");
+			out.append("return").finishStatement(true);
 			return null;
 		}
 		out.append("return ");
@@ -1322,11 +1366,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitVariableDeclaration(VariableDeclarationTree node, WriterHelper out) {
 		if (node.isConst())
-			out.append("const ");
+			out.append("const");
 		else if (node.isScoped())
-			out.append("let ");
+			out.append("let");
 		else
-			out.append("var ");
+			out.append("var");
+		
+		out.append(options.space);
 		
 		boolean isFirstDeclaration = true;
 		for (VariableDeclaratorTree declarator : node.getDeclarations()) {
@@ -1338,13 +1384,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			
 			TypeTree type = declarator.getType();
 			if (type != null && !type.isImplicit()) {
-				out.append(':');
+				out.append(':').optionalSpace();
 				type.accept(this, out);
 			}
 			
 			ExpressionTree initializer = declarator.getIntitializer();
 			if (initializer != null) {
-				out.append('=');
+				out.optionalSpace().append('=').optionalSpace();
 				initializer.accept(this, out);
 			}
 		}
@@ -1365,7 +1411,15 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append("while(");
 		node.getCondition().accept(this, out);
 		out.append(")");
-		node.getStatement().accept(this, out);
+		StatementTree statement = node.getStatement();
+		if (statement.getKind() == Kind.BLOCK) {
+			out.optionalSpace();
+			statement.accept(this, out);
+		} else {
+			out.pushIndent();
+			statement.accept(this, out);
+			out.popIndent();
+		}
 		return null;
 	}
 
