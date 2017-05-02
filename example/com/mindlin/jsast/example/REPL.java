@@ -18,11 +18,22 @@ public class REPL {
 		Scanner s = new Scanner(System.in);
 		System.out.println("Nautilus JS transpiler");
 		while (true) {
-			System.out.print(">>> ");
-			String line = s.nextLine();
-			CompilationUnitTree ast = parser.apply("tmp", line);
+			StringBuffer sb = new StringBuffer();
+			while (true) {
+				System.out.print(">>> ");
+				String line = s.nextLine().trim();
+				if (line.endsWith("\\")) {
+					sb.append(line, 0, line.length() - 1);
+					sb.append('\n');
+				} else {
+					sb.append(line);
+					break;
+				}
+			}
+			CompilationUnitTree ast = parser.apply("tmp", sb.toString());
 			StringWriter out = new StringWriter();
 			writer.write(ast, out);
+			//System.err.println(ast);
 			System.out.println(out.toString());
 		}
 	}
