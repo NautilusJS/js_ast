@@ -55,7 +55,6 @@ import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -66,13 +65,13 @@ import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
-import com.mindlin.jsast.tree.type.VoidTypeTree;
 
 public interface ASTTransformation extends TreeVisitor<Tree, ASTTransformerContext> {
 	@Override
-	default Tree visitAnyType(AnyTypeTree node, ASTTransformerContext d) {
+	default Tree visitSpecialType(SpecialTypeTree node, ASTTransformerContext d) {
 		return node;
 	}
 	
@@ -388,11 +387,6 @@ public interface ASTTransformation extends TreeVisitor<Tree, ASTTransformerConte
 	
 	@Override
 	default Tree visitVariableDeclaration(VariableDeclarationTree node, ASTTransformerContext d) {
-		return node;
-	}
-	
-	@Override
-	default Tree visitVoidType(VoidTypeTree node, ASTTransformerContext d) {
 		return node;
 	}
 	

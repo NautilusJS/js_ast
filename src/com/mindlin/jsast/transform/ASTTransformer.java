@@ -56,7 +56,6 @@ import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -67,9 +66,9 @@ import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
-import com.mindlin.jsast.tree.type.VoidTypeTree;
 
 public class ASTTransformer implements ASTTransformation {
 	List<ASTTransformation> transformations;
@@ -84,8 +83,9 @@ public class ASTTransformer implements ASTTransformation {
 			result = result.accept(transformation, context);
 		return result;
 	}
+	
 	@Override
-	public Tree visitAnyType(AnyTypeTree node, ASTTransformerContext d) {
+	public Tree visitSpecialType(SpecialTypeTree node, ASTTransformerContext d) {
 		Tree result = node;
 		boolean modified = false;
 		do {
@@ -209,26 +209,31 @@ public class ASTTransformer implements ASTTransformation {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public Tree visitExpressionStatement(ExpressionStatementTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public Tree visitForEachLoop(ForEachLoopTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public Tree visitForLoop(ForLoopTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public Tree visitFunctionCall(FunctionCallTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public Tree visitFunctionExpression(FunctionExpressionTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
@@ -419,16 +424,13 @@ public class ASTTransformer implements ASTTransformation {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	@Override
-	public Tree visitVoidType(VoidTypeTree node, ASTTransformerContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 	@Override
 	public Tree visitWhileLoop(WhileLoopTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
 	@Override
 	public Tree visitWith(WithTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
