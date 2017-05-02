@@ -325,11 +325,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				if (property.isOptional())
 					out.append('?');
 				
-				TypeTree type = property.getType();
-				if (type != null && !type.isImplicit()) {
-					out.append(':').optionalSpace();
-					type.accept(this, out);
-				}
+				writeTypeMaybe(property.getType(), out);
 			}
 			out.append(';');
 			if (!isType)
@@ -340,7 +336,36 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitSpecialType(SpecialTypeTree node, WriterHelper out) {
 		out.beginRegion(node.getStart());
-		out.append("any");
+		String name;
+		switch (node.getType()) {
+			case ANY:
+				name = "any";
+				break;
+			case BOOLEAN:
+				name = "boolean";
+				break;
+			case NEVER:
+				name = "never";
+				break;
+			case NULL:
+				name = "null";
+				break;
+			case NUMBER:
+				name = "number";
+				break;
+			case STRING:
+				name = "string";
+				break;
+			case UNDEFINED:
+				name = "undefined";
+				break;
+			case VOID:
+				name = "void";
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+		out.append(name);
 		out.endRegion(node.getEnd());
 		return null;
 	}
@@ -581,7 +606,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		if (type.isImplicit())
 			return null;
 		
-		out.append(options.space).append("as").append(options.space);
+		out.appendIsolated("as");
 		type.accept(this, out);
 		return null;
 	}
@@ -594,15 +619,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			node.getIdentifier().accept(this, out);
 		}
 		if (node.getSuperType().isPresent()) {
-			out.append(options.space);
-			out.append("extends");
-			out.append(options.space);
+			out.appendIsolated("extends");
 			node.getSuperType().get().accept(this, out);
 		}
 		if (!node.getImplementing().isEmpty()) {
-			out.append(options.space);
-			out.append("implements");
-			out.append(options.space);
+			out.appendIsolated("implements");
 			
 			boolean isFirst = true;
 			for (TypeTree iface : node.getImplementing()) {
@@ -707,7 +728,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitEnumDeclaration(EnumDeclarationTree node, WriterHelper out) {
-		out.append("enum ");
+		out.append("enum").append(options.space);
 		node.getIdentifier().accept(this, out);
 		out.append('{');
 		out.pushIndent();
@@ -752,9 +773,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append("for(");
 		node.getVariable().accept(this, out);
 		if (node.getKind() == Tree.Kind.FOR_IN_LOOP)
-			out.append(" in ");
+			out.appendIsolated("in");
 		else if (node.getKind() == Tree.Kind.FOR_OF_LOOP)
-			out.append(" of ");
+			out.appendIsolated("of");
 		else
 			throw new IllegalArgumentException("Can only process for/in and for/of loops");
 		
@@ -844,10 +865,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		//Write parameters
 		this.writeFunctionParameters(node, out);
 		
-		if (node.getReturnType() != null && !node.getReturnType().isImplicit()) {
-			out.optionalSpace().append(':').optionalSpace();
-			node.getReturnType().accept(this, out);
-		}
+		this.writeTypeMaybe(node.getReturnType(), out);
 		
 		out.optionalSpace();
 		
@@ -1250,10 +1268,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		node.getName().accept(this, out);
 		if (node.isOptional())
 			out.append('?');
-		if (node.getType() != null && !node.getType().isImplicit()) {
-			out.append(':');
-			node.getType().accept(this, out);
-		}
+		writeTypeMaybe(node.getType(), out);
 		return null;
 	}
 
@@ -1402,11 +1417,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			for (CatchTree ct : node.getCatches()) {
 				out.append("catch(");
 				ct.getParameter().accept(this, out);
-				TypeTree ctParamType = ct.getType();
-				if (ctParamType != null && !ctParamType.isImplicit()) {
-					out.append(':');
-					ctParamType.accept(this, out);
-				}
+				writeTypeMaybe(ct.getType(), out);
 				out.append(')');
 				
 				ct.getBlock().accept(this, out);
@@ -1518,11 +1529,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			
 			declarator.getIdentifier().accept(this, out);
 			
-			TypeTree type = declarator.getType();
-			if (type != null && !type.isImplicit()) {
-				out.append(':').optionalSpace();
-				type.accept(this, out);
-			}
+			writeTypeMaybe(declarator.getType(), out);
 			
 			ExpressionTree initializer = declarator.getIntitializer();
 			if (initializer != null) {

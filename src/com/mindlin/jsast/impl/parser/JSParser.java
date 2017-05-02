@@ -17,7 +17,6 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
-import com.mindlin.jsast.impl.tree.SpecialTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
@@ -73,6 +72,7 @@ import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.RegExpLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
 import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
+import com.mindlin.jsast.impl.tree.SpecialTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.StringLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.SuperExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
@@ -83,7 +83,6 @@ import com.mindlin.jsast.impl.tree.TupleTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
-import com.mindlin.jsast.impl.tree.VoidTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
@@ -142,6 +141,7 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 
 public class JSParser {
 	/**
@@ -903,7 +903,7 @@ public class JSParser {
 	
 	TypeTree reinterpretAsType(Token typeToken) {
 		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
-			return new VoidTypeTreeImpl(typeToken);
+			return new SpecialTypeTreeImpl(typeToken);
 		if (typeToken.getKind() == TokenKind.IDENTIFIER) {
 			switch (typeToken.getValue().toString()) {
 				case "any":
@@ -917,15 +917,19 @@ public class JSParser {
 	protected TypeTree parseTypeStatement(Token typeToken, JSLexer src, Context context) {
 		if (typeToken == null)
 			typeToken = src.nextToken();
+		
 		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
-				return new VoidTypeTreeImpl(typeToken);
+				return new SpecialTypeTreeImpl(typeToken);
 		if (typeToken.isIdentifier()) {
 			switch (typeToken.<String>getValue()) {
 				case "any":
 				case "string":
 				case "number":
 				case "boolean":
-					//TODO finish
+				case "null":
+				case "undefined":
+				case "never":
+					return new SpecialTypeTreeImpl(typeToken);
 			}
 		}
 		throw new UnsupportedOperationException();
@@ -1377,7 +1381,7 @@ public class JSParser {
 					arrayBaseType = arrayGenericArgs.get(0);
 				else
 					//Fall back on 'any[]'
-					arrayBaseType = new SpecialTypeTreeImpl(-1, -1, true);
+					arrayBaseType = new SpecialTypeTreeImpl(-1, -1, SpecialType.ANY, true);
 				
 				return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
 			}
@@ -1388,7 +1392,7 @@ public class JSParser {
 			
 			return  new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
-			return new VoidTypeTreeImpl(startToken);
+			return new SpecialTypeTreeImpl(startToken);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION)) {
 			//Function
 			return parseFunctionType(src, context);

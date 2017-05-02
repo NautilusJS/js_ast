@@ -56,7 +56,7 @@ public interface Tree {
 		BITWISE_AND(BinaryTree.class),
 		BITWISE_OR(BinaryTree.class),
 		BITWISE_XOR(BinaryTree.class),
-		BITWISE_NOT(BinaryTree.class),
+		BITWISE_NOT(UnaryTree.class),
 
 		// Assignment operators
 		ASSIGNMENT(AssignmentTree.class),
