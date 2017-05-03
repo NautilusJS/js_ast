@@ -1,6 +1,10 @@
 package com.mindlin.jsast.tree;
 
 public interface CastTree extends ExpressiveExpressionTree {
+	/**
+	 * Get the type that the expression was cast to
+	 * @return
+	 */
 	TypeTree getType();
 
 	@Override
