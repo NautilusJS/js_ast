@@ -203,7 +203,7 @@ public class JSParser {
 	
 	private static Token expectEOL(JSLexer src, Context context) {
 		Token t = src.nextToken();
-		if (t.isEOS() || t.matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON) || t.matches(TokenKind.SPECIAL, JSSpecialGroup.EOL))
+		if (t.isSpecial() && (!context.isStrict() || t.getValue() == JSSpecialGroup.SEMICOLON))
 			return t;
 		throw new JSSyntaxException("Illegal token " + t + "; expected EOL");
 	}
@@ -1039,6 +1039,7 @@ public class JSParser {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (!(keywordToken.getValue() == JSKeyword.RETURN || keywordToken.getValue() == JSKeyword.THROW))
 			throw new JSUnexpectedTokenException(keywordToken);
+		
 		ExpressionTree expr;
 		if (keywordToken.getValue() == JSKeyword.RETURN && src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
 			expr = new UnaryTreeImpl.VoidTreeImpl(src.getPosition(), src.getPosition(), null);
