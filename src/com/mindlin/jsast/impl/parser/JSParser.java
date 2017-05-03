@@ -2533,8 +2533,27 @@ public class JSParser {
 	}
 	
 	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, Context context) {
-		identifierToken = expect(identifierToken, TokenKind.IDENTIFIER, src, context);
-		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), identifierToken.getValue());
+		if (identifierToken == null)
+			identifierToken = src.nextToken();
+		
+		//'yield' can be an identifier if yield expressions aren't allowed in the current context
+		if (identifierToken.matches(TokenKind.KEYWORD, JSKeyword.YIELD)) {
+			if (!context.allowYield() && !context.isStrict())
+				identifierToken = identifierToken.reinterpretAsIdentifier();
+			else
+				throw new JSSyntaxException("'yield' not allowed as identifier", identifierToken.getStart());
+		}
+		
+		expect(identifierToken, TokenKind.IDENTIFIER, src, context);
+		
+		String name = identifierToken.getValue();
+		
+		//'arguments' and 'eval' not allowed as identifiers in strict mode
+		//TODO support 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static' as illegal strict mode identifiers
+		if (context.isStrict() && (name.equals("arguments") || name.equals("eval") || name.equals("yield")))
+			throw new JSSyntaxException("'" + name + "' not allowed as identifier in strict mode", identifierToken.getStart());
+		
+		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), name);
 	}
 	
 	protected ThisExpressionTree parseThis(Token thisKeywordToken, JSLexer src, Context ctx) {
