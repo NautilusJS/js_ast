@@ -74,6 +74,7 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
@@ -1531,5 +1532,22 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitTemplateLiteral(TemplateLiteralTree node, WriterHelper d) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Void visitTypeAlias(TypeAliasTree node, WriterHelper out) {
+		out.append("type").append(options.space);
+		node.getAlias().accept(this, out);
+		if (!node.getGenericParameters().isEmpty()) {
+			out.append('<');
+			writeList(node.getGenericParameters(), out);
+			out.append('>');
+		}
+		out.optionalSpace();
+		out.append('=');
+		out.optionalSpace();
+		node.getValue().accept(this, out);
+		out.finishStatement(true);
+		return null;
 	}
 }

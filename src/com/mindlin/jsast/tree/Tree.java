@@ -147,6 +147,7 @@ public interface Tree {
 
 		// Type stuff
 		CAST(CastTree.class),
+		TYPE_ALIAS(TypeAliasTree.class),
 		
 		SPECIAL_TYPE(SpecialTypeTree.class),
 		NEVER_TYPE,

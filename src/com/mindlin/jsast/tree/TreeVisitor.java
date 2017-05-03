@@ -76,6 +76,7 @@ public interface TreeVisitor<R, D> {
 	R visitThrow(ThrowTree node, D d);
 	R visitTry(TryTree node, D d);
 	R visitTupleType(TupleTypeTree node, D d);
+	R visitTypeAlias(TypeAliasTree node, D d);
 	R visitUnary(UnaryTree node, D d);
 	R visitUnionType(UnionTypeTree node, D d);
 	R visitVariableDeclaration(VariableDeclarationTree node, D d);

@@ -81,6 +81,7 @@ import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ThrowTreeImpl;
 import com.mindlin.jsast.impl.tree.TryTreeImpl;
 import com.mindlin.jsast.impl.tree.TupleTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.TypeAliasTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
@@ -134,6 +135,7 @@ import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
@@ -312,13 +314,14 @@ public class JSParser {
 					case "type":
 						if (src.peek().getKind() != TokenKind.IDENTIFIER)
 							break;
-						//type statements not yet supported
-						throw new UnsupportedOperationException("Type statements not yet supported: " + next.getStart());
+						return this.parseTypeAlias(next, src, context);
 					case "async":
 						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 							return this.finishExpressionStatement(this.parseFunctionExpression(next, src, context), src, context);
 					case "await":
-						throw new UnsupportedOperationException("awaiting on await: " + next.getStart());
+						if (!context.allowAwait())
+							break;
+						return this.parseAwait(next, src, context);
 					default:
 						break;
 				}
@@ -657,8 +660,9 @@ public class JSParser {
 	 * @param context
 	 * @return
 	 */
-	protected List<GenericTypeTree> parseGenericParameters(Token openChevron, JSLexer src, Context context) {
-		openChevron = expect(openChevron, TokenKind.OPERATOR, JSOperator.LESS_THAN, src, context);
+	protected List<GenericTypeTree> parseGenericParametersMaybe(JSLexer src, Context context) {
+		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LESS_THAN))
+			return Collections.emptyList();
 		
 		ArrayList<GenericTypeTree> generics = new ArrayList<>();
 		
@@ -797,25 +801,24 @@ public class JSParser {
 		throw new JSUnexpectedTokenException(typeToken);
 	}
 	
-	protected TypeTree parseTypeStatement(Token typeToken, JSLexer src, Context context) {
-		if (typeToken == null)
-			typeToken = src.nextToken();
+	protected TypeAliasTree parseTypeAlias(Token typeToken, JSLexer src, Context context) {
+		typeToken = expect(typeToken, TokenKind.IDENTIFIER, "type", src, context);
 		
-		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
-				return new SpecialTypeTreeImpl(typeToken);
-		if (typeToken.isIdentifier()) {
-			switch (typeToken.<String>getValue()) {
-				case "any":
-				case "string":
-				case "number":
-				case "boolean":
-				case "null":
-				case "undefined":
-				case "never":
-					return new SpecialTypeTreeImpl(typeToken);
-			}
-		}
-		throw new UnsupportedOperationException();
+		IdentifierTree identifier = this.parseIdentifier(null, src, context, false);
+		
+		List<GenericTypeTree> genericParams = this.parseGenericParametersMaybe(src, context);
+		
+		expect(TokenKind.OPERATOR, JSOperator.ASSIGNMENT, src, context);
+		
+		TypeTree value = parseType(src, context);
+		
+		expectEOL(src, context);
+		
+		return new TypeAliasTreeImpl(typeToken.getStart(), src.getPosition(), identifier, genericParams, value);
+	}
+	
+	protected StatementTree parseAwait(Token awaitToken, JSLexer src, Context context) {
+		throw new UnsupportedOperationException("awaiting on await: " + awaitToken.getStart());
 	}
 	
 	/**

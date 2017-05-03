@@ -51,6 +51,7 @@ import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
@@ -367,6 +368,11 @@ public interface ASTTransformation extends TreeVisitor<Tree, ASTTransformerConte
 	
 	@Override
 	default Tree visitTry(TryTree node, ASTTransformerContext d) {
+		return node;
+	}
+	
+	@Override
+	default Tree visitTypeAlias(TypeAliasTree node, ASTTransformerContext d) {
 		return node;
 	}
 	
