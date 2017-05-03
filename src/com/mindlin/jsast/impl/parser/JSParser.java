@@ -1426,7 +1426,9 @@ public class JSParser {
 		if (next != null)
 			label = next.getValue();
 		final long start = keywordToken.getStart();
+		expectEOL(src, context);
 		final long end = src.getPosition();
+		
 		if (keywordToken.getValue() == JSKeyword.BREAK)
 			return new AbstractGotoTree.BreakTreeImpl(start, end, label);
 		else if (keywordToken.getValue() == JSKeyword.CONTINUE)
@@ -2422,7 +2424,6 @@ public class JSParser {
 				throw new JSSyntaxException("'yield' not allowed as identifier", identifierToken.getStart());
 		}
 		
-		expect(identifierToken, TokenKind.IDENTIFIER, src, context);
 		
 		if (!identifierToken.isIdentifier()) {
 			if (optional)
