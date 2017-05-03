@@ -300,13 +300,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				//Is function interface
 				out.append('(');
 				FunctionTypeTree type = (FunctionTypeTree) property.getType();
-				boolean isFirst = true;
-				for (ParameterTree param : type.getParameters()) {
-					if (!isFirst)
-						out.append(',').optionalSpace();
-					isFirst = false;
-					param.accept(this, out);
-				}
+				writeList(type.getParameters(), out);
 				out.append(')').append(':').optionalSpace();
 				type.getReturnType().accept(this, out);
 			} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
@@ -330,6 +324,24 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			out.append(';');
 			if (!isType)
 				out.newline();
+		}
+	}
+	
+	/**
+	 * Write a comma-separated list with the given values
+	 * @param values
+	 * @param out
+	 */
+	public void writeList(List<? extends Tree> values, WriterHelper out) {
+		boolean isFirst = true;
+		for (Tree value : values) {
+			if (!isFirst)
+				out.append(',').optionalSpace();
+			else
+				isFirst = false;
+			
+			if (value != null)
+				value.accept(this, out);
 		}
 	}
 	
@@ -363,7 +375,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				name = "void";
 				break;
 			default:
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Unknown type: " + node.getType());
 		}
 		out.append(name);
 		out.endRegion(node.getEnd());
@@ -374,14 +386,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitArrayLiteral(ArrayLiteralTree node, WriterHelper out) {
 		out.beginRegion(node.getStart());
 		out.append('[');
-		boolean isFirst = true;
-		for (ExpressionTree element : node.getElements()) {
-			if (!isFirst)
-				out.append(',').optionalSpace();
-			isFirst = false;
-			if (element != null)
-				element.accept(this, out);
-		}
+		writeList(node.getElements(), out);
 		out.append(']');
 		out.endRegion(node.getEnd());
 		return null;
@@ -390,14 +395,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitArrayPattern(ArrayPatternTree node, WriterHelper out) {
 		out.append('[');
-		boolean isFirst = true;
-		for (PatternTree element : node.getElements()) {
-			if (!isFirst)
-				out.append(',');
-			isFirst = false;
-			if (element != null)
-				element.accept(this, out);
-		}
+		writeList(node.getElements(), out);
 		out.append(']');
 		return null;
 	}
@@ -625,13 +623,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		if (!node.getImplementing().isEmpty()) {
 			out.appendIsolated("implements");
 			
-			boolean isFirst = true;
-			for (TypeTree iface : node.getImplementing()) {
-				if (!isFirst)
-					out.append(',').optionalSpace();
-				isFirst = false;
-				iface.accept(this, out);
-			}
+			writeList(node.getImplementing(), out);
 		}
 		
 		out.optionalSpace().append('{');
@@ -734,13 +726,8 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.pushIndent();
 		out.newline();
 		
-		List<ObjectPropertyTree> values = node.getValues();
-		boolean isFirst = true;
-		for (ObjectPropertyTree value : values) {
-			if (isFirst)
-				out.append(',').newline();
-			value.accept(this, out);
-		}
+		writeList(node.getValues(), out);
+		
 		// TODO Auto-generated method stub
 		out.popIndent();
 		out.newline();
@@ -820,13 +807,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitFunctionCall(FunctionCallTree node, WriterHelper out) {
 		node.getCallee().accept(this, out);
 		out.append('(');
-		boolean isFirst = true;
-		for (ExpressionTree arg : node.getArguments()) {
-			if (!isFirst)
-				out.append(',').optionalSpace();
-			isFirst = false;
-			arg.accept(this, out);
-		}
+		writeList(node.getArguments(), out);
 		out.append(')');
 		return null;
 	}
@@ -842,13 +823,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			}
 		}
 		out.append('(');
-		boolean isFirst = true;
-		for (ParameterTree param : params) {
-			if (!isFirst)
-				out.append(',').optionalSpace();
-			isFirst = false;
-			param.accept(this, out);
-		}
+		writeList(params, out);
 		out.append(')');
 	}
 	
@@ -896,13 +871,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				parameters.get(0).accept(this, out);
 			} else {
 				out.append('(');
-				boolean isFirst = true;
-				for (ParameterTree parameter : parameters) {
-					if (!isFirst)
-						out.append(',').optionalSpace();
-					isFirst = false;
-					parameter.accept(this, out);
-				}
+				writeList(parameters, out);
 				out.append(')');
 			}
 			
@@ -944,13 +913,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			return null;
 		
 		out.append('<');
-		boolean isFirst = true;
-		for (TypeTree type : node.getGenerics()) {
-			if (!isFirst)
-				out.append(',').optionalSpace();
-			isFirst = false;
-			type.accept(this, out);
-		}
+		writeList(node.getGenerics(), out);
 		out.append('>');
 		return null;
 	}
@@ -1070,13 +1033,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		//TODO what if no identifier but yes supertypes
 		if (node.getSupertypes() != null && !node.getSupertypes().isEmpty()) {
 			out.appendIsolated("extends");
-			boolean isFirst = true;
-			for (TypeTree superType : node.getSupertypes()) {
-				if (!isFirst)
-					out.append(',').optionalSpace();
-				isFirst = false;
-				superType.accept(this, out);
-			}
+			writeList(node.getSupertypes(), out);
 		}
 		out.optionalSpace().append('{');
 		out.pushIndent();
@@ -1172,13 +1129,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append("new").append(options.space);
 		node.getCallee().accept(this, out);
 		out.append('(');
-		boolean isFirst = true;
-		for (ExpressionTree expr : node.getArguments()) {
-			if (!isFirst)
-				out.append(',');
-			isFirst = false;
-			expr.accept(this, out);
-		}
+		writeList(node.getArguments(), out);
 		out.append(')');
 		return null;
 	}
@@ -1215,17 +1166,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				else if (method.getDeclarationType() == PropertyDeclarationType.SETTER)
 					out.append("set ");
 				method.getKey().accept(this, out);
+				
 				out.append('(');
-				{
-					boolean isFirstParam = true;
-					for (ParameterTree param : fn.getParameters()) {
-						if (!isFirstParam)
-							out.append(',').optionalSpace();
-						isFirstParam = false;
-						param.accept(this, out);
-					}
-				}
+				writeList(fn.getParameters(), out);
 				out.append(')');
+				
 				this.writeTypeMaybe(fn.getReturnType(), out);
 				fn.getBody().accept(this, out);
 			} else {
@@ -1304,13 +1249,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitSequence(SequenceTree node, WriterHelper out) {
-		boolean isFirst = true;
-		for (ExpressionTree expr : node.getExpressions()) {
-			if (!isFirst)
-				out.append(',').optionalSpace();
-			isFirst = false;
-			expr.accept(this, out);
-		}
+		writeList(node.getExpressions(), out);
 		return null;
 	}
 
@@ -1321,7 +1260,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append(singleQuotes ? '\'' : '"');
 		for (int i = 0, l = value.length(); i < l; i++) {
 			char c = value.charAt(i);
-			boolean escape = false;
 			switch (c) {
 				case '\t':
 					c = 't';
@@ -1432,13 +1370,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitTupleType(TupleTypeTree node, WriterHelper out) {
 		out.append('[');
-		boolean isFirst = true;
-		for (TypeTree type : node.getSlotTypes()) {
-			if (!isFirst)
-				out.append(',');
-			isFirst = false;
-			type.accept(this, out);
-		}
+		writeList(node.getSlotTypes(), out);
 		out.append(']');
 		return null;
 	}
