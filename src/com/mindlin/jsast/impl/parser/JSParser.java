@@ -1631,6 +1631,7 @@ public class JSParser {
 				return parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, src, context);
 			}
 			initializer = declarations;
+			expectEOL(src, context);
 		} else {
 			context.push();
 			context.allowIn(false);
@@ -1643,10 +1644,8 @@ public class JSParser {
 				return this.parsePartialForEachLoopTree(forKeywordToken, left, isOf, src, context);
 			}
 			
-			initializer = new ExpressionStatementTreeImpl(expr);
+			initializer = this.finishExpressionStatement(expr, src, context);
 		}
-		
-		expectEOL(src, context);
 		
 		return parsePartialForLoopTree(forKeywordToken, initializer, src, context);
 	}

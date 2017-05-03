@@ -8,6 +8,7 @@ import org.junit.Test;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
+import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
@@ -49,12 +50,12 @@ public class ForLoopTest {
 	
 	@Test
 	public void testForLoopBreak() {
-		ForLoopTree loop = parseStatement("for(;;;)break;", Kind.FOR_LOOP);
+		ForLoopTree loop = parseStatement("for(;;)break;", Kind.FOR_LOOP);
 	}
 	
 	@Test
 	public void testNamedForLoopBreak() {
-		ForLoopTree loop = parseStatement("foo:for(;;;)break foo;", Kind.FOR_LOOP);
+		LabeledStatementTree loop = parseStatement("foo:for(;;)break foo;", Kind.LABELED_STATEMENT);
 	}
 	
 	@Test
