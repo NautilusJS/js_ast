@@ -322,9 +322,8 @@ public class JSParser {
 					default:
 						break;
 				}
-				Token lookahead = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON);
-				if (lookahead != null)
-					return this.parseLabeledStatement(this.parseIdentifier(next, src, context), lookahead, src, context);
+				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON))
+					return this.parseLabeledStatement(this.parseIdentifier(next, src, context, false), src, context);
 			}
 			//Fallthrough intentional
 			case BOOLEAN_LITERAL:
@@ -940,7 +939,7 @@ public class JSParser {
 			return new ThrowTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
 	}
 
-	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, Token colon, JSLexer src, Context context) {
+	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, JSLexer src, Context context) {
 		StatementTree statement = this.parseStatement(src, context);
 		context.registerStatementLabel(identifier.getName(), identifier.getStart());
 		return new LabeledStatementTreeImpl(identifier.getStart(), src.getPosition(), identifier, statement);
