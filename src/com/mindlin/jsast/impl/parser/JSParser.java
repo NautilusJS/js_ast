@@ -2570,10 +2570,17 @@ public class JSParser {
 
 	FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
 		Token startBodyToken = src.peek();
-		ctx.push().enterFunction()
+		ctx.push()
 			.allowAwait(async);
+		
+		if (generator)
+			ctx.enterGenerator();
+		else
+			ctx.enterFunction();
+		
 		//Read function body
 		StatementTree body;
+		//TODO require block if not lambda?
 		if (startBodyToken.matches(TokenKind.BRACKET, '{')) {
 			src.skip(startBodyToken);
 			body = parseBlock(startBodyToken, src, ctx);
