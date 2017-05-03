@@ -1664,10 +1664,21 @@ public class JSParser {
 	
 	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, Context context) {
 		withKeywordToken = expect(withKeywordToken, TokenKind.KEYWORD, JSKeyword.WITH, src, context);
+		
+		if (context.isStrict())
+			throw new JSSyntaxException("'with' blocks may not be used in strict mode", withKeywordToken.getStart());
+		
 		src.expect(JSOperator.LEFT_PARENTHESIS);
+		
+		context.push();
+		context.allowIn(true);
 		ExpressionTree expression = parseNextExpression(src, context);
+		context.pop();
+		
 		src.expect(JSOperator.RIGHT_PARENTHESIS);
 		StatementTree statement = this.parseStatement(src, context);
+		
+		//TODO check if statement is valid (isLabelledFunction)
 		return new WithTreeImpl(withKeywordToken.getStart(), src.getPosition(), expression, statement);
 	}
 	
