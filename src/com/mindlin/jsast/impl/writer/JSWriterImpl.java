@@ -291,36 +291,45 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		return result;
 	}
 	
-	protected void writeInterfaceBody(List<? extends InterfacePropertyTree> properties, WriterHelper out, boolean isType) {
-		for (InterfacePropertyTree property : properties) {
-			if (property.isReadonly())
-				out.append("readonly").append(options.space);
-			
-			if (property.getKey() == null) {
-				//Is function interface
-				out.append('(');
-				FunctionTypeTree type = (FunctionTypeTree) property.getType();
-				writeList(type.getParameters(), out);
-				out.append(')').append(':').optionalSpace();
-				type.getReturnType().accept(this, out);
-			} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
-				//Is index type (format: `[name: KeyType]: ValueType`)
-				out.append('[');
-				property.getKey().accept(this, out);
+	void writeInterfaceProperty(InterfacePropertyTree property, WriterHelper out) {
+		if (property.isReadonly())
+			out.append("readonly").append(options.space);
+		
+		if (property.getKey() == null) {
+			//Is function interface
+			out.append('(');
+			FunctionTypeTree type = (FunctionTypeTree) property.getType();
+			writeList(type.getParameters(), out);
+			out.append(')').append(':').optionalSpace();
+			type.getReturnType().accept(this, out);
+		} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
+			//Is index type (format: `[name: KeyType]: ValueType`)
+			out.append('[');
+			property.getKey().accept(this, out);
 
-				IndexTypeTree type = (IndexTypeTree) property.getType();
-				out.append(':').optionalSpace();
-				type.getIndexType().accept(this, out);
-				
-				out.append("]:").optionalSpace();
-				type.getReturnType().accept(this, out);
-			} else {
-				property.getKey().accept(this, out);
-				if (property.isOptional())
-					out.append('?');
-				
-				writeTypeMaybe(property.getType(), out);
-			}
+			IndexTypeTree type = (IndexTypeTree) property.getType();
+			out.append(':').optionalSpace();
+			type.getIndexType().accept(this, out);
+			
+			out.append("]:").optionalSpace();
+			type.getReturnType().accept(this, out);
+		} else {
+			property.getKey().accept(this, out);
+			if (property.isOptional())
+				out.append('?');
+			
+			writeTypeMaybe(property.getType(), out);
+		}
+	}
+	
+	protected void writeInterfaceBody(List<? extends InterfacePropertyTree> properties, WriterHelper out, boolean isType) {
+		if (isType && properties.size() == 1) {
+			writeInterfaceProperty(properties.get(0), out);
+			return;
+		}
+		
+		for (InterfacePropertyTree property : properties) {
+			writeInterfaceProperty(property, out);
 			out.append(';');
 			if (!isType)
 				out.newline();
