@@ -960,9 +960,7 @@ public class JSParser {
 		List<VariableDeclaratorTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
-			Token identifier = src.nextToken();
-			if (!identifier.isIdentifier())
-				throw new JSUnexpectedTokenException(identifier);
+			IdentifierTree identifier = parseIdentifier(null, src, context);
 			
 			//Check if a type is available
 			TypeTree type = this.parseTypeMaybe(src, context, false);
@@ -1029,7 +1027,7 @@ public class JSParser {
 						break;
 				}
 			}
-			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), type, initializer));
+			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), identifier, type, initializer));
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		if (!inFor)
