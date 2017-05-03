@@ -8,6 +8,7 @@ import org.junit.Test;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 public class VariableDeclarationTest {
@@ -54,12 +55,12 @@ public class VariableDeclarationTest {
 	
 	@Test
 	public void testComplexVariableDeclaration() {
-		VariableDeclarationTree decl = (VariableDeclarationTree) parseStatement("var foo : void = 5, bar = foo + 1;");
+		VariableDeclarationTree decl = (VariableDeclarationTree) parseStatement("var foo : number = 5, bar = foo + 1;");
 		assertEquals(2, decl.getDeclarations().size());
 
 		VariableDeclaratorTree declarator0 = decl.getDeclarations().get(0);
 		assertIdentifier("foo", declarator0.getIdentifier());
-		assertEquals(Kind.VOID_TYPE, declarator0.getType().getKind());
+		assertSpecialType(SpecialType.NUMBER, declarator0.getType());
 		assertNotNull(declarator0.getIntitializer());
 		assertLiteral(5, declarator0.getIntitializer());
 

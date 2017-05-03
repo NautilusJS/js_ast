@@ -1419,32 +1419,42 @@ public class JSParser {
 			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, Collections.emptyList());
 		} else if (startToken.isIdentifier()) {
 			//Check for 'keyof X'
-			if ("keyof".matches(startToken.getValue())) {
-				TypeTree baseType = parseType(src, context);
-				return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), false, baseType);
+			switch (startToken.<String>getValue()) {
+				case "keyof": {
+					TypeTree baseType = parseType(src, context);
+					return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), false, baseType);
+				}
+				case "Array": {
+					//Array<X> => X[]
+					List<TypeTree> arrayGenericArgs = this.parseGenericArguments(null, src, context);
+					if (arrayGenericArgs.size() > 1)
+						throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
+					
+					TypeTree arrayBaseType = null;
+					if (arrayGenericArgs.size() == 1)
+						arrayBaseType = arrayGenericArgs.get(0);
+					else
+						//Fall back on 'any[]'
+						arrayBaseType = new SpecialTypeTreeImpl(-1, -1, SpecialType.ANY, true);
+					
+					return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
+				}
+				case "any":
+				case "string":
+				case "number":
+				case "boolean":
+				case "null":
+				case "undefined":
+				case "never":
+					return new SpecialTypeTreeImpl(startToken);
+				default: {
+					IdentifierTree identifier = new IdentifierTreeImpl(startToken);
+					
+					List<TypeTree> generics = this.parseGenericArguments(null, src, context);
+					
+					return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
+				}
 			}
-			
-			//Array<X> => X[]
-			if ("Array".matches(startToken.getValue())) {
-				List<TypeTree> arrayGenericArgs = this.parseGenericArguments(null, src, context);
-				if (arrayGenericArgs.size() > 1)
-					throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
-				
-				TypeTree arrayBaseType = null;
-				if (arrayGenericArgs.size() == 1)
-					arrayBaseType = arrayGenericArgs.get(0);
-				else
-					//Fall back on 'any[]'
-					arrayBaseType = new SpecialTypeTreeImpl(-1, -1, SpecialType.ANY, true);
-				
-				return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
-			}
-			
-			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
-			
-			List<TypeTree> generics = this.parseGenericArguments(null, src, context);
-			
-			return  new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
 			return new SpecialTypeTreeImpl(startToken);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION)) {

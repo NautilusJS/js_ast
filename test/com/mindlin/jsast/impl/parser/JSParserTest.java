@@ -18,6 +18,9 @@ import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 import junit.framework.Assert;
+import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 
 @RunWith(Suite.class)
 @SuiteClasses({ArrayLiteralTest.class, AssignmentTest.class, BinaryExpressionTest.class, ClassDeclarationTest.class, DoLoopTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, InterfaceDeclarationTest.class, LambdaTest.class, OperatorTest.class, StatementTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
@@ -43,6 +46,11 @@ public class JSParserTest {
 	protected static final void assertIdentifier(String name, ExpressionTree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	protected static final void assertSpecialType(SpecialType value, TypeTree type) {
+		assertEquals(Kind.SPECIAL_TYPE, type.getKind());
+		assertEquals(value, ((SpecialTypeTree) type).getType());
 	}
 	
 	protected static void assertExceptionalExpression(String expr, String errorMsg) {
