@@ -767,7 +767,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitForEachLoop(ForEachLoopTree node, WriterHelper out) {
 		out.append("for(");
+		
+		out.pushContext();
+		out.doFinishWithNewline(false);
 		node.getVariable().accept(this, out);
+		out.popContext();
+		
 		if (node.getKind() == Tree.Kind.FOR_IN_LOOP)
 			out.appendIsolated("in");
 		else if (node.getKind() == Tree.Kind.FOR_OF_LOOP)
@@ -777,7 +782,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		node.getExpression().accept(this, out);
 		out.append(')');
-		node.getStatement().accept(this, out);
+		
+		StatementTree statement = node.getStatement();
+		if (statement.getKind() == Kind.BLOCK)//Optional space between ')' in for header and '{' in block
+			out.optionalSpace();
+		statement.accept(this, out);
 		return null;
 	}
 
@@ -1067,7 +1076,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitIntersectionType(IntersectionTypeTree node, WriterHelper out) {
 		node.getLeftType().accept(this, out);
+		out.optionalSpace();
 		out.append('&');
+		out.optionalSpace();
 		node.getRightType().accept(this, out);
 		return null;
 	}
