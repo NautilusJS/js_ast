@@ -804,12 +804,10 @@ public class JSLexer implements Supplier<Token> {
 				if (keyword != null) {
 					//Because the '*' in function* and yield* is not normally considered part of an
 					//identifier sequence, we have to check for it here
-					if (chars.hasNext() && chars.peek() == '*' && (keyword == JSKeyword.FUNCTION || keyword == JSKeyword.YIELD)) {
-						chars.next();
+					if (chars.hasNext() && chars.peek() == '*' && keyword == JSKeyword.FUNCTION) {
+						chars.skip(1);
 						if (keyword == JSKeyword.FUNCTION)
 							keyword = JSKeyword.FUNCTION_GENERATOR;
-						else if (keyword == JSKeyword.YIELD)
-							keyword = JSKeyword.YIELD_GENERATOR;
 					}
 					value = keyword;
 					kind = TokenKind.KEYWORD;

@@ -1490,6 +1490,14 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				node.getExpression().accept(this, out);
 				out.append("--");
 				return null;
+			case YIELD:
+				operator = "yield";
+				spaceAfter = true;
+				break;
+			case YIELD_GENERATOR:
+				operator = "yield*";
+				spaceAfter = true;
+				break;
 			default:
 				throw new IllegalArgumentException("Unknown operator type: " + node.getKind());
 		}

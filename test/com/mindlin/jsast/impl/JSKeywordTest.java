@@ -16,7 +16,6 @@ public class JSKeywordTest {
 		assertEquals(JSKeyword.FUNCTION_GENERATOR, JSKeyword.lookup("function*"));
 		
 		assertEquals(JSKeyword.YIELD, JSKeyword.lookup("yield"));
-		assertEquals(JSKeyword.YIELD_GENERATOR, JSKeyword.lookup("yield*"));
 	}
 	
 	@Test

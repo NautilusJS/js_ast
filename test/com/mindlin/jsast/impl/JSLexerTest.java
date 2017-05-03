@@ -12,6 +12,7 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.parser.JSKeyword;
+import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 import com.mindlin.jsast.impl.util.Characters;
 
@@ -347,17 +348,28 @@ public class JSLexerTest {
 	@Test
 	public void testYield() {
 		JSLexer lexer = new JSLexer("yield yield* yield *");
+		
 		Token next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
 		assertEquals(JSKeyword.YIELD, next.getValue());
 		
-		next = lexer.nextToken();
-		assertEquals(TokenKind.KEYWORD, next.getKind());
-		assertEquals(JSKeyword.YIELD_GENERATOR, next.getValue());
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
 		assertEquals(JSKeyword.YIELD, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.OPERATOR, next.getKind());
+		assertEquals(JSOperator.MULTIPLICATION, next.getValue());
+		
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.KEYWORD, next.getKind());
+		assertEquals(JSKeyword.YIELD, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.OPERATOR, next.getKind());
+		assertEquals(JSOperator.MULTIPLICATION, next.getValue());
 	}
 	
 	@Test

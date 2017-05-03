@@ -5,10 +5,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
-import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.Tree.Kind;

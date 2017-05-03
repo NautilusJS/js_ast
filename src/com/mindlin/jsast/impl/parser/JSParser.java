@@ -238,6 +238,7 @@ public class JSParser {
 		return parseNext(src.nextToken(), src, context);
 	}
 	
+	@Deprecated
 	protected Tree parseNext(Token token, JSLexer src, Context context) {
 		switch (token.getKind()) {
 			case KEYWORD:
@@ -287,7 +288,6 @@ public class JSParser {
 					case NEW:
 					case TYPEOF:
 					case YIELD:
-					case YIELD_GENERATOR:
 					case SUPER:
 					case THIS:
 						return parseNextExpression(token, src, context);
@@ -406,9 +406,9 @@ public class JSParser {
 					case NEW:
 					case TYPEOF:
 					case YIELD:
-					case YIELD_GENERATOR:
 					case SUPER:
 					case THIS:
+						//TODO redirect keywords to better fns
 						return this.parseExpressionStatement(next, src, context);
 					case CASE:
 					case FINALLY:
@@ -1547,7 +1547,6 @@ public class JSParser {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
 			throw new JSUnexpectedTokenException(keywordToken);
-		//TODO check if keyword allowed in context
 		String label = null;
 		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
 		if (next != null)
@@ -2797,7 +2796,6 @@ public class JSParser {
 						kind = Tree.Kind.DELETE;
 						break;
 					case YIELD:
-					case YIELD_GENERATOR:
 						return this.parseYield(operatorToken, src, context);
 					default:
 						break;
@@ -2888,16 +2886,12 @@ public class JSParser {
 	 *
 	 */
 	protected UnaryTree parseYield(Token yieldKeywordToken, JSLexer src, Context context) {
-		yieldKeywordToken = expect(yieldKeywordToken, TokenKind.KEYWORD, src, context);
+		yieldKeywordToken = expect(yieldKeywordToken, TokenKind.KEYWORD, JSKeyword.YIELD, src, context);
 		
 		dialect.require("js.yield", src.getPosition());
 		
 		//Check if it's a 'yield*'
-		boolean delegates = yieldKeywordToken.getValue() == JSKeyword.YIELD_GENERATOR;
-		
-		//Make sure that our keywork is, in fact, either 'yield' or 'yield*'
-		if (!delegates && yieldKeywordToken.getValue() != JSKeyword.YIELD)
-			throw new JSUnexpectedTokenException(yieldKeywordToken);
+		boolean delegates = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION);
 		
 		//Parse RHS of expression
 		ExpressionTree argument = delegates
