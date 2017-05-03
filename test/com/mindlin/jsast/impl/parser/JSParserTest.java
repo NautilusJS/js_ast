@@ -15,6 +15,7 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
+import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 import junit.framework.Assert;
@@ -46,6 +47,12 @@ public class JSParserTest {
 	protected static final void assertIdentifier(String name, ExpressionTree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected static final <T extends Tree> T assertKind(Tree tree, Tree.Kind kind) {
+		assertEquals(kind, tree.getKind());
+		return (T) tree;
 	}
 	
 	protected static final void assertSpecialType(SpecialType value, TypeTree type) {

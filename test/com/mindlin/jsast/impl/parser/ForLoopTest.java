@@ -48,6 +48,16 @@ public class ForLoopTest {
 	}
 	
 	@Test
+	public void testForLoopBreak() {
+		ForLoopTree loop = parseStatement("for(;;;)break;", Kind.FOR_LOOP);
+	}
+	
+	@Test
+	public void testNamedForLoopBreak() {
+		ForLoopTree loop = parseStatement("foo:for(;;;)break foo;", Kind.FOR_LOOP);
+	}
+	
+	@Test
 	public void testForLoopEmpty() {
 		ForLoopTree loop = parseStatement("for(;;);", Kind.FOR_LOOP);
 		//Initializer not null (should be empty statement)

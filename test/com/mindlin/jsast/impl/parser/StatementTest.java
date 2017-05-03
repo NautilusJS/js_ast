@@ -10,8 +10,11 @@ import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.DebuggerTree;
+import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.jsast.tree.WithTree;
 
 public class StatementTest {
 	
@@ -57,7 +60,8 @@ public class StatementTest {
 	
 	@Test
 	public void testDebuggerStatement() {
-		DebuggerTree debugger = parseStatement("debugger;", Tree.Kind.DEBUGGER);
+		parseStatement("debugger;", Tree.Kind.DEBUGGER);
+		//There is literally nothing to test
 	}
 	
 	@Test
@@ -84,5 +88,28 @@ public class StatementTest {
 		assertEquals("later", continueTree.getLabel());
 	}
 	
+	@Test
+	public void testWith() {
+		WithTree with = parseStatement("with(0);", Tree.Kind.WITH);
+		
+		assertLiteral(0, with.getScope());
+	}
 	
+	@Test
+	public void testLabelledStatements() {
+		LabeledStatementTree labelled = parseStatement("x:;", Tree.Kind.LABELED_STATEMENT);
+		
+		assertIdentifier("x", labelled.getName());
+		assertKind(labelled.getStatement(), Tree.Kind.EMPTY_STATEMENT);
+		
+		
+		labelled = parseStatement("x:y:;", Tree.Kind.LABELED_STATEMENT);
+		
+		assertIdentifier("x", labelled.getName());
+		
+		labelled = assertKind(labelled.getStatement(), Tree.Kind.LABELED_STATEMENT);
+		assertIdentifier("y", labelled.getName());
+		
+		assertKind(labelled.getStatement(), Tree.Kind.EMPTY_STATEMENT);
+	}
 }
