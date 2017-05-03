@@ -480,6 +480,9 @@ public class JSParser {
 	
 	protected ExpressionStatementTree finishExpressionStatement(ExpressionTree expression, JSLexer src, Context context) {
 		long end = expectEOL(src, context).getEnd();
+		//TODO convert to directive tree
+		if (!context.isStrict() && expression.getKind() == Kind.STRING_LITERAL && "use strict".equals(((LiteralTree<?>)expression).getValue()))
+			context.enterStrict();
 		return new ExpressionStatementTreeImpl(expression.getStart(), end, expression);
 	}
 	
