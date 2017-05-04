@@ -53,33 +53,30 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	/**
-	 * Read an escape sequence in the form of either {@code uXXXX} or {@code u{X...XXX}}.
+	 * Read an escape sequence in the form of either {@code uXXXX} or <code>u{X...XXX}</code>.
 	 * 
 	 * It is expected that the 'u' at the start of the escape sequence has already been consumed.
 	 * 
 	 * @return character read
 	 * @see <a href="https://tc39.github.io/ecma262/#prod-UnicodeEscapeSequence">ECMAScript 262 &sect; 11.8.4</a>
 	 */
-	protected char readUnicodeEscapeSequence() {
+	protected String readUnicodeEscapeSequence() {
+		int value = 0;
 		if (chars.peek() == '{') {
 			chars.skip(1);
 			//Max unicode code point is 0x10FFFF, which fits within a 32-bit integer
-			int val = 0;
 			char c = chars.next();
 			do {
 				int digit = Characters.asHexDigit(c);
 				if (c < 0)
 					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", chars.position());
 				//Overflow (value >= 0x10FFFF)
-				if ((val << 4) < val)
-					throw new JSSyntaxException("Invalid Unicode code point " + val, chars.position());
-				val = (val << 4) | digit;
+				if ((value << 4) < value)
+					throw new JSSyntaxException("Invalid Unicode code point " + value, chars.position());
+				value = (value << 4) | digit;
 			} while ((c = chars.next()) != '}');
-			
-			return (char) val;
 		} else {
 			//Escape in uXXXX form
-			int value = 0;
 			for (int i = 0; i < 4; i++) {
 				char c = chars.next();
 				int digit = Characters.asHexDigit(c);
@@ -87,8 +84,8 @@ public class JSLexer implements Supplier<Token> {
 					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", chars.position());
 				value = (value << 4) | digit;
 			}
-			return (char) value;
 		}
+		return new String(new int[]{value}, 0, 1);
 	}
 	
 	public String nextStringLiteral(final char startChar) {
@@ -155,33 +152,7 @@ public class JSLexer implements Supplier<Token> {
 					case 'u': {
 						//Unicode escape
 						//See mathiasbynens.be/notes/javascript-escapes
-						char d = chars.next();
-						if (d == '{') {
-							//Max unicode code point is 0x10FFFF, which fits within a 32-bit integer
-							int val = 0;
-							d = chars.next();
-							do {
-								int digit = Characters.asHexDigit(d);
-								if (d < 0)
-									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
-								if (val<<4 < val)
-									throw new JSSyntaxException("Invalid Unicode code point " + val, chars.position());
-								val = (val << 4) | digit;
-							} while ((d = chars.next()) != '}');
-							sb.append(new String(new int[] { val }, 0, 1));
-						} else {
-							int val = Characters.asHexDigit(d);
-							if (val < 0)
-								throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
-							for (int i = 0; i < 3; i++) {
-								int digit = Characters.asHexDigit(d = chars.next());
-								if (digit < 0)
-									throw new JSSyntaxException("Invalid character '" + d + "' in unicode code point escape sequence", chars.position());
-								val = (val << 4) | digit;
-							}
-							String t = new String(new int[] { val }, 0, 1);
-							sb.append(t);
-						}
+						sb.append(this.readUnicodeEscapeSequence());
 						break;
 					}
 					case 'x':
