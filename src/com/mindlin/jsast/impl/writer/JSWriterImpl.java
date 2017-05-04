@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import com.mindlin.jsast.impl.util.Characters;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
@@ -23,7 +25,6 @@ import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
-import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
@@ -47,7 +48,6 @@ import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
-import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.NullLiteralTree;
@@ -122,11 +122,67 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		type.accept(this, out);
 	}
 	
+	void writeMethodDefinition(MethodDefinitionTree method, WriterHelper out) {
+		//Write access modifier; public is implied
+		if (method.getAccess() == AccessModifier.PROTECTED)
+			out.append("protected").append(options.space);
+		else if (method.getAccess() == AccessModifier.PRIVATE)
+			out.append("private").append(options.space);
+		
+		if (method.isStatic())
+			out.append("static").append(options.space);
+		
+		if (method.isAbstract())
+			out.append("abstract").append(options.space);
+		
+		//Pretty sure that 'readonly' isn't a valid modifier here
+		
+		
+		switch (method.getDeclarationType()) {
+			case GETTER:
+				out.append("get").append(options.space);
+				break;
+			case SETTER:
+				out.append("set").append(options.space);
+				break;
+			case GENERATOR:
+				out.append("*").append(options.space);
+				break;
+			case ASYNC_METHOD:
+				out.append("async").append(options.space);
+			case CONSTRUCTOR:
+			case METHOD:
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown declaration type: " + method.getDeclarationType());
+		}
+		
+		
+		FunctionExpressionTree fn = method.getValue();
+		
+		method.getKey().accept(this, out);
+		
+		FunctionTypeTree type = (FunctionTypeTree) method.getType();
+		
+		out.append('(');
+		writeList(type.getParameters(), out);
+		out.append(')');
+		
+		this.writeTypeMaybe(type.getReturnType(), out);
+		
+		if (!method.isAbstract()) {
+			fn.getBody().accept(this, out);
+			out.finishStatement(false);
+		} else {
+			out.finishStatement(true);
+		}
+	}
+	
 	protected class WriterHelper implements Closeable {
 		protected final Writer parent;
 		protected int indentLevel = options.baseIndent;
 		private String indent = "";
-		protected int newlineBacklog = 0;
+		private int newlineBacklog = 0;
 		protected Stack<WriterHelperContext> context = new Stack<>();
 		
 		public WriterHelper(Writer parent) {
@@ -351,6 +407,18 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			
 			if (value != null)
 				value.accept(this, out);
+		}
+	}
+	
+	public <T> void writeList(List<T> values, WriterHelper out, BiConsumer<T, WriterHelper> serializer, Consumer<WriterHelper> delimiter) {
+		boolean isFirst = true;
+		for (T value : values) {
+			if (!isFirst)
+				delimiter.accept(out);
+			else
+				isFirst = false;
+			
+			serializer.accept(value, out);
 		}
 	}
 	
@@ -636,10 +704,16 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		out.optionalSpace().append('{');
+		out.newline().pushIndent();
 		for (ClassPropertyTree<?> property : node.getProperties()) {
-			//TODO finish
-			throw new UnsupportedOperationException();
+			if (property.getKind() == Tree.Kind.METHOD_DEFINITION)
+				this.writeMethodDefinition((MethodDefinitionTree) property, out);
+			else {
+				//TODO finish
+			}
 		}
+		out.popIndent();
+		out.newline();
 		out.append('}');
 		return null;
 	}
@@ -1093,12 +1167,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitLiteral(LiteralTree<?> node, WriterHelper out) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Void visitMemberType(MemberTypeTree node, WriterHelper out) {
 		node.getBaseType().accept(this, out);
 		out.append('.');
@@ -1108,39 +1176,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitMethodDefinition(MethodDefinitionTree node, WriterHelper out) {
-		//Write access modifier; public is implied
-		if (node.getAccess() == AccessModifier.PROTECTED)
-			out.append("protected ");
-		else if (node.getAccess() == AccessModifier.PRIVATE)
-			out.append("private ");
-		
-		if (node.isStatic())
-			out.append("static ");
-
-		//Pretty sure that 'readonly' isn't valid
-		
-		
-		switch (node.getDeclarationType()) {
-			case CONSTRUCTOR:
-				out.append("constructor");
-				break;
-			case GETTER:
-				out.append("get ");
-				break;
-			case SETTER:
-				out.append("set ");
-				break;
-			case METHOD:
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown declaration type: " + node.getDeclarationType());
-		}
-		
-		if (node.getDeclarationType() != PropertyDeclarationType.CONSTRUCTOR)
-			node.getKey().accept(this, out);
-		
-		//TODO check that this is right
-		node.getValue().accept(this, out);
+		this.writeMethodDefinition(node, out);
 		return null;
 	}
 
@@ -1177,22 +1213,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				out.append(',').optionalSpace();
 			isFirst = false;
 			if (property.getKind() == Kind.METHOD_DEFINITION) {
-				MethodDefinitionTree method = (MethodDefinitionTree) property;
-				FunctionExpressionTree fn = method.getValue();
-				if (fn.isGenerator())
-					out.append("* ");
-				else if (method.getDeclarationType() == PropertyDeclarationType.GETTER)
-					out.append("get ");
-				else if (method.getDeclarationType() == PropertyDeclarationType.SETTER)
-					out.append("set ");
-				method.getKey().accept(this, out);
-				
-				out.append('(');
-				writeList(fn.getParameters(), out);
-				out.append(')');
-				
-				this.writeTypeMaybe(fn.getReturnType(), out);
-				fn.getBody().accept(this, out);
+				this.writeMethodDefinition((MethodDefinitionTree) property, out);
 			} else {
 				ObjectPropertyKeyTree key = property.getKey();
 				key.accept(this, out);
