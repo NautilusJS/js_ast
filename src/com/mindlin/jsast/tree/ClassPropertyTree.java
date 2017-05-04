@@ -34,6 +34,8 @@ public interface ClassPropertyTree<T> extends TypedPropertyTree {
 		GETTER,
 		SETTER,
 		METHOD,
+		ASYNC_METHOD,
+		GENERATOR,
 		CONSTRUCTOR,
 		FIELD;
 	}

@@ -1009,7 +1009,6 @@ public class JSParser {
 			PropertyDeclarationType methodType = null;
 			AccessModifier accessModifier = null;//Defaults to PUBLIC
 			boolean readonly = false;//Readonly modifier
-			boolean generator = false;
 			boolean isStatic = false;
 			boolean isPropertyAbstract = false;
 			Token modifierToken = null;//Store token of modifier for later error stuff
@@ -1027,6 +1026,8 @@ public class JSParser {
 						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", next.getStart(), next.getEnd());
 					if (isPropertyAbstract)
 						throw new JSUnexpectedTokenException(next);
+					
+					modifierToken = next;
 					isPropertyAbstract = true;
 				} else if (next.isKeyword()) {
 					JSKeyword keyword = next.getValue();
@@ -1066,11 +1067,15 @@ public class JSParser {
 			if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
 				//Generator function
 				dialect.require("js.method.generator", next.getStart());
-				generator = true;
-				methodType = PropertyDeclarationType.METHOD;
+				methodType = PropertyDeclarationType.GENERATOR;
 				
 				modifierToken = next;
 				next = src.nextToken();
+			} else if (next.matches(TokenKind.IDENTIFIER, "async") && dialect.supports("js.function.async")) {
+				methodType = PropertyDeclarationType.ASYNC_METHOD;
+				modifierToken = next;
+				next = src.nextToken();
+				//TODO test lookahead identifier predicate (below)
 			} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && (src.peek().getKind() == TokenKind.IDENTIFIER || src.peek().matches(TokenKind.BRACKET, '['))) {
 				//Getter/setter method
 				dialect.require("js.accessor", next.getStart());
@@ -1105,10 +1110,14 @@ public class JSParser {
 				
 				if (!computed && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
 					//Promote to constructor
-					if (methodType != null || generator) {
+					if (methodType != null || isPropertyAbstract) {
 						String modifierName;
-						if (generator)
+						if (methodType == PropertyDeclarationType.GENERATOR)
 							modifierName = "generator";
+						else if (methodType == PropertyDeclarationType.ASYNC_METHOD)
+							modifierName = "async";
+						else if (isPropertyAbstract)
+							modifierName = "abstract";
 						else if (methodType == PropertyDeclarationType.GETTER)
 							modifierName = "getter";
 						else if (methodType == PropertyDeclarationType.SETTER)
@@ -1118,28 +1127,34 @@ public class JSParser {
 						
 						throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
 					}
+					
 					dialect.require("js.class.constructor", key.getStart());
 					methodType = PropertyDeclarationType.CONSTRUCTOR;
-				} else if (methodType == null) {//It's a not a getter/setter
+				} else if (methodType == null) {
+					//It's a not a getter/setter, but it's still a method
 					methodType = PropertyDeclarationType.METHOD;
 				}
 				
-				//Parse method
+				//Parse method parameters
 				List<ParameterTree> params = this.parseParameters(src, context);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				
-				TypeTree returnType = this.parseTypeMaybe(src, context, false);
+				TypeTree returnType = null;
+				//Return type may not be set on constructor
+				if (methodType != PropertyDeclarationType.CONSTRUCTOR)
+					returnType = this.parseTypeMaybe(src, context, false);
 				
+				//Parse method body, if not abstract
 				FunctionExpressionTree fn = null;
 				if (!isPropertyAbstract)
-					fn = this.finishFunctionBody(propertyStartPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
+					fn = this.finishFunctionBody(propertyStartPos, methodType == PropertyDeclarationType.ASYNC_METHOD, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, methodType == PropertyDeclarationType.GENERATOR, src, context);
+				else
+					expectEOL(src, context);
 				
 				FunctionTypeTree functionType = new FunctionTypeTreeImpl(propertyStartPos, src.getPosition(), true, params, Collections.emptyList(), returnType);
 				
-				//Consume semicolon at end
-				
 				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
-			} else if (methodType != null || generator || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
+			} else if (methodType != null || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
 				//TODO also check for fields named 'new'?
 				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 			} else {
@@ -1314,6 +1329,8 @@ public class JSParser {
 					
 					return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
 				}
+				case "this":
+					throw new UnsupportedOperationException("'this' type not implemented yet");
 				case "any":
 				case "string":
 				case "number":
@@ -1372,7 +1389,7 @@ public class JSParser {
 			type = parseType(src, context);
 			expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 		} else {
-			type = parseImmediateType(src, context);
+			type = this.parseImmediateType(src, context);
 		}
 		
 		//Suppoert member types in form of 'A.B'

@@ -5,11 +5,11 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 
