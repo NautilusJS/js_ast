@@ -53,7 +53,6 @@ public interface TreeVisitor<R, D> {
 	R visitInterfaceType(InterfaceTypeTree node, D d);
 	R visitIntersectionType(IntersectionTypeTree node, D d);
 	R visitLabeledStatement(LabeledStatementTree node, D d);
-	R visitLiteral(LiteralTree<?> node, D d);
 	R visitMemberType(MemberTypeTree node, D d);
 	R visitMethodDefinition(MethodDefinitionTree node, D d);
 	R visitNew(NewTree node, D d);
