@@ -56,10 +56,8 @@ import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
-import com.mindlin.jsast.tree.ObjectPropertyTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.ReturnTree;
 import com.mindlin.jsast.tree.SequenceTree;
@@ -81,7 +79,6 @@ import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -92,6 +89,7 @@ import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.writer.JSWriter;
@@ -99,6 +97,7 @@ import com.mindlin.jsast.writer.JSWriterOptions;
 
 public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.WriterHelper> {
 	protected final JSWriterOptions options;
+	
 	public JSWriterImpl(JSWriterOptions options) {
 		//TODO clone
 		this.options = options;

@@ -70,19 +70,19 @@ import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 
-public class ASTTransformer implements ASTTransformation {
+public class ASTTransformer implements ASTTransformation<Tree, ASTTransformerContext> {
 	List<ASTTransformation> transformations;
 	public CompilationUnitTree apply(CompilationUnitTree tree) {
 		
 		return null;
 	}
-	
+	/*
 	protected Tree applySinglePass(Tree node, ASTTransformerContext context) {
 		Tree result = node;
-		for (ASTTransformation transformation : transformations)
+		for (ASTTransformation<?> transformation : transformations)
 			result = result.accept(transformation, context);
 		return result;
-	}
+	}*/
 	
 	@Override
 	public Tree visitSpecialType(SpecialTypeTree node, ASTTransformerContext d) {
@@ -299,11 +299,7 @@ public class ASTTransformer implements ASTTransformation {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	@Override
-	public Tree visitLiteral(LiteralTree<?> node, ASTTransformerContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 	@Override
 	public Tree visitMemberType(MemberTypeTree node, ASTTransformerContext d) {
 		// TODO Auto-generated method stub
