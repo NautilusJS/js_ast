@@ -39,4 +39,13 @@ public interface SourceFile {
 			idx = 1 - idx;
 		return idx;
 	}
+	
+	default FilePosition getOffsetPosotion(long offset) {
+		long[] offsets = lineOffsets();
+		int line = Arrays.binarySearch(offsets, offset);
+		if (line < 0)
+			line = 1 - line;
+		int col = (int) (offset - offsets[line]);
+		return new FilePosition(line, col);
+	}
 }

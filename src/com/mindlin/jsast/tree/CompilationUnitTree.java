@@ -10,8 +10,16 @@ public interface CompilationUnitTree extends Tree {
 	
 	List<StatementTree> getSourceElements();
 	
+	/**
+	 * Get the source file that this code came from
+	 * @return
+	 */
 	SourceFile getSourceFile();
 	
+	/**
+	 * Whether this compilation unit is strict
+	 * @return
+	 */
 	boolean isStrict();
 	
 	@Override

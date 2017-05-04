@@ -11,7 +11,7 @@ public abstract class AbstractGotoTree extends AbstractTree implements GotoTree 
 		super(start, end);
 		this.label = label;
 	}
-
+	
 	@Override
 	public String getLabel() {
 		return this.label;

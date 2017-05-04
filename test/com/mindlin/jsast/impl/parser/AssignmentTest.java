@@ -19,7 +19,6 @@ public class AssignmentTest {
 	@Test
 	public void testChainedAssignment() {
 		AssignmentTree assignment = parseExpression("x=y=z", Kind.ASSIGNMENT);
-		System.out.println(assignment);
 		assertIdentifier("x", assignment.getLeftOperand());
 		assertEquals(Tree.Kind.ASSIGNMENT, assignment.getRightOperand().getKind());
 		
@@ -34,5 +33,6 @@ public class AssignmentTest {
 //		assertExceptionalExpression("y++=x", errorMessagePrefix + "numeric literals");
 		assertExceptionalExpression("'hello'=x", errorMessagePrefix + "string literals");
 		assertExceptionalExpression("true=x", errorMessagePrefix + "boolean literals");
+		assertExceptionalExpression("~x=y", errorMessagePrefix + "opaque expressions");
 	}
 }

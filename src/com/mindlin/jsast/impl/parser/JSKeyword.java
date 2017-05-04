@@ -2,7 +2,6 @@ package com.mindlin.jsast.impl.parser;
 
 public enum JSKeyword {
 	AS(true),
-	AWAIT,
 	BREAK,
 	CASE,
 	CLASS,
@@ -47,7 +46,7 @@ public enum JSKeyword {
 	WHILE,
 	WITH,
 	YIELD,
-	YIELD_GENERATOR(false, "yield*");
+	;
 	public static JSKeyword lookup(String identifier) {
 		//Check if identifier can even be an identifier (i.e., is all lower case)
 		if (!identifier.equals(identifier.toLowerCase()))

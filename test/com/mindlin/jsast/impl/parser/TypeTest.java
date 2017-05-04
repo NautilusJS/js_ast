@@ -11,6 +11,7 @@ import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
@@ -38,8 +39,8 @@ public class TypeTest {
 	
 	@Test
 	public void testIdentifierType() {
-		IdentifierTypeTree type = parseType("string", Kind.IDENTIFIER_TYPE);
-		assertIdentifierType("string", 0, type);
+		IdentifierTypeTree type = parseType("Foo", Kind.IDENTIFIER_TYPE);
+		assertIdentifierType("Foo", 0, type);
 	}
 	
 	@Test
@@ -81,9 +82,9 @@ public class TypeTest {
 	
 	@Test
 	public void testUnionType() {
-		UnionTypeTree type = parseType("string|number", Kind.TYPE_UNION);
-		assertIdentifierType("string", 0, type.getLeftType());
-		assertIdentifierType("number", 0, type.getRightType());
+		UnionTypeTree type = parseType("A | B", Kind.TYPE_UNION);
+		assertIdentifierType("A", 0, type.getLeftType());
+		assertIdentifierType("B", 0, type.getRightType());
 	}
 	
 	@Test
@@ -104,22 +105,22 @@ public class TypeTest {
 	
 	@Test
 	public void testSimpleInlineInterfaceType() {
-		InterfaceTypeTree type = parseType("{a:string}", Kind.INTERFACE_TYPE);
+		InterfaceTypeTree type = parseType("{a:Foo}", Kind.INTERFACE_TYPE);
 		assertEquals(1, type.getProperties().size());
 		
 		InterfacePropertyTree prop0 = type.getProperties().get(0);
 		ObjectPropertyKeyTree key0 = prop0.getKey();
 		assertFalse(key0.isComputed());
 		assertIdentifier("a", key0);
-		assertIdentifierType("string", 0, prop0.getType());
+		assertIdentifierType("Foo", 0, prop0.getType());
 	}
 	
 	@Test
 	public void testTupleType() {
 		TupleTypeTree type = parseType("[string, number]", Kind.TUPLE_TYPE);
 		assertEquals(2, type.getSlotTypes().size());
-		assertIdentifierType("string", 0, type.getSlotTypes().get(0));
-		assertIdentifierType("number", 0, type.getSlotTypes().get(1));
+		assertSpecialType(SpecialType.STRING, type.getSlotTypes().get(0));
+		assertSpecialType(SpecialType.NUMBER, type.getSlotTypes().get(1));
 	}
 	
 	@Test

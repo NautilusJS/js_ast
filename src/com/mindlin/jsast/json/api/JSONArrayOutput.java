@@ -1,7 +1,6 @@
 package com.mindlin.jsast.json.api;
 
 import java.util.Collection;
-import java.util.Map;
 
 public interface JSONArrayOutput extends SafelyCloseable {
 	void writeBoolean(boolean value);

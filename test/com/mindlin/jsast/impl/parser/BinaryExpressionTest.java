@@ -1,18 +1,14 @@
 package com.mindlin.jsast.impl.parser;
 
-import static org.junit.Assert.*;
+import static com.mindlin.jsast.impl.parser.JSParserTest.assertIdentifier;
+import static com.mindlin.jsast.impl.parser.JSParserTest.parseExpression;
+import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-import java.util.Random;
-
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
@@ -77,12 +73,12 @@ public class BinaryExpressionTest {
 	
 	@Test
 	public void testOrderOfOperationsParentheses() {
-		BinaryTree expr = parseExpression("(a+b)*c");
+		BinaryTree expr = parseExpression("(a+b)*c", Tree.Kind.MULTIPLICATION);
 		
-		assertEquals(Tree.Kind.MULTIPLICATION, expr.getKind());
 		assertIdentifier("c", expr.getRightOperand());
 		
-		BinaryTree left = (BinaryTree) expr.getLeftOperand();
+		assertEquals(Tree.Kind.PARENTHESIZED, expr.getLeftOperand().getKind());
+		BinaryTree left = (BinaryTree) ((ParenthesizedTree) expr.getLeftOperand()).getExpression();
 		assertEquals(Tree.Kind.ADDITION, left.getKind());
 		assertIdentifier("a", left.getLeftOperand());
 		assertIdentifier("b", left.getRightOperand());

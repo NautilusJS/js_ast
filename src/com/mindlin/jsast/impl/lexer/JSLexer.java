@@ -664,14 +664,14 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	protected String scanRegExpFlags() {
-		long start = chars.position();
+		chars.mark();
 		while (!isEOF()) {
 			char c = chars.peek();
 			if (c != 'g' && c!= 'i' && c!= 'm' && c != 'y')
 				break;
 			chars.next();
 		}
-		return chars.copy(start, chars.position() - start);
+		return chars.copyFromMark();
 	}
 	
 	public Token finishRegExpLiteral(Token start) {
@@ -698,7 +698,7 @@ public class JSLexer implements Supplier<Token> {
 				if (c == '\n' ||c == '\r')
 					break;
 			} else if (c == '*' && chars.hasNext() && chars.peek() == '/') {
-				chars.next(2);
+				chars.skip(1);
 				break;
 			}
 			sb.append(c);
@@ -775,12 +775,10 @@ public class JSLexer implements Supplier<Token> {
 				if (keyword != null) {
 					//Because the '*' in function* and yield* is not normally considered part of an
 					//identifier sequence, we have to check for it here
-					if (chars.hasNext() && chars.peek() == '*' && (keyword == JSKeyword.FUNCTION || keyword == JSKeyword.YIELD)) {
-						chars.next();
+					if (chars.hasNext() && chars.peek() == '*' && keyword == JSKeyword.FUNCTION) {
+						chars.skip(1);
 						if (keyword == JSKeyword.FUNCTION)
 							keyword = JSKeyword.FUNCTION_GENERATOR;
-						else if (keyword == JSKeyword.YIELD)
-							keyword = JSKeyword.YIELD_GENERATOR;
 					}
 					value = keyword;
 					kind = TokenKind.KEYWORD;

@@ -1,6 +1,5 @@
 package com.mindlin.jsast.tree;
 
-import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -11,12 +10,11 @@ import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
-import com.mindlin.jsast.tree.type.VoidTypeTree;
 
 public interface TreeVisitor<R, D> {
-	R visitAnyType(AnyTypeTree node, D d);
 	R visitArrayLiteral(ArrayLiteralTree node, D d);
 	R visitArrayPattern(ArrayPatternTree node, D d);
 	R visitArrayType(ArrayTypeTree node, D d);
@@ -26,6 +24,7 @@ public interface TreeVisitor<R, D> {
 	R visitBlock(BlockTree node, D d);
 	R visitBooleanLiteral(BooleanLiteralTree node, D d);
 	R visitBreak(BreakTree node, D d);
+	R visitCast(CastTree node, D d);
 	R visitClassDeclaration(ClassDeclarationTree node, D d);
 	R visitComment(CommentNode node, D d);
 	R visitCompilationUnit(CompilationUnitTree node, D d);
@@ -68,6 +67,7 @@ public interface TreeVisitor<R, D> {
 	R visitRegExpLiteral(RegExpLiteralTree node, D d);
 	R visitReturn(ReturnTree node, D d);
 	R visitSequence(SequenceTree node, D d);
+	R visitSpecialType(SpecialTypeTree node, D d);
 	R visitStringLiteral(StringLiteralTree node, D d);
 	R visitSuper(SuperExpressionTree node, D d);
 	R visitSwitch(SwitchTree node, D d);
@@ -76,10 +76,10 @@ public interface TreeVisitor<R, D> {
 	R visitThrow(ThrowTree node, D d);
 	R visitTry(TryTree node, D d);
 	R visitTupleType(TupleTypeTree node, D d);
+	R visitTypeAlias(TypeAliasTree node, D d);
 	R visitUnary(UnaryTree node, D d);
 	R visitUnionType(UnionTypeTree node, D d);
 	R visitVariableDeclaration(VariableDeclarationTree node, D d);
-	R visitVoidType(VoidTypeTree node, D d);
 	R visitWhileLoop(WhileLoopTree node, D d);
 	R visitWith(WithTree node, D d);
 }

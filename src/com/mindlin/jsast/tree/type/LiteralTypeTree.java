@@ -1,17 +1,19 @@
 package com.mindlin.jsast.tree.type;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TypeTree;
 
-public interface VoidTypeTree extends TypeTree {
+public interface LiteralTypeTree<T> extends TypeTree {
+	LiteralTree<T> getValue();
+	
 	@Override
-	default Tree.Kind getKind() {
-		return Tree.Kind.VOID_TYPE;
+	default Kind getKind() {
+		return Kind.LITERAL_TYPE;
 	}
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitVoidType(this, data);
+		return null;
 	}
 }
