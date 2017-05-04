@@ -5,7 +5,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
@@ -63,7 +63,7 @@ public class TypeInheritanceValidator {
 		}
 	}
 	
-	public static TypeTree computeMemberType(TypeContext context, TypeTree baseType, String memberName) {
+	/*public static TypeTree computeMemberType(TypeContext context, TypeTree baseType, String memberName) {
 		switch (baseType.getKind()) {
 			case IDENTIFIER_TYPE:
 				baseType = context.resolve((IdentifierTypeTree)baseType);
@@ -71,7 +71,7 @@ public class TypeInheritanceValidator {
 		}
 		
 		return null;
-	}
+	}*/
 	
 	public static TypeTree computeIndexType(TypeTree baseType, TypeTree indexType) {
 		return null;

@@ -1,7 +1,6 @@
 package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TypeTree;
 
 /**
  * Type representing a type expression in the form of {@code keyof X}

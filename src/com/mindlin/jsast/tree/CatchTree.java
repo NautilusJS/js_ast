@@ -1,5 +1,7 @@
 package com.mindlin.jsast.tree;
 
+import com.mindlin.jsast.tree.type.TypeTree;
+
 public interface CatchTree extends Tree {
 	BlockTree getBlock();
 

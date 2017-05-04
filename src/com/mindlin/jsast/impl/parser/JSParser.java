@@ -136,7 +136,6 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
@@ -145,6 +144,7 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 
 public class JSParser {

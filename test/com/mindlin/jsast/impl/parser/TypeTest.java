@@ -6,13 +6,13 @@ import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;

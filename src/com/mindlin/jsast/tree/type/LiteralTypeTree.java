@@ -2,7 +2,6 @@ package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeTree;
 
 public interface LiteralTypeTree<T> extends TypeTree {
 	LiteralTree<T> getValue();

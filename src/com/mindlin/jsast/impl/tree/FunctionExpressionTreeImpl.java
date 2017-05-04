@@ -7,7 +7,7 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree, StatementTree {
 	protected final StatementTree body;

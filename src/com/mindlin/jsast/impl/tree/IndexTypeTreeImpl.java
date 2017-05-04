@@ -1,7 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class IndexTypeTreeImpl extends AbstractTypeTree implements IndexTypeTree {
 	protected final TypeTree idxType;

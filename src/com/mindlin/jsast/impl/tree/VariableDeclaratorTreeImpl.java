@@ -3,8 +3,8 @@ package com.mindlin.jsast.impl.tree;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class VariableDeclaratorTreeImpl extends AbstractTree implements VariableDeclaratorTree {
 	protected final PatternTree identifier;

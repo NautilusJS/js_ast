@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	/**

@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	protected final IdentifierTree alias;

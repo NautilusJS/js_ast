@@ -3,7 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	protected final boolean rest;

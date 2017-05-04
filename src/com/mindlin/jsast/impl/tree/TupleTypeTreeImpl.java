@@ -2,8 +2,8 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class TupleTypeTreeImpl extends AbstractTypeTree implements TupleTypeTree {
 	protected final List<TypeTree> slots;

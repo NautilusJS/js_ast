@@ -2,8 +2,8 @@ package com.mindlin.jsast.impl.tree;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class GenericTypeTreeImpl extends AbstractTypeTree implements GenericTypeTree {
 	protected final IdentifierTree name;

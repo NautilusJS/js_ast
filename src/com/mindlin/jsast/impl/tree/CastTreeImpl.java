@@ -2,7 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class CastTreeImpl extends AbstractExpressiveExpressionTree implements CastTree {
 	protected final TypeTree type;

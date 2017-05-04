@@ -6,8 +6,8 @@ import java.util.Optional;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDeclarationTree {
 	protected final IdentifierTree name;

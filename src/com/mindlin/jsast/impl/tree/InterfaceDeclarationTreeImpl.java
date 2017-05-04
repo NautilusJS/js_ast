@@ -5,7 +5,7 @@ import java.util.List;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class InterfaceDeclarationTreeImpl extends AbstractTree implements InterfaceDeclarationTree {
 	protected final IdentifierTree name;

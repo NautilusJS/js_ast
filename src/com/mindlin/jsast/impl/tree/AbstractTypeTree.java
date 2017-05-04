@@ -1,6 +1,6 @@
 package com.mindlin.jsast.impl.tree;
 
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public abstract class AbstractTypeTree extends AbstractTree implements TypeTree {
 	protected final boolean implicit;

@@ -3,7 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class MethodDefinitionTreeImpl extends ClassPropertyTreeImpl<FunctionExpressionTree> implements MethodDefinitionTree {
 	protected final boolean isAbstract;

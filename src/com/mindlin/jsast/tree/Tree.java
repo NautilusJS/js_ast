@@ -13,6 +13,7 @@ import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html

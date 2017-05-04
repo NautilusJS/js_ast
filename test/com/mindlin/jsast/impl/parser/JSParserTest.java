@@ -19,8 +19,9 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 import junit.framework.Assert;
-import com.mindlin.jsast.tree.TypeTree;
+
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 
 @RunWith(Suite.class)

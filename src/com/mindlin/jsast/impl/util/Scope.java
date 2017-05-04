@@ -4,10 +4,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class Scope {
 	protected final CompilationUnitTree root;
+	protected final int depth;
 	protected final Scope parent;
 	protected final Scope hoistScope;
 	protected Map<String, String> variables = new LinkedHashMap<>();
@@ -15,6 +16,7 @@ public class Scope {
 	
 	public Scope(Scope parent, ScopeType type) {
 		this.parent = parent;
+		this.depth = parent.depth + 1;
 		this.root = parent.root;
 		this.type = type;
 		
@@ -26,6 +28,7 @@ public class Scope {
 	
 	public Scope(CompilationUnitTree root) {
 		this.parent = null;
+		this.depth = 0;
 		this.root = root;
 		this.type = ScopeType.MODULE;
 		this.hoistScope = this;
@@ -53,6 +56,15 @@ public class Scope {
 	
 	public TypeTree lookupType(String name) {
 		return null;
+	}
+	
+	public boolean isChildOf(Scope maybeParent) {
+		if (parent.depth >= this.depth)
+			return false;
+		Scope candidate = this;
+		for (int i = 0; i < this.depth - parent.depth; i++)
+			candidate = candidate.parent;
+		return candidate == maybeParent;
 	}
 	
 	public static enum ScopeType {

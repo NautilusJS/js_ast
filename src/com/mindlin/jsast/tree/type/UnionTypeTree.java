@@ -2,7 +2,6 @@ package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeTree;
 
 public interface UnionTypeTree extends TypeTree {
 	TypeTree getLeftType();

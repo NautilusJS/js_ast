@@ -3,7 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.TypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class CatchTreeImpl extends AbstractTree implements CatchTree {
 	protected final BlockTree block;

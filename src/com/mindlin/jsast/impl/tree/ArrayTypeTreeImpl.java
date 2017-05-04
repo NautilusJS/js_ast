@@ -1,7 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ArrayTypeTreeImpl extends AbstractTypeTree implements ArrayTypeTree {
 	protected final TypeTree baseType;

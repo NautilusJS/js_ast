@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTypeTree {
 	protected final List<ParameterTree> parameters;

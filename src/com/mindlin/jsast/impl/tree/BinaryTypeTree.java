@@ -2,8 +2,8 @@ package com.mindlin.jsast.impl.tree;
 
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeTree;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 /**
