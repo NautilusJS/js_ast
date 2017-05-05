@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-public interface EnumDeclarationTree extends ExpressionTree {
+public interface EnumDeclarationTree extends StatementTree {
 
 	IdentifierTree getIdentifier();
 

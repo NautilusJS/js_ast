@@ -621,8 +621,6 @@ public class JSParser {
 						return parseThis(t, src, context);
 					case CLASS:
 						return this.parseClass(t, src, context);
-					case INTERFACE:
-						return this.parseInterface(t, src, context);
 					default:
 						throw new JSUnexpectedTokenException(t);
 				}
