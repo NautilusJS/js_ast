@@ -11,6 +11,6 @@ public interface MethodDefinitionTree extends ClassPropertyTree<FunctionExpressi
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitMethodDefinition(this, data);
+		throw new UnsupportedOperationException();
 	}
 }

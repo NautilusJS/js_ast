@@ -54,13 +54,11 @@ public interface TreeVisitor<R, D> {
 	R visitIntersectionType(IntersectionTypeTree node, D d);
 	R visitLabeledStatement(LabeledStatementTree node, D d);
 	R visitMemberType(MemberTypeTree node, D d);
-	R visitMethodDefinition(MethodDefinitionTree node, D d);
 	R visitNew(NewTree node, D d);
 	R visitNull(NullLiteralTree node, D d);
 	R visitNumericLiteral(NumericLiteralTree node, D d);
 	R visitObjectLiteral(ObjectLiteralTree node, D d);
 	R visitObjectPattern(ObjectPatternTree node, D d);
-	R visitParameter(ParameterTree node, D d);
 	R visitParameterType(ParameterTypeTree node, D d);
 	R visitParentheses(ParenthesizedTree node, D d);
 	R visitRegExpLiteral(RegExpLiteralTree node, D d);

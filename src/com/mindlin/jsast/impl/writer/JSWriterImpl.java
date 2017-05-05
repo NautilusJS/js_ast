@@ -903,6 +903,20 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.append(')');
 		return null;
 	}
+	
+	protected void writeFunctionParameter(ParameterTree param, WriterHelper out) {
+		if (param.isRest())
+			out.append("...");
+		param.getIdentifier().accept(this, out);
+		
+		if (param.isOptional())
+			out.append('?');
+		this.writeTypeMaybe(param.getType(), out);
+		if (param.getInitializer() != null) {
+			out.optionalSpace().append('=').optionalSpace();
+			param.getInitializer().accept(this, out);
+		}
+	}
 
 	protected void writeFunctionParameters(FunctionExpressionTree node, WriterHelper out) {
 		List<ParameterTree> params = node.getParameters();
@@ -910,12 +924,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			ParameterTree param0 = params.get(0);
 			if (!param0.isOptional() && param0.getInitializer() == null && !param0.isRest() && (param0.getType() == null || param0.getType().isImplicit())) {
 				//We don't have to write parentheses
-				param0.accept(this, out);
+				this.writeFunctionParameter(param0, out);
 				return;
 			}
 		}
 		out.append('(');
-		writeList(params, out);
+		writeList(params, out, this::writeFunctionParameter, wh->wh.append(',').optionalSpace());
 		out.append(')');
 	}
 	
@@ -1175,12 +1189,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitMethodDefinition(MethodDefinitionTree node, WriterHelper out) {
-		this.writeMethodDefinition(node, out);
-		return null;
-	}
-
-	@Override
 	public Void visitNew(NewTree node, WriterHelper out) {
 		out.append("new").append(options.space);
 		node.getCallee().accept(this, out);
@@ -1231,22 +1239,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitObjectPattern(ObjectPatternTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Void visitParameter(ParameterTree node, WriterHelper out) {
-		if (node.isRest())
-			out.append("...");
-		node.getIdentifier().accept(this, out);
-		
-		if (node.isOptional())
-			out.append('?');
-		this.writeTypeMaybe(node.getType(), out);
-		if (node.getInitializer() != null) {
-			out.optionalSpace().append('=').optionalSpace();
-			node.getInitializer().accept(this, out);
-		}
-		return null;
 	}
 
 	@Override
