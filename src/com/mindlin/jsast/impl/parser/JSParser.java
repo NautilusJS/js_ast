@@ -859,7 +859,7 @@ public class JSParser {
 				switch (initializer.getKind()) {
 					case STRING_LITERAL:
 					case TYPEOF:
-						type = new LiteralTypeTreeImpl<>((StringLiteralTree)initializer, true);
+						type = new SpecialTypeTreeImpl(SpecialType.STRING);
 						break;
 					case SUBTRACTION:
 					case MULTIPLICATION:
@@ -1370,6 +1370,8 @@ public class JSParser {
 			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
 			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), false, slots);
 		} else if (startToken.isLiteral()) {
+			if (startToken.getKind() == TokenKind.NULL_LITERAL)
+				return new SpecialTypeTreeImpl(startToken.getStart(), startToken.getEnd(), SpecialType.NULL, false);
 			return new LiteralTypeTreeImpl<>(parseLiteral(startToken, src, context), false);
 		} else {
 			throw new JSUnexpectedTokenException(startToken);
