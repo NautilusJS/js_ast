@@ -72,9 +72,9 @@ public interface Tree {
 		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
 
 		// Assignment bitwise operators
-		BITWISE_AND_ASSIGNMENT(BinaryTree.class),
-		BITWISE_OR_ASSIGNMENT(BinaryTree.class),
-		BITWISE_XOR_ASSIGNMENT(BinaryTree.class),
+		BITWISE_AND_ASSIGNMENT(AssignmentTree.class),
+		BITWISE_OR_ASSIGNMENT(AssignmentTree.class),
+		BITWISE_XOR_ASSIGNMENT(AssignmentTree.class),
 
 		// Comparison operators
 		EQUAL(BinaryTree.class),
