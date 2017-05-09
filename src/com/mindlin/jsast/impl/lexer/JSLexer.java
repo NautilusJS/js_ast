@@ -241,7 +241,7 @@ public class JSLexer implements Supplier<Token> {
 			char lookahead = chars.peek();
 			if (lookahead < '0' || '7' < lookahead) {
 				if (Characters.canStartIdentifier(lookahead) || Characters.isDecimalDigit(lookahead) || isEmpty)
-					throw new JSSyntaxException("Unexpected token", chars.position());
+					throw new JSSyntaxException("Unexpected character: " + lookahead, chars.position());
 				break;
 			}
 			isEmpty = false;
@@ -278,9 +278,11 @@ public class JSLexer implements Supplier<Token> {
 		}
 		
 		if (chars.peek() == '0') {
-			if (!chars.hasNext(2))
+			if (!chars.hasNext(2)) {
 				//Is '0'
+				chars.skip(1);
 				return 0;
+			}
 			
 			switch (chars.peek(2)) {
 				case 'X':
