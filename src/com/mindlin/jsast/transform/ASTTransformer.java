@@ -13,6 +13,7 @@ import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
+import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
@@ -586,7 +587,18 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public StatementTree visitIf(IfTree node, D ctx) {
-		// TODO Auto-generated method stub
+		ExpressionTree oldCondition = node.getExpression();
+		ExpressionTree newCondition = (ExpressionTree) oldCondition.accept(this, ctx);
+		
+		StatementTree oldConcequent = node.getThenStatement();
+		StatementTree newConcequent = (StatementTree) oldConcequent.accept(this, ctx);
+		
+		StatementTree oldAlternative = node.getElseStatement();
+		StatementTree newAlternative = oldAlternative == null ? null : (StatementTree) oldAlternative.accept(this, ctx);
+		
+		if (oldCondition != newCondition || oldConcequent != newConcequent || oldAlternative != newAlternative)
+			node = new IfTreeImpl(node.getStart(), node.getEnd(), newCondition, newConcequent, newAlternative);
+		
 		return (StatementTree) node.accept(this.transformation, ctx);
 	}
 	
