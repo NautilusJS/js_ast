@@ -89,7 +89,7 @@ public interface Tree {
 		// Logical operators
 		LOGICAL_AND(BinaryTree.class),
 		LOGICAL_OR(BinaryTree.class),
-		LOGICAL_NOT(BinaryTree.class),
+		LOGICAL_NOT(UnaryTree.class),
 
 		// Literals
 		BOOLEAN_LITERAL(BooleanLiteralTree.class),
