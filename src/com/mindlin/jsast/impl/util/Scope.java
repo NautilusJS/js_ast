@@ -8,13 +8,31 @@ import com.mindlin.jsast.tree.type.TypeTree;
 
 public class Scope {
 	protected final CompilationUnitTree root;
+	/**
+	 * Distance from root scope (root = 0)
+	 */
 	protected final int depth;
+	/**
+	 * Parent scope
+	 */
 	protected final Scope parent;
+	/**
+	 * Reference to scope that variables are hoisted to; may be self
+	 */
 	protected final Scope hoistScope;
+	/**
+	 * Map of defined variables
+	 */
 	protected Map<String, String> variables = new LinkedHashMap<>();
+	/**
+	 * Type of scope
+	 */
 	protected final ScopeType type;
 	
+	protected final boolean conditional;
+	
 	public Scope(Scope parent, ScopeType type) {
+		this.conditional = false;//TODO fix
 		this.parent = parent;
 		this.depth = parent.depth + 1;
 		this.root = parent.root;
@@ -27,6 +45,7 @@ public class Scope {
 	}
 	
 	public Scope(CompilationUnitTree root) {
+		this.conditional = false;
 		this.parent = null;
 		this.depth = 0;
 		this.root = root;
