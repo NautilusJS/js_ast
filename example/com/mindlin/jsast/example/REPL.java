@@ -6,9 +6,9 @@ import java.util.Scanner;
 
 import com.mindlin.jsast.impl.parser.JSParser;
 import com.mindlin.jsast.impl.writer.JSWriterImpl;
-import com.mindlin.jsast.transform.ASTTransformer;
-import com.mindlin.jsast.transform.ASTTransformerContext;
+import com.mindlin.jsast.transform.DeadCodeRemovalTransformation;
 import com.mindlin.jsast.transform.ExpressionFlattenerTransformation;
+import com.mindlin.jsast.transform.TransformerSeries;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.writer.JSWriterOptions;
 
@@ -18,7 +18,7 @@ public class REPL {
 		JSWriterOptions options = new JSWriterOptions();
 		options.indentStyle = "\t";
 		JSWriterImpl writer = new JSWriterImpl(options);
-		ASTTransformer<ASTTransformerContext> transformer = new ASTTransformer<>(new ExpressionFlattenerTransformation());
+		TransformerSeries transformer = new TransformerSeries(new ExpressionFlattenerTransformation(), new DeadCodeRemovalTransformation());
 		Scanner s = new Scanner(System.in);
 		System.out.println("Nautilus JS transpiler");
 		while (true) {
@@ -40,11 +40,11 @@ public class REPL {
 			writer.write(ast, out);
 			System.out.println(out.toString());
 			
-			ast = (CompilationUnitTree) ast.accept(transformer, null);
+			ast = transformer.apply(ast);
 			out = new StringWriter();
 			writer.write(ast, out);
 			System.out.println(out.toString());
-//			System.err.println(ast);
+			System.err.println(ast);
 		}
 	}
 }
