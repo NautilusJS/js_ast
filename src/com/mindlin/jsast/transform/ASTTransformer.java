@@ -1,8 +1,10 @@
 package com.mindlin.jsast.transform;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
+import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTypeTree;
@@ -16,6 +18,7 @@ import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
 import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
@@ -105,15 +108,21 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		this.transformation = transformation;
 	}
 	
+	protected <T extends Tree> boolean transformAll(List<? extends T> src, List<T> dst, D ctx) {
+		boolean modified = false;
+		for (T element : src) {
+			@SuppressWarnings("unchecked")
+			T transformed = element == null ? null : (T) element.accept(this, ctx);
+			dst.add(transformed);
+			modified |= transformed != element;
+		}
+		return modified;
+	}
+	
 	@Override
 	public ExpressionTree visitArrayLiteral(ArrayLiteralTree node, D ctx) {
 		ArrayList<ExpressionTree> elements = new ArrayList<>();
-		boolean modified = false;
-		for (ExpressionTree element : node.getElements()) {
-			ExpressionTree newElement = (ExpressionTree) element.accept(this, ctx);
-			modified |= newElement != element;
-			elements.add(newElement);
-		}
+		boolean modified = transformAll(node.getElements(), elements, ctx);
 		
 		if (modified)
 			node = new ArrayLiteralTreeImpl(node.getStart(), node.getEnd(), elements);
@@ -129,7 +138,12 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public TypeTree visitArrayType(ArrayTypeTree node, D ctx) {
-		// TODO Auto-generated method stub
+		TypeTree oldBase = node.getBaseType();
+		TypeTree newBase = (TypeTree) node.accept(this, ctx);
+		
+		if (newBase != oldBase)
+			node = new ArrayTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), newBase);
+		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
 	
@@ -165,12 +179,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	@Override
 	public StatementTree visitBlock(BlockTree node, D ctx) {
 		ArrayList<StatementTree> statements = new ArrayList<>();
-		boolean modified = false;
-		for (StatementTree statement : node.getStatements()) {
-			StatementTree newStatement = (StatementTree) statement.accept(this, ctx);
-			modified |= newStatement != statement;
-			statements.add(newStatement);
-		}
+		boolean modified = transformAll(node.getStatements(), statements, ctx);
 		
 		if (modified)
 			node = new BlockTreeImpl(node.getStart(), node.getEnd(), statements);
@@ -215,13 +224,8 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public CompilationUnitTree visitCompilationUnit(CompilationUnitTree node, D ctx) {
-		boolean modified = false;
 		ArrayList<StatementTree> statements = new ArrayList<>();
-		for (StatementTree statement : node.getSourceElements()) {
-			StatementTree stmt = (StatementTree) statement.accept(this, ctx);
-			statements.add(stmt);
-			modified |= stmt != statement;
-		}
+		boolean modified = this.transformAll(node.getSourceElements(), statements, ctx);
 		
 		if (modified)
 			node = new CompilationUnitTreeImpl(node.getStart(), node.getEnd(), node.getSourceFile(), node.getLineMap(),
@@ -348,15 +352,8 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public ExpressionTree visitSequence(SequenceTree node, D ctx) {
-		boolean modified = false;
-		ArrayList<ExpressionTree> expressions = new ArrayList<>(node.getExpressions().size());
-		for (ExpressionTree expression : node.getExpressions()) {
-			ExpressionTree newExpression = (ExpressionTree) expression.accept(this, ctx);
-			
-			modified |= newExpression != expression;
-			
-			expressions.add(newExpression);
-		}
+		ArrayList<ExpressionTree> expressions = new ArrayList<>();
+		boolean modified = this.transformAll(node.getExpressions(), expressions, ctx);
 		
 		if (modified) {
 			expressions.trimToSize();
@@ -418,14 +415,8 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public TypeTree visitTupleType(TupleTypeTree node, D ctx) {
-		boolean modified = false;
 		ArrayList<TypeTree> slots = new ArrayList<>();
-		for (TypeTree slot : node.getSlotTypes()) {
-			TypeTree newSlot = (TypeTree) slot.accept(this, ctx);
-			if (newSlot != slot)
-				modified = true;
-			slots.add(newSlot);
-		}
+		boolean modified = this.transformAll(node.getSlotTypes(), slots, ctx);
 		
 		if (modified)
 			node = new TupleTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), slots);
@@ -469,7 +460,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 			ExpressionTree oldInitializer = declarator.getIntitializer();
 			
 			PatternTree newIdentifier = (PatternTree) oldIdentifier.accept(this, ctx);
-			TypeTree newType = (TypeTree) oldType.accept(this, ctx);
+			TypeTree newType = oldType == null ? null : (TypeTree) oldType.accept(this, ctx);
 			ExpressionTree newInitaializer = oldInitializer == null ? null
 					: (ExpressionTree) oldInitializer.accept(this, ctx);
 			
@@ -575,13 +566,11 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public Tree visitIdentifier(IdentifierTree node, D ctx) {
-		// TODO Auto-generated method stub
 		return node.accept(this.transformation, ctx);
 	}
 	
 	@Override
 	public TypeTree visitIdentifierType(IdentifierTypeTree node, D ctx) {
-		// TODO Auto-generated method stub
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
 	
@@ -642,7 +631,15 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public ExpressionTree visitNew(NewTree node, D ctx) {
-		// TODO Auto-generated method stub
+		ExpressionTree oldCallee = node.getCallee();
+		ExpressionTree newCallee = (ExpressionTree) oldCallee.accept(this, ctx);
+		
+		ArrayList<ExpressionTree> arguments = new ArrayList<>();
+		boolean modified = oldCallee != newCallee | this.transformAll(node.getArguments(), arguments, ctx);
+		arguments.trimToSize();
+		
+		if (modified)
+			node = new NewTreeImpl(node.getStart(), node.getEnd(), newCallee, arguments);
 		return (ExpressionTree) node.accept(this.transformation, ctx);
 	}
 	
