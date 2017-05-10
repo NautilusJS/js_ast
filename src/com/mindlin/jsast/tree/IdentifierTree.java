@@ -3,6 +3,16 @@ package com.mindlin.jsast.tree;
 public interface IdentifierTree extends ExpressionTree, ObjectPropertyKeyTree, PatternTree {
 	String getName();
 	
+	/**
+	 * Get the name of this identifier, as it appeared in the source.
+	 * This method is designed to be used for generating source maps from AST's with
+	 * variables that have been renamed.
+	 * @return source name
+	 */
+	default String getSourceName() {
+		return getName();
+	}
+	
 	@Override
 	default boolean isComputed() {
 		return false;
