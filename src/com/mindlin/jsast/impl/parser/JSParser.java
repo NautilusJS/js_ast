@@ -1259,7 +1259,7 @@ public class JSParser {
 			superClasses = Collections.emptyList();
 		}
 		
-		expect(src.nextToken(), TokenKind.BRACKET, '{');
+		expect(TokenKind.BRACKET, '{', src, context);
 		List<InterfacePropertyTree> properties = parseInterfaceBody(src, context);
 		
 		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, superClasses, properties);
@@ -1874,7 +1874,7 @@ public class JSParser {
 			startToken = src.nextToken();
 		
 		context.isolateCoverGrammar();
-		ExpressionTree expr = parseExponentiation(startToken, src, context);
+		ExpressionTree expr = this.parseExponentiation(startToken, src, context);
 		context.inheritCoverGrammar();
 		
 		/*
