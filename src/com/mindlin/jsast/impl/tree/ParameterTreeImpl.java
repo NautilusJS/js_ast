@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
@@ -13,15 +15,15 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	protected final TypeTree type;
 	protected final ExpressionTree initializer;
 	protected final IdentifierTree identifier;
-
+	
 	public ParameterTreeImpl(IdentifierTree identifier) {
 		this(identifier.getStart(), identifier.getEnd(), identifier);
 	}
-
+	
 	public ParameterTreeImpl(long start, long end, IdentifierTree identifier) {
 		this(start, end, null, identifier, false, false, null, null);
 	}
-
+	
 	public ParameterTreeImpl(long start, long end, AccessModifier access, IdentifierTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
 		super(start, end);
 		this.access = access;
@@ -31,22 +33,22 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 		this.type = type;
 		this.initializer = initializer;
 	}
-
+	
 	@Override
 	public boolean isRest() {
 		return rest;
 	}
-
+	
 	@Override
 	public boolean isOptional() {
 		return optional;
 	}
-
+	
 	@Override
 	public TypeTree getType() {
 		return type;
 	}
-
+	
 	@Override
 	public ExpressionTree getInitializer() {
 		return initializer;

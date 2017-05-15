@@ -1,7 +1,5 @@
 package com.mindlin.jsast.impl.tree;
 
-import java.util.Objects;
-
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;

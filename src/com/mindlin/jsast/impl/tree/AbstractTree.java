@@ -36,8 +36,12 @@ public abstract class AbstractTree implements Tree {
 		}
 		return sb.toString();
 	}
+	
 	protected final long start, end;
 	protected boolean mutable = true;
+	/**
+	 * Cache our hash here, so we don't cascade every time
+	 */
 	private transient int hash;
 	
 	public AbstractTree(long start, long end) {
@@ -58,16 +62,17 @@ public abstract class AbstractTree implements Tree {
 		if (!this.mutable)
 			throw new JSMutabilityException();
 	}
+	
 	@Override
 	public long getStart() {
 		return this.start;
 	}
-
+	
 	@Override
 	public long getEnd() {
 		return this.end;
 	}
-
+	
 	@Override
 	public String toString() {
 		return toJSON();
@@ -81,6 +86,15 @@ public abstract class AbstractTree implements Tree {
 		return h;
 	}
 	
+	/**
+	 * Compute a hashcode for this object from scratch. The result of this
+	 * method (may?) be cached elsewhere
+	 * <p>
+	 * This method should be overridden by (almost) all children of this class.
+	 * </p>
+	 * 
+	 * @return hashcode computed from scratch
+	 */
 	protected int hash() {
 		return Objects.hashCode(getKind());
 	}

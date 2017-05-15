@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.TreeVisitor;
@@ -19,26 +20,29 @@ public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTy
 		this.generics = generics;
 		this.returnType = returnType;
 	}
-
+	
 	@Override
 	public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
-
+	
 	@Override
 	public List<ParameterTree> getParameters() {
 		return this.parameters;
 	}
-
+	
 	@Override
 	public List<GenericTypeTree> getGenerics() {
 		return this.generics;
 	}
-
+	
 	@Override
 	public TypeTree getReturnType() {
 		return this.returnType;
 	}
 	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getParameters(), getGenerics(), getReturnType());
+	}
 }

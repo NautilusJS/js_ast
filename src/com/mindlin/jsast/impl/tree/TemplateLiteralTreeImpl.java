@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.TemplateElementTree;
@@ -38,4 +39,8 @@ public class TemplateLiteralTreeImpl extends AbstractTree implements TemplateLit
 		return this.expressions;
 	}
 	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getQuasis(), getExpressions());
+	}
 }

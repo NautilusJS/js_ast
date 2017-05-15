@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
@@ -33,6 +34,11 @@ public class InterfaceDeclarationTreeImpl extends AbstractTree implements Interf
 	@Override
 	public List<? extends InterfacePropertyTree> getProperties() {
 		return this.properties;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getIdentifier(), getSupertypes(), getProperties());
 	}
 	
 }

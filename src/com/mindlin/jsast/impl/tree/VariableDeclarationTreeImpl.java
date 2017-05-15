@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
@@ -34,6 +35,11 @@ public class VariableDeclarationTreeImpl extends AbstractTree implements Variabl
 	@Override
 	public List<VariableDeclaratorTree> getDeclarations() {
 		return declarations;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), isScoped(), isConst(), getDeclarations());
 	}
 	
 }

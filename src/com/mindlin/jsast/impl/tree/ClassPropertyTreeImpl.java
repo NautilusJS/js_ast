@@ -43,7 +43,7 @@ public class ClassPropertyTreeImpl<T extends Tree> extends AbstractTypedProperty
 	
 	@Override
 	protected int hash() {
-		return Objects.hashCode(getKind(), getAccess(), isReadonly(), isStatic(), getDeclarationType(), getKey(), getType(), getValue());
+		return Objects.hash(getKind(), getAccess(), isReadonly(), isStatic(), getDeclarationType(), getKey(), getType(), getValue());
 	}
 	
 }

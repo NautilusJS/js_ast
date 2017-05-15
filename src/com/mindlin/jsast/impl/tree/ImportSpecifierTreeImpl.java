@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
 
@@ -33,6 +35,11 @@ public class ImportSpecifierTreeImpl extends AbstractTree implements ImportSpeci
 	@Override
 	public boolean isDefault() {
 		return isDefault;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getAlias(), getImported(), isDefault());
 	}
 
 }

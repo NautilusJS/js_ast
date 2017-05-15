@@ -27,7 +27,7 @@ public class IndexTypeTreeImpl extends AbstractTypeTree implements IndexTypeTree
 	
 	@Override
 	protected int hash() {
-		return Objects.hashCode(getKind(), getIndexType(), getReturnType());
+		return Objects.hash(getKind(), getIndexType(), getReturnType());
 	}
 	
 }
