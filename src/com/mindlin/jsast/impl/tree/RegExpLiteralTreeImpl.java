@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 
@@ -23,6 +25,11 @@ public class RegExpLiteralTreeImpl extends AbstractTree implements RegExpLiteral
 	@Override
 	public String[] getValue() {
 		return new String[] { body, flags };
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), this.body, this.flags);
 	}
 	
 }

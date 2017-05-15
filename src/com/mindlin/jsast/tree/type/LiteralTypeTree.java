@@ -13,6 +13,6 @@ public interface LiteralTypeTree<T> extends TypeTree {
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 }
