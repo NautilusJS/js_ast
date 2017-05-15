@@ -1856,8 +1856,9 @@ public class JSParser {
 						return -1;
 					//Fallthrough intentional
 				case INSTANCEOF:
-				case AS:
 					return 11;
+				case AS:
+					return 15;
 				default:
 					return -1;
 			}

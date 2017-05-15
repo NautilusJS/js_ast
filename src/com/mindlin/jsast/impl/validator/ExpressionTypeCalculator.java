@@ -357,7 +357,8 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 
 	@Override
 	public TypeTree visitInterfaceDeclaration(InterfaceDeclarationTree node, TypeContext d) {
-		return TypeInheritanceValidator.reduceInterface(d, node.getSupertypes(), node.getProperties());
+		//return TypeInheritanceValidator.reduceInterface(d, node.getSupertypes(), node.getProperties());
+		return null;
 	}
 
 	@Override
