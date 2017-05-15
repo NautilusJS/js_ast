@@ -93,6 +93,7 @@ public interface JSDialect {
 			public boolean supports(String feature) {
 				switch (feature) {
 					case "ts.parameter.optional":
+					case "ts.parameter.accessModifier":
 					case "ts.types":
 					case "ts.types.union":
 					case "ts.types.interface":

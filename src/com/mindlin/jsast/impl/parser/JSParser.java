@@ -534,12 +534,12 @@ public class JSParser {
 				// as a default value (except ones that won't run at all)
 				
 				IdentifierTree identifier = (IdentifierTree) assignment.getLeftOperand();
-				return new ParameterTreeImpl(identifier.getStart(), assignment.getRightOperand().getEnd(), identifier, false, false, null, assignment.getRightOperand());
+				return new ParameterTreeImpl(identifier.getStart(), assignment.getRightOperand().getEnd(), null, identifier, false, false, null, assignment.getRightOperand());
 			}
 			case SPREAD:
 				dialect.require("js.parameter.rest", expr.getStart());
 				//Turn into rest parameter
-				return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), (IdentifierTree)((UnaryTree)expr).getExpression(), true, false, null, null);
+				return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, (IdentifierTree)((UnaryTree)expr).getExpression(), true, false, null, null);
 			case ARRAY_LITERAL: {
 				dialect.require("js.parameter.destructured", expr.getStart());
 				List<PatternTree> params = ((ArrayLiteralTree) expr).getElements()
@@ -1134,7 +1134,7 @@ public class JSParser {
 				}
 				
 				//Parse method parameters
-				List<ParameterTree> params = this.parseParameters(src, context);
+				List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				
 				TypeTree returnType = null;
@@ -1218,7 +1218,7 @@ public class JSParser {
 				type = new IndexTypeTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
 			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Parse function type
-				List<ParameterTree> params = this.parseParameters(src, context);
+				List<ParameterTree> params = this.parseParameters(src, context, false);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
 				
@@ -2102,7 +2102,7 @@ public class JSParser {
 	 * Note: parameters are in the function <i>declaration</i>, while arguments are used when
 	 * invoking a function.
 	 */
-	protected List<ParameterTree> parseParameters(JSLexer src, Context context) {
+	protected List<ParameterTree> parseParameters(JSLexer src, Context context, boolean allowAccessModifiers) {
 		if (src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 			return Collections.emptyList();
 		
@@ -2113,6 +2113,25 @@ public class JSParser {
 		boolean prevOptional = false;
 		do {
 			Token identifier = src.nextToken();
+			AccessModifier access = null;
+			if (allowAccessModifiers && identifier.isKeyword() && identifier.getValue() == JSKeyword.PUBLIC || identifier.getValue() == JSKeyword.PROTECTED || identifier.getValue() == JSKeyword.PRIVATE) {
+				dialect.require("ts.parameter.accessModifier", identifier.getStart());
+				switch (identifier.<JSKeyword>getValue()) {
+					case PUBLIC:
+						access = AccessModifier.PUBLIC;
+						break;
+					case PROTECTED:
+						access = AccessModifier.PROTECTED;
+						break;
+					case PRIVATE:
+						access = AccessModifier.PRIVATE;
+						break;
+					default:
+						//Should *never* happen
+						throw new JSSyntaxException("Unexpected keyword: " + identifier, identifier.getStart());
+				}
+				identifier = src.nextToken();
+			}
 			if (!identifier.isIdentifier()) {
 				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 					//We have ourselves a rest parameter.
@@ -2131,7 +2150,7 @@ public class JSParser {
 					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 						throw new JSSyntaxException("Rest parameter must be the last", src.getPosition());
 					
-					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), (IdentifierTree)expr.getExpression(), true, false, type, null));
+					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), null, (IdentifierTree)expr.getExpression(), true, false, type, null));
 					break;
 				}
 				throw new JSUnexpectedTokenException(identifier);
@@ -2152,7 +2171,7 @@ public class JSParser {
 			if (assignment != null)
 				defaultValue = parseAssignment(null, src, context);
 			
-			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
+			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), access, new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		//Expect to end with a right paren
@@ -2191,10 +2210,10 @@ public class JSParser {
 		//Parse default value, if exists
 		ExpressionTree defaultValue = ((optionalToken == null && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(null, src, context) : null;
 		
-		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), (IdentifierTree)lastParam, false, optionalToken != null, type, defaultValue));
+		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), null, (IdentifierTree)lastParam, false, optionalToken != null, type, defaultValue));
 		
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
-			parameters.addAll(this.parseParameters(src, context));
+			parameters.addAll(this.parseParameters(src, context, false));
 		
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		expectOperator(JSOperator.LAMBDA, src, context);
@@ -2545,7 +2564,7 @@ public class JSParser {
 			identifier = new IdentifierTreeImpl(next);
 		
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		List<ParameterTree> params = parseParameters(src, context);
+		List<ParameterTree> params = this.parseParameters(src, context, false);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		//Get return type, if provided
@@ -2695,7 +2714,7 @@ public class JSParser {
 						methodType = PropertyDeclarationType.METHOD;
 					}
 					
-					List<ParameterTree> params = this.parseParameters(src, context);
+					List<ParameterTree> params = this.parseParameters(src, context, false);
 					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 					
 					TypeTree returnType = this.parseTypeMaybe(src, context, true);

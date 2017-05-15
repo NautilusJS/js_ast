@@ -1,6 +1,7 @@
 package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 
 /**
  * Represents a parameter declaration (this is used when defining a function, not when
@@ -11,6 +12,10 @@ import com.mindlin.jsast.tree.type.TypeTree;
  * @author mailmindlin
  */
 public interface ParameterTree extends Tree {
+	/**
+	 * Return if this parameter is a rest parameter.
+	 * @return if this parameter is a rest parameter.
+	 */
 	boolean isRest();
 	
 	boolean isOptional();
@@ -20,6 +25,12 @@ public interface ParameterTree extends Tree {
 	ExpressionTree getInitializer();
 	
 	IdentifierTree getIdentifier();
+	
+	/**
+	 * Get the access modifier for this parameter.
+	 * @return this parameter's access modifier, else {@code null} if not present
+	 */
+	AccessModifier getAccessModifier();
 
 	@Override
 	default Tree.Kind getKind() {
