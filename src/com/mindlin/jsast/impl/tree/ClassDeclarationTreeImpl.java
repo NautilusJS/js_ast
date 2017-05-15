@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.mindlin.jsast.tree.ClassDeclarationTree;
@@ -55,6 +56,11 @@ public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDecla
 	@Override
 	public List<GenericTypeTree> getGenerics() {
 		return this.generics;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), isAbstract(), getIdentifier(), getGenerics(), getSuperType(), getImplementing(), getProperties());
 	}
 	
 }
