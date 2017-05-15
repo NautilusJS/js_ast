@@ -164,9 +164,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		FunctionTypeTree type = (FunctionTypeTree) method.getType();
 		
-		out.append('(');
-		writeList(type.getParameters(), out);
-		out.append(')');
+		this.writeFunctionParameters(type.getParameters(), false, out);
 		
 		this.writeTypeMaybe(type.getReturnType(), out);
 		
@@ -353,10 +351,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		if (property.getKey() == null) {
 			//Is function interface
-			out.append('(');
 			FunctionTypeTree type = (FunctionTypeTree) property.getType();
-			writeList(type.getParameters(), out);
-			out.append(')').append(':').optionalSpace();
+			this.writeFunctionParameters(type.getParameters(), false, out);
+			out.append(':').optionalSpace();
 			type.getReturnType().accept(this, out);
 		} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
 			//Is index type (format: `[name: KeyType]: ValueType`)
@@ -907,20 +904,38 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	protected void writeFunctionParameter(ParameterTree param, WriterHelper out) {
 		if (param.isRest())
 			out.append("...");
+		else if (param.getAccessModifier() != null) {
+			switch (param.getAccessModifier()) {
+				case PUBLIC:
+					out.append("public");
+					break;
+				case PROTECTED:
+					out.append("protected");
+					break;
+				case PRIVATE:
+					out.append("private");
+					break;
+				default:
+					throw new IllegalArgumentException("Unknown access modifier: " + param.getAccessModifier() + " at " + param.getStart());
+			}
+			out.append(options.space);
+		}
+		
 		param.getIdentifier().accept(this, out);
 		
 		if (param.isOptional())
 			out.append('?');
+		
 		this.writeTypeMaybe(param.getType(), out);
+		
 		if (param.getInitializer() != null) {
 			out.optionalSpace().append('=').optionalSpace();
 			param.getInitializer().accept(this, out);
 		}
 	}
 
-	protected void writeFunctionParameters(FunctionExpressionTree node, WriterHelper out) {
-		List<ParameterTree> params = node.getParameters();
-		if (node.isArrow() && params.size() == 1) {
+	protected void writeFunctionParameters(List<ParameterTree> params, boolean isArrow, WriterHelper out) {
+		if (isArrow && params.size() == 1) {
 			ParameterTree param0 = params.get(0);
 			if (!param0.isOptional() && param0.getInitializer() == null && !param0.isRest() && (param0.getType() == null || param0.getType().isImplicit())) {
 				//We don't have to write parentheses
@@ -944,7 +959,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		}
 		
 		//Write parameters
-		this.writeFunctionParameters(node, out);
+		this.writeFunctionParameters(node.getParameters(), node.isArrow(), out);
 		
 		this.writeTypeMaybe(node.getReturnType(), out);
 		
@@ -973,13 +988,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		TypeTree returnType = node.getReturnType();
 		
 		if (generics == null || generics.isEmpty()) {
-			if (parameters.size() == 1) {
-				parameters.get(0).accept(this, out);
-			} else {
-				out.append('(');
-				writeList(parameters, out);
-				out.append(')');
-			}
+			this.writeFunctionParameters(parameters, true, out);
 			
 			out.optionalSpace();
 			out.append("=>");
