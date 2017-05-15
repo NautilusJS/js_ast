@@ -2,8 +2,6 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import java.util.Objects;
-
 import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.GotoTree;

@@ -546,6 +546,7 @@ public class JSParser {
 					.stream()
 					.map(this::reinterpretExpressionAsPattern)
 					.collect(Collectors.toList());
+				//TODO finish
 			}
 			case OBJECT_LITERAL:
 				dialect.require("js.parameter.destructured", expr.getStart());
@@ -1548,12 +1549,6 @@ public class JSParser {
 			throw new JSSyntaxException("Incomplete try statement", src.getPosition());
 		catchBlocks.trimToSize();
 		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
-	}
-	
-	protected IfTree parseFunctionStatement(Token functionKeywordToken, JSLexer src, Context context) {
-		functionKeywordToken = expect(functionKeywordToken, TokenKind.KEYWORD, JSKeyword.FUNCTION, src, context);
-		//TODO finish
-		throw new UnsupportedOperationException("Type support is (currently) not supported");
 	}
 	
 	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, Context context) {
