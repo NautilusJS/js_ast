@@ -37,6 +37,8 @@ public abstract class AbstractTree implements Tree {
 	}
 	protected final long start, end;
 	protected boolean mutable = true;
+	private transient int hash;
+	
 	public AbstractTree(long start, long end) {
 		this.start = start;
 		this.end = end;
@@ -68,6 +70,18 @@ public abstract class AbstractTree implements Tree {
 	@Override
 	public String toString() {
 		return toJSON();
+	}
+	
+	@Override
+	public int hashCode() {
+		int h = this.hash;
+		if (h == 0)
+			this.hash = h = this.hash();
+		return h;
+	}
+	
+	protected int hash() {
+		return super.hashCode();
 	}
 	
 	public String toJSON() {

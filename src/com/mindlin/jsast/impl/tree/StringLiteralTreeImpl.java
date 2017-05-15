@@ -19,4 +19,9 @@ public class StringLiteralTreeImpl extends AbstractTree implements StringLiteral
 	public String getValue() {
 		return value;
 	}
+	
+	@Override
+	public int hashCode() {
+		return value.hashCode();
+	}
 }

@@ -20,4 +20,8 @@ public class IdentifierTreeImpl extends AbstractTree implements IdentifierTree {
 		return name;
 	}
 	
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
 }

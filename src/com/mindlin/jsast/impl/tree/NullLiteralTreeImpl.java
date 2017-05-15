@@ -16,4 +16,5 @@ public class NullLiteralTreeImpl extends AbstractTree implements NullLiteralTree
 	public Void getValue() {
 		return null;
 	}
+	
 }

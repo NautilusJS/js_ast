@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -21,4 +23,8 @@ public class CastTreeImpl extends AbstractExpressiveExpressionTree implements Ca
 		return this.type;
 	}
 	
+	@Override
+	public int hash() {
+		return Objects.hash(getKind(), getType(), getExpression());
+	}
 }
