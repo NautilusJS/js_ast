@@ -7,7 +7,7 @@ public class RenamedIdentifierTreeImpl extends IdentifierTreeImpl {
 		super(start, end, name);
 		this.sourceName = sourceName;
 	}
-
+	
 	@Override
 	public String getSourceName() {
 		return this.sourceName;

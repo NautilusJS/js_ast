@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.parser.JSKeyword;
@@ -9,7 +11,7 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 	public static SpecialType mapType(Token t) {
 		if (t.matches(TokenKind.KEYWORD, JSKeyword.VOID))
 			return SpecialType.VOID;
-		String name = t.<String>getValue();
+		String name = t.<String> getValue();
 		switch (name) {
 			case "null":
 				return SpecialType.NULL;
@@ -28,6 +30,7 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 		}
 		return null;
 	}
+	
 	protected final SpecialType type;
 	
 	public SpecialTypeTreeImpl(SpecialType type) {
@@ -37,15 +40,20 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 	public SpecialTypeTreeImpl(Token t) {
 		this(t.getStart(), t.getEnd(), mapType(t), false);
 	}
-
+	
 	public SpecialTypeTreeImpl(long start, long end, SpecialType type, boolean implicit) {
 		super(start, end, implicit);
 		this.type = type;
 	}
-
+	
 	@Override
 	public SpecialType getType() {
 		return this.type;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getType());
 	}
 	
 }

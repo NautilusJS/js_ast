@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import com.mindlin.jsast.exception.JSMutabilityException;
@@ -81,7 +82,7 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	protected int hash() {
-		return super.hashCode();
+		return Objects.hashCode(getKind());
 	}
 	
 	public String toJSON() {

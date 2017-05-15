@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
@@ -77,5 +78,11 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	@Override
 	public TypeTree getReturnType() {
 		return this.returnType;
+	}
+	
+	@Override
+	protected int hash() {
+		//TODO hash isStrict()?
+		return Objects.hash(getKind(), isAsync(), getName(), getParameters(), getReturnType(), isArrow(), getBody(), isStrict(), isGenerator());
 	}
 }

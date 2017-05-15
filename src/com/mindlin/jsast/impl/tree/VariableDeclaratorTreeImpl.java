@@ -12,28 +12,29 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 	protected final PatternTree identifier;
 	protected final ExpressionTree initializer;
 	protected final TypeTree type;
-
+	
 	public VariableDeclaratorTreeImpl(Token t) {
 		this(t.getStart(), t.getEnd(), t.getValue(), null, null);
 	}
-
-	public VariableDeclaratorTreeImpl(long start, long end, PatternTree identifier, TypeTree type, ExpressionTree initializer) {
+	
+	public VariableDeclaratorTreeImpl(long start, long end, PatternTree identifier, TypeTree type,
+			ExpressionTree initializer) {
 		super(start, end);
 		this.identifier = identifier;
 		this.type = type;
 		this.initializer = initializer;
 	}
-
+	
 	@Override
 	public ExpressionTree getInitializer() {
 		return this.initializer;
 	}
-
+	
 	@Override
 	public TypeTree getType() {
 		return this.type;
 	}
-
+	
 	@Override
 	public PatternTree getIdentifier() {
 		return identifier;
@@ -43,5 +44,5 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 	protected int hash() {
 		return Objects.hash(getKind(), getIdentifier(), getType(), getInitializer());
 	}
-
+	
 }

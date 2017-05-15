@@ -7,7 +7,7 @@ public class ThisExpressionTreeImpl extends AbstractTree implements ThisExpressi
 	public ThisExpressionTreeImpl(Token t) {
 		this(t.getStart(), t.getEnd());
 	}
-
+	
 	public ThisExpressionTreeImpl(long start, long end) {
 		super(start, end);
 	}

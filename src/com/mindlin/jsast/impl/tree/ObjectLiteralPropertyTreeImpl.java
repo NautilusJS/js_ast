@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
@@ -22,6 +24,11 @@ public class ObjectLiteralPropertyTreeImpl extends AbstractTree implements Objec
 	@Override
 	public ExpressionTree getValue() {
 		return value;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getKey(), getValue());
 	}
 	
 }

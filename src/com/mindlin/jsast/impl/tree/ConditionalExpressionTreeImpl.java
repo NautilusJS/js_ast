@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 
@@ -32,6 +34,11 @@ public class ConditionalExpressionTreeImpl extends AbstractTree implements Condi
 	@Override
 	public ExpressionTree getFalseExpression() {
 		return this.falseExpr;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getCondition(), getTrueExpression(), getFalseExpression());
 	}
 
 }

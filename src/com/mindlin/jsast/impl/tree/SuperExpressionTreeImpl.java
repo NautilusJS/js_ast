@@ -7,7 +7,7 @@ public class SuperExpressionTreeImpl extends AbstractTree implements SuperExpres
 	public SuperExpressionTreeImpl(Token t) {
 		this(t.getStart(), t.getEnd());
 	}
-
+	
 	public SuperExpressionTreeImpl(long start, long end) {
 		super(start, end);
 	}

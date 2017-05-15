@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
@@ -32,6 +33,11 @@ public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	@Override
 	public TypeTree getValue() {
 		return this.value;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getAlias(), getGenericParameters(), getValue());
 	}
 	
 }

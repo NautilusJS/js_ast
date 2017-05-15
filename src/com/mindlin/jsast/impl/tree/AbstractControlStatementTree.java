@@ -5,6 +5,7 @@ import com.mindlin.jsast.tree.StatementTree;
 
 public abstract class AbstractControlStatementTree extends AbstractTree implements ControlStatementTree {
 	protected final StatementTree statement;
+	
 	public AbstractControlStatementTree(long start, long end, StatementTree statement) {
 		super(start, end);
 		this.statement = statement;
