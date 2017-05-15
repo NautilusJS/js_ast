@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.IdentifierTree;
 
@@ -21,7 +23,7 @@ public class IdentifierTreeImpl extends AbstractTree implements IdentifierTree {
 	}
 	
 	@Override
-	public int hashCode() {
-		return name.hashCode();
+	protected int hash() {
+		return Objects.hash(getKind(), getName());
 	}
 }

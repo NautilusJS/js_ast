@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -28,6 +30,11 @@ public class IfTreeImpl extends AbstractTree implements IfTree {
 	@Override
 	public StatementTree getElseStatement() {
 		return this.elseStatement;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getExpression(), getThenStatement(), getElseStatement());
 	}
 	
 }

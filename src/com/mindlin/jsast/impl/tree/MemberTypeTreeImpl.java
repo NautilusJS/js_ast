@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
-import com.mindlin.jsast.tree.TreeVisitor;
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -19,12 +20,6 @@ public class MemberTypeTreeImpl extends AbstractTypeTree implements MemberTypeTr
 	}
 	
 	@Override
-	public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public TypeTree getName() {
 		return this.name;
 	}
@@ -32,6 +27,11 @@ public class MemberTypeTreeImpl extends AbstractTypeTree implements MemberTypeTr
 	@Override
 	public TypeTree getBaseType() {
 		return this.base;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getBaseType(), getName());
 	}
 	
 }

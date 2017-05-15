@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.StringLiteralTree;
 
@@ -21,7 +23,7 @@ public class StringLiteralTreeImpl extends AbstractTree implements StringLiteral
 	}
 	
 	@Override
-	public int hashCode() {
-		return value.hashCode();
+	protected int hash() {
+		return Objects.hash(getKind(), getValue());
 	}
 }

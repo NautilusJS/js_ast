@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -29,5 +31,10 @@ public class ForEachLoopTreeImpl extends AbstractLoopTree implements ForEachLoop
 	@Override
 	public ExpressionTree getExpression() {
 		return expression;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getVariable(), getExpression(), getStatement());
 	}
 }

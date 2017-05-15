@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.Tree;
@@ -7,18 +9,18 @@ import com.mindlin.jsast.tree.Tree;
 public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 	protected final ExpressionTree left, right;
 	protected final Tree.Kind kind;
-
+	
 	public BinaryTreeImpl(long start, long end, Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		super(start, end);
 		this.kind = kind;
 		this.left = left;
 		this.right = right;
 	}
-
+	
 	public BinaryTreeImpl(Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		this(left.getStart(), right.getEnd(), kind, left, right);
 	}
-
+	
 	protected String getOperand() {
 		// TODO finish
 		switch (kind) {
@@ -105,19 +107,24 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 		}
 		throw new IllegalArgumentException(kind.toString() + " is not a binary operator");
 	}
-
+	
 	@Override
 	public ExpressionTree getLeftOperand() {
 		return left;
 	}
-
+	
 	@Override
 	public ExpressionTree getRightOperand() {
 		return right;
 	}
-
+	
 	@Override
 	public Kind getKind() {
 		return kind;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getLeftOperand(), getRightOperand());
 	}
 }

@@ -27,7 +27,7 @@ public class NewTreeImpl extends AbstractTree implements NewTree {
 	}
 
 	@Override
-	public int hash() {
+	protected int hash() {
 		return Objects.hash(getKind(), getCallee(), getArguments());
 	}
 }

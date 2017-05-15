@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
@@ -24,6 +25,11 @@ public class IdentifierTypeTreeImpl extends AbstractTypeTree implements Identifi
 	@Override
 	public List<TypeTree> getGenerics() {
 		return this.generics;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getIdentifier(), getGenerics());
 	}
 	
 }

@@ -17,14 +17,14 @@ public class CastTreeImpl extends AbstractExpressiveExpressionTree implements Ca
 	public CastTreeImpl(ExpressionTree expression, TypeTree type) {
 		this(Math.min(expression.getStart(), type.getStart()), Math.max(expression.getEnd(), type.getEnd()), expression, type);
 	}
-
+	
 	@Override
 	public TypeTree getType() {
 		return this.type;
 	}
 	
 	@Override
-	public int hash() {
+	protected int hash() {
 		return Objects.hash(getKind(), getType(), getExpression());
 	}
 }

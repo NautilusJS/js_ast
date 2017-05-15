@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -17,5 +18,9 @@ public class ArrayLiteralTreeImpl extends AbstractTree implements ArrayLiteralTr
 	public List<? extends ExpressionTree> getElements() {
 		return elements;
 	}
-
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getElements());
+	}
 }

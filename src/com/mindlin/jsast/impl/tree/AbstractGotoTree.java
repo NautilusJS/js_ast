@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.GotoTree;
@@ -15,6 +17,11 @@ public abstract class AbstractGotoTree extends AbstractTree implements GotoTree 
 	@Override
 	public String getLabel() {
 		return this.label;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getLabel());
 	}
 
 	public static class ContinueTreeImpl extends AbstractGotoTree implements ContinueTree {

@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.ArrayPatternTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -16,6 +17,11 @@ public class ArrayPatternTreeImpl extends AbstractTree implements ArrayPatternTr
 	@Override
 	public List<PatternTree> getElements() {
 		return elements;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getElements());
 	}
 	
 }

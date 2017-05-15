@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ExpressiveExpressionTree;
 
@@ -14,5 +16,10 @@ public abstract class AbstractExpressiveExpressionTree extends AbstractTree impl
 	@Override
 	public ExpressionTree getExpression() {
 		return this.expression;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getExpression());
 	}
 }

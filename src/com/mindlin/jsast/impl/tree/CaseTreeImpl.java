@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -29,5 +30,10 @@ public class CaseTreeImpl extends AbstractTree implements CaseTree {
 	@Override
 	public boolean isDefault() {
 		return expression == null;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getExpression(), getStatements(), isDefault());
 	}
 }

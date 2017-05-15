@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.IdentifierTree;
@@ -31,4 +33,8 @@ public class CatchTreeImpl extends AbstractTree implements CatchTree {
 		return type;
 	}
 
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getParameter(), getType(), getBlock());
+	}
 }

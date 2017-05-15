@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.type.IntersectionTypeTree;
@@ -45,5 +47,10 @@ public class BinaryTypeTree extends AbstractTypeTree implements UnionTypeTree, I
 		else if (kind == Kind.TYPE_INTERSECTION)
 			return IntersectionTypeTree.super.accept(visitor, data);
 		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getLeftType(), getRightType());
 	}
 }
