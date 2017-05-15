@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.Tree;
@@ -37,6 +39,11 @@ public class ClassPropertyTreeImpl<T extends Tree> extends AbstractTypedProperty
 	@Override
 	public PropertyDeclarationType getDeclarationType() {
 		return declaration;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hashCode(getKind(), getAccess(), isReadonly(), isStatic(), getDeclarationType(), getKey(), getType(), getValue());
 	}
 	
 }

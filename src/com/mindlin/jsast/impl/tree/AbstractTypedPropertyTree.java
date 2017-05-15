@@ -35,7 +35,7 @@ public abstract class AbstractTypedPropertyTree extends AbstractTree implements 
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getKey(), isReadonly(), getType());
+		return Objects.hash(getKind(), isReadonly(), getKey(), getType());
 	}
 	
 }

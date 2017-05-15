@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.ObjectPatternPropertyTree;
 import com.mindlin.jsast.tree.ObjectPatternTree;
@@ -16,6 +17,11 @@ public class ObjectPatternTreeImpl extends AbstractTree implements ObjectPattern
 	@Override
 	public List<ObjectPatternPropertyTree> getProperties() {
 		return properties;
+	}
+	
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getProperties());
 	}
 	
 }

@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
@@ -16,5 +18,10 @@ public class MethodDefinitionTreeImpl extends ClassPropertyTreeImpl<FunctionExpr
 	@Override
 	public boolean isAbstract() {
 		return isAbstract;
+	}
+	
+	@Override
+	protected int hash() {
+		return super.hash() * 31 + Boolean.hashCode(isAbstract());
 	}
 }
