@@ -1642,8 +1642,8 @@ public class JSParser {
 				
 				if (declarations.getDeclarations().size() != 1)
 					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Must have 1 binding", next.getStart());
-				if (declarations.getDeclarations().get(0).getIntitializer() != null)
-					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getIntitializer().getStart());
+				if (declarations.getDeclarations().get(0).getInitializer() != null)
+					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getInitializer().getStart());
 				
 				return parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, src, context);
 			}

@@ -25,7 +25,7 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 	}
 
 	@Override
-	public ExpressionTree getIntitializer() {
+	public ExpressionTree getInitializer() {
 		return this.initializer;
 	}
 
@@ -41,7 +41,7 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getIdentifier(), getType(), getIntitializer());
+		return Objects.hash(getKind(), getIdentifier(), getType(), getInitializer());
 	}
 
 }

@@ -22,7 +22,7 @@ public class VariableDeclarationTest {
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
 		assertIdentifier("x", declarator.getIdentifier());
-		assertNull(declarator.getIntitializer());
+		assertNull(declarator.getInitializer());
 	}
 	
 	@Test
@@ -34,7 +34,7 @@ public class VariableDeclarationTest {
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
 		assertIdentifier("x", declarator.getIdentifier());
-		assertNull(declarator.getIntitializer());
+		assertNull(declarator.getInitializer());
 	}
 	
 	@Test
@@ -50,7 +50,7 @@ public class VariableDeclarationTest {
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
 		assertIdentifier("x", declarator.getIdentifier());
-		assertLiteral(5, declarator.getIntitializer());
+		assertLiteral(5, declarator.getInitializer());
 	}
 	
 	@Test
@@ -61,14 +61,14 @@ public class VariableDeclarationTest {
 		VariableDeclaratorTree declarator0 = decl.getDeclarations().get(0);
 		assertIdentifier("foo", declarator0.getIdentifier());
 		assertSpecialType(SpecialType.NUMBER, declarator0.getType());
-		assertNotNull(declarator0.getIntitializer());
-		assertLiteral(5, declarator0.getIntitializer());
+		assertNotNull(declarator0.getInitializer());
+		assertLiteral(5, declarator0.getInitializer());
 
 		VariableDeclaratorTree declarator1 = decl.getDeclarations().get(1);
 		assertIdentifier("bar", declarator1.getIdentifier());
 		assertNull(declarator1.getType());
-		assertEquals(Kind.ADDITION, declarator1.getIntitializer().getKind());
-		BinaryTree bin1 = (BinaryTree) declarator1.getIntitializer();
+		assertEquals(Kind.ADDITION, declarator1.getInitializer().getKind());
+		BinaryTree bin1 = (BinaryTree) declarator1.getInitializer();
 		assertIdentifier("foo", bin1.getLeftOperand());
 		assertLiteral(1, bin1.getRightOperand());
 	}

@@ -1504,7 +1504,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			
 			writeTypeMaybe(declarator.getType(), out);
 			
-			ExpressionTree initializer = declarator.getIntitializer();
+			ExpressionTree initializer = declarator.getInitializer();
 			if (initializer != null) {
 				out.optionalSpace().append('=').optionalSpace();
 				initializer.accept(this, out);

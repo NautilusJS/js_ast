@@ -457,7 +457,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		for (VariableDeclaratorTree declarator : node.getDeclarations()) {
 			PatternTree oldIdentifier = declarator.getIdentifier();
 			TypeTree oldType = declarator.getType();
-			ExpressionTree oldInitializer = declarator.getIntitializer();
+			ExpressionTree oldInitializer = declarator.getInitializer();
 			
 			PatternTree newIdentifier = (PatternTree) oldIdentifier.accept(this, ctx);
 			TypeTree newType = oldType == null ? null : (TypeTree) oldType.accept(this, ctx);

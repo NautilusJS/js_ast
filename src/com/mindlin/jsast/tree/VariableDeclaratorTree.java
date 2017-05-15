@@ -11,7 +11,7 @@ public interface VariableDeclaratorTree extends Tree {
 	 * 
 	 * @return initializer
 	 */
-	ExpressionTree getIntitializer();
+	ExpressionTree getInitializer();
 
 	/**
 	 * Get the type of this variable. Return null for any.

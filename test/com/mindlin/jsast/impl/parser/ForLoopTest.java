@@ -27,7 +27,7 @@ public class ForLoopTest {
 		assertEquals(1, declaration.getDeclarations().size());
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
-		assertNull(declarator.getIntitializer());
+		assertNull(declarator.getInitializer());
 		assertIdentifier("i", declarator.getIdentifier());
 		
 		//TODO parse array
@@ -76,7 +76,7 @@ public class ForLoopTest {
 		assertEquals(1, declaration.getDeclarations().size());
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
-		assertNull(declarator.getIntitializer());
+		assertNull(declarator.getInitializer());
 		assertIdentifier("i", declarator.getIdentifier());
 	}
 	
