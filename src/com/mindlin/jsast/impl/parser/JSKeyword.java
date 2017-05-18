@@ -56,22 +56,28 @@ public enum JSKeyword {
 				return keyword;
 		return null;
 	}
+	
 	private final boolean requiresStrict;
 	private final String stringValue;
+	
 	JSKeyword() {
 		this(false);
 	}
+	
 	JSKeyword(boolean requiresStrict) {
 		this.requiresStrict = requiresStrict;
 		this.stringValue = name().toLowerCase();
 	}
+	
 	JSKeyword(boolean requiresStrict, String stringValue) {
 		this.requiresStrict = requiresStrict;
 		this.stringValue = stringValue;
 	}
+	
 	public boolean isStrictOnly() {
 		return this.requiresStrict;
 	}
+	
 	@Override
 	public String toString() {
 		return stringValue;
