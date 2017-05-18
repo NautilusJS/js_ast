@@ -88,6 +88,11 @@ public class JSLexer implements Supplier<Token> {
 		return new String(new int[]{value}, 0, 1);
 	}
 	
+	public TemplateTokenInfo nextTemplateLiteral() {
+		//TODO finish
+		return null;
+	}
+	
 	public String nextStringLiteral(final char startChar) {
 		StringBuilder sb = new StringBuilder();
 		boolean isEscaped = false;
@@ -859,5 +864,11 @@ public class JSLexer implements Supplier<Token> {
 	@Override
 	public Token get() {
 		return nextToken();
+	}
+	
+	public static class TemplateTokenInfo {
+		boolean isTail() {
+			return false;
+		}
 	}
 }
