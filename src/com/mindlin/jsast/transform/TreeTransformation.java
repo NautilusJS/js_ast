@@ -54,6 +54,7 @@ import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
@@ -95,6 +96,11 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 
 	@Override
 	default ExpressionTree visitAssignmentPattern(AssignmentPatternTree node, D d){
+		return node;
+	}
+	
+	@Override
+	default ExpressionTree visitAwait(AwaitTree node, D d) {
 		return node;
 	}
 

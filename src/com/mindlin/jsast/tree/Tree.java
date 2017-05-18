@@ -1,5 +1,6 @@
 package com.mindlin.jsast.tree;
 
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
@@ -119,6 +120,7 @@ public interface Tree {
 		TRY(TryTree.class),
 
 		// Control flow modifiers
+		AWAIT(AwaitTree.class),
 		CASE(CaseTree.class),
 		RETURN(ReturnTree.class),
 		THROW(ThrowTree.class),
