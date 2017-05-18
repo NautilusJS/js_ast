@@ -1,17 +1,57 @@
 package com.mindlin.jsast.transform;
 
-public class ASTTransformerContext {
-	ContextData data = new ContextData();
-	
-	protected static class ContextData {
-		final ContextData parent;
+import java.util.List;
 
-		ContextData() {
-			this.parent = null;
-		}
+import com.mindlin.jsast.tree.ParameterTree;
+
+public class ASTTransformerContext implements ScopedContext {
+
+	@Override
+	public void enterBlock() {
+		// TODO Auto-generated method stub
 		
-		ContextData(ContextData parent) {
-			this.parent = parent;
-		}
 	}
+
+	@Override
+	public void exitBlock() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void enterFunction(List<ParameterTree> params) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void exitFunction() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void enterClass() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void exitClass() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void enterCatch() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void exitCatch() {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

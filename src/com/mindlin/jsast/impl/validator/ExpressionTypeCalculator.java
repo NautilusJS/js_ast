@@ -103,7 +103,8 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 			.map(expression -> expression.accept(this, d))
 			.reduce(new ArrayList<TypeTree>(), (tuple, type) -> {
 				for (TypeTree t : tuple) {
-					
+					//TODO reduce
+					tuple.add(t);
 				}
 				return tuple;
 			}, (a, b) -> {a.addAll(b); return a;});

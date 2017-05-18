@@ -3,7 +3,7 @@ package com.mindlin.jsast.transform;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.CastTreeImpl;
-import com.mindlin.jsast.impl.tree.ExpressionPatternTreeImpl;
+import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.tree.AssignmentTree;
@@ -164,7 +164,7 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 		
 		if (lhs != oldLhs || rhs != oldRhs) {
 			if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
-				node = new ExpressionPatternTreeImpl(kind, lhs, rhs);
+				node = new MemberExpressionTreeImpl(kind, lhs, rhs);
 			else
 				node = new BinaryTreeImpl(kind, lhs, rhs);
 		}
