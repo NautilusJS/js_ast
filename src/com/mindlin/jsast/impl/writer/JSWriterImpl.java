@@ -70,6 +70,7 @@ import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
@@ -496,6 +497,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		node.getRight().accept(this, out);
 		return null;
 	}
+	
+	@Override
+	public Void visitAwait(AwaitTree node, WriterHelper out) {
+		out.append("await").append(options.space);
+		node.getExpression().accept(this, out);
+		return null;
+	}
 
 	@Override
 	public Void visitBinary(BinaryTree node, WriterHelper out) {
@@ -749,8 +757,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitContinue(ContinueTree node, WriterHelper out) {
 		out.append("continue");
-		if (node.getLabel() != null)
-			out.append(options.space).append(node.getLabel());
+		if (node.getLabel() != null) {
+			out.append(options.space);
+			node.getLabel().accept(this, out);
+		}
 		out.finishStatement(true);
 		return null;
 	}

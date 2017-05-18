@@ -62,5 +62,4 @@ public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDecla
 	protected int hash() {
 		return Objects.hash(getKind(), isAbstract(), getIdentifier(), getGenerics(), getSuperType(), getImplementing(), getProperties());
 	}
-	
 }

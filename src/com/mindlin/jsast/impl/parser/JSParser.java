@@ -97,6 +97,7 @@ import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CompilationUnitTree;
+import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EnumDeclarationTree;
@@ -784,19 +785,6 @@ public class JSParser {
 		return new ExportTreeImpl(expr.getStart(), src.getPosition(), expr);
 	}
 	
-	TypeTree reinterpretAsType(Token typeToken) {
-		if (typeToken.matches(TokenKind.KEYWORD, JSKeyword.VOID))
-			return new SpecialTypeTreeImpl(typeToken);
-		if (typeToken.getKind() == TokenKind.IDENTIFIER) {
-			switch (typeToken.getValue().toString()) {
-				case "any":
-				case "never":
-			}
-		}
-		//TODO fix identifiers
-		throw new JSUnexpectedTokenException(typeToken);
-	}
-	
 	protected TypeAliasTree parseTypeAlias(Token typeToken, JSLexer src, Context context) {
 		typeToken = expect(typeToken, TokenKind.IDENTIFIER, "type", src, context);
 		
@@ -814,6 +802,7 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseAwait(Token awaitToken, JSLexer src, Context context) {
+		//TODO finish
 		throw new UnsupportedOperationException("awaiting on await: " + awaitToken.getStart());
 	}
 	
@@ -940,7 +929,7 @@ public class JSParser {
 		return new LabeledStatementTreeImpl(identifier.getStart(), src.getPosition(), identifier, statement);
 	}
 	
-	//Type structures
+	//SECTION: Type structures
 	
 	/**
 	 * Parse a class declaration
@@ -1438,11 +1427,8 @@ public class JSParser {
 		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
 			throw new JSUnexpectedTokenException(keywordToken);
 		
-		String label = null;
+		IdentifierTree label = this.parseIdentifier(null, src, context, true);
 		
-		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
-		if (next != null)
-			label = next.getValue();
 		final long start = keywordToken.getStart();
 		expectEOL(src, context);
 		final long end = src.getPosition();
@@ -1714,7 +1700,7 @@ public class JSParser {
 	}
 	
 	
-	// Expressions
+	//SECTION: Expressions
 
 	public ExpressionTree parseNextExpression(JSLexer src, Context context) {
 		return parseNextExpression(src.nextToken(), src, context);
@@ -2608,14 +2594,13 @@ public class JSParser {
 	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
 		
+		if (src.nextTokenIs(TokenKind.BRACKET, ']'))
+			return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), Collections.emptyList());
+		
 		ArrayList<ExpressionTree> values = new ArrayList<>();
 		
-		Token next;
-		while (!((next = src.nextToken()).matches(TokenKind.BRACKET, ']') || src.isEOF())) {
-			Token lookahead = src.peek();
-			if (lookahead.matches(TokenKind.BRACKET, ']'))
-				break;
-			else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)) {
+		for (Token lookahead = src.peek(); !lookahead.matches(TokenKind.BRACKET, ']') && !src.isEOF(); lookahead = src.peek()) {
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)) {
 				values.add(null);
 				continue;
 			} else if (lookahead.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
@@ -2638,7 +2623,109 @@ public class JSParser {
 		
 		values.trimToSize();
 		
-		return new ArrayLiteralTreeImpl(startToken.getStart(), next.getEnd(), values);
+		return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), values);
+	}
+	
+	protected ObjectPropertyKeyTree parseObjectPropertyKey(JSLexer src, Context context) {
+		Token lookahead = src.peek();
+		long start = lookahead.getStart();
+		IdentifierTree id = this.parseIdentifier(null, src, context, true);
+		if (id != null)
+			return id;
+		
+		switch (lookahead.getKind()) {
+			case NUMERIC_LITERAL:
+			case STRING_LITERAL:
+				return (ObjectPropertyKeyTree) this.parseLiteral(null, src, context);
+			case IDENTIFIER:
+			case BOOLEAN_LITERAL:
+			case NULL_LITERAL:
+			case KEYWORD:
+				return new IdentifierTreeImpl(src.nextToken());
+			case BRACKET:
+				if (lookahead.<Character>getValue() == '[') {
+					ExpressionTree expr = this.parseNextExpression(src, context);
+					expect(TokenKind.BRACKET, ']', src, context);
+					return new ComputedPropertyKeyTreeImpl(start, src.getPosition(), expr);
+				}
+			default:
+				throw new JSUnexpectedTokenException(lookahead);
+		}
+	}
+	
+	protected ObjectLiteralPropertyTree parseObjectProperty(JSLexer src, Context context) {
+		final long startPos = src.getPosition();
+		
+		PropertyDeclarationType methodType = null;
+		boolean generator = false;
+		Token modifierToken = null;
+		
+		Token lookahead = src.peek();
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+			generator = true;
+			dialect.require("js.method.generator", startPos);
+			methodType = PropertyDeclarationType.GENERATOR;
+			modifierToken = lookahead;
+		} else if (lookahead.matches(TokenKind.IDENTIFIER, "get") || lookahead.matches(TokenKind.IDENTIFIER, "set")) {
+			// && (src.peek().getKind() == TokenKind.IDENTIFIER || src.peek().matches(TokenKind.BRACKET, '['))
+			//TODO fix
+//			dialect.require("js.accessor", next.getStart());
+//			methodType = next.getValue().equals("set") ? PropertyDeclarationType.SETTER : PropertyDeclarationType.GETTER;
+//			modifierToken = next;
+		}
+
+		ObjectPropertyKeyTree key = this.parseObjectPropertyKey(src, context);
+		boolean computed = key.isComputed();
+		
+		ObjectLiteralPropertyTree prop;
+		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) != null) {
+			if (!computed && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("contructor")) {
+				if (methodType != null || generator) {
+					String modifierName;
+					if (generator)
+						modifierName = "generator";
+					else if (methodType == PropertyDeclarationType.GETTER)
+						modifierName = "getter";
+					else if (methodType == PropertyDeclarationType.SETTER)
+						modifierName = "setter";
+					else
+						modifierName = "unknown";
+					
+					throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
+				}
+				methodType = PropertyDeclarationType.CONSTRUCTOR;
+			} else if (methodType == null) {
+				methodType = PropertyDeclarationType.METHOD;
+			}
+			
+			List<ParameterTree> params = this.parseParameters(src, context, false);
+			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+			
+			TypeTree returnType = this.parseTypeMaybe(src, context, true);
+			
+			FunctionExpressionTree fn = this.finishFunctionBody(startPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, generator, src, context);
+			
+			//XXX finish
+			throw new UnsupportedOperationException();
+//			prop = new MethodDefinitionTreeImpl(startPos, src.getPosition(), key, fn, methodType);
+		} else if (methodType != null || generator) {
+			throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
+		} else if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null) {
+			ExpressionTree value = this.parseAssignment(null, src, context);
+			prop = new ObjectLiteralPropertyTreeImpl(startPos, value.getEnd(), key, value);
+//		} else if ((next = src.nextTokenIf(t->t.matches(TokenKind.OPERATOR, JSOperator.COMMA) || t.matches(TokenKind.BRACKET, '}'))) != null) {
+			//ES6 shorthand 
+			dialect.require("js.property.shorthand", key.getStart());
+//			properties.add(new ObjectLiteralPropertyTreeImpl(startPos, key.getEnd(), key, key));
+			
+//			if (next.getValue() != TokenKind.OPERATOR)
+//				break;
+//			continue;
+		} else {
+			throw new JSUnexpectedTokenException(src.peek());
+		}
+		
+		return null;
 	}
 	
 	/**

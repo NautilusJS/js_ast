@@ -19,4 +19,16 @@ public interface UnaryTree extends ExpressiveExpressionTree {
 			return Tree.Kind.VOID;
 		}
 	}
+	
+	public interface AwaitTree extends UnaryTree {
+		@Override
+		default Tree.Kind getKind() {
+			return Tree.Kind.AWAIT;
+		}
+		
+		@Override
+		default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+			return visitor.visitAwait(this, data);
+		}
+	}
 }

@@ -1,5 +1,6 @@
 package com.mindlin.jsast.tree;
 
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -20,6 +21,7 @@ public interface TreeVisitor<R, D> {
 	R visitArrayType(ArrayTypeTree node, D d);
 	R visitAssignment(AssignmentTree node, D d);
 	R visitAssignmentPattern(AssignmentPatternTree node, D d);
+	R visitAwait(AwaitTree node, D d);
 	R visitBinary(BinaryTree node, D d);
 	R visitBlock(BlockTree node, D d);
 	R visitBooleanLiteral(BooleanLiteralTree node, D d);

@@ -9,11 +9,9 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.ContinueTree;
-import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.WithTree;
 
 public class StatementTest {
@@ -79,13 +77,13 @@ public class StatementTest {
 	@Test
 	public void testLabeledBreak() {
 		BreakTree breakTree = parseStatement("break everything;", Tree.Kind.BREAK);
-		assertEquals("everything", breakTree.getLabel());
+		assertIdentifier("everything", breakTree.getLabel());
 	}
 	
 	@Test
 	public void testLabeledContinue() {
 		ContinueTree continueTree = parseStatement("continue later;", Tree.Kind.CONTINUE);
-		assertEquals("later", continueTree.getLabel());
+		assertIdentifier("later", continueTree.getLabel());
 	}
 	
 	@Test

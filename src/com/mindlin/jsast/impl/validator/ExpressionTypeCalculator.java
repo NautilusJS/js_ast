@@ -38,7 +38,6 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
-import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.NullLiteralTree;
@@ -55,6 +54,8 @@ import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
+import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
@@ -62,7 +63,6 @@ import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -136,6 +136,12 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 	@Override
 	public TypeTree visitAssignmentPattern(AssignmentPatternTree node, TypeContext d) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public TypeTree visitAwait(AwaitTree node, TypeContext d) {
+		//TODO Auto-generated method stub
 		return null;
 	}
 

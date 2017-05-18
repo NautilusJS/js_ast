@@ -5,17 +5,18 @@ import java.util.Objects;
 import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.GotoTree;
+import com.mindlin.jsast.tree.IdentifierTree;
 
 public abstract class AbstractGotoTree extends AbstractTree implements GotoTree {
-	protected final String label;
+	protected final IdentifierTree label;
 
-	public AbstractGotoTree(long start, long end, String label) {
+	public AbstractGotoTree(long start, long end, IdentifierTree label) {
 		super(start, end);
 		this.label = label;
 	}
 	
 	@Override
-	public String getLabel() {
+	public IdentifierTree getLabel() {
 		return this.label;
 	}
 	
@@ -25,13 +26,13 @@ public abstract class AbstractGotoTree extends AbstractTree implements GotoTree 
 	}
 
 	public static class ContinueTreeImpl extends AbstractGotoTree implements ContinueTree {
-		public ContinueTreeImpl(long start, long end, String label) {
+		public ContinueTreeImpl(long start, long end, IdentifierTree label) {
 			super(start, end, label);
 		}
 	}
 
 	public static class BreakTreeImpl extends AbstractGotoTree implements BreakTree {
-		public BreakTreeImpl(long start, long end, String label) {
+		public BreakTreeImpl(long start, long end, IdentifierTree label) {
 			super(start, end, label);
 		}
 	}
