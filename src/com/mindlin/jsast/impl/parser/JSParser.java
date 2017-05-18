@@ -2605,14 +2605,13 @@ public class JSParser {
 	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
 		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
 		
+		if (src.nextTokenIs(TokenKind.BRACKET, ']'))
+			return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), Collections.emptyList());
+		
 		ArrayList<ExpressionTree> values = new ArrayList<>();
 		
-		Token next;
-		while (!((next = src.nextToken()).matches(TokenKind.BRACKET, ']') || src.isEOF())) {
-			Token lookahead = src.peek();
-			if (lookahead.matches(TokenKind.BRACKET, ']'))
-				break;
-			else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)) {
+		for (Token lookahead = src.peek(); !lookahead.matches(TokenKind.BRACKET, ']') && !src.isEOF(); lookahead = src.peek()) {
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)) {
 				values.add(null);
 				continue;
 			} else if (lookahead.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
@@ -2635,7 +2634,7 @@ public class JSParser {
 		
 		values.trimToSize();
 		
-		return new ArrayLiteralTreeImpl(startToken.getStart(), next.getEnd(), values);
+		return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), values);
 	}
 	
 	/**
