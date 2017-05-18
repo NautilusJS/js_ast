@@ -1,5 +1,6 @@
 package com.mindlin.jsast.json;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 
@@ -39,6 +40,12 @@ public class JSONSerializationTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
+		} finally {
+			try {
+				str.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		System.out.println(w.toString());
 	}

@@ -13,6 +13,7 @@ public class InterfaceDeclarationTest {
 	@Test
 	public void testEmptyInterfaceDeclaration() {
 		InterfaceDeclarationTree iface = parseStatement("interface Foo{}", Kind.INTERFACE_DECLARATION);
+		assertIdentifier("Foo", iface.getIdentifier());
 	}
 	
 }

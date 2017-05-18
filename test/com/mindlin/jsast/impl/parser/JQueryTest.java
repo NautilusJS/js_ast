@@ -5,17 +5,10 @@ import static org.junit.Assert.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.impl.util.CharacterArrayStream;
-import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.Tree;
 
 public class JQueryTest {
 	@Test

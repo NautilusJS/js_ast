@@ -6,10 +6,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;

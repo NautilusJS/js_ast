@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 

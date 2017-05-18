@@ -9,8 +9,6 @@ import com.mindlin.jsast.tree.BinaryTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
-import com.mindlin.jsast.tree.StatementTree;
-import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
@@ -51,11 +49,13 @@ public class ForLoopTest {
 	@Test
 	public void testForLoopBreak() {
 		ForLoopTree loop = parseStatement("for(;;)break;", Kind.FOR_LOOP);
+		assertEquals(Kind.EMPTY_STATEMENT, loop.getInitializer().getKind());
 	}
 	
 	@Test
 	public void testNamedForLoopBreak() {
 		LabeledStatementTree loop = parseStatement("foo:for(;;)break foo;", Kind.LABELED_STATEMENT);
+		assertIdentifier("foo", loop.getName());
 	}
 	
 	@Test

@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.mindlin.jsast.tree.DoWhileLoopTree;
-import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.WhileLoopTree;
 

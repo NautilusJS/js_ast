@@ -110,7 +110,7 @@ public interface Tree {
 
 		// Member access
 		ARRAY_ACCESS(BinaryTree.class),
-		MEMBER_SELECT(ExpressionPatternTree.class),
+		MEMBER_SELECT(MemberExpressionTree.class),
 
 		// Control structures
 		BLOCK(BlockTree.class),
@@ -255,4 +255,8 @@ public interface Tree {
 	boolean isMutable();
 
 	<R, D> R accept(TreeVisitor<R, D> visitor, D data);
+	
+	default boolean equivalentTo(Tree other) {
+		return this.equals(other);
+	}
 }
