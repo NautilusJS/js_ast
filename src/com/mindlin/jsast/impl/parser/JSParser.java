@@ -940,7 +940,7 @@ public class JSParser {
 		return new LabeledStatementTreeImpl(identifier.getStart(), src.getPosition(), identifier, statement);
 	}
 	
-	//Type structures
+	//SECTION: Type structures
 	
 	/**
 	 * Parse a class declaration
@@ -1438,11 +1438,8 @@ public class JSParser {
 		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
 			throw new JSUnexpectedTokenException(keywordToken);
 		
-		String label = null;
+		IdentifierTree label = this.parseIdentifier(null, src, context, true);
 		
-		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
-		if (next != null)
-			label = next.getValue();
 		final long start = keywordToken.getStart();
 		expectEOL(src, context);
 		final long end = src.getPosition();
@@ -1714,7 +1711,7 @@ public class JSParser {
 	}
 	
 	
-	// Expressions
+	//SECTION: Expressions
 
 	public ExpressionTree parseNextExpression(JSLexer src, Context context) {
 		return parseNextExpression(src.nextToken(), src, context);
