@@ -2397,7 +2397,7 @@ public class JSParser {
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
 				ExpressionTree property = this.parseIdentifier(null, src, context, false);
-				expr = new ExpressionPatternTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
+				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
 			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
 				//TODO Tagged template literal
 				return this.parseLiteral(t, src, context);
@@ -2643,6 +2643,7 @@ public class JSParser {
 		switch (lookahead.getKind()) {
 			case NUMERIC_LITERAL:
 			case STRING_LITERAL:
+			case TEMPLATE_LITERAL:
 				return (ObjectPropertyKeyTree) this.parseLiteral(null, src, context);
 			case IDENTIFIER:
 			case BOOLEAN_LITERAL:
