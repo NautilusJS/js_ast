@@ -434,9 +434,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.beginRegion(node.getStart());
 		String name;
 		switch (node.getType()) {
-			case ANY:
-				name = "any";
-				break;
 			case BOOLEAN:
 				name = "boolean";
 				break;
@@ -727,7 +724,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			}
 		}
 		out.popIndent();
-		out.newline();
 		out.append('}');
 		return null;
 	}

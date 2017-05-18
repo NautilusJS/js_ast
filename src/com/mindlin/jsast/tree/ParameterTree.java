@@ -24,7 +24,7 @@ public interface ParameterTree extends Tree {
 	
 	ExpressionTree getInitializer();
 	
-	IdentifierTree getIdentifier();
+	PatternTree getIdentifier();
 	
 	/**
 	 * Get the access modifier for this parameter.

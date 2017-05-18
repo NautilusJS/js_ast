@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
@@ -40,7 +39,7 @@ import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ExportTreeImpl;
-import com.mindlin.jsast.impl.tree.ExpressionPatternTreeImpl;
+import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
@@ -523,41 +522,44 @@ public class JSParser {
 	}
 	
 	ParameterTree reinterpretExpressionAsParameter(ExpressionTree expr) {
-		switch (expr.getKind()) {
-			case IDENTIFIER:
-				return new ParameterTreeImpl((IdentifierTree)expr);
-			case ASSIGNMENT: {
-				dialect.require("js.parameter.default", expr.getStart());
-				//Turn into default parameter
-				AssignmentTree assignment = (AssignmentTree) expr;
-				if (assignment.getLeftOperand().getKind() != Tree.Kind.IDENTIFIER)
-					throw new JSSyntaxException("Cannot reinterpret " + expr + "as parameter (left-hand side of assignment expression is not an identifier)", expr.getStart());
-				// I can't find any example of an expression that can't be used
-				// as a default value (except ones that won't run at all)
-				
-				IdentifierTree identifier = (IdentifierTree) assignment.getLeftOperand();
-				return new ParameterTreeImpl(identifier.getStart(), assignment.getRightOperand().getEnd(), null, identifier, false, false, null, assignment.getRightOperand());
+		try {
+			switch (expr.getKind()) {
+				case IDENTIFIER:
+					return new ParameterTreeImpl((IdentifierTree)expr);
+				case ASSIGNMENT: {
+					dialect.require("js.parameter.default", expr.getStart());
+					//Turn into default parameter
+					AssignmentTree assignment = (AssignmentTree) expr;
+					PatternTree identifier = this.reinterpretExpressionAsPattern(assignment.getLeftOperand());
+					
+					if (identifier.getKind() != Kind.IDENTIFIER)
+						dialect.require("js.parameter.destructured", identifier.getStart());
+					
+					// I can't find any example of an expression that can't be used
+					// as a default value (except ones that won't run at all)
+					
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, identifier, false, false, null, assignment.getRightOperand());
+				}
+				case SPREAD: {
+					dialect.require("js.parameter.rest", expr.getStart());
+					//Turn into rest parameter
+					PatternTree identifier = this.reinterpretExpressionAsPattern(((UnaryTree)expr).getExpression());
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, identifier, true, false, null, null);
+				}
+				case ARRAY_LITERAL:
+				case OBJECT_LITERAL:
+					dialect.require("js.parameter.destructured", expr.getStart());
+					//Turn into destructuring parameter
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, this.reinterpretExpressionAsPattern(expr), false, false, null, null);
+				default:
+					break;
 			}
-			case SPREAD:
-				dialect.require("js.parameter.rest", expr.getStart());
-				//Turn into rest parameter
-				return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, (IdentifierTree)((UnaryTree)expr).getExpression(), true, false, null, null);
-			case ARRAY_LITERAL: {
-				dialect.require("js.parameter.destructured", expr.getStart());
-				List<PatternTree> params = ((ArrayLiteralTree) expr).getElements()
-					.stream()
-					.map(this::reinterpretExpressionAsPattern)
-					.collect(Collectors.toList());
-				//TODO finish
-			}
-			case OBJECT_LITERAL:
-				dialect.require("js.parameter.destructured", expr.getStart());
-				// TODO support for destructuring
-				throw new UnsupportedOperationException("Array/Object literal conversion to destructuring parameters not yet supported");
-			default:
-				break;
+		} catch (JSSyntaxException e) {
+			//Betterize error messages
+			throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart(), e);
 		}
-		throw new JSSyntaxException("Cannot reinterpret " + expr + "as parameter", expr.getStart());
+		
+		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart());
 	}
 	
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
@@ -621,7 +623,7 @@ public class JSParser {
 					case FUNCTION:
 						return this.parseFunctionExpression(t, src, context);
 					case THIS:
-						return parseThis(t, src, context);
+						return this.parseThis(t, src, context);
 					case CLASS:
 						return this.parseClass(t, src, context);
 					default:
@@ -980,12 +982,14 @@ public class JSParser {
 				//We can add multiple interfaces here
 				do {
 					interfaces.add(parseType(src, context));
-				} while ((next = src.nextToken()).matches(TokenKind.OPERATOR, JSOperator.COMMA));
+				} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
+				next = src.nextToken();
 			}
 		}
 		
 		//Read class body
 		expect(next, TokenKind.BRACKET, '{', src, context);
+		
 		ArrayList<ClassPropertyTree<?>> properties = new ArrayList<>();
 		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
 			//Start position of our next index
