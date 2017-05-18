@@ -66,6 +66,6 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	
 	@Override
 	protected int hash() {
-		return Objects.hashCode(getKind(), getAccessModifier(), getIdentifier(), isRest(), isOptional(), getType(), getInitializer());
+		return Objects.hash(getKind(), getAccessModifier(), getIdentifier(), isRest(), isOptional(), getType(), getInitializer());
 	}
 }
