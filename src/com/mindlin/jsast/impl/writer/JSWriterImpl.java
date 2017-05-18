@@ -79,6 +79,7 @@ import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -418,6 +419,14 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			
 			serializer.accept(value, out);
 		}
+	}
+	
+	@Override
+	public Void visitAnyType(AnyTypeTree node, WriterHelper out) {
+		out.beginRegion(node.getStart());
+		out.append("any");
+		out.endRegion(node.getEnd());
+		return null;
 	}
 	
 	@Override

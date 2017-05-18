@@ -18,6 +18,7 @@ import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
+import com.mindlin.jsast.impl.tree.AnyTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
@@ -1310,13 +1311,14 @@ public class JSParser {
 						arrayBaseType = arrayGenericArgs.get(0);
 					else
 						//Fall back on 'any[]'
-						arrayBaseType = new SpecialTypeTreeImpl(-1, -1, SpecialType.ANY, true);
+						arrayBaseType = new AnyTypeTreeImpl(-1, -1, true);
 					
 					return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
 				}
 				case "this":
 					throw new UnsupportedOperationException("'this' type not implemented yet");
 				case "any":
+					return new AnyTypeTreeImpl(startToken.getStart(), startToken.getEnd(), false);
 				case "string":
 				case "number":
 				case "boolean":
@@ -1910,7 +1912,7 @@ public class JSParser {
 				
 				ExpressionTree expression;
 				if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
-					expression = new ExpressionPatternTreeImpl(kind, left, right);
+					expression = new MemberExpressionTreeImpl(kind, left, right);
 				else if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
 					throw new JSSyntaxException("This shouldn't be happening", operator.getStart());
 				else
@@ -2378,11 +2380,12 @@ public class JSParser {
 				context.isAssignmentTarget(true);
 				ExpressionTree property = parseNextExpression(src, context.coverGrammarIsolated());
 				expect(TokenKind.BRACKET, ']', src, context);
-				expr = new ExpressionPatternTreeImpl(expr.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
+				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
 			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
 				//Function call
 				context.isBindingElement(false);
 				context.isAssignmentTarget(false);
+				//TODO delegate to parseFunctionCall()?
 				List<ExpressionTree> arguments = this.parseArguments(t, src, context);
 				expr = new FunctionCallTreeImpl(expr.getStart(), src.getPosition(), expr, arguments);
 			} else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {

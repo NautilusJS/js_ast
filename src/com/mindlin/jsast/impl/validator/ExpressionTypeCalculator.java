@@ -63,6 +63,7 @@ import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -89,6 +90,11 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 		public FunctionTypeTree lookupFunctionType(String identifier) {
 			return null;
 		}
+	}
+	
+	@Override
+	public TypeTree visitAnyType(AnyTypeTree node, TypeContext d) {
+		return node;
 	}
 
 	@Override

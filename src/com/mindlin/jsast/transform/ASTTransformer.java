@@ -86,6 +86,7 @@ import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -117,6 +118,11 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 			modified |= transformed != element;
 		}
 		return modified;
+	}
+	
+	@Override
+	public TypeTree visitAnyType(AnyTypeTree node, D ctx) {
+		return transformation.visitAnyType(node, ctx);
 	}
 	
 	@Override

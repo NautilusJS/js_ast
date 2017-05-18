@@ -87,13 +87,13 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	/**
-	 * Compute a hashcode for this object from scratch. The result of this
+	 * Compute a hash code for this object from scratch. The result of this
 	 * method (may?) be cached elsewhere
 	 * <p>
 	 * This method should be overridden by (almost) all children of this class.
 	 * </p>
 	 * 
-	 * @return hashcode computed from scratch
+	 * @return hash code computed from scratch
 	 */
 	protected int hash() {
 		return Objects.hashCode(getKind());

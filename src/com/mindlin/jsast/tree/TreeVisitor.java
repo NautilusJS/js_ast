@@ -1,6 +1,7 @@
 package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
+import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -16,6 +17,7 @@ import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 public interface TreeVisitor<R, D> {
+	R visitAnyType(AnyTypeTree node, D d);
 	R visitArrayLiteral(ArrayLiteralTree node, D d);
 	R visitArrayPattern(ArrayPatternTree node, D d);
 	R visitArrayType(ArrayTypeTree node, D d);

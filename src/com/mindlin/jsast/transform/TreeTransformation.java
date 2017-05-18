@@ -58,6 +58,7 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
@@ -74,6 +75,12 @@ import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
+	
+	@Override
+	default TypeTree visitAnyType(AnyTypeTree node, D d) {
+		return node;
+	}
+	
 	@Override
 	default ExpressionTree visitArrayLiteral(ArrayLiteralTree node, D d){
 		return node;

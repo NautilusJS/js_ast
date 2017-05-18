@@ -25,8 +25,6 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 				return SpecialType.BOOLEAN;
 			case "never":
 				return SpecialType.NEVER;
-			case "any":
-				return SpecialType.ANY;
 		}
 		return null;
 	}
