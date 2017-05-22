@@ -97,7 +97,6 @@ import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EnumDeclarationTree;
@@ -119,6 +118,7 @@ import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
+import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternPropertyTree;
@@ -145,8 +145,8 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
-import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class JSParser {
 	/**
@@ -565,12 +565,13 @@ public class JSParser {
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
 		switch (t.getKind()) {
 			case IDENTIFIER:
-				if (t.<String>getValue().equals("async") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
+				if (dialect.supports("js.function.async") && t.getValue().equals("async") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 					//Async function
 					return this.parseFunctionExpression(t, src, context);
-				else if (t.<String>getValue().equals("abstract") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.CLASS))
+				else if (t.getValue().equals("abstract") && src.peek().matches(TokenKind.KEYWORD, JSKeyword.CLASS))
 					//Abstract class
 					return this.parseClass(t, src, context);
+				
 				return this.parseIdentifier(t, src, context, false);
 			case NUMERIC_LITERAL:
 				if (context.isStrict()) {
@@ -1066,7 +1067,7 @@ public class JSParser {
 				modifierToken = next;
 				next = src.nextToken();
 				//TODO test lookahead identifier predicate (below)
-			} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && (src.peek().getKind() == TokenKind.IDENTIFIER || src.peek().matches(TokenKind.BRACKET, '['))) {
+			} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && this.isQualifiedPropertyName(src.peek(), context)) {
 				//Getter/setter method
 				dialect.require("js.accessor", next.getStart());
 				methodType = next.getValue().equals("set") ? PropertyDeclarationType.SETTER : PropertyDeclarationType.GETTER;
@@ -1125,25 +1126,7 @@ public class JSParser {
 					methodType = PropertyDeclarationType.METHOD;
 				}
 				
-				//Parse method parameters
-				List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR);
-				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-				
-				TypeTree returnType = null;
-				//Return type may not be set on constructor
-				if (methodType != PropertyDeclarationType.CONSTRUCTOR)
-					returnType = this.parseTypeMaybe(src, context, false);
-				
-				//Parse method body, if not abstract
-				FunctionExpressionTree fn = null;
-				if (!isPropertyAbstract)
-					fn = this.finishFunctionBody(propertyStartPos, methodType == PropertyDeclarationType.ASYNC_METHOD, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, methodType == PropertyDeclarationType.GENERATOR, src, context);
-				else
-					expectEOL(src, context);
-				
-				FunctionTypeTree functionType = new FunctionTypeTreeImpl(propertyStartPos, src.getPosition(), true, params, Collections.emptyList(), returnType);
-				
-				property = new MethodDefinitionTreeImpl(propertyStartPos, src.getPosition(), accessModifier, isPropertyAbstract, readonly, isStatic, methodType, key, functionType, fn);
+				property = this.parseMethodDefinition(propertyStartPos, isPropertyAbstract, isStatic, readonly, accessModifier, methodType, key, src, context);
 			} else if (methodType != null || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
 				//TODO also check for fields named 'new'?
 				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
@@ -1348,17 +1331,17 @@ public class JSParser {
 			List<InterfacePropertyTree> properties = this.parseInterfaceBody(src, context);
 			return new InterfaceTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
-			//Tuple (of array type '[]')
-			//TODO fix for '[]'
-			List<TypeTree> slots;
-			if (!src.nextTokenIs(TokenKind.BRACKET, ']')) {
-				slots = new ArrayList<>();
-				do {
-					slots.add(parseType(src, context));
-				} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
-			} else {
-				slots = Collections.emptyList();
+			//Tuple (or array type '[]')
+			if (src.nextTokenIs(TokenKind.BRACKET, ']')) {
+				//Array type
+				//TODO finish
 			}
+			
+			
+			List<TypeTree> slots = new ArrayList<>();
+			do {
+				slots.add(parseType(src, context));
+			} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 			
 			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
 			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), false, slots);
@@ -2497,20 +2480,25 @@ public class JSParser {
 
 	FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
 		Token startBodyToken = src.peek();
-		ctx.push()
-			.allowAwait(async);
 		
+		//Update context for function
+		ctx.push();
+		if (async) {
+			dialect.require("js.function.async", startPos);
+			ctx.allowAwait(true);
+		}
 		if (generator)
 			ctx.enterGenerator();
 		else
 			ctx.enterFunction();
+		
 		
 		//Read function body
 		StatementTree body;
 		//TODO require block if not lambda?
 		if (startBodyToken.matches(TokenKind.BRACKET, '{')) {
 			src.skip(startBodyToken);
-			body = parseBlock(startBodyToken, src, ctx);
+			body = this.parseBlock(startBodyToken, src, ctx);
 		} else
 			body = new ReturnTreeImpl(parseNextExpression(src, ctx.coverGrammarIsolated()));
 		//TODO infer name from syntax
@@ -2678,17 +2666,24 @@ public class JSParser {
 		}
 	}
 	
-	protected MethodDefinitionTree parseMethodDefinition(long startPos, boolean isAbstract, boolean isStatic, boolean isReadonly, Token modifierToken, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
-		List<ParameterTree> params = this.parseParameters(src, context, false);
+	protected MethodDefinitionTree parseMethodDefinition(long startPos, boolean isAbstract, boolean isStatic, boolean isReadonly, AccessModifier accessModifier, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
+		List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
-		TypeTree returnType = this.parseTypeMaybe(src, context, true);
+		TypeTree returnType = null;
+		//Return type may not be set on constructor
+		if (methodType != PropertyDeclarationType.CONSTRUCTOR)
+			returnType = this.parseTypeMaybe(src, context, false);
+		
+		FunctionTypeTree type = new FunctionTypeTreeImpl(startPos, src.getPosition(), true, params, Collections.emptyList(), returnType);
 		
 		FunctionExpressionTree fn = null;
 		if (!isAbstract)
 			fn = this.finishFunctionBody(startPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, params, returnType, false, methodType == PropertyDeclarationType.GENERATOR, src, context);
+		else
+			expectEOL(src, context);
 		
-		return new MethodDefinitionTreeImpl(startPos, src.getPosition(), null, isAbstract, isReadonly, isStatic, methodType, key, null, fn);
+		return new MethodDefinitionTreeImpl(startPos, src.getPosition(), accessModifier, isAbstract, isReadonly, isStatic, methodType, key, type, fn);
 	}
 	
 	protected ObjectLiteralPropertyTree parseObjectProperty(JSLexer src, Context context) {
@@ -2744,7 +2739,7 @@ public class JSParser {
 			} else if (methodType == null) {
 				methodType = PropertyDeclarationType.METHOD;
 			}
-			return this.parseMethodDefinition(startPos, false, false, false, modifierToken, methodType, key, src, context);
+			return this.parseMethodDefinition(startPos, false, false, false, null, methodType, key, src, context);
 		} else if (methodType != null)
 			throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 		else if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null) {
