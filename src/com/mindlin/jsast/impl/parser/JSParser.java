@@ -839,11 +839,17 @@ public class JSParser {
 			
 			//Check if an initializer is available
 			ExpressionTree initializer = null;
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
 				initializer = this.parseAssignment(null, src, context.coverGrammarIsolated());
-			else if (isConst)
+				if (initializer.getKind() == Kind.FUNCTION_EXPRESSION && ((FunctionExpressionTree) initializer).getName() == null) {
+					//Infer fn name from variable id
+					FunctionExpressionTree fn = (FunctionExpressionTree) initializer;
+					initializer = new FunctionExpressionTreeImpl(fn.getStart(), fn.getEnd(), fn.isAsync(), identifier, fn.getParameters(), fn.getReturnType(), fn.isArrow(), fn.getBody(), fn.isStrict(), fn.isGenerator());
+				}
+			} else if (isConst) {
 				//No initializer
 				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
+			}
 			
 			if (type == null && initializer != null) {
 				//Halfhearted attempt at calculating type
@@ -948,6 +954,7 @@ public class JSParser {
 		//Support abstract classes
 		boolean isClassAbstract = false;
 		if (classKeywordToken.matches(TokenKind.IDENTIFIER, "abstract")) {
+			dialect.require("ts.class.abstract", classKeywordToken.getStart());
 			classKeywordToken = src.nextToken();
 			isClassAbstract = true;
 		}
@@ -1067,6 +1074,7 @@ public class JSParser {
 				modifierToken = next;
 				next = src.nextToken();
 				//TODO test lookahead identifier predicate (below)
+				//TODO support async
 			} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && this.isQualifiedPropertyName(src.peek(), context)) {
 				//Getter/setter method
 				dialect.require("js.accessor", next.getStart());
@@ -1125,7 +1133,7 @@ public class JSParser {
 				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
 					value = this.parseAssignment(null, src, context);
 				//Fields end with a semicolon
-				src.expect(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
+				expectEOL(src, context);
 				property = new ClassPropertyTreeImpl<ExpressionTree>(propertyStartPos, src.getPosition(), accessModifier, readonly, isStatic, methodType, key, fieldType, value);
 			}
 			
@@ -2284,7 +2292,6 @@ public class JSParser {
 			return finishFunctionBody(leftParenToken.getStart(), false, null, params, null, true, false, src, context);
 		}
 		//Not a lambda, just some parentheses around some expression.
-		//TODO probably needs to be wrapped with ParenthesizedTree
 		return new ParenthesizedTreeImpl(leftParenToken.getStart(), src.getPosition(), expr);
 	}
 	
@@ -2488,7 +2495,7 @@ public class JSParser {
 			body = this.parseBlock(startBodyToken, src, ctx);
 		} else
 			body = new ReturnTreeImpl(parseNextExpression(src, ctx.coverGrammarIsolated()));
-		//TODO infer name from syntax
+		
 		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, parameters, returnType, arrow, body, ctx.isStrict(), generator);
 		ctx.pop();
 		//You can't assign to a function
