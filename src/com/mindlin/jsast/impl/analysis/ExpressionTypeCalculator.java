@@ -1,13 +1,14 @@
-package com.mindlin.jsast.impl.validator;
+package com.mindlin.jsast.impl.analysis;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.mindlin.jsast.impl.analysis.ExpressionTypeCalculator.TypeContext;
 import com.mindlin.jsast.impl.tree.FunctionTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.SpecialTypeTreeImpl;
-import com.mindlin.jsast.impl.validator.ExpressionTypeCalculator.TypeContext;
+import com.mindlin.jsast.impl.validator.TypeInheritanceValidator;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ArrayPatternTree;
 import com.mindlin.jsast.tree.AssignmentPatternTree;

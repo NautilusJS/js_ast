@@ -98,6 +98,7 @@ public interface JSDialect {
 					case "ts.types.union":
 					case "ts.types.interface":
 					case "ts.types.cast":
+					case "ts.class.abstract":
 						return true;
 				}
 				if (JSStandardDialect.ES2017.supports(feature))
