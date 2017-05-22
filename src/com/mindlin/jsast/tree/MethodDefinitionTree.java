@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface MethodDefinitionTree extends ClassPropertyTree<FunctionExpressionTree> {
+public interface MethodDefinitionTree extends ClassPropertyTree<FunctionExpressionTree>, ObjectLiteralPropertyTree {
 	
 	boolean isAbstract();
 	
