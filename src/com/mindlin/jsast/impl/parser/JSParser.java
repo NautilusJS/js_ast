@@ -1102,20 +1102,7 @@ public class JSParser {
 				if (!computed && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
 					//Promote to constructor
 					if (methodType != null || isPropertyAbstract) {
-						String modifierName;
-						if (methodType == PropertyDeclarationType.GENERATOR)
-							modifierName = "generator";
-						else if (methodType == PropertyDeclarationType.ASYNC_METHOD)
-							modifierName = "async";
-						else if (isPropertyAbstract)
-							modifierName = "abstract";
-						else if (methodType == PropertyDeclarationType.GETTER)
-							modifierName = "getter";
-						else if (methodType == PropertyDeclarationType.SETTER)
-							modifierName = "setter";
-						else
-							modifierName = "[unknown]";
-						
+						String modifierName = isPropertyAbstract ? "abstract" : methodType.name();
 						throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
 					}
 					
@@ -2729,16 +2716,9 @@ public class JSParser {
 			key = this.parseObjectPropertyKey(src, context);
 		
 		if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) != null) {
-			//TODO get rid of this
-			if (!key.isComputed() && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("contructor")) {
-				if (methodType != null) {
-					String modifierName = methodType.name();
-					throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
-				}
-				methodType = PropertyDeclarationType.CONSTRUCTOR;
-			} else if (methodType == null) {
+			if (methodType == null)
 				methodType = PropertyDeclarationType.METHOD;
-			}
+			
 			return this.parseMethodDefinition(startPos, false, false, false, null, methodType, key, src, context);
 		} else if (methodType != null)
 			throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
