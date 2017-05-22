@@ -1013,7 +1013,7 @@ public class JSParser {
 					readonly = true;
 				} else if (next.matches(TokenKind.IDENTIFIER, "abstract")) {
 					//Check for 'abstract' keyword
-					if (isPropertyAbstract)
+					if (!isClassAbstract)
 						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", next.getStart(), next.getEnd());
 					if (isPropertyAbstract)
 						throw new JSUnexpectedTokenException(next);
@@ -2226,13 +2226,13 @@ public class JSParser {
 			List<ParameterTree> param = reinterpretExpressionAsParameterList(parseSpread(null, src, context));
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 			expectOperator(JSOperator.LAMBDA, src, context);
-			return finishFunctionBody(leftParenToken.getStart(), false, null, param, null, true, false, src, context);
+			return this.finishFunctionBody(leftParenToken.getStart(), false, null, param, null, true, false, src, context);
 		}
 		
 		context.isBindingElement(true);
 		context.isolateCoverGrammar();
 		context.isMaybeParam(true);
-		ExpressionTree expr = parseAssignment(null, src, context);
+		ExpressionTree expr = this.parseAssignment(null, src, context);
 		context.inheritCoverGrammar();
 		
 		
