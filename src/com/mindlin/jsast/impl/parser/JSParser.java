@@ -2677,22 +2677,17 @@ public class JSParser {
 		final long startPos = src.getPosition();
 		
 		PropertyDeclarationType methodType = null;
-		Token modifierToken = null;
 		ObjectPropertyKeyTree key = null;
 		
-		Token lookahead = src.peek();
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
 			//Handle generator methods
 			dialect.require("js.method.generator", startPos);
 			methodType = PropertyDeclarationType.GENERATOR;
-			modifierToken = lookahead;
-		} else if (lookahead.isIdentifier()) {
+		} else if (src.peek().isIdentifier()) {
 			//Handle getter/setter/async methods
-			src.skip(lookahead);
-			Token id = lookahead;
-			String name = lookahead.getValue();
+			Token id = src.nextToken();
+			String name = id.getValue();
 			if ((name.equals("async") || name.equals("get") || name.equals("set")) && this.isQualifiedPropertyName(src.peek(), context)) {
-				modifierToken = lookahead;
 				key = this.parseObjectPropertyKey(src, context);
 				switch (name) {
 					case "async":
@@ -2708,7 +2703,7 @@ public class JSParser {
 						methodType = PropertyDeclarationType.SETTER;
 				}
 			} else {
-				key = new IdentifierTreeImpl(lookahead);
+				key = new IdentifierTreeImpl(id);
 			}
 		}
 		
