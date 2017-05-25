@@ -24,7 +24,7 @@ import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.BinaryTypeTree;
+import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
@@ -1381,7 +1381,7 @@ public class JSParser {
 		boolean union = next.getValue() == JSOperator.BITWISE_OR;
 		TypeTree left = type;
 		TypeTree right = parseType(src, context);
-		return new BinaryTypeTree(left.getStart(), right.getEnd(), false, left, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, right);
+		return new BinaryTypeTreeImpl(left.getStart(), right.getEnd(), false, left, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, right);
 	}
 	
 	

@@ -7,7 +7,7 @@ import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.BinaryTypeTree;
+import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.CastTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
@@ -88,19 +88,18 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 public class ASTTransformer<D> implements TreeTransformation<D> {
 	TreeTransformation<D> transformation;
@@ -304,7 +303,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitIntersectionType(IntersectionTypeTree node, D ctx) {
+	public TypeTree visitIntersectionType(BinaryTypeTree node, D ctx) {
 		TypeTree oldLeftType = node.getLeftType();
 		TypeTree oldRightType = node.getRightType();
 		
@@ -312,7 +311,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		TypeTree newRightType = (TypeTree) oldRightType.accept(this, ctx);
 		
 		if (newLeftType != oldLeftType || newRightType != oldRightType)
-			node = new BinaryTypeTree(node.getStart(), node.getEnd(), node.isImplicit(), newLeftType, node.getKind(),
+			node = new BinaryTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), newLeftType, node.getKind(),
 					newRightType);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
@@ -442,7 +441,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitUnionType(UnionTypeTree node, D ctx) {
+	public TypeTree visitUnionType(BinaryTypeTree node, D ctx) {
 		TypeTree oldLeftType = node.getLeftType();
 		TypeTree oldRightType = node.getRightType();
 		
@@ -450,7 +449,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		TypeTree newRightType = (TypeTree) oldRightType.accept(this, ctx);
 		
 		if (newLeftType != oldLeftType || newRightType != oldRightType)
-			node = new BinaryTypeTree(node.getStart(), node.getEnd(), node.isImplicit(), newLeftType, node.getKind(),
+			node = new BinaryTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), newLeftType, node.getKind(),
 					newRightType);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);

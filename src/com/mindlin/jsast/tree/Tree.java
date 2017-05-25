@@ -4,19 +4,18 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
 //http://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/index.html
@@ -165,8 +164,8 @@ public interface Tree {
 		IDENTIFIER_TYPE(IdentifierTypeTree.class),
 		INTERFACE_PROPERTY(InterfacePropertyTree.class),
 		INDEX_TYPE(IndexTypeTree.class),
-		TYPE_UNION(UnionTypeTree.class),
-		TYPE_INTERSECTION(IntersectionTypeTree.class),
+		TYPE_UNION(BinaryTypeTree.class),
+		TYPE_INTERSECTION(BinaryTypeTree.class),
 		GENERIC_PARAM(GenericTypeTree.class),
 		INTERFACE_TYPE(InterfaceTypeTree.class),
 

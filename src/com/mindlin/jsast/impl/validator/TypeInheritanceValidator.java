@@ -2,20 +2,20 @@ package com.mindlin.jsast.impl.validator;
 
 import java.util.List;
 
-import com.mindlin.jsast.impl.tree.BinaryTypeTree;
+import com.mindlin.jsast.impl.analysis.TypeContext;
+import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 /**
  * Computes type inheritance calculations
@@ -72,9 +72,10 @@ public class TypeInheritanceValidator {
 				break;
 			}
 			case TYPE_UNION:
-				return isSubtype(context, base, ((UnionTypeTree)child).getLeftType()) && isSubtype(context, base, ((UnionTypeTree)child).getRightType());
+				//TODO merge with TYPE_INTERSECTION branch
+				return isSubtype(context, base, ((BinaryTypeTree)child).getLeftType()) && isSubtype(context, base, ((BinaryTypeTree)child).getRightType());
 			case TYPE_INTERSECTION:
-				return isSubtype(context, base, ((IntersectionTypeTree)child).getRightType()) || isSubtype(context, base, ((IntersectionTypeTree) child).getRightType());
+				return isSubtype(context, base, ((BinaryTypeTree)child).getRightType()) || isSubtype(context, base, ((BinaryTypeTree) child).getRightType());
 			default:
 				throw new UnsupportedOperationException();
 		}
@@ -95,12 +96,13 @@ public class TypeInheritanceValidator {
 				return false;
 			}
 			case TYPE_UNION: {
-				UnionTypeTree union = (UnionTypeTree) base;
+				BinaryTypeTree union = (BinaryTypeTree) base;
 				//TODO fix generic param binding
 				return isSubtype(context, union.getLeftType(), child) || isSubtype(context, union.getRightType(), child);
 			}
 			case TYPE_INTERSECTION: {
-				IntersectionTypeTree intersection = (IntersectionTypeTree) base;
+				//TODO merge with TYPE_UNION branch
+				BinaryTypeTree intersection = (BinaryTypeTree) base;
 				return isSubtype(context, intersection.getLeftType(), child) && isSubtype(context, intersection.getRightType(), child);
 			}
 			case ARRAY_TYPE: {
@@ -168,7 +170,8 @@ public class TypeInheritanceValidator {
 				//This should hold up pretty well.
 				return ((SpecialTypeTree) a).getType() == ((SpecialTypeTree) b).getType();
 			case TYPE_UNION: {
-				UnionTypeTree unionA = (UnionTypeTree) a, unionB = (UnionTypeTree) b;
+				//TODO merge with TYPE_INTERSECTION branch
+				BinaryTypeTree unionA = (BinaryTypeTree) a, unionB = (BinaryTypeTree) b;
 				if (isEquivalent(context, unionA.getLeftType(), unionB.getLeftType()))
 					return isEquivalent(context, unionA.getRightType(), unionB.getRightType());
 				else
@@ -176,7 +179,7 @@ public class TypeInheritanceValidator {
 							&& isEquivalent(context, unionA.getRightType(), unionB.getLeftType());
 			}
 			case TYPE_INTERSECTION: {
-				IntersectionTypeTree intersectionA = (IntersectionTypeTree) a, intersectionB = (IntersectionTypeTree) b;
+				BinaryTypeTree intersectionA = (BinaryTypeTree) a, intersectionB = (BinaryTypeTree) b;
 				if (isEquivalent(context, intersectionA.getLeftType(), intersectionB.getLeftType()))
 					return isEquivalent(context, intersectionA.getRightType(), intersectionB.getRightType());
 				else
@@ -203,7 +206,7 @@ public class TypeInheritanceValidator {
 	}
 	
 	public static TypeTree union(ASTContext context, TypeTree a, TypeTree b) {
-		return new BinaryTypeTree(-1, -1, true, a, Kind.TYPE_UNION, b);
+		return new BinaryTypeTreeImpl(-1, -1, true, a, Kind.TYPE_UNION, b);
 	}
 	
 	public static TypeTree reduce(ASTContext context, TypeTree type) {

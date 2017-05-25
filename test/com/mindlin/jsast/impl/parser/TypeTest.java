@@ -7,13 +7,12 @@ import org.junit.Test;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.Tree.Kind;
@@ -82,21 +81,21 @@ public class TypeTest {
 	
 	@Test
 	public void testUnionType() {
-		UnionTypeTree type = parseType("A | B", Kind.TYPE_UNION);
+		BinaryTypeTree type = parseType("A | B", Kind.TYPE_UNION);
 		assertIdentifierType("A", 0, type.getLeftType());
 		assertIdentifierType("B", 0, type.getRightType());
 	}
 	
 	@Test
 	public void testIntersectionType() {
-		IntersectionTypeTree type = parseType("A & B", Kind.TYPE_INTERSECTION);
+		BinaryTypeTree type = parseType("A & B", Kind.TYPE_INTERSECTION);
 		assertIdentifierType("A", 0, type.getLeftType());
 		assertIdentifierType("B", 0, type.getRightType());
 	}
 	
 	@Test
 	public void testIntersectionTypeWithGenerics() {
-		IntersectionTypeTree type = parseType("A<T> & B<R>", Kind.TYPE_INTERSECTION);
+		BinaryTypeTree type = parseType("A<T> & B<R>", Kind.TYPE_INTERSECTION);
 		assertIdentifierType("A", 1, type.getLeftType());
 		assertIdentifierType("T", 0, ((IdentifierTypeTree)type.getLeftType()).getGenerics().get(0));
 		assertIdentifierType("B", 1, type.getRightType());
@@ -125,11 +124,11 @@ public class TypeTest {
 	
 	@Test
 	public void testParentheticalType() {
-		IntersectionTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
+		BinaryTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
 		assertIdentifierType("A", 0, intersection.getLeftType());
 		
 		assertEquals(Kind.TYPE_UNION, intersection.getRightType().getKind());
-		UnionTypeTree union = (UnionTypeTree) intersection.getRightType();
+		BinaryTypeTree union = (BinaryTypeTree) intersection.getRightType();
 		assertIdentifierType("B", 0, union.getLeftType());
 		assertIdentifierType("C", 0, union.getRightType());
 	}
