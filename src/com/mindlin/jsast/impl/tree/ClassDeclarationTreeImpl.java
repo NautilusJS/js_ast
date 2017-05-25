@@ -2,7 +2,6 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
@@ -34,8 +33,8 @@ public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDecla
 	}
 	
 	@Override
-	public Optional<TypeTree> getSuperType() {
-		return Optional.ofNullable(superType);
+	public TypeTree getSuperType() {
+		return superType;
 	}
 	
 	@Override

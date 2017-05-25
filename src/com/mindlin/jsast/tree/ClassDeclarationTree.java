@@ -1,7 +1,6 @@
 package com.mindlin.jsast.tree;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -13,9 +12,10 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	IdentifierTree getIdentifier();
 	
 	/**
-	 * Get the class that this class extends, if available
+	 * Get the class that this class extends, if available.
+	 * @return super type, else null if not applicable
 	 */
-	Optional<TypeTree> getSuperType();
+	TypeTree getSuperType();
 	
 	/**
 	 * Get the interfaces that this class implements

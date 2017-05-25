@@ -31,4 +31,21 @@ public interface CompilationUnitTree extends Tree {
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
 		return visitor.visitCompilationUnit(this, data);
 	}
+	
+	@Override
+	default boolean equivalentTo(Tree other) {
+		if (this == other || this.equals(other))
+			return true;
+		
+		if (other.getKind() != Tree.Kind.COMPILATION_UNIT)
+			return false;
+		
+		CompilationUnitTree o = (CompilationUnitTree) other;
+		
+		if (this.getSourceFile() != o.getSourceFile())
+			return false;
+		
+		//TODO finish
+		return false;
+	}
 }

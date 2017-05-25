@@ -26,7 +26,7 @@ public class TransformerSeries implements Function<CompilationUnitTree, Compilat
 			for (ASTTransformer<?> transformer : transformers)
 				ast1 = (CompilationUnitTree) ast1.accept(transformer, null);
 			n++;
-			if (ast1 == ast0) {
+			if (ast1 == ast0 || ast1.equivalentTo(ast0) || ast0.equivalentTo(ast1)) {
 				System.out.println(n);
 				return ast0;
 			}

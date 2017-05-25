@@ -704,9 +704,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			out.append(options.space);
 			node.getIdentifier().accept(this, out);
 		}
-		if (node.getSuperType().isPresent()) {
+		if (node.getSuperType() != null) {
 			out.appendIsolated("extends");
-			node.getSuperType().get().accept(this, out);
+			node.getSuperType().accept(this, out);
 		}
 		if (!node.getImplementing().isEmpty()) {
 			out.appendIsolated("implements");
