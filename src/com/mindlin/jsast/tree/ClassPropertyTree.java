@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface ClassPropertyTree<T> extends TypedPropertyTree {
+public interface ClassPropertyTree<T extends ExpressionTree> extends TypedPropertyTree {
 	/**
 	 * Get the value of the property
 	 * @return

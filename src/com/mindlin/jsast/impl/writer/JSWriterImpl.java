@@ -25,6 +25,7 @@ import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
@@ -170,8 +171,8 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		this.writeTypeMaybe(type.getReturnType(), out);
 		
 		if (!method.isAbstract()) {
+			out.optionalSpace();
 			fn.getBody().accept(this, out);
-			out.finishStatement(false);
 		} else {
 			out.finishStatement(true);
 		}
@@ -719,7 +720,34 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			if (property.getKind() == Tree.Kind.METHOD_DEFINITION)
 				this.writeMethodDefinition((MethodDefinitionTree) property, out);
 			else {
-				//TODO finish
+				//Sanity check
+				if (property.getDeclarationType() != PropertyDeclarationType.FIELD)
+					throw new IllegalArgumentException("Huh?" + property.getDeclarationType());//TODO better message
+				
+				if (property.getAccess() == AccessModifier.PROTECTED)
+					out.append("protected").append(options.space);
+				else if (property.getAccess() == AccessModifier.PRIVATE)
+					out.append("private").append(options.space);
+				
+				if (property.isStatic())
+					out.append("static").append(options.space);
+				
+				if (property.isReadonly())
+					out.append("readonly").append(options.space);
+				
+				//Write property name
+				property.getKey().accept(this, out);
+				
+				//Write type
+				this.writeTypeMaybe(property.getType(), out);
+				
+				//Write initializer
+				if (property.getValue() != null) {
+					out.optionalSpace().append('=').optionalSpace();
+					property.getValue().accept(this, out);
+				}
+				
+				out.finishStatement(true);
 			}
 		}
 		out.popIndent();

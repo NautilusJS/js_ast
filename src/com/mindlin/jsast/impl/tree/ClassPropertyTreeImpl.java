@@ -3,11 +3,11 @@ package com.mindlin.jsast.impl.tree;
 import java.util.Objects;
 
 import com.mindlin.jsast.tree.ClassPropertyTree;
+import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
-import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class ClassPropertyTreeImpl<T extends Tree> extends AbstractTypedPropertyTree implements ClassPropertyTree<T> {
+public class ClassPropertyTreeImpl<T extends ExpressionTree> extends AbstractTypedPropertyTree implements ClassPropertyTree<T> {
 	protected final T value;
 	protected final boolean isStatic;
 	protected final AccessModifier access;
