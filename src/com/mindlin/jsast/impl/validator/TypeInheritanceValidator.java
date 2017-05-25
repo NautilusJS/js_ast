@@ -72,10 +72,13 @@ public class TypeInheritanceValidator {
 				break;
 			}
 			case TYPE_UNION:
-				//TODO merge with TYPE_INTERSECTION branch
-				return isSubtype(context, base, ((BinaryTypeTree)child).getLeftType()) && isSubtype(context, base, ((BinaryTypeTree)child).getRightType());
 			case TYPE_INTERSECTION:
-				return isSubtype(context, base, ((BinaryTypeTree)child).getRightType()) || isSubtype(context, base, ((BinaryTypeTree) child).getRightType());
+				//if child = (A & B), return isSubtype(A) || isSubtype(B)
+				//if child = (A | B), return isSubtype(A) && isSubtype(B)
+				if (isSubtype(context, base, ((BinaryTypeTree) child).getLeftType()))
+					return child.getKind() == Kind.TYPE_INTERSECTION || isSubtype(context, base, ((BinaryTypeTree) child).getRightType());
+				else
+					return child.getKind() == Kind.TYPE_INTERSECTION && isSubtype(context, base, ((BinaryTypeTree) child).getRightType());
 			default:
 				throw new UnsupportedOperationException();
 		}
@@ -169,22 +172,14 @@ public class TypeInheritanceValidator {
 			case SPECIAL_TYPE:
 				//This should hold up pretty well.
 				return ((SpecialTypeTree) a).getType() == ((SpecialTypeTree) b).getType();
+			case TYPE_INTERSECTION:
 			case TYPE_UNION: {
-				//TODO merge with TYPE_INTERSECTION branch
-				BinaryTypeTree unionA = (BinaryTypeTree) a, unionB = (BinaryTypeTree) b;
-				if (isEquivalent(context, unionA.getLeftType(), unionB.getLeftType()))
-					return isEquivalent(context, unionA.getRightType(), unionB.getRightType());
+				BinaryTypeTree binA = (BinaryTypeTree) a, binB = (BinaryTypeTree) b;
+				if (isEquivalent(context, binA.getLeftType(), binB.getLeftType()))
+					return isEquivalent(context, binA.getRightType(), binB.getRightType());
 				else
-					return isEquivalent(context, unionA.getLeftType(), unionB.getRightType())
-							&& isEquivalent(context, unionA.getRightType(), unionB.getLeftType());
-			}
-			case TYPE_INTERSECTION: {
-				BinaryTypeTree intersectionA = (BinaryTypeTree) a, intersectionB = (BinaryTypeTree) b;
-				if (isEquivalent(context, intersectionA.getLeftType(), intersectionB.getLeftType()))
-					return isEquivalent(context, intersectionA.getRightType(), intersectionB.getRightType());
-				else
-					return isEquivalent(context, intersectionA.getLeftType(), intersectionB.getRightType())
-							&& isEquivalent(context, intersectionA.getRightType(), intersectionB.getLeftType());
+					return isEquivalent(context, binB.getLeftType(), binB.getRightType())
+							&& isEquivalent(context, binB.getRightType(), binB.getLeftType());
 			}
 			default:
 				throw new IllegalArgumentException("Unknown type kind: " + a.getKind());
