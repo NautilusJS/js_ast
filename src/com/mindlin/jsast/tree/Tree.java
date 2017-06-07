@@ -246,17 +246,56 @@ public interface Tree {
 			return this.typ;
 		}
 	}
-
+	
+	/**
+	 * Get the kind of this tree. Useful for switch statements.
+	 * @return the kind of this tree.
+	 */
 	Kind getKind();
 
+	/**
+	 * Get the start position of this tree.
+	 * @return the start position of this element, else -1 if not available
+	 * @see #getEnd()
+	 */
 	long getStart();
 
+	/**
+	 * Get the end position of this tree.
+	 * 
+	 * @return the end position of this element, else -1 if not available
+	 * @see #getStart()
+	 */
 	long getEnd();
 	
 	boolean isMutable();
 
 	<R, D> R accept(TreeVisitor<R, D> visitor, D data);
 	
+	/**
+	 * Indicates whether another tree is 'equivalent to' this one.
+	 * <p>
+	 * This method is less strict than {@link #equals(Object)}, as it does not require all
+	 * fields to be the same. Rather, it is to test a looser 'is pretty much the same' equivalence that ignores
+	 * certain attributes.
+	 * For example, the values of {@link #getStart()}, {@link #getEnd()}, and {@link #isMutable()} should
+	 * be ignored.
+	 * </p>
+	 * <p>
+	 * Implementations of this method should satisfy the general contract provided by {@link #equals(Object)}. Specifically,
+	 * <ul>
+	 * <li>For any {@code x} and {@code y}, {@code x.equals(y)} implies {@code x.equivalentTo(y)}.</li>
+	 * <li>It is <i>reflexive</i>: For any non-null {@code x}, {@code x.equivalentTo(x) == true}.</li>
+	 * <li>It is <i>symmetric</i>: For any non-null {@code x} and {@code b}, {@code a.equivalentTo(b) == b.equivalentTo(a)}</li>
+	 * <li>It is <i>transitive</i>: For any non-null  {@code x}, {@code y}, and {@code z},
+	 * 		if {@code x.equivalentTo(y)} returns {@code true} and {@code y.equivalentTo(z)} returns {@code true},
+	 * 		then {@code x.equivalentTo(z)} should return {@code true}.</li>
+	 * <li>It is <i>consistent</i>: For any non-null {@code x} and {@code y}, multiple calls of </li>
+	 * <li>Like {@link #equals(Object)}, {@code a.equivalentTo(null)} should return {@code false}.</li>
+	 * </p>
+	 * @param other
+	 * @return
+	 */
 	default boolean equivalentTo(Tree other) {
 		return this.equals(other);
 	}
