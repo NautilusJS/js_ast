@@ -2,6 +2,8 @@
 
 This is a JavaScript/TypeScript parser written in Java.
 
+I wrote this project to satisfy the problem of parsing JS/TS code in Java (even Nashorn doesn't do this well, or for modern dialects). 
+
 ## Scope
 This parser should be able to process valid JavaScript and TypeScript. It should fully support ES6 features.
 
