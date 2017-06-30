@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class CatchTreeImpl extends AbstractTree implements CatchTree {

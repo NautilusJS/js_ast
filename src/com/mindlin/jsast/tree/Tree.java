@@ -247,6 +247,15 @@ public interface Tree {
 		}
 	}
 	
+	public static boolean equivalentTo(Tree a, Tree b) {
+		if (a == b)
+			return true;
+		
+		if (a == null || b == null)
+			return false;
+		
+		return a.equivalentTo(b);
+	}
 	/**
 	 * Get the kind of this tree. Useful for switch statements.
 	 * @return the kind of this tree.
@@ -297,6 +306,6 @@ public interface Tree {
 	 * @return
 	 */
 	default boolean equivalentTo(Tree other) {
-		return this.equals(other);
+		return this == other;
 	}
 }
