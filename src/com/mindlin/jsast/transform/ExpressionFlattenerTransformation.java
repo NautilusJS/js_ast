@@ -66,7 +66,87 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 						}
 					}
 				}
-				//TODO finish for RHS
+				
+				if (!SideEffectValidator.hasSideEffectsMaybe(ctx, node.getRightOperand())) {
+					Optional<Boolean> rhs = SideEffectValidator.coerceToBoolean(ctx, node.getRightOperand());
+					if (rhs.isPresent()) {
+						//We can't simplify these as well as when we know the LHS has no side-effects, because the LHS must be evaluated
+						if (kind == Kind.LOGICAL_AND) {
+							// (x && true) => x
+							if (rhs.get())
+								return node.getLeftOperand();
+						} else {//kind == LOGICAL_OR
+							// (x || false) => x
+							if (!rhs.get())
+								return node.getLeftOperand();
+						}
+						
+						// (x || true) and (x && false) can't be reduced (x has side-effects), even though we know their values
+						return node;
+					}
+				}
+				break;
+			}
+			case ADDITION:
+				//Addition is hard, b/c strings and stuff
+				break;
+			case SUBTRACTION:
+			case MULTIPLICATION:
+			case DIVISION:
+			case REMAINDER:
+			case EXPONENTIATION:
+			case LEFT_SHIFT:
+			case RIGHT_SHIFT:
+			case UNSIGNED_RIGHT_SHIFT: {
+				if (!SideEffectValidator.hasSideEffectsMaybe(ctx, node)) {
+					Optional<Number> lhs = SideEffectValidator.coerceToNumber(ctx, node.getLeftOperand());
+					if (!lhs.isPresent())
+						break;
+					
+					Optional<Number> rhs = SideEffectValidator.coerceToNumber(ctx, node.getRightOperand());
+					if (!rhs.isPresent())
+						break;
+					
+					
+					//TODO handle other implementations of 'Number'
+					Number left = lhs.get(), right = rhs.get();
+					
+					//TODO handle differences between Java math and JS math
+					Number result;
+					switch (kind) {
+						case SUBTRACTION:
+							result = left.doubleValue() - right.doubleValue();
+							break;
+						case MULTIPLICATION:
+							result = left.doubleValue() * right.doubleValue();
+							break;
+						case DIVISION:
+							result = left.doubleValue() / right.doubleValue();
+							break;
+						case REMAINDER:
+							result = left.doubleValue() % right.doubleValue();
+							break;
+						case EXPONENTIATION:
+							result = Math.pow(left.doubleValue(), right.doubleValue());
+							break;
+						case LEFT_SHIFT:
+							//TODO exception if not int?
+							result = left.intValue() << right.intValue();
+							break;
+						case RIGHT_SHIFT:
+							//TODO exception if not int?
+							result = left.intValue() >> right.intValue();
+							break;
+						case UNSIGNED_RIGHT_SHIFT:
+							//TODO exception if not int?
+							result = left.intValue() >>> right.intValue();
+							break;
+						default:
+							throw new IllegalStateException("This should be impossible");
+					}
+					
+					return new NumericLiteralTreeImpl(node.getStart(), node.getEnd(), result);
+				}
 				break;
 			}
 			default:

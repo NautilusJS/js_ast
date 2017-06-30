@@ -68,6 +68,27 @@ public class SideEffectValidator {
 		return coerced;
 	}
 	
+	public static Optional<Number> coerceToNumber(ASTTransformerContext ctx, ExpressionTree tree) {
+		switch (tree.getKind()) {
+			case BOOLEAN_LITERAL:
+				return Optional.of(((BooleanLiteralTree)tree).getValue() ? 1 : 0);
+			case NUMERIC_LITERAL:
+				return Optional.of(((NumericLiteralTree)tree).getValue());
+			case STRING_LITERAL:
+				//return Optional.of(((StringLiteralTree)tree).getValue());
+			default:
+				break;
+		}
+		//We have no idea
+		return Optional.empty();
+	}
+	
+	/**
+	 * Determines if an expression may have side effects. Errs on the side of returning true.
+	 * @param ctx
+	 * @param tree
+	 * @return If the given expression may have side effects
+	 */
 	public static boolean hasSideEffectsMaybe(ASTTransformerContext ctx, ExpressionTree tree) {
 		switch (tree.getKind()) {
 			case NULL_LITERAL:
@@ -83,11 +104,12 @@ public class SideEffectValidator {
 					return false;
 				break;
 			case ARRAY_LITERAL:
-				// '[]' is safe
-				if (((ArrayLiteralTree)tree).getElements().isEmpty())
-					return false;
-				break;
-			//Don't have an inherent side-effect, but could
+				//No SE if no element has a SE
+				for (ExpressionTree element : ((ArrayLiteralTree)tree).getElements())
+					if (hasSideEffectsMaybe(ctx, element))//TODO check context
+						return true;
+				return false;
+			//Don't have an inherent side-effect, but one of their operands might
 			case EQUAL:
 			case NOT_EQUAL:
 			case STRICT_EQUAL:
