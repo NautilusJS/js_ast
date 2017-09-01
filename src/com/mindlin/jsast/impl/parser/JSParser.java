@@ -1195,7 +1195,7 @@ public class JSParser {
 				type = new IndexTypeTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
 			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Parse function type
-				List<ParameterTree> params = this.parseParameters(src, context, false);
+				List<ParameterTree> params = this.parseParameters(src, context, false, null);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
 				
@@ -2071,13 +2071,19 @@ public class JSParser {
 	}
 	
 	/**
-	 * Parse function parameters. This method will consume all parameters up to a closing (right)
-	 * parenthesis (which will also be consumed).
+	 * Parse function parameters. This method will consume all parameters up to
+	 * a closing (right) parenthesis (which will also be consumed).
 	 * 
-	 * Note: parameters are in the function <i>declaration</i>, while arguments are used when
-	 * invoking a function.
+	 * Note: parameters are in the function <i>declaration</i>, while arguments
+	 * are used when invoking a function.
+	 * 
+	 * @param previous
+	 *            Previous parameters parsed, if available. Null if no
+	 *            parameters were parsed for the same list before this method
+	 *            was called
+	 *            TODO clarify
 	 */
-	protected List<ParameterTree> parseParameters(JSLexer src, Context context, boolean allowAccessModifiers) {
+	protected List<ParameterTree> parseParameters(JSLexer src, Context context, boolean allowAccessModifiers, List<ParameterTree> previous) {
 		if (src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 			return Collections.emptyList();
 		
@@ -2086,6 +2092,32 @@ public class JSParser {
 		//Flag to remember that all parameters after the first optional parameter must also be
 		// optional
 		boolean prevOptional = false;
+		
+		if (previous != null && !previous.isEmpty()) {
+			result.addAll(previous);
+			
+			for (ParameterTree param : result) {
+				boolean optional = param.isOptional();
+				if (prevOptional && !optional)
+					throw new JSSyntaxException("A required parameter cannot follow an optional parameter", param.getStart(), param.getEnd());
+				prevOptional |= optional;
+				
+				if (param.isRest()) {
+					if (optional)
+						throw new JSSyntaxException("Rest parameters cannot be optional", param.getStart(), param.getEnd());
+					if (param.getInitializer() != null)
+						throw new JSSyntaxException("Rest parameters cannot have a default value", param.getStart(), param.getEnd());
+					if (param != result.get(result.size() - 1))
+						throw new JSSyntaxException("Rest parameter must be the last", param.getStart(), param.getEnd());
+					
+					expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+					result.trimToSize();
+					return result;
+				}
+				//We could probably check satisficaiton of the accessModifier constraints, but it wouldn't be that useful.
+			}
+		}
+		
 		do {
 			Token identifier = src.nextToken();
 			AccessModifier access = null;
@@ -2162,7 +2194,7 @@ public class JSParser {
 	protected FunctionExpressionTree upgradeGroupToLambdaFunction(long startPos, List<ExpressionTree> expressions, ExpressionTree lastParam, JSLexer src, Context context) {
 		dialect.require("js.function.lambda", startPos);
 		
-		ArrayList<ParameterTree> parameters = new ArrayList<>();
+		List<ParameterTree> parameters = new ArrayList<>();
 		if (expressions != null)
 			for (ExpressionTree expression : expressions)
 				parameters.add(reinterpretExpressionAsParameter(expression));
@@ -2186,14 +2218,13 @@ public class JSParser {
 		ExpressionTree defaultValue = ((optionalToken == null && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(null, src, context) : null;
 		
 		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), null, (IdentifierTree)lastParam, false, optionalToken != null, type, defaultValue));
+		((ArrayList<?>) parameters).trimToSize();
 		
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
-			parameters.addAll(this.parseParameters(src, context, false));
+			parameters = this.parseParameters(src, context, false, parameters);
 		
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		expectOperator(JSOperator.LAMBDA, src, context);
-		
-		parameters.trimToSize();
 		
 		return finishFunctionBody(startPos, false, null, parameters, null, true, false, src, context);
 	}
@@ -2538,7 +2569,7 @@ public class JSParser {
 			identifier = new IdentifierTreeImpl(next);
 		
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		List<ParameterTree> params = this.parseParameters(src, context, false);
+		List<ParameterTree> params = this.parseParameters(src, context, false, null);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		//Get return type, if provided
@@ -2668,7 +2699,7 @@ public class JSParser {
 	}
 	
 	protected MethodDefinitionTree parseMethodDefinition(long startPos, boolean isAbstract, boolean isStatic, boolean isReadonly, AccessModifier accessModifier, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
-		List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR);
+		List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR, null);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		TypeTree returnType = null;
