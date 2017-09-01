@@ -20,11 +20,12 @@ public class LambdaTest {
 		assertExceptionalExpression("()=>()", "Empty parentheses aren't a valid lambda body");
 		assertExceptionalExpression("x=>()", "Empty parentheses aren't a valid lambda body");
 		assertExceptionalExpression("(x,y)=>()", "Empty parentheses aren't a valid lambda body");
-		assertExceptionalExpression("...x=>()", "Rest parameters aren't allowed without parentheses");
-		assertExceptionalExpression("x:void=>()", "Types aren't allowed without parentheses");
-		assertExceptionalExpression("x?=>()", "Optional parameters not allowed without parentheses");
-		assertExceptionalExpression("(x?=5)=>()", "Initializers not allowed for optional parameters");
-		assertExceptionalExpression("(x?, y)=>()", "Required parameters may not follow an optional parameter");
+		//assertExceptionalExpression("...x=>{}", "Rest parameters aren't allowed without parentheses");
+		assertExceptionalExpression("x:void=>{}", "Types aren't allowed without parentheses");
+		assertExceptionalExpression("x?=>{}", "Optional parameters not allowed without parentheses");
+		assertExceptionalExpression("(x?=5)=>{}", "Initializers not allowed for optional parameters");
+		assertExceptionalExpression("(x?, y)=>{}", "Required parameters may not follow an optional parameter");
+		assertExceptionalExpression("(...x, y)=>{}", "No parameter may follow a rest parameter");
 	}
 	
 	@Test
