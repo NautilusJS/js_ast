@@ -4,7 +4,7 @@ public interface TemplateElementTree extends Tree {
 	
 	String getRaw();
 	
-	boolean isTail();
+	String getCooked();
 	
 	@Override
 	default Tree.Kind getKind() {
