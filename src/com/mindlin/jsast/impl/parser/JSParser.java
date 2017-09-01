@@ -14,6 +14,7 @@ import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.fs.SourceFile;
 import com.mindlin.jsast.impl.lexer.JSLexer;
+import com.mindlin.jsast.impl.lexer.JSLexer.RegExpTokenInfo;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
@@ -2204,7 +2205,7 @@ public class JSParser {
 		if (lastParam.getKind() != Kind.IDENTIFIER)
 			//TODO support destructured parameters
 			throw new JSUnexpectedTokenException(src.peek());
-							
+		
 		Token optionalToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 		if (optionalToken != null)
 			dialect.require("ts.parameter.optional", optionalToken.getStart());
@@ -2600,10 +2601,12 @@ public class JSParser {
 					context.isAssignmentTarget(false);
 					context.isBindingElement(false);
 				return new NullLiteralTreeImpl(literalToken);
-			case REGEX_LITERAL:
+			case REGEX_LITERAL: {
 				context.isAssignmentTarget(false);
 				context.isBindingElement(false);
-				return new RegExpLiteralTreeImpl(literalToken);
+				RegExpTokenInfo info = literalToken.getValue();
+				return new RegExpLiteralTreeImpl(literalToken.getStart(), literalToken.getEnd(), info.body, info.flags);
+			}
 			case TEMPLATE_LITERAL: {
 				ArrayList<TemplateElementTree> quasis = new ArrayList<>();
 				ArrayList<ExpressionTree> expressions = new ArrayList<>();

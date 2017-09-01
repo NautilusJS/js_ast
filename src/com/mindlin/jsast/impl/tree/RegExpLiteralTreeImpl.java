@@ -2,24 +2,38 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
+import com.mindlin.jsast.tree.Tree;
 
 public class RegExpLiteralTreeImpl extends AbstractTree implements RegExpLiteralTree {
 	protected final String body;
 	protected final String flags;
 	
-	public RegExpLiteralTreeImpl(Token regexToken) {
-		super(regexToken.getStart(), regexToken.getEnd());
-		String[] data = regexToken.getValue();
-		this.body = data[0];
-		this.flags = data[1];
-	}
-	
 	public RegExpLiteralTreeImpl(long start, long end, String body, String flags) {
 		super(start, end);
 		this.body = body;
 		this.flags = flags;
+	}
+	
+	@Override
+	public String getBody() {
+		return this.body;
+	}
+	
+	@Override
+	public String getFlags() {
+		return this.flags;
+	}
+	
+	@Override
+	public boolean equivalentTo(Tree other) {
+		if (this == other)
+			return true;
+		if (getKind() != other.getKind() || this.hashCode() != other.hashCode())
+			return false;
+		
+		RegExpLiteralTree r = (RegExpLiteralTree) other;
+		return Objects.equals(this.body, r.getBody()) && Objects.equals(this.flags, r.getFlags());
 	}
 	
 	@Override

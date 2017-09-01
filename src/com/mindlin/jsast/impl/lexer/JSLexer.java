@@ -689,7 +689,8 @@ public class JSLexer implements Supplier<Token> {
 		long intermediateStart = getPosition();
 		String body = scanRegExpBody(start.text);
 		String flags = scanRegExpFlags();
-		return new Token(start.getStart(), TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), new String[]{body, flags});
+		RegExpTokenInfo info = new RegExpTokenInfo(body, flags);
+		return new Token(start.getStart(), TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), info);
 	}
 	
 	public String nextComment(final boolean singleLine) {
@@ -864,6 +865,41 @@ public class JSLexer implements Supplier<Token> {
 	@Override
 	public Token get() {
 		return nextToken();
+	}
+	
+	public static class RegExpTokenInfo {
+		public final String body;
+		public final String flags;
+		
+		RegExpTokenInfo(String body, String flags) {
+			this.body = body;
+			this.flags = flags;
+		}
+		
+		@Override
+		public int hashCode() {
+			return Objects.hash(body, flags);
+		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (this == other)
+				return true;
+			if (other == null || !(other instanceof RegExpTokenInfo))
+				return false;
+			
+			RegExpTokenInfo o = (RegExpTokenInfo) other;
+			return this.body.equals(o.body) && this.flags.equals(o.flags);
+		}
+		
+		@Override
+		public String toString() {
+			return new StringBuffer()
+					.append(this.getClass().getSimpleName())
+					.append("{body=\"").append(this.body)
+					.append("\",flags=\"").append(this.flags)
+					.append("\"}").toString();
+		}
 	}
 	
 	public static class TemplateTokenInfo {

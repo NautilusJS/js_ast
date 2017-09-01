@@ -122,7 +122,8 @@ public class Token {
 	public String toString() {
 		//@formatter:off
 		StringBuilder sb = new StringBuilder(70)//High end of expected outputs
-				.append("Token{kind=").append(getKind())
+				.append(this.getClass().getSimpleName())
+				.append("{kind=").append(getKind())
 				.append(",value=").append(value)
 				.append(",start=").append(getStart())
 				.append(",end=").append(getEnd());
