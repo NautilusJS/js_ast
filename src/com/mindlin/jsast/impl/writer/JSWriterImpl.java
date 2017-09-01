@@ -161,21 +161,16 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		
 		FunctionExpressionTree fn = method.getValue();
-		
 		method.getKey().accept(this, out);
 		
-		FunctionTypeTree type = (FunctionTypeTree) method.getType();
+		this.writeFunctionParameters(fn.getParameters(), false, out);
 		
-		this.writeFunctionParameters(type.getParameters(), false, out);
+		this.writeTypeMaybe(fn.getReturnType(), out);
 		
-		this.writeTypeMaybe(type.getReturnType(), out);
-		
-		if (!method.isAbstract()) {
+		if (!method.isAbstract())
 			fn.getBody().accept(this, out);
-			out.finishStatement(false);
-		} else {
+		else
 			out.finishStatement(true);
-		}
 	}
 	
 	protected class WriterHelper implements Closeable {
