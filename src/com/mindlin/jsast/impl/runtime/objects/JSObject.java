@@ -21,12 +21,12 @@ public interface JSObject {
 		setMember(Integer.toString(index), value);
 	}
 
-	void removeMember(String key);
+	boolean removeMember(String key);
 
-	void removeMember(Symbol key);
+	boolean removeMember(Symbol key);
 
-	default void removeSlot(int index) {
-		removeMember(Integer.toString(index));
+	default boolean removeSlot(int index) {
+		return removeMember(Integer.toString(index));
 	}
 
 	boolean hasMember(String key);
