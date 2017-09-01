@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.ParameterTree;
+import com.mindlin.jsast.tree.ReturnTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
@@ -280,15 +281,21 @@ public class LambdaTest {
 		assertNull(param0.getInitializer());
 		assertIdentifier("x", param0.getIdentifier());
 		
-		//TODO Finish
-		/*FunctionExpressionTree lambda1 = (FunctionExpressionTree) lambda.getBody();
+		
+		//Check returned function
+		ReturnTree result = assertKind(lambda.getBody(), Kind.RETURN);
+		FunctionExpressionTree lambda1 = assertKind(result.getExpression(), Kind.FUNCTION_EXPRESSION);
+		assertTrue(lambda1.isArrow());
 		List<ParameterTree> params1 = lambda1.getParameters();
 		assertEquals(1, params1.size());
 		
-		ParameterTree param1 = params1.get(0);
-		assertFalse(param1.isRest());
-		assertFalse(param1.isOptional());
-		assertLiteral(6, param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());*/
+		ParameterTree param1_1 = params1.get(0);
+		assertFalse(param1_1.isRest());
+		assertFalse(param1_1.isOptional());
+		assertNull(param1_1.getInitializer());
+		assertIdentifier("y", param1_1.getIdentifier());
+		
+		ReturnTree result1 = assertKind(lambda1.getBody(), Kind.RETURN);
+		assertIdentifier("x", result1.getExpression());
 	}
 }
