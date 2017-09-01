@@ -15,6 +15,7 @@ import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.fs.SourceFile;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.JSLexer.RegExpTokenInfo;
+import com.mindlin.jsast.impl.lexer.JSLexer.TemplateTokenInfo;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
@@ -78,6 +79,8 @@ import com.mindlin.jsast.impl.tree.SpecialTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.StringLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.SuperExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.SwitchTreeImpl;
+import com.mindlin.jsast.impl.tree.TemplateElementTreeImpl;
+import com.mindlin.jsast.impl.tree.TemplateLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ThrowTreeImpl;
 import com.mindlin.jsast.impl.tree.TryTreeImpl;
@@ -1337,7 +1340,8 @@ public class JSParser {
 			//Tuple (or array type '[]')
 			if (src.nextTokenIs(TokenKind.BRACKET, ']')) {
 				//Array type
-				//TODO finish
+				//TODO figure out what base type to use here
+				return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, null);
 			}
 			
 			
@@ -2414,7 +2418,7 @@ public class JSParser {
 				context.isAssignmentTarget(true);
 				ExpressionTree property = this.parseIdentifier(null, src, context, false);
 				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
-			} else if ((t = src.nextTokenIf(TokenKind.TEMPLATE_LITERAL)) != null) {
+			} else if ((t = src.nextTokenIf(token -> (token.getKind() == TokenKind.TEMPLATE_LITERAL && token.<TemplateTokenInfo>getValue().head))) != null) {
 				//TODO Tagged template literal
 				return this.parseLiteral(t, src, context);
 			} else {
@@ -2610,8 +2614,20 @@ public class JSParser {
 			case TEMPLATE_LITERAL: {
 				ArrayList<TemplateElementTree> quasis = new ArrayList<>();
 				ArrayList<ExpressionTree> expressions = new ArrayList<>();
-				//TODO finish parsing
-				throw new UnsupportedOperationException();
+				
+				TemplateTokenInfo quasi = literalToken.getValue();
+				if (!quasi.head)
+					throw new IllegalStateException("Not head");
+				quasis.add(new TemplateElementTreeImpl(literalToken.getStart(), literalToken.getEnd(), literalToken.getText(), quasi.cooked));
+				
+				while (!quasi.tail) {
+					expressions.add(this.parseNextExpression(src, context));
+					
+					Token t = src.nextToken();
+					quasi = t.getValue();
+					quasis.add(new TemplateElementTreeImpl(t.getStart(), t.getEnd(), t.getText(), quasi.cooked));
+				}
+				return new TemplateLiteralTreeImpl(literalToken.getStart(), src.getPosition(), quasis, expressions);
 			}
 			default:
 				throw new JSUnexpectedTokenException(literalToken);

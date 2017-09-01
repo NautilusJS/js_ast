@@ -12,6 +12,7 @@ import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
+import com.mindlin.jsast.impl.util.BooleanStack;
 import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 import com.mindlin.jsast.impl.util.Characters;
@@ -20,6 +21,7 @@ public class JSLexer implements Supplier<Token> {
 	
 	protected final CharacterStream chars;
 	protected Token lookahead = null;
+	protected final BooleanStack templateStack = new BooleanStack();
 	
 	public JSLexer(char[] chars) {
 		this(new CharacterArrayStream(chars));
@@ -52,6 +54,70 @@ public class JSLexer implements Supplier<Token> {
 		return null;
 	}
 	
+	protected String readEscapeSequence(char c) {
+		switch (c) {
+			case '\'':
+			case '"':
+			case '\\':
+			case '`':
+				return Character.toString(c);
+			case 'n':
+				return "\n";
+			case 'r':
+				return "\r";
+			case 'v':
+				return Character.toString(Characters.VT);// vertical tab; it's a thing.
+			case 't':
+				return "\t";
+			case 'b':
+				return "\b";
+			case 'f':
+				return "\f";
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+				//EASCII octal escape
+				{
+					int val = c - '0';
+					if (chars.peek() >= '0' && chars.peek() <= '7') {
+						val = (val << 3) | (chars.next() - '0');
+						if (val < 32 && chars.peek() >= '0' && chars.peek() <= '7')
+							val = (val << 3) | (chars.next() - '0');
+					}
+					return Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte)val})).toString();
+				}
+			case '\n':
+				if (chars.hasNext() && chars.peek() == '\r')
+					chars.skip(1);
+				return "";
+			case '\r':
+				if (chars.hasNext() && chars.peek() == '\n')
+					chars.skip(1);
+				return "";
+			case 'u': {
+				//Unicode escape
+				return this.readUnicodeEscapeSequence();
+			}
+			case 'x':
+				//EASCII hexdecimal character escape
+				if (!chars.hasNext(2))
+					throw new JSEOFException("Invalid Extended ASCII escape sequence (EOF)", getPosition() - 2);
+				try {
+					String s = chars.copyNext(2);
+					return Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte) Integer.parseInt(s, 16)})).toString();
+				} catch (NumberFormatException e) {
+					throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", getPosition() - 4, e);
+				}
+			default:
+				throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition() - 2);
+		}
+	}
+	
 	/**
 	 * Read an escape sequence in the form of either {@code uXXXX} or <code>u{X...XXX}</code>.
 	 * 
@@ -59,6 +125,7 @@ public class JSLexer implements Supplier<Token> {
 	 * 
 	 * @return character read
 	 * @see <a href="https://tc39.github.io/ecma262/#prod-UnicodeEscapeSequence">ECMAScript 262 &sect; 11.8.4</a>
+	 * @see <a href="https://mathiasbynens.be/notes/javascript-escapes">JavaScript character escape sequences · Mathias Bynens</a>
 	 */
 	protected String readUnicodeEscapeSequence() {
 		int value = 0;
@@ -88,9 +155,57 @@ public class JSLexer implements Supplier<Token> {
 		return new String(new int[]{value}, 0, 1);
 	}
 	
-	public TemplateTokenInfo nextTemplateLiteral() {
-		//TODO finish
-		return null;
+	protected TemplateTokenInfo nextTemplateLiteral() {
+		boolean head = chars.hasNext() && chars.peek() == '`';
+		chars.skip(1);//Skip start '`'/'}';
+		if (!head)
+			this.templateStack.pop();//Pop template marker from stack
+		
+		boolean tail = false;
+		boolean escaped = false;
+		StringBuilder cooked = new StringBuilder();
+		
+		loop:
+		while (true) {
+			if (!chars.hasNext())
+				throw new JSEOFException("Unexpected EOF while parsing a template literal", getPosition());
+			char c = chars.next();
+			if (escaped) {
+				escaped = false;
+				cooked.append(this.readEscapeSequence(c));
+				continue;
+			}
+			switch (c) {
+				case '`':
+					tail = true;
+					break loop;
+				case '$': {
+					if (chars.hasNext() && chars.peek() == '{') {
+						chars.next();
+						this.templateStack.push(true);
+						break loop;
+					}
+					cooked.append('$');
+					break;
+				}
+				case '\\':
+					escaped = true;
+					continue;
+				case '\r':
+					// '\r\n' is treated as a single character
+					if (chars.hasNext() && chars.peek() == '\n')
+						chars.skip(1);
+					//breakthrough intentional
+				case '\n':
+					cooked.append('\n');
+					break;
+				default:
+					cooked.append(c);
+					break;
+			}
+		}
+		
+		return new TemplateTokenInfo(head, tail, cooked.toString());
 	}
 	
 	public String nextStringLiteral(final char startChar) {
@@ -102,85 +217,13 @@ public class JSLexer implements Supplier<Token> {
 			char c = chars.next();
 			if (isEscaped) {
 				isEscaped = false;
-				switch (c) {
-					case '\'':
-					case '"':
-					case '\\':
-					case '`':
-						sb.append(c);
-						break;
-					case 'n':
-						sb.append('\n');
-						break;
-					case 'r':
-						sb.append('\r');
-						break;
-					case 'v':
-						sb.append(Characters.VT);// vertical tab
-						break;
-					case 't':
-						sb.append('\t');
-						break;
-					case 'b':
-						sb.append('\b');
-						break;
-					case 'f':
-						sb.append('\f');
-						break;
-					case '0':
-					case '1':
-					case '2':
-					case '3':
-					case '4':
-					case '5':
-					case '6':
-					case '7':
-						//EASCII octal escape
-						{
-							int val = c - '0';
-							if (chars.peek() >= '0' && chars.peek() <= '7') {
-								val = (val << 3) | (chars.next() - '0');
-								if (val < 32 && chars.peek() >= '0' && chars.peek() <= '7')
-									val = (val << 3) | (chars.next() - '0');
-							}
-							sb.append(Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte)val})).toString());
-						}
-						break;
-					case '\n':
-						if (chars.hasNext() && chars.peek() == '\r')
-							chars.skip(1);
-						break;
-					case '\r':
-						if (chars.hasNext() && chars.peek() == '\n')
-							chars.skip(1);
-						break;
-					case 'u': {
-						//Unicode escape
-						//See mathiasbynens.be/notes/javascript-escapes
-						sb.append(this.readUnicodeEscapeSequence());
-						break;
-					}
-					case 'x':
-						//EASCII hexdecimal character escape
-						if (!chars.hasNext(2))
-							throw new JSEOFException("Invalid Extended ASCII escape sequence (EOF)", getPosition() - 2);
-						try {
-							String s = chars.copyNext(2);
-							sb.append(Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte) Integer.parseInt(s, 16)})).toString());
-						} catch (NumberFormatException e) {
-							throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", getPosition() - 4, e);
-						}
-						break;
-					default:
-						throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition() - 2);
-				}
+				sb.append(readEscapeSequence(c));
 				continue;
-			}
-			if (c == '\\') {
+			} else if (c == '\\') {
 				isEscaped = true;
 				continue;
-			}
-			if (c == '\r' || c == '\n') {
+			} else if (c == '\r' || c == '\n') {
+				//TODO remove (template literals are handled elsewhere)
 				if (startChar == '`') {
 					//Newlines are allowed as part of a template literal
 					if (chars.hasNext() && ((c == '\r' && chars.peek() == '\n') || chars.peek() == '\r'))
@@ -189,8 +232,7 @@ public class JSLexer implements Supplier<Token> {
 					continue;
 				}
 				throw new JSSyntaxException("Illegal newline in the middle of a string literal", getPosition());
-			}
-			if (c == startChar)
+			} else if (c == startChar)
 				break;
 			sb.append(c);
 		}
@@ -734,13 +776,14 @@ public class JSLexer implements Supplier<Token> {
 		char c = chars.peek();
 		Object value = null;
 		TokenKind kind = null;
+		//TODO clean up (possibly with switch statement)
 		//Drop through a various selection of possible results
 		//Check if it's a string literal
 		if (c == '"' || c == '\'') {
 			value = nextStringLiteral();
 			kind = TokenKind.STRING_LITERAL;
-		} else if (c == '`') {
-			value = nextStringLiteral();
+		} else if (c == '`' || (c == '}' && this.templateStack.getSize() != 0 && this.templateStack.peek())) {
+			value = nextTemplateLiteral();
 			kind = TokenKind.TEMPLATE_LITERAL;
 		//Check if it's a numeric literal (the first letter of all numbers must be /[\.0-9]/)
 		} else if (Characters.isDecimalDigit(c) || (c == '.' && chars.hasNext(2) && Characters.isDecimalDigit(chars.peek(2)))) {
@@ -748,6 +791,10 @@ public class JSLexer implements Supplier<Token> {
 			kind = TokenKind.NUMERIC_LITERAL;
 		//Check if it's a bracket
 		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
+			if (c == '{')
+				templateStack.push(false);
+			else if (c == '}' && templateStack.getSize() > 0)
+				templateStack.pop();
 			value = c;
 			kind = TokenKind.BRACKET;
 			chars.next();
@@ -889,12 +936,12 @@ public class JSLexer implements Supplier<Token> {
 				return false;
 			
 			RegExpTokenInfo o = (RegExpTokenInfo) other;
-			return this.body.equals(o.body) && this.flags.equals(o.flags);
+			return Objects.equals(this.body, o.body) && Objects.equals(this.flags, o.flags);
 		}
 		
 		@Override
 		public String toString() {
-			return new StringBuffer()
+			return new StringBuilder()
 					.append(this.getClass().getSimpleName())
 					.append("{body=\"").append(this.body)
 					.append("\",flags=\"").append(this.flags)
@@ -903,8 +950,39 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public static class TemplateTokenInfo {
-		boolean isTail() {
-			return false;
+		public final boolean head;
+		public final boolean tail;
+		public final String cooked;
+		TemplateTokenInfo(boolean head, boolean tail, String cooked) {
+			this.head = head;
+			this.tail = tail;
+			this.cooked = cooked;
+		}
+		
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.head, this.tail, this.cooked);
+		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (this == other)
+				return true;
+			if (other == null || !(other instanceof TemplateTokenInfo))
+				return false;
+			
+			TemplateTokenInfo o = (TemplateTokenInfo) other;
+			return this.head == o.head && this.tail == o.tail && Objects.equals(this.cooked, o.cooked);
+		}
+		
+		@Override
+		public String toString() {
+			return new StringBuilder()
+					.append(this.getClass().getSimpleName())
+					.append("{head=").append(this.head)
+					.append(",tail=").append(this.tail)
+					.append(",cooked=\"").append(this.cooked)
+					.append("\"}").toString();
 		}
 	}
 }

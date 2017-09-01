@@ -66,6 +66,7 @@ import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
 import com.mindlin.jsast.tree.SwitchTree;
+import com.mindlin.jsast.tree.TemplateElementTree;
 import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
@@ -1589,9 +1590,24 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitTemplateLiteral(TemplateLiteralTree node, WriterHelper d) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+	public Void visitTemplateLiteral(TemplateLiteralTree node, WriterHelper out) {
+		out.append('`');
+		List<TemplateElementTree> quasis = node.getQuasis();
+		List<ExpressionTree> expressions = node.getExpressions();
+		
+		out.append(quasis.get(0).getCooked());
+		for (int i = 1; i < quasis.size(); i++) {
+			ExpressionTree expr = expressions.get(i-1);
+			TemplateElementTree quasi = quasis.get(i);
+			
+			out.append("${");
+			expr.accept(this, out);
+			out.append("}");
+			
+			out.append(quasi.getCooked());
+		}
+		out.append('`');
+		return null;
 	}
 
 	@Override
