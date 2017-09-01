@@ -25,6 +25,7 @@ import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
@@ -70,30 +71,29 @@ import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 import com.mindlin.jsast.writer.JSWriter;
 import com.mindlin.jsast.writer.JSWriterOptions;
 
@@ -167,10 +167,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		this.writeTypeMaybe(fn.getReturnType(), out);
 		
-		if (!method.isAbstract())
+		if (!method.isAbstract()) {
+			out.optionalSpace();
 			fn.getBody().accept(this, out);
-		else
+		} else {
 			out.finishStatement(true);
+		}
 	}
 	
 	protected class WriterHelper implements Closeable {
@@ -699,9 +701,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			out.append(options.space);
 			node.getIdentifier().accept(this, out);
 		}
-		if (node.getSuperType().isPresent()) {
+		if (node.getSuperType() != null) {
 			out.appendIsolated("extends");
-			node.getSuperType().get().accept(this, out);
+			node.getSuperType().accept(this, out);
 		}
 		if (!node.getImplementing().isEmpty()) {
 			out.appendIsolated("implements");
@@ -715,7 +717,34 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			if (property.getKind() == Tree.Kind.METHOD_DEFINITION)
 				this.writeMethodDefinition((MethodDefinitionTree) property, out);
 			else {
-				//TODO finish
+				//Sanity check
+				if (property.getDeclarationType() != PropertyDeclarationType.FIELD)
+					throw new IllegalArgumentException("Huh?" + property.getDeclarationType());//TODO better message
+				
+				if (property.getAccess() == AccessModifier.PROTECTED)
+					out.append("protected").append(options.space);
+				else if (property.getAccess() == AccessModifier.PRIVATE)
+					out.append("private").append(options.space);
+				
+				if (property.isStatic())
+					out.append("static").append(options.space);
+				
+				if (property.isReadonly())
+					out.append("readonly").append(options.space);
+				
+				//Write property name
+				property.getKey().accept(this, out);
+				
+				//Write type
+				this.writeTypeMaybe(property.getType(), out);
+				
+				//Write initializer
+				if (property.getValue() != null) {
+					out.optionalSpace().append('=').optionalSpace();
+					property.getValue().accept(this, out);
+				}
+				
+				out.finishStatement(true);
 			}
 		}
 		out.popIndent();
@@ -1181,7 +1210,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitIntersectionType(IntersectionTypeTree node, WriterHelper out) {
+	public Void visitIntersectionType(BinaryTypeTree node, WriterHelper out) {
 		node.getLeftType().accept(this, out);
 		out.optionalSpace();
 		out.append('&');
@@ -1493,7 +1522,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitUnionType(UnionTypeTree node, WriterHelper out) {
+	public Void visitUnionType(BinaryTypeTree node, WriterHelper out) {
 		node.getLeftType().accept(this, out);
 		out.optionalSpace();
 		out.append('|');

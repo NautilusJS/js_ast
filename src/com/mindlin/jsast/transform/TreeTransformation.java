@@ -60,19 +60,18 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	
@@ -267,7 +266,7 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 
 	@Override
-	default TypeTree visitIntersectionType(IntersectionTypeTree node, D d){
+	default TypeTree visitIntersectionType(BinaryTypeTree node, D d){
 		return node;
 	}
 
@@ -387,7 +386,7 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 
 	@Override
-	default TypeTree visitUnionType(UnionTypeTree node, D d){
+	default TypeTree visitUnionType(BinaryTypeTree node, D d){
 		return node;
 	}
 

@@ -79,6 +79,23 @@ public abstract class AbstractTree implements Tree {
 	}
 	
 	@Override
+	public boolean equals(Object other) {
+		if (other == this)
+			return true;
+		
+		if (other == null || !(other instanceof Tree))
+			return false;
+		
+		if (!this.equivalentTo((Tree) other))
+			return false;
+		
+		if (this.getStart() != ((Tree)other).getStart() || this.getEnd() != ((Tree)other).getEnd())
+			return false;
+		
+		return true;
+	}
+	
+	@Override
 	public int hashCode() {
 		int h = this.hash;
 		if (h == 0)

@@ -56,30 +56,29 @@ import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeContext> {
 	
@@ -382,7 +381,7 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 	}
 
 	@Override
-	public TypeTree visitIntersectionType(IntersectionTypeTree node, TypeContext d) {
+	public TypeTree visitIntersectionType(BinaryTypeTree node, TypeContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -532,7 +531,7 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 	}
 
 	@Override
-	public TypeTree visitUnionType(UnionTypeTree node, TypeContext d) {
+	public TypeTree visitUnionType(BinaryTypeTree node, TypeContext d) {
 		return TypeInheritanceValidator.reduce(null, node);
 	}
 

@@ -3,18 +3,17 @@ package com.mindlin.jsast.tree;
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
 import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.IntersectionTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ParameterTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
-import com.mindlin.jsast.tree.type.UnionTypeTree;
 
 public interface TreeVisitor<R, D> {
 	R visitAnyType(AnyTypeTree node, D d);
@@ -55,7 +54,7 @@ public interface TreeVisitor<R, D> {
 	R visitIndexType(IndexTypeTree node, D d);
 	R visitInterfaceDeclaration(InterfaceDeclarationTree node, D d);
 	R visitInterfaceType(InterfaceTypeTree node, D d);
-	R visitIntersectionType(IntersectionTypeTree node, D d);
+	R visitIntersectionType(BinaryTypeTree node, D d);
 	R visitLabeledStatement(LabeledStatementTree node, D d);
 	R visitMemberType(MemberTypeTree node, D d);
 	R visitNew(NewTree node, D d);
@@ -79,7 +78,7 @@ public interface TreeVisitor<R, D> {
 	R visitTupleType(TupleTypeTree node, D d);
 	R visitTypeAlias(TypeAliasTree node, D d);
 	R visitUnary(UnaryTree node, D d);
-	R visitUnionType(UnionTypeTree node, D d);
+	R visitUnionType(BinaryTypeTree node, D d);
 	R visitVariableDeclaration(VariableDeclarationTree node, D d);
 	R visitWhileLoop(WhileLoopTree node, D d);
 	R visitWith(WithTree node, D d);

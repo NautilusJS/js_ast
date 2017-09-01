@@ -24,7 +24,7 @@ import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.BinaryTypeTree;
+import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
@@ -998,10 +998,12 @@ public class JSParser {
 		//Read class body
 		expect(next, TokenKind.BRACKET, '{', src, context);
 		
+		next = null;
+		
 		ArrayList<ClassPropertyTree<?>> properties = new ArrayList<>();
-		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
+		while (!src.peek().matches(TokenKind.BRACKET, '}')) {
 			//Start position of our next index
-			final long propertyStartPos = next.getStart();
+			final long propertyStartPos = src.peek().getStart();
 			
 			//Aspects of property
 			PropertyDeclarationType methodType = null;
@@ -1014,31 +1016,36 @@ public class JSParser {
 			//We can have up to 3 modifiers (ex. 'public static readonly')
 			for (int i = 0; i < 3; i++) {
 				//Check for 'readonly' modifier
-				if (next.matches(TokenKind.IDENTIFIER, "readonly")) {
+				Token lookahead = src.peek();
+				if (lookahead.matches(TokenKind.IDENTIFIER, "readonly")) {
+					src.skip(lookahead);
 					if (readonly)//Readonly already set
-						throw new JSUnexpectedTokenException(next);
+						throw new JSUnexpectedTokenException(lookahead);
 					readonly = true;
-				} else if (next.matches(TokenKind.IDENTIFIER, "abstract")) {
+				} else if (lookahead.matches(TokenKind.IDENTIFIER, "abstract")) {
+					src.skip(lookahead);
 					//Check for 'abstract' keyword
 					if (!isClassAbstract)
-						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", next.getStart(), next.getEnd());
+						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", lookahead.getStart(), lookahead.getEnd());
 					if (isPropertyAbstract)
-						throw new JSUnexpectedTokenException(next);
+						throw new JSUnexpectedTokenException(lookahead);
 					
-					modifierToken = next;
+					modifierToken = lookahead;
 					isPropertyAbstract = true;
-				} else if (next.isKeyword()) {
-					JSKeyword keyword = next.getValue();
+				} else if (lookahead.isKeyword()) {
+					JSKeyword keyword = lookahead.getValue();
 					
 					if (keyword == JSKeyword.STATIC) {
+						src.skip(lookahead);
 						if (isStatic)
-							throw new JSUnexpectedTokenException(next);
-						dialect.require("js.class.static", next.getStart());
+							throw new JSUnexpectedTokenException(lookahead);
+						dialect.require("js.class.static", lookahead.getStart());
 						isStatic = true;
-					} else if (keyword == JSKeyword.PUBLIC || next.getValue() == JSKeyword.PROTECTED || next.getValue() == JSKeyword.PRIVATE) {
+					} else if (keyword == JSKeyword.PUBLIC || keyword == JSKeyword.PROTECTED || keyword == JSKeyword.PRIVATE) {
+						src.skip(lookahead);
 						//Check that there weren't other access modifiers.
 						if (accessModifier != null)
-							throw new JSUnexpectedTokenException(next);
+							throw new JSUnexpectedTokenException(lookahead);
 						
 						if (keyword == JSKeyword.PUBLIC)
 							accessModifier = AccessModifier.PUBLIC;
@@ -1054,60 +1061,58 @@ public class JSParser {
 					//next isn't a modifier
 					break;
 				}
-				next = src.nextToken();
 			}
 			
 			//Default accessModifier to PUBLIC if not set
 			if (accessModifier == null)
 				accessModifier = AccessModifier.PUBLIC;
 			
+
+			//Parse property key and optionally more modifiers
+			//TODO make sure that this works with the other modifiers (ex., is 'get readonly foo();' allowed?)
+			//I'm not sure if this is *correct* js/ts, but let's go with it.
+			ObjectPropertyKeyTree key = null;
+			
 			//Now check if it's a generator/getter/setter
-			if (next.matches(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) != null) {
 				//Generator function
 				dialect.require("js.method.generator", next.getStart());
 				methodType = PropertyDeclarationType.GENERATOR;
 				
 				modifierToken = next;
-				next = src.nextToken();
-			} else if (next.matches(TokenKind.IDENTIFIER, "async") && dialect.supports("js.function.async")) {
-				methodType = PropertyDeclarationType.ASYNC_METHOD;
-				modifierToken = next;
-				next = src.nextToken();
-				//TODO test lookahead identifier predicate (below)
-				//TODO support async
-			} else if ((next.matches(TokenKind.IDENTIFIER, "get") || next.matches(TokenKind.IDENTIFIER, "set")) && this.isQualifiedPropertyName(src.peek(), context)) {
-				//Getter/setter method
-				dialect.require("js.accessor", next.getStart());
-				methodType = next.getValue().equals("set") ? PropertyDeclarationType.SETTER : PropertyDeclarationType.GETTER;
-				
-				modifierToken = next;
-				next = src.nextToken();
+			} else if (src.peek().isIdentifier()) {
+				//Handle getter/setter/async methods
+				Token id = src.nextToken();
+				String name = id.getValue();
+				if ((name.equals("async") || name.equals("get") || name.equals("set")) && this.isQualifiedPropertyName(src.peek(), context)) {
+					key = this.parseObjectPropertyKey(src, context);
+					switch (name) {
+						case "async":
+							dialect.require("js.method.async", id.getStart());
+							methodType = PropertyDeclarationType.ASYNC_METHOD;
+							break;
+						case "get":
+							dialect.require("js.accessor", id.getStart());
+							methodType = PropertyDeclarationType.GETTER;
+							break;
+						case "set":
+							dialect.require("js.accessor", id.getStart());
+							methodType = PropertyDeclarationType.SETTER;
+					}
+				} else {
+					key = new IdentifierTreeImpl(id);
+				}
 			}
 			
-			//Parse property key
-			//I'm not sure if this is *correct* js/ts, but let's go with it.
-			ObjectPropertyKeyTree key;
-			boolean computed = false;
-			if ((key = this.parseIdentifier(next, null, context, true)) != null) {
-				//The key is an identifier
-			} else if (next.getKind() == TokenKind.STRING_LITERAL || next.getKind() == TokenKind.NUMERIC_LITERAL) {
-				//We have a string or number as an identifier. Should this work? No. But does this work...
-				key = (ObjectPropertyKeyTree) this.parseLiteral(next, null, context);
-			} else if (next.matches(TokenKind.BRACKET, '[')) {
-				//ES6 computed ID. Also should probably be illegal
-				computed = true;
-				ExpressionTree expr = parseNextExpression(src, context);
-				Token closeBracket = expect(TokenKind.BRACKET, ']', src, context);
-				key = new ComputedPropertyKeyTreeImpl(next.getStart(), closeBracket.getEnd(), expr);
-			} else {
-				throw new JSUnexpectedTokenException(next);
-			}
+			if (key == null)
+				key = this.parseObjectPropertyKey(src, context);
 			
+			//Now let's start on reading the property
 			ClassPropertyTree<?> property;
 			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Some type of method
 				
-				if (!computed && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
+				if (!key.isComputed() && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
 					//Promote to constructor
 					if (methodType != null || isPropertyAbstract) {
 						String modifierName = isPropertyAbstract ? "abstract" : methodType.name();
@@ -1126,6 +1131,7 @@ public class JSParser {
 				//TODO also check for fields named 'new'?
 				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 			} else {
+				methodType = PropertyDeclarationType.FIELD;
 				//Field with (optional) type
 				TypeTree fieldType = this.parseTypeMaybe(src, context, false);
 				//Optional value expression
@@ -1139,6 +1145,7 @@ public class JSParser {
 			
 			properties.add(property);
 			
+			//TODO better expect EOS
 			src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
 		}
 		expect(next, TokenKind.BRACKET, '}', src, context);
@@ -1381,7 +1388,7 @@ public class JSParser {
 		boolean union = next.getValue() == JSOperator.BITWISE_OR;
 		TypeTree left = type;
 		TypeTree right = parseType(src, context);
-		return new BinaryTypeTree(left.getStart(), right.getEnd(), false, left, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, right);
+		return new BinaryTypeTreeImpl(left.getStart(), right.getEnd(), false, left, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, right);
 	}
 	
 	
