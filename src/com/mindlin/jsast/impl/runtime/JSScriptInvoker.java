@@ -140,10 +140,12 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 
 	@Override
 	public Object visitAssignment(AssignmentTree node, RuntimeScope d) {
-		Object value = node.getRightOperand().accept(this, d);
+		Object value = JSRuntimeUtils.dereference(node.getRightOperand().accept(this, d));
 		Object target = node.getLeftOperand().accept(this, d);
-		if (!(target instanceof Reference))
+		
+		if (target == null || !(target instanceof Reference))
 			throw new JSException("Invalid left hand side of assignment");
+		
 		//TODO fix for update-assignments (ex. +=)
 		((Reference)target).set(value);
 		return value;
@@ -162,13 +164,46 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 		Kind kind = node.getKind();
 		switch (kind) {
 			case MEMBER_SELECT:
-				return JSRuntimeUtils.getMember(lhs, ((IdentifierTree)rhs).getName());
+				return new Reference() {
+					final String name = ((IdentifierTree)rhs).getName();
+					@Override
+					public void set(Object value) {
+						JSRuntimeUtils.setMember(lhs, name, value);
+					}
+					@Override
+					public Object get() {
+						return JSRuntimeUtils.getMember(lhs, name);
+					}
+				};
 			case ARRAY_ACCESS: {
-				Object key = rhs.accept(this, d);
-				String keyType = JSRuntimeUtils.typeof(key);
-				if ("symbol".equals(keyType))
-					return JSRuntimeUtils.getMember(lhs, (Symbol) key);
-				return JSRuntimeUtils.getMember(lhs, JSRuntimeUtils.toString(key));
+				final Object key = JSRuntimeUtils.dereference(rhs.accept(this, d));
+				switch(JSRuntimeUtils.typeof(key)) {
+					case "symbol":
+						return new Reference() {
+							final Symbol k = (Symbol) key;
+							@Override
+							public void set(Object value) {
+								JSRuntimeUtils.setMember(lhs, k, value);
+							}
+							@Override
+							public Object get() {
+								return JSRuntimeUtils.getMember(lhs, k);
+							}
+						};
+					//TODO support number?
+					default:
+						return new Reference() {
+							final String k = JSRuntimeUtils.toString(key);
+							@Override
+							public void set(Object value) {
+								JSRuntimeUtils.setMember(lhs, k, value);
+							}
+							@Override
+							public Object get() {
+								return JSRuntimeUtils.getMember(lhs, k);
+							}
+						};
+				}
 			}
 			case LOGICAL_AND:
 			case LOGICAL_OR:
@@ -391,7 +426,16 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 
 	@Override
 	public Object visitIdentifier(IdentifierTree node, RuntimeScope d) {
-		return d.bindings.get(node.getName());
+		return new Reference() {
+			@Override
+			public void set(Object value) {
+				d.bindings.put(node.getName(), value);
+			}
+			@Override
+			public Object get() {
+				return d.bindings.get(node.getName());
+			}
+		};
 	}
 
 	@Override

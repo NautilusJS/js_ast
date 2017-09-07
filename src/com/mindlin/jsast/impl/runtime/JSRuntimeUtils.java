@@ -23,7 +23,14 @@ public class JSRuntimeUtils {
 	
 	protected static Map<Class<?>, Method> ifaceMethods = new ConcurrentHashMap<>();
 	
+	public static Object dereference(Object value) {
+		if (value != null && value instanceof Reference)
+			return ((Reference)value).get();
+		return value;
+	}
+	
 	public static String typeof(Object value) {
+		value = dereference(value);
 		if (value == null)
 			return "object";//Yes, this is correct
 		else if (value == UNDEFINED)
@@ -41,6 +48,7 @@ public class JSRuntimeUtils {
 	}
 
 	public static boolean toBoolean(Object value) {
+		value = dereference(value);
 		if (value == null || value == UNDEFINED)
 			return false;
 		if (value instanceof Boolean)
@@ -57,6 +65,7 @@ public class JSRuntimeUtils {
 	}
 	
 	public static Number toNumber(Object value) {
+		value = dereference(value);
 		if (value == null)
 			return 0;
 		else if (value == UNDEFINED)
@@ -70,6 +79,7 @@ public class JSRuntimeUtils {
 	}
 	
 	public static String toString(Object value) {
+		value = dereference(value);
 		return "" + value;
 	}
 	/**
@@ -139,6 +149,7 @@ public class JSRuntimeUtils {
 	}
 
 	public static Object getSlot(Object target, int slot) {
+		target = dereference(target);
 		if (target instanceof JSObject)
 			return ((JSObject) target).getSlot(slot);
 		if (target.getClass().isArray())
@@ -158,6 +169,7 @@ public class JSRuntimeUtils {
 	}
 	
 	public static Object getMember(Object target, Symbol member) {
+		target = dereference(target);
 		if (target instanceof JSObject)
 			return ((JSObject) target).getMember(member);
 		if (target instanceof Map)
@@ -169,6 +181,8 @@ public class JSRuntimeUtils {
 	@SuppressWarnings("unchecked")
 	public static void setMember(Object target, String member, Object value) {
 		if (target instanceof JSObject)
+		target = dereference(target);
+		value = dereference(value);
 			((JSObject) target).setMember(member, value);
 		else if (target instanceof Map)
 			((Map<String, Object>) target).put(member, value);
@@ -177,6 +191,8 @@ public class JSRuntimeUtils {
 
 	@SuppressWarnings("unchecked")
 	public static void setMember(Object target, Symbol member, Object value) {
+		target = dereference(target);
+		value = dereference(value);
 		if (target instanceof JSObject)
 			((JSObject) target).setMember(member, value);
 		else if (target instanceof Map)

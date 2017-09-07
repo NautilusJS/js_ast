@@ -22,7 +22,11 @@ public class JSScriptEngine implements ScriptEngine, Compilable {
 		RuntimeScope scope = new RuntimeScope();
 		scope.bindings = this.engineBindings;
 		scope.context = context;
-		return ast.accept(new JSScriptInvoker(), scope);
+		
+		
+		Object result = ast.accept(new JSScriptInvoker(), scope);
+		
+		return JSRuntimeUtils.dereference(result);
 	}
 
 	@Override
