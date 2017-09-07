@@ -81,27 +81,27 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default ExpressionTree visitArrayLiteral(ArrayLiteralTree node, D d){
+	default ExpressionTree visitArrayLiteral(ArrayLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default PatternTree visitArrayPattern(ArrayPatternTree node, D d){
+	default PatternTree visitArrayPattern(ArrayPatternTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitArrayType(ArrayTypeTree node, D d){
+	default TypeTree visitArrayType(ArrayTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitAssignment(AssignmentTree node, D d){
+	default ExpressionTree visitAssignment(AssignmentTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitAssignmentPattern(AssignmentPatternTree node, D d){
+	default ExpressionTree visitAssignmentPattern(AssignmentPatternTree node, D d) {
 		return node;
 	}
 	
@@ -109,299 +109,299 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	default ExpressionTree visitAwait(AwaitTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitBinary(BinaryTree node, D d){
+	default ExpressionTree visitBinary(BinaryTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitBlock(BlockTree node, D d){
+	default StatementTree visitBlock(BlockTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitBooleanLiteral(BooleanLiteralTree node, D d){
+	default ExpressionTree visitBooleanLiteral(BooleanLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitBreak(BreakTree node, D d){
+	default StatementTree visitBreak(BreakTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitCast(CastTree node, D d){
+	default ExpressionTree visitCast(CastTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default Tree visitClassDeclaration(ClassDeclarationTree node, D d){
+	default Tree visitClassDeclaration(ClassDeclarationTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default CommentNode visitComment(CommentNode node, D d){
+	default CommentNode visitComment(CommentNode node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default CompilationUnitTree visitCompilationUnit(CompilationUnitTree node, D d){
+	default CompilationUnitTree visitCompilationUnit(CompilationUnitTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ObjectPropertyKeyTree visitComputedPropertyKey(ComputedPropertyKeyTree node, D d){
+	default ObjectPropertyKeyTree visitComputedPropertyKey(ComputedPropertyKeyTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, D d){
+	default ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitContinue(ContinueTree node, D d){
+	default StatementTree visitContinue(ContinueTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitDebugger(DebuggerTree node, D d){
+	default StatementTree visitDebugger(DebuggerTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitDoWhileLoop(DoWhileLoopTree node, D d){
+	default StatementTree visitDoWhileLoop(DoWhileLoopTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitEmptyStatement(EmptyStatementTree node, D d){
+	default StatementTree visitEmptyStatement(EmptyStatementTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitEnumDeclaration(EnumDeclarationTree node, D d){
+	default StatementTree visitEnumDeclaration(EnumDeclarationTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitExport(ExportTree node, D d){
+	default StatementTree visitExport(ExportTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitExpressionStatement(ExpressionStatementTree node, D d){
+	default StatementTree visitExpressionStatement(ExpressionStatementTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitForEachLoop(ForEachLoopTree node, D d){
+	default StatementTree visitForEachLoop(ForEachLoopTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitForLoop(ForLoopTree node, D d){
+	default StatementTree visitForLoop(ForLoopTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitFunctionCall(FunctionCallTree node, D d){
+	default ExpressionTree visitFunctionCall(FunctionCallTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitFunctionExpression(FunctionExpressionTree node, D d){
+	default ExpressionTree visitFunctionExpression(FunctionExpressionTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitFunctionType(FunctionTypeTree node, D d){
+	default TypeTree visitFunctionType(FunctionTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitGenericRefType(GenericRefTypeTree node, D d){
+	default TypeTree visitGenericRefType(GenericRefTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitGenericType(GenericTypeTree node, D d){
+	default TypeTree visitGenericType(GenericTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default Tree visitIdentifier(IdentifierTree node, D d){
+	default Tree visitIdentifier(IdentifierTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitIdentifierType(IdentifierTypeTree node, D d){
+	default TypeTree visitIdentifierType(IdentifierTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitIf(IfTree node, D d){
+	default StatementTree visitIf(IfTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitImport(ImportTree node, D d){
+	default StatementTree visitImport(ImportTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitIndexType(IndexTypeTree node, D d){
+	default TypeTree visitIndexType(IndexTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitInterfaceDeclaration(InterfaceDeclarationTree node, D d){
+	default StatementTree visitInterfaceDeclaration(InterfaceDeclarationTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitInterfaceType(InterfaceTypeTree node, D d){
+	default TypeTree visitInterfaceType(InterfaceTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitIntersectionType(BinaryTypeTree node, D d){
+	default TypeTree visitIntersectionType(BinaryTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitLabeledStatement(LabeledStatementTree node, D d){
+	default StatementTree visitLabeledStatement(LabeledStatementTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitMemberType(MemberTypeTree node, D d){
+	default TypeTree visitMemberType(MemberTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitNew(NewTree node, D d){
+	default ExpressionTree visitNew(NewTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitNull(NullLiteralTree node, D d){
+	default ExpressionTree visitNull(NullLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitNumericLiteral(NumericLiteralTree node, D d){
+	default ExpressionTree visitNumericLiteral(NumericLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitObjectLiteral(ObjectLiteralTree node, D d){
+	default ExpressionTree visitObjectLiteral(ObjectLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default PatternTree visitObjectPattern(ObjectPatternTree node, D d){
+	default PatternTree visitObjectPattern(ObjectPatternTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default Tree visitParameterType(ParameterTypeTree node, D d){
+	default Tree visitParameterType(ParameterTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitParentheses(ParenthesizedTree node, D d){
+	default ExpressionTree visitParentheses(ParenthesizedTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitRegExpLiteral(RegExpLiteralTree node, D d){
+	default ExpressionTree visitRegExpLiteral(RegExpLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitReturn(ReturnTree node, D d){
+	default StatementTree visitReturn(ReturnTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitSequence(SequenceTree node, D d){
+	default ExpressionTree visitSequence(SequenceTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitSpecialType(SpecialTypeTree node, D d){
+	default TypeTree visitSpecialType(SpecialTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitStringLiteral(StringLiteralTree node, D d){
+	default ExpressionTree visitStringLiteral(StringLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitSuper(SuperExpressionTree node, D d){
+	default ExpressionTree visitSuper(SuperExpressionTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitSwitch(SwitchTree node, D d){
+	default StatementTree visitSwitch(SwitchTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitTemplateLiteral(TemplateLiteralTree node, D d){
+	default ExpressionTree visitTemplateLiteral(TemplateLiteralTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitThis(ThisExpressionTree node, D d){
+	default ExpressionTree visitThis(ThisExpressionTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitThrow(ThrowTree node, D d){
+	default StatementTree visitThrow(ThrowTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitTry(TryTree node, D d){
+	default StatementTree visitTry(TryTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitTupleType(TupleTypeTree node, D d){
+	default TypeTree visitTupleType(TupleTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitTypeAlias(TypeAliasTree node, D d){
+	default StatementTree visitTypeAlias(TypeAliasTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default ExpressionTree visitUnary(UnaryTree node, D d){
+	default ExpressionTree visitUnary(UnaryTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default TypeTree visitUnionType(BinaryTypeTree node, D d){
+	default TypeTree visitUnionType(BinaryTypeTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitVariableDeclaration(VariableDeclarationTree node, D d){
+	default StatementTree visitVariableDeclaration(VariableDeclarationTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitWhileLoop(WhileLoopTree node, D d){
+	default StatementTree visitWhileLoop(WhileLoopTree node, D d) {
 		return node;
 	}
-
+	
 	@Override
-	default StatementTree visitWith(WithTree node, D d){
+	default StatementTree visitWith(WithTree node, D d) {
 		return node;
 	}
 }
