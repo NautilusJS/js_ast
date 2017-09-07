@@ -14,12 +14,15 @@ import com.mindlin.jsast.tree.CompilationUnitTree;
 
 public class JSScriptEngine implements ScriptEngine, Compilable {
 	NestedBindings engineBindings = new NestedBindings(JSScriptEngineFactory.getInstance().globalBindings, ScriptContext.ENGINE_SCOPE);
-	JSParser parser;
+	JSParser parser = new JSParser();
 
 	@Override
 	public Object eval(String script, ScriptContext context) throws ScriptException {
-		CompilationUnitTree ast = parser.apply(null, script);
-		return null;
+		CompilationUnitTree ast = parser.apply("asf", script);
+		RuntimeScope scope = new RuntimeScope();
+		scope.bindings = this.engineBindings;
+		scope.context = context;
+		return ast.accept(new JSScriptInvoker(), scope);
 	}
 
 	@Override
@@ -30,9 +33,7 @@ public class JSScriptEngine implements ScriptEngine, Compilable {
 
 	@Override
 	public Object eval(String script) throws ScriptException {
-		CompilationUnitTree ast = parser.apply(null, script);
-		// TODO Auto-generated method stub
-		return null;
+		return this.eval(script, (ScriptContext) null);
 	}
 
 	@Override
@@ -55,14 +56,12 @@ public class JSScriptEngine implements ScriptEngine, Compilable {
 
 	@Override
 	public void put(String key, Object value) {
-		// TODO Auto-generated method stub
-
+		this.engineBindings.put(key, value);
 	}
 
 	@Override
 	public Object get(String key) {
-		// TODO Auto-generated method stub
-		return null;
+		return this.engineBindings.get(key);
 	}
 
 	@Override
