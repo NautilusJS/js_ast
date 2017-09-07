@@ -160,10 +160,11 @@ public class JSRuntimeUtils {
 	}
 	
 	public static Object getMember(Object target, String member) {
+		target = dereference(target);
 		if (target instanceof JSObject)
 			return ((JSObject) target).getMember(member);
 		if (target instanceof Map)
-			return ((Map<?, ?>) target).get(member);
+			return ((Map<String, Object>) target).getOrDefault(member, UNDEFINED);
 		//TODO finish
 		return null;
 	}
@@ -173,7 +174,7 @@ public class JSRuntimeUtils {
 		if (target instanceof JSObject)
 			return ((JSObject) target).getMember(member);
 		if (target instanceof Map)
-			return ((Map<?, ?>) target).get(member);
+			return ((Map<Symbol, Object>) target).getOrDefault(member, UNDEFINED);
 		//TODO finish
 		return null;
 	}
