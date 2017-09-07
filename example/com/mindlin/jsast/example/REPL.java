@@ -8,6 +8,7 @@ import com.mindlin.jsast.impl.parser.JSParser;
 import com.mindlin.jsast.impl.runtime.JSScriptEngine;
 import com.mindlin.jsast.impl.writer.JSWriterImpl;
 import com.mindlin.jsast.transform.DeadCodeRemovalTransformation;
+import com.mindlin.jsast.transform.ExpressionFixerTf;
 import com.mindlin.jsast.transform.ExpressionFlattenerTransformation;
 import com.mindlin.jsast.transform.TransformerSeries;
 import com.mindlin.jsast.tree.CompilationUnitTree;
@@ -19,7 +20,9 @@ public class REPL {
 		JSWriterOptions options = new JSWriterOptions();
 		options.indentStyle = "\t";
 		JSWriterImpl writer = new JSWriterImpl(options);
+		TransformerSeries preTransformer = new TransformerSeries();
 		TransformerSeries transformer = new TransformerSeries(new ExpressionFlattenerTransformation(), new DeadCodeRemovalTransformation());
+		TransformerSeries postTransformer = new TransformerSeries(new ExpressionFixerTf());
 		@SuppressWarnings("resource")
 		Scanner s = new Scanner(System.in);
 		JSScriptEngine engine = new JSScriptEngine();
@@ -43,13 +46,16 @@ public class REPL {
 			writer.write(ast, out);
 			System.out.println(out.toString());
 			
+			ast = preTransformer.apply(ast);
 			ast = transformer.apply(ast);
+			ast = postTransformer.apply(ast);
 			out = new StringWriter();
 			writer.write(ast, out);
 			System.out.println(out.toString());
 			System.out.println(ast);
 			
 			try {
+				System.out.print("Evaluating...");
 				System.out.println(engine.eval(sb.toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
