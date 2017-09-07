@@ -541,8 +541,15 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 
 	@Override
 	public Object visitTemplateLiteral(TemplateLiteralTree node, RuntimeScope d) {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(node.getQuasis().get(0).getCooked());
+		for (int i = 1; i < node.getQuasis().size(); i++) {
+			sb.append(JSRuntimeUtils.toString(node.getExpressions().get(i-1).accept(this, d)));
+			sb.append(node.getQuasis().get(i).getCooked());
+		}
+		
+		return sb.toString();
 	}
 
 	@Override
