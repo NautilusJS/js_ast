@@ -46,6 +46,15 @@ public class JSRuntimeUtils {
 		//TODO support functions
 		return "object";
 	}
+	
+	public static Object add(Object a, Object b) {
+		a = dereference(a);
+		b = dereference(b);
+		String typeA = typeof(a), typeB = typeof(b);
+		if ("string".equals(typeA) || "string".equals(typeB) || "object".equals(typeB))
+			return toString(a) + toString(b);
+		return toNumber(a).doubleValue() + toNumber(b).doubleValue();
+	}
 
 	public static boolean toBoolean(Object value) {
 		value = dereference(value);
