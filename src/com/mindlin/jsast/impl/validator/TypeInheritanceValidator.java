@@ -2,8 +2,8 @@ package com.mindlin.jsast.impl.validator;
 
 import java.util.List;
 
-import com.mindlin.jsast.impl.analysis.TypeContext;
 import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
+import com.mindlin.jsast.transform.TypeContext;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
