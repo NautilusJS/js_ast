@@ -1,5 +1,8 @@
 package com.mindlin.jsast.tree;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
@@ -256,6 +259,19 @@ public interface Tree {
 		
 		return a.equivalentTo(b);
 	}
+	
+	public static <T extends Tree> boolean equivalentTo(List<? extends T> a, List<? extends T> b) {
+		if (a == b)
+			return true;
+		if (a == null || b == null || a.size() != b.size())
+			return false;
+		
+		for (Iterator<? extends T> i = a.iterator(), j = b.iterator(); i.hasNext();)
+			if (!Tree.equivalentTo(i.next(), j.next()))
+				return false;
+		return true;
+	}
+	
 	/**
 	 * Get the kind of this tree. Useful for switch statements.
 	 * @return the kind of this tree.
@@ -303,7 +319,7 @@ public interface Tree {
 	 * <li>Like {@link #equals(Object)}, {@code a.equivalentTo(null)} should return {@code false}.</li>
 	 * </p>
 	 * @param other
-	 * @return
+	 * @return equivalency
 	 */
 	default boolean equivalentTo(Tree other) {
 		return this == other;

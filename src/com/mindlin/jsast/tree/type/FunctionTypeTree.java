@@ -15,6 +15,22 @@ public interface FunctionTypeTree extends TypeTree {
 	List<GenericTypeTree> getGenerics();
 
 	TypeTree getReturnType();
+	
+	@Override
+	default boolean equivalentTo(Tree other) {
+		if (this == other)
+			return true;
+		
+		if (other == null || this.getKind() != other.getKind() || !(other instanceof FunctionTypeTree) || this.hashCode() != other.hashCode())
+			return false;
+		
+		
+		FunctionTypeTree o = (FunctionTypeTree) other;
+		
+		return Tree.equivalentTo(this.getParameters(), o.getParameters())
+				&& Tree.equivalentTo(this.getGenerics(), o.getGenerics())
+				&& Tree.equivalentTo(this.getReturnType(), o.getReturnType());
+	}
 
 	@Override
 	default Tree.Kind getKind() {

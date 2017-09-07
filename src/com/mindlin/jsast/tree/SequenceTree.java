@@ -9,6 +9,11 @@ public interface SequenceTree extends ExpressionTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.SEQUENCE;
 	}
+	
+	@Override
+	default boolean equivalentTo(Tree other) {
+		return this == other;
+	}
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
