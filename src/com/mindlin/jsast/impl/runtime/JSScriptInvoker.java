@@ -146,9 +146,45 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 		if (target == null || !(target instanceof Reference))
 			throw new JSException("Invalid left hand side of assignment");
 		
-		//TODO fix for update-assignments (ex. +=)
-		((Reference)target).set(value);
-		return value;
+		Object result = value;
+		if (node.getKind() == Kind.ASSIGNMENT) {
+			result = value;
+		} else if (node.getKind() == Kind.ADDITION_ASSIGNMENT) {
+			result = JSRuntimeUtils.add(target, value);
+		} else {
+			Number l = JSRuntimeUtils.toNumber(target), r = JSRuntimeUtils.toNumber(value);
+			switch (node.getKind()) {
+				case SUBTRACTION_ASSIGNMENT:
+					result = l.doubleValue() - r.doubleValue();
+					break;
+				case MULTIPLICATION_ASSIGNMENT:
+					result = l.doubleValue() * r.doubleValue();
+					break;
+				case DIVISION_ASSIGNMENT:
+					result = l.doubleValue() / r.doubleValue();
+					break;
+				case REMAINDER_ASSIGNMENT:
+					result = l.doubleValue() % r.doubleValue();
+					break;
+				case EXPONENTIATION_ASSIGNMENT:
+					result = Math.pow(l.doubleValue(), r.doubleValue());
+					break;
+				case LEFT_SHIFT_ASSIGNMENT:
+					result = l.intValue() << r.intValue();
+					break;
+				case RIGHT_SHIFT_ASSIGNMENT:
+					result = l.intValue() >> r.intValue();
+					break;
+				case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+					result = l.intValue() >>> r.intValue();
+					break;
+				default:
+					throw new IllegalArgumentException();
+			}
+		}
+		
+		((Reference) target).set(result);
+		return result;
 	}
 
 	@Override
@@ -210,24 +246,22 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 				if (kind == Kind.LOGICAL_AND ^ JSRuntimeUtils.toBoolean(lhs))
 					return lhs;
 				return rhs.accept(this, d);
-			case ADDITION: {
-				Object rResult = rhs.accept(this, d);
-				String lType = JSRuntimeUtils.typeof(lhs);
-				String rType = JSRuntimeUtils.typeof(rhs);
-				if ("string".equals(lType) || "string".equals(rType))
-					return JSRuntimeUtils.toString(lhs) + JSRuntimeUtils.toString(rResult);
-				return JSRuntimeUtils.toNumber(lhs).doubleValue() + JSRuntimeUtils.toNumber(rResult).doubleValue();
-			}
+			case ADDITION:
+				return JSRuntimeUtils.add(lhs,  rhs.accept(this, d));
+		}
+		
+		double l = JSRuntimeUtils.toNumber(lhs).doubleValue(), r = JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue();
+		switch (node.getKind()) {
 			case SUBTRACTION:
-				return JSRuntimeUtils.toNumber(lhs).doubleValue() - JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue();
+				return l - r;
 			case MULTIPLICATION:
-				return JSRuntimeUtils.toNumber(lhs).doubleValue() * JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue();
+				return l * r;
 			case DIVISION:
-				return JSRuntimeUtils.toNumber(lhs).doubleValue() / JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue();
+				return l / r;
 			case REMAINDER:
-				return JSRuntimeUtils.toNumber(lhs).doubleValue() - JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue();
+				return l % r;
 			case EXPONENTIATION:
-				return Math.pow(JSRuntimeUtils.toNumber(lhs).doubleValue(), JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue());
+				return Math.pow(l, r);
 		}
 		throw new UnsupportedOperationException();
 	}
