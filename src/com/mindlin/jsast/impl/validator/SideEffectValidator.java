@@ -13,6 +13,7 @@ import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
+import com.mindlin.jsast.tree.TemplateLiteralTree;
 
 public class SideEffectValidator {
 	public static Optional<Boolean> coerceToBoolean(ASTTransformerContext ctx, ExpressionTree tree) {
@@ -96,6 +97,11 @@ public class SideEffectValidator {
 			case NUMERIC_LITERAL:
 			case STRING_LITERAL:
 			case REGEXP_LITERAL:
+				return false;
+			case TEMPLATE_LITERAL:
+				for (ExpressionTree expr : ((TemplateLiteralTree)tree).getExpressions())
+					if (hasSideEffectsMaybe(ctx, expr))
+						return true;
 				return false;
 			case OBJECT_LITERAL:
 				//TODO better checking
