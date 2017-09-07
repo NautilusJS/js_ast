@@ -489,7 +489,41 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitAssignment(AssignmentTree node, WriterHelper out) {
 		node.getLeftOperand().accept(this, out);
-		out.optionalSpace().append('=').optionalSpace();
+		out.optionalSpace();
+		switch (node.getKind()) {
+			case ASSIGNMENT:
+				break;
+			case ADDITION_ASSIGNMENT:
+				out.append('+');
+				break;
+			case SUBTRACTION_ASSIGNMENT:
+				out.append('-');
+				break;
+			case MULTIPLICATION_ASSIGNMENT:
+				out.append('*');
+				break;
+			case DIVISION_ASSIGNMENT:
+				out.append('/');
+				break;
+			case REMAINDER_ASSIGNMENT:
+				out.append('%');
+				break;
+			case EXPONENTIATION_ASSIGNMENT:
+				out.append("**");
+				break;
+			case LEFT_SHIFT_ASSIGNMENT:
+				out.append("<<");
+				break;
+			case RIGHT_SHIFT_ASSIGNMENT:
+				out.append(">>");
+				break;
+			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
+				out.append(">>>");
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+		out.append('=').optionalSpace();
 		node.getRightOperand().accept(this, out);
 		return null;
 	}
