@@ -20,6 +20,7 @@ public class TransformerSeries implements Function<CompilationUnitTree, Compilat
 	@Override
 	public CompilationUnitTree apply(CompilationUnitTree ast) {
 		CompilationUnitTree ast0 = ast;
+		//TODO cache intermediate forms, to (hopefully) get us out of unstable results.
 		int n = 0;
 		while (true) {
 			CompilationUnitTree ast1 = ast0;
