@@ -66,23 +66,23 @@ public abstract class AbstractJSObject implements JSObject {
 	}
 
 	@Override
-	public void removeMember(String key) {
+	public boolean removeMember(String key) {
 		if (isFrozen())
-			return;
+			return false;
 		PropertyDescriptor descriptor = members.get(key);
 		if (!descriptor.isConfigurable())
-			return;
-		members.remove(key, descriptor);
+			return false;
+		return members.remove(key, descriptor);
 	}
 
 	@Override
-	public void removeMember(Symbol key) {
+	public boolean removeMember(Symbol key) {
 		if (isFrozen())
-			return;
+			return false;
 		PropertyDescriptor descriptor = members.get(key);
 		if (!descriptor.isConfigurable())
-			return;
-		members.remove(key, descriptor);
+			return false;
+		return members.remove(key, descriptor);
 	}
 
 	@Override
