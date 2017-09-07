@@ -20,6 +20,7 @@ import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
 import com.mindlin.jsast.tree.BlockTree;
+import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
@@ -34,6 +35,7 @@ import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 
@@ -43,6 +45,16 @@ import com.mindlin.jsast.tree.VariableDeclaratorTree;
  */
 public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> {
 
+	@Override
+	public ExpressionTree visitCast(CastTree node, ASTTransformerContext d) {
+		return node.getExpression();
+	}
+
+	@Override
+	public StatementTree visitTypeAlias(TypeAliasTree node, ASTTransformerContext d) {
+		return null;
+	}
+	
 	@Override
 	public Tree visitClassDeclaration(ClassDeclarationTree node, ASTTransformerContext d) {
 		boolean modified = false;
