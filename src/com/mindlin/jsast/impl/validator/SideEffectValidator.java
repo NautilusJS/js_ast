@@ -17,7 +17,6 @@ import com.mindlin.jsast.tree.TemplateLiteralTree;
 
 public class SideEffectValidator {
 	public static Optional<Boolean> coerceToBoolean(ASTTransformerContext ctx, ExpressionTree tree) {
-		System.out.println("Coercing: " + tree);
 		switch (tree.getKind()) {
 			case BOOLEAN_LITERAL:
 				return Optional.of(((BooleanLiteralTree)tree).getValue());
@@ -97,6 +96,7 @@ public class SideEffectValidator {
 			case NUMERIC_LITERAL:
 			case STRING_LITERAL:
 			case REGEXP_LITERAL:
+			case IDENTIFIER:
 				return false;
 			case TEMPLATE_LITERAL:
 				for (ExpressionTree expr : ((TemplateLiteralTree)tree).getExpressions())
