@@ -14,6 +14,7 @@ import javax.script.ScriptContext;
 public class NestedBindings implements Bindings {
 	protected final NestedBindings parent;
 	private final Map<String, Object> local;
+	private final Set<String> constants = new HashSet<>();
 	protected final int scope;
 
 	public NestedBindings(int scope) {
@@ -120,8 +121,11 @@ public class NestedBindings implements Bindings {
 
 	@Override
 	public Object put(String key, Object value) {
-		if (localContainsKey(key) || parent == null || (this.getScope() <= ScriptContext.GLOBAL_SCOPE && !parent.containsKey(key)))
+		if (localContainsKey(key) || parent == null || (this.getScope() <= ScriptContext.GLOBAL_SCOPE && !parent.containsKey(key))) {
+			if (constants.contains(key))
+				throw new IllegalArgumentException("Cannot set a constant");
 			return local.put(key, value);
+		}
 		return parent.put(key, value);
 	}
 	
@@ -133,7 +137,15 @@ public class NestedBindings implements Bindings {
 	}
 
 	public Object putLocal(String name, Object value) {
+		if (constants.contains(name))
+			throw new IllegalArgumentException("Cannot set a constant");
 		return local.put(name, value);
+	}
+	
+	public Object putConst(String name, Object value) {
+		Object r = putLocal(name, value);
+		constants.add(name);
+		return r;
 	}
 
 	@Override
@@ -164,8 +176,11 @@ public class NestedBindings implements Bindings {
 
 	@Override
 	public Object remove(Object key) {
-		if (localContainsKey(key) || parent == null)
+		if (localContainsKey(key) || parent == null) {
+			if (constants.contains(key))
+				throw new IllegalArgumentException("Cannot remove a constant");
 			return local.remove(key);
+		}
 		return parent.remove(key);
 	}
 

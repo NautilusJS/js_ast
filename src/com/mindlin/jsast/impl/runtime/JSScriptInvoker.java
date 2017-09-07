@@ -613,7 +613,11 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 			PatternTree identifier = declarator.getIdentifier();
 			if (identifier.getKind() == Kind.IDENTIFIER) {
 				String name = ((IdentifierTree)identifier).getName();
-				if (local)
+				if (local && d.bindings.containsKey(name))
+					throw new IllegalArgumentException("Cannot redefine '" + name + "'");
+				if (node.isConst())
+					d.bindings.putConst(name, value);
+				else if (local)
 					d.bindings.putLocal(name, value);
 				else
 					d.bindings.put(name, value);
