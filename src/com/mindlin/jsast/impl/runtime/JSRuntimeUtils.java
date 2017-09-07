@@ -178,15 +178,46 @@ public class JSRuntimeUtils {
 		//TODO finish
 		return null;
 	}
-
+	
+	public static void setSlot(Object target, int slot, Object value) {
+		target = dereference(target);
+		if (target instanceof List) {
+			if (slot >= ((List<?>)target).size())
+				((List<Object>) target).add(slot, value);
+			else
+				((List<Object>) target).set(slot, value);
+			return;
+		} else {
+			//Probably bad
+			((Object[]) target)[slot] = value;
+		}
+		throw new JSTypeError("Cannot set slot " + slot + " on " + target);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static void setMember(Object target, String member, Object value) {
-		if (target instanceof JSObject)
 		target = dereference(target);
 		value = dereference(value);
+		if (target == null)
+			throw new NullPointerException();
+		if (target instanceof JSObject) {
 			((JSObject) target).setMember(member, value);
-		else if (target instanceof Map)
+			return;
+		}
+		if (target instanceof Map) {
 			((Map<String, Object>) target).put(member, value);
+			return;
+		}
+		if (target instanceof List || target.getClass().isArray()) {
+			try {
+				int slot = Integer.parseInt(member);
+				System.out.println(slot);
+				setSlot(target, slot, value);
+				return;
+			} catch (NumberFormatException e) {
+				//We couldn't convert it to an int
+			}
+		}
 		throw new JSTypeError("Cannot set member " + member + " on " + target);
 	}
 
@@ -198,6 +229,7 @@ public class JSRuntimeUtils {
 			((JSObject) target).setMember(member, value);
 		else if (target instanceof Map)
 			((Map<Symbol, Object>) target).put(member, value);
-		throw new JSTypeError("Cannot set member " + member + " on " + target);
+		else
+			throw new JSTypeError("Cannot set member " + member + " on " + target);
 	}
 }
