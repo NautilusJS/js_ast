@@ -39,8 +39,6 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 		return node.getExpression();
 	}
 
-
-
 	@Override
 	public ExpressionTree visitBinary(BinaryTree node, ASTTransformerContext ctx) {
 		Tree.Kind kind = node.getKind();
@@ -162,6 +160,7 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 			ExpressionTree expr = node.getExpression();
 			switch (expr.getKind()) {
 				case UNARY_MINUS://Already coerced to number
+				case UNARY_PLUS:
 				case NUMERIC_LITERAL:
 					return expr;
 				case BOOLEAN_LITERAL:
