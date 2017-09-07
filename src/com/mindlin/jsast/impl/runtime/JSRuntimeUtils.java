@@ -106,6 +106,7 @@ public class JSRuntimeUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object invoke(Object target, Object thiz, Object... args) throws JSTypeError {
+		target = dereference(target);
 		if (target instanceof JSObject)
 			return ((JSObject) target).call(thiz, args);
 		else if (target instanceof Function)
