@@ -14,13 +14,13 @@ public interface CompilationUnitTree extends Tree {
 	
 	/**
 	 * Get the source file that this code came from
-	 * @return
+	 * @return source file
 	 */
 	SourceFile getSourceFile();
 	
 	/**
 	 * Whether this compilation unit is strict
-	 * @return
+	 * @return if strict
 	 */
 	boolean isStrict();
 	
@@ -36,7 +36,7 @@ public interface CompilationUnitTree extends Tree {
 	
 	@Override
 	default boolean equivalentTo(Tree other) {
-		if (this == other || this.equals(other))
+		if (this == other)
 			return true;
 		
 		if (other.getKind() != Tree.Kind.COMPILATION_UNIT)

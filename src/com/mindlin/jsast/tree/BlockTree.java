@@ -19,7 +19,7 @@ public interface BlockTree extends StatementTree {
 
 	@Override
 	default boolean equivalentTo(Tree other) {
-		if (this == other || this.equals(other))
+		if (this == other)
 			return true;
 
 		List<? extends StatementTree> statements = this.getStatements();
