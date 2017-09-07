@@ -1,8 +1,10 @@
 package com.mindlin.jsast.transform;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
+import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
 import com.mindlin.jsast.impl.validator.SideEffectValidator;
@@ -22,12 +24,25 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 	public ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, ASTTransformerContext ctx) {
 		ExpressionTree condition = node.getCondition();
 		
-		Optional<Boolean> coerced = SideEffectValidator.coerceToBoolean(ctx, condition);
-		if (coerced.isPresent() && !SideEffectValidator.hasSideEffectsMaybe(ctx, condition)) {
-			if (coerced.get())
-				return node.getTrueExpression();
-			else
-				return node.getFalseExpression();
+		//Convert (c ? x : x) to (c, x)
+		//We can trust the reducer for sequences to check better for side effects
+		if (node.getTrueExpression().equivalentTo(node.getFalseExpression()))
+			return new SequenceTreeImpl(node.getStart(), node.getEnd(), Arrays.asList(condition, node.getTrueExpression()));
+		
+		if (!SideEffectValidator.hasSideEffectsMaybe(ctx, condition)) {
+			Optional<Boolean> coerced = SideEffectValidator.coerceToBoolean(ctx, condition);
+			if (coerced.isPresent()) {
+				if (coerced.get())
+					return node.getTrueExpression();
+				else
+					return node.getFalseExpression();
+			}
+			
+			//Squish to '&&'/'||' expression
+			if (condition.equivalentTo(node.getTrueExpression()))
+				return new BinaryTreeImpl(node.getStart(), node.getEnd(), Kind.LOGICAL_OR, condition, node.getFalseExpression());
+			if (condition.equivalentTo(node.getFalseExpression()))
+				return new BinaryTreeImpl(node.getStart(), node.getEnd(), Kind.LOGICAL_AND, condition, node.getTrueExpression());
 		}
 		
 		return node;
