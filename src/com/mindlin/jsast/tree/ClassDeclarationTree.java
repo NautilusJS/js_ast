@@ -44,6 +44,25 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	}
 	
 	@Override
+	default boolean equivalentTo(Tree other) {
+		if (this == other)
+			return true;
+		
+		if (other == null || this.getKind() == other.getKind() && !(other instanceof ClassDeclarationTree) || this.hashCode() != other.hashCode())
+			return false;
+		
+		
+		ClassDeclarationTree o = (ClassDeclarationTree) other;
+		
+		return this.isAbstract() == o.isAbstract()
+			&& Tree.equivalentTo(this.getIdentifier(), o.getIdentifier())
+			&& Tree.equivalentTo(this.getGenerics(), o.getGenerics())
+			&& Tree.equivalentTo(this.getSuperType(), o.getSuperType())
+			&& Tree.equivalentTo(this.getImplementing(), o.getImplementing())
+			&& Tree.equivalentTo(this.getProperties(), o.getProperties());//TODO fix for order
+	}
+	
+	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
 		return visitor.visitClassDeclaration(this, data);
 	}

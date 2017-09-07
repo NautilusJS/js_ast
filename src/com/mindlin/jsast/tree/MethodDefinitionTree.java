@@ -8,6 +8,13 @@ public interface MethodDefinitionTree extends ClassPropertyTree<FunctionExpressi
 	default Tree.Kind getKind() {
 		return Tree.Kind.METHOD_DEFINITION;
 	}
+	
+	@Override
+	default boolean equivalentTo(Tree other) {
+		return ClassPropertyTree.super.equivalentTo(other)
+				&& (other instanceof MethodDefinitionTree)
+				&& (this.isAbstract() == ((MethodDefinitionTree)other).isAbstract());
+	}
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
