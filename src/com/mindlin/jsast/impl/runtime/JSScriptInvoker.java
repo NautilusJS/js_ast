@@ -114,10 +114,6 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 		}
 	}
 	
-	protected static String stringify(Object value) {
-		return "" + value;
-	}
-	
 	@Override
 	public Object visitAnyType(AnyTypeTree node, RuntimeScope d) {
 		return null;
@@ -127,7 +123,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	public Object visitArrayLiteral(ArrayLiteralTree node, RuntimeScope d) {
 		return node.getElements()
 			.stream()
-			.map(element -> element.accept(this, d))
+			.map(element -> element == null ? JSRuntimeUtils.UNDEFINED : element.accept(this, d))
 			.collect(Collectors.toList());
 	}
 

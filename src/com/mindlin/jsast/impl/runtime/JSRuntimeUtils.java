@@ -14,7 +14,13 @@ import com.mindlin.jsast.impl.runtime.objects.JSObject;
 import com.mindlin.jsast.impl.runtime.objects.Symbol;
 
 public class JSRuntimeUtils {
-	public static final Object UNDEFINED = new Object();
+	public static final Object UNDEFINED = new Object() {
+		@Override
+		public String toString() {
+			return "undefined";
+		}
+	};
+	
 	protected static Map<Class<?>, Method> ifaceMethods = new ConcurrentHashMap<>();
 	
 	public static String typeof(Object value) {
