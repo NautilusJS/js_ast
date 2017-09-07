@@ -80,6 +80,8 @@ public class JSRuntimeUtils {
 	
 	public static String toString(Object value) {
 		value = dereference(value);
+		if (value != null && value instanceof Symbol)
+			throw new IllegalArgumentException("Can't convert symbol into string");
 		return "" + value;
 	}
 	/**
