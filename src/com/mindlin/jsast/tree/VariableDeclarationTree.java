@@ -2,28 +2,54 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+/**
+ * Node representing a variable declaration statement.
+ * <p>
+ * Note that multiple variables may be declared in this statement; that's the
+ * reason for the separation between this and {@link VariableDeclaratorTree}:
+ * all declarators under this declaration share the same var/let/const keyword.
+ * </p>
+ * 
+ * @see VariableDeclaratorTree
+ * @author mailmindlin
+ */
 public interface VariableDeclarationTree extends StatementTree, PatternTree {
 	List<VariableDeclaratorTree> getDeclarations();
-
+	
 	/**
-	 * Whether this was initialized with a <code>let</code> keyword.
+	 * If variables declared under this tree are declared in the block scope.
+	 * In other terms, whether this was initialized with a <code>let</code>
+	 * or <code>const</code> keyword.
+	 * <p>
+	 * If this is true, the variables declared under this tree are limited to
+	 * the scope of the block, statement, or expression on which it is used.
+	 * </p>
 	 * 
-	 * @return
+	 * @return if scoped
+	 * 
+	 * @see <a href=
+	 *      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let">MDN
+	 *      Article on let Keyword</a>
 	 */
 	boolean isScoped();
-
+	
 	/**
-	 * Whether this was initialized with a <code>const</code> keyword
+	 * If variables declared under this tree are constants. More specifically,
+	 * whether this was initialized with a <code>const</code> keyword.
+	 * <p>
+	 * If this method returns <code>true</code>, all declarations MUST have an
+	 * initializer.
+	 * </p>
 	 * 
-	 * @return
+	 * @return if const
 	 */
 	boolean isConst();
-
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.VARIABLE_DECLARATION;
 	}
-
+	
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
 		return visitor.visitVariableDeclaration(this, data);

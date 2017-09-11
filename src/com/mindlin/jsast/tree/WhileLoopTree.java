@@ -1,5 +1,10 @@
 package com.mindlin.jsast.tree;
 
+/**
+ * While loop node.
+ * @see DoWhileLoopTree for do...while loops
+ * @author mailmindlin
+ */
 public interface WhileLoopTree extends ConditionalLoopTree {
 	@Override
 	default Tree.Kind getKind() {

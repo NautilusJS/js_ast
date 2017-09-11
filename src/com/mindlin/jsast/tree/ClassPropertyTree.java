@@ -1,5 +1,11 @@
 package com.mindlin.jsast.tree;
 
+/**
+ * Repre
+ * @author mailmindlin
+ *
+ * @param <T>
+ */
 public interface ClassPropertyTree<T extends ExpressionTree> extends TypedPropertyTree {
 	/**
 	 * Get the value of the property
