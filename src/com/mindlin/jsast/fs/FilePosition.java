@@ -1,19 +1,24 @@
 package com.mindlin.jsast.fs;
 
 public class FilePosition {
-	protected final int line;
-	protected final int col;
+	protected final long line;
+	protected final long col;
 	
-	public FilePosition(int line, int col) {
+	public FilePosition(long line, long col) {
 		this.line = line;
 		this.col = col;
 	}
 	
-	public int getLine() {
+	public long getLine() {
 		return line;
 	}
 	
-	public int getCol() {
+	public long getCol() {
 		return col;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%d:%d", line, col);
 	}
 }

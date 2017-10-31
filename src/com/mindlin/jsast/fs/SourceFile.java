@@ -3,6 +3,7 @@ package com.mindlin.jsast.fs;
 import java.nio.file.Path;
 import java.util.Arrays;
 
+import com.mindlin.jsast.impl.tree.LineMap;
 import com.mindlin.jsast.impl.util.CharacterStream;
 
 /**
@@ -25,6 +26,12 @@ public interface SourceFile {
 	 * @return source file name
 	 */
 	String getName();
+	
+	/**
+	 * Get LineMap for file
+	 * @return
+	 */
+	default LineMap getLineMap() {return null;}
 	
 	long[] lineOffsets();
 	
