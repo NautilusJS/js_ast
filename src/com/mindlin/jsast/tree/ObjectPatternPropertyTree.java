@@ -7,4 +7,9 @@ public interface ObjectPatternPropertyTree extends ObjectPropertyTree, PatternTr
 	default Tree.Kind getKind() {
 		return Tree.Kind.OBJECT_PATTERN;
 	}
+	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -15,7 +15,7 @@ public interface CaseTree extends StatementTree {
 	}
 	
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
 		throw new UnsupportedOperationException();
 	}
 }

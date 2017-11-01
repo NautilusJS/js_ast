@@ -8,9 +8,9 @@ import com.mindlin.jsast.tree.TreeVisitor;
 
 public interface IdentifierTypeTree extends TypeTree {
 	IdentifierTree getIdentifier();
-
+	
 	List<TypeTree> getGenerics();
-
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.IDENTIFIER_TYPE;

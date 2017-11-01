@@ -14,7 +14,7 @@ public interface TemplateLiteralTree extends LiteralTree<String>, ObjectProperty
 	}
 
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitTemplateLiteral(this, data);
 	}
 }

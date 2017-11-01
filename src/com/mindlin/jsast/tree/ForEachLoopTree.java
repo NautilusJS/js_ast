@@ -6,7 +6,7 @@ public interface ForEachLoopTree extends LoopTree {
 	ExpressionTree getExpression();
 
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitForEachLoop(this, data);
 	}
 }

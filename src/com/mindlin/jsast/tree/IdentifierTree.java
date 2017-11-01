@@ -36,7 +36,7 @@ public interface IdentifierTree extends ExpressionTree, ObjectPropertyKeyTree, P
 	}
 	
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitIdentifier(this, data);
 	}
 }

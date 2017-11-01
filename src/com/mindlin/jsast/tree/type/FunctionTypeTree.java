@@ -11,9 +11,9 @@ import com.mindlin.jsast.tree.Tree;
  */
 public interface FunctionTypeTree extends TypeTree {
 	List<ParameterTree> getParameters();
-
+	
 	List<GenericTypeTree> getGenerics();
-
+	
 	TypeTree getReturnType();
 	
 	@Override
@@ -31,7 +31,7 @@ public interface FunctionTypeTree extends TypeTree {
 				&& Tree.equivalentTo(this.getGenerics(), o.getGenerics())
 				&& Tree.equivalentTo(this.getReturnType(), o.getReturnType());
 	}
-
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.FUNCTION_TYPE;

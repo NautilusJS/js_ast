@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface AssignmentTree extends BinaryTree, StatementTree {
+public interface AssignmentTree extends BinaryTree {
 	default ExpressionTree getVariable() {
 		return getLeftOperand();
 	}
@@ -11,7 +11,7 @@ public interface AssignmentTree extends BinaryTree, StatementTree {
 	}
 
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitAssignment(this, data);
 	}
 }

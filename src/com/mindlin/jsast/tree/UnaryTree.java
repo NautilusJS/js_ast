@@ -3,7 +3,7 @@ package com.mindlin.jsast.tree;
 public interface UnaryTree extends ExpressiveExpressionTree {
 	
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitUnary(this, data);
 	}
 	
@@ -17,6 +17,16 @@ public interface UnaryTree extends ExpressiveExpressionTree {
 		@Override
 		default Tree.Kind getKind() {
 			return Tree.Kind.VOID;
+		}
+		
+		@Override
+		default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
+			return null;//TODO is this ok?
+		}
+		
+		@Override
+		default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+			return this.accept(visitor, data);
 		}
 	}
 	

@@ -13,7 +13,7 @@ public interface ComputedPropertyKeyTree extends ExpressiveExpressionTree, Objec
 	}
 	
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitComputedPropertyKey(this, data);
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
+		throw new UnsupportedOperationException();
 	}
 }

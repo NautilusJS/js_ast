@@ -17,6 +17,8 @@ public interface ExpressionTreeVisitor<R, D> {
 	R visitNull(NullLiteralTree node, D d);
 	R visitNumericLiteral(NumericLiteralTree node, D d);
 	R visitObjectLiteral(ObjectLiteralTree node, D d);
+	R visitParentheses(ParenthesizedTree node, D d);
+	R visitRegExpLiteral(RegExpLiteralTree node, D d);
 	R visitSequence(SequenceTree node, D d);
 	R visitStringLiteral(StringLiteralTree node, D d);
 	R visitSuper(SuperExpressionTree node, D d);

@@ -16,8 +16,6 @@ public interface StatementTreeVisitor<R, D> {
 	R visitImport(ImportTree node, D d);
 	R visitInterfaceDeclaration(InterfaceDeclarationTree node, D d);
 	R visitLabeledStatement(LabeledStatementTree node, D d);
-	R visitParentheses(ParenthesizedTree node, D d);
-	R visitRegExpLiteral(RegExpLiteralTree node, D d);
 	R visitReturn(ReturnTree node, D d);
 	R visitSwitch(SwitchTree node, D d);
 	R visitThrow(ThrowTree node, D d);

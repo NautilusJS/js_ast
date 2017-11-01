@@ -6,6 +6,8 @@ import com.mindlin.jsast.tree.TreeVisitor;
 public interface IndexTypeTree extends TypeTree {
 	TypeTree getIndexType();
 	
+	boolean isReadonly();
+	
 	TypeTree getReturnType();
 	
 	@Override

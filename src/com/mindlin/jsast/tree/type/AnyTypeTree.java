@@ -1,7 +1,6 @@
 package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TreeVisitor;
 
 public interface AnyTypeTree extends TypeTree {
 	
@@ -11,7 +10,7 @@ public interface AnyTypeTree extends TypeTree {
 	}
 	
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitAnyType(this, data);
 	}
 }

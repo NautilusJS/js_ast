@@ -6,4 +6,9 @@ package com.mindlin.jsast.tree;
  */
 public interface ExpressionTree extends Tree {
 	<R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data);
+
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return this.accept(visitor, data);
+	}
 }
