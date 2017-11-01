@@ -343,11 +343,6 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 		}
 
 		@Override
-		public ExpressionTree visitComputedPropertyKey(ComputedPropertyKeyTree node, Void d) {
-			return node;
-		}
-
-		@Override
 		public ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, Void d) {
 			return node.getCondition().accept(this, d);
 		}

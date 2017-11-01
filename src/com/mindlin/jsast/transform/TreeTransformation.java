@@ -151,11 +151,6 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default ObjectPropertyKeyTree visitComputedPropertyKey(ComputedPropertyKeyTree node, D d) {
-		return node;
-	}
-	
-	@Override
 	default ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, D d) {
 		return node;
 	}
