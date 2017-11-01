@@ -5,5 +5,5 @@ package com.mindlin.jsast.tree;
  * @author mailmindlin
  */
 public interface ExpressionTree extends Tree {
-
+	<R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data);
 }
