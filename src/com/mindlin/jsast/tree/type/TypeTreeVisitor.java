@@ -33,7 +33,6 @@ public interface TypeTreeVisitor<R, D> {
 	R visitIntersectionType(CompositeTypeTree node, D d);
 	
 	R visitMemberType(MemberTypeTree node, D d);
-	R visitParameterType(ParameterTypeTree node, D d);
 	
 	R visitSpecialType(SpecialTypeTree node, D d);
 	
