@@ -690,7 +690,11 @@ public class JSParser {
 			if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
 				supertype = this.parseType(src, context);
 			
-			generics.add(new GenericTypeTreeImpl(identifier.getStart(), src.getPosition(), false, identifier, supertype));
+			TypeTree defaultValue = null;
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
+				defaultValue = this.parseType(src, context);
+			
+			generics.add(new GenericTypeTreeImpl(identifier.getStart(), src.getPosition(), false, identifier, supertype, defaultValue));
 		} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 		
 		expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
@@ -1337,6 +1341,7 @@ public class JSParser {
 			return parseFunctionType(src, context);
 		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
 			//Inline interface (or object type '{}')
+			//TODO: change to object type
 			List<InterfacePropertyTree> properties = this.parseInterfaceBody(src, context);
 			return new InterfaceTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {

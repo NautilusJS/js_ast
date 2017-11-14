@@ -6,7 +6,7 @@ import java.util.Set;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.Tree;
 
-public interface InterfaceTypeTree extends TypeTree {
+public interface InterfaceDeclarationTree extends TypeTree {
 	/**
 	 * Generic parameters
 	 * @return generic parameters, else null if not generic type
@@ -29,7 +29,7 @@ public interface InterfaceTypeTree extends TypeTree {
 	
 	@Override
 	default Tree.Kind getKind() {
-		return Tree.Kind.INTERFACE_TYPE;
+		return Tree.Kind.INTERFACE_DECLARATION;
 	}
 
 	@Override

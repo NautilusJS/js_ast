@@ -22,12 +22,23 @@ public interface GenericParameterTree extends TypeTree {
 	 * Supertype of generic parameter. For example, if declared as
 	 * <code>T extends Foo</code>, this method would return Foo.
 	 * 
-	 * @return supertype
+	 * @return supertype, else null if not present
 	 */
 	TypeTree getSupertype();
+	
+	/**
+	 * Default value of parameter
+	 * @return default value, else null if not present
+	 */
+	TypeTree getDefault();
 	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.GENERIC_PARAM;
+	}
+	
+	@Override
+	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
+		throw new UnsupportedOperationException();
 	}
 }
