@@ -12,13 +12,12 @@ import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EmptyStatementTree;
-import com.mindlin.jsast.tree.EnumDeclarationTree;
+//import com.mindlin.jsast.tree.EmptyStatementTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -36,7 +35,6 @@ import com.mindlin.jsast.tree.NullLiteralTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternTree;
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
@@ -60,15 +58,15 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexTypeTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
+import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
-import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -221,7 +219,7 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default TypeTree visitGenericType(GenericTypeTree node, D d) {
+	default TypeTree visitGenericType(GenericParameterTree node, D d) {
 		return node;
 	}
 	
@@ -246,7 +244,7 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default TypeTree visitIndexType(IndexTypeTree node, D d) {
+	default TypeTree visitIndexType(IndexSignatureTree node, D d) {
 		return node;
 	}
 	
@@ -256,12 +254,12 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default TypeTree visitInterfaceType(InterfaceTypeTree node, D d) {
+	default TypeTree visitInterfaceType(ObjectTypeTree node, D d) {
 		return node;
 	}
 	
 	@Override
-	default TypeTree visitIntersectionType(BinaryTypeTree node, D d) {
+	default TypeTree visitIntersectionType(CompositeTypeTree node, D d) {
 		return node;
 	}
 	
@@ -297,11 +295,6 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	
 	@Override
 	default PatternTree visitObjectPattern(ObjectPatternTree node, D d) {
-		return node;
-	}
-	
-	@Override
-	default Tree visitParameterType(ParameterTypeTree node, D d) {
 		return node;
 	}
 	
@@ -381,7 +374,7 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default TypeTree visitUnionType(BinaryTypeTree node, D d) {
+	default TypeTree visitUnionType(CompositeTypeTree node, D d) {
 		return node;
 	}
 	

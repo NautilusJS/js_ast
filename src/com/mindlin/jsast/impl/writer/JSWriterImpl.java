@@ -34,7 +34,6 @@ import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EmptyStatementTree;
-import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -83,15 +82,16 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
+import com.mindlin.jsast.tree.type.EnumMemberTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexTypeTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
+import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
-import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -358,16 +358,16 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		} else if (property.getType().getKind() == Kind.INDEX_TYPE) {
 			//Is index type (format: `[name: KeyType]: ValueType`)
 			out.append('[');
-			property.getKey().accept(this, out);
+			this.writePropertyKey(property.getKey(), out);
 
-			IndexTypeTree type = (IndexTypeTree) property.getType();
+			IndexSignatureTree type = (IndexSignatureTree) property.getType();
 			out.append(':').optionalSpace();
 			type.getIndexType().accept(this, out);
 			
 			out.append("]:").optionalSpace();
 			type.getReturnType().accept(this, out);
 		} else {
-			property.getKey().accept(this, out);
+			this.writePropertyKey(property.getKey(), out);
 			if (property.isOptional())
 				out.append('?');
 			
@@ -768,7 +768,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 					out.append("readonly").append(options.space);
 				
 				//Write property name
-				property.getKey().accept(this, out);
+				this.writePropertyKey(property.getKey(), out);
 				
 				//Write type
 				this.writeTypeMaybe(property.getType(), out);
@@ -800,12 +800,14 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		return null;
 	}
 
-	@Override
-	public Void visitComputedPropertyKey(ComputedPropertyKeyTree node, WriterHelper out) {
-		out.append('[');
-		node.getExpression().accept(this, out);
-		out.append(']');
-		return null;
+	protected void writePropertyKey(ObjectPropertyKeyTree node, WriterHelper out) {
+		if (node.isComputed()) {
+			out.append('[');
+			((ComputedPropertyKeyTree) node).getExpression().accept(this, out);
+			out.append(']');
+		} else {
+			node.accept(this, out);
+		}
 	}
 
 	@Override
@@ -871,18 +873,30 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		out.finishStatement(true);
 		return null;
 	}
+	
+	protected void writeEnumMember(EnumMemberTree node, WriterHelper out) {
+		node.getName().accept(this, out);
+		
+		//Write initializer if present
+		ExpressionTree initializer = node.getInitializer();
+		if (initializer != null) {
+			out.optionalSpace();
+			out.append('=');
+			out.optionalSpace();
+			initializer.accept(this, out);
+		}
+	}
 
 	@Override
 	public Void visitEnumDeclaration(EnumDeclarationTree node, WriterHelper out) {
 		out.append("enum").append(options.space);
-		node.getIdentifier().accept(this, out);
+		node.getName().accept(this, out);
 		out.append('{');
 		out.pushIndent();
 		out.newline();
 		
-		writeList(node.getValues(), out);
+		writeList(node.getMembers(), out, this::writeEnumMember, wh->wh.append(',').newline());
 		
-		// TODO Auto-generated method stub
 		out.popIndent();
 		out.newline();
 		out.append('}');
@@ -1058,7 +1072,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitFunctionType(FunctionTypeTree node, WriterHelper out) {
 		List<ParameterTree> parameters = node.getParameters();
-		List<GenericTypeTree> generics = node.getGenerics();
+		List<GenericParameterTree> generics = node.getGenerics();
 		TypeTree returnType = node.getReturnType();
 		
 		if (generics == null || generics.isEmpty()) {
@@ -1083,7 +1097,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitGenericType(GenericTypeTree node, WriterHelper out) {
+	public Void visitGenericType(GenericParameterTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}
@@ -1091,6 +1105,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitIdentifier(IdentifierTree node, WriterHelper out) {
 		//TODO check if correct
+		//TODO fix unicode escapes
 		out.append(node.getName());
 		return null;
 	}
@@ -1205,7 +1220,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitIndexType(IndexTypeTree node, WriterHelper out) {
+	public Void visitIndexType(IndexSignatureTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}
@@ -1237,20 +1252,27 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitInterfaceType(InterfaceTypeTree node, WriterHelper out) {
+	public Void visitInterfaceType(ObjectTypeTree node, WriterHelper out) {
 		out.append('{');
-		writeInterfaceBody(node.getProperties(), out, true);
+		writeInterfaceBody(node.getDeclaredProperties(), out, true);
 		out.append('}');
 		return null;
 	}
 
 	@Override
-	public Void visitIntersectionType(BinaryTypeTree node, WriterHelper out) {
-		node.getLeftType().accept(this, out);
-		out.optionalSpace();
-		out.append('&');
-		out.optionalSpace();
-		node.getRightType().accept(this, out);
+	public Void visitIntersectionType(CompositeTypeTree node, WriterHelper out) {
+		boolean isFirst = true;
+		for (TypeTree constituent : node.getConstituents()) {
+			//TODO: parens around nested intersection types
+			if (!isFirst) {
+				out.optionalSpace();
+				out.append('&');
+				out.optionalSpace();
+			} else {
+				isFirst = false;
+			}
+			constituent.accept(this, out);
+		}
 		return null;
 	}
 
@@ -1307,7 +1329,8 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				this.writeMethodDefinition((MethodDefinitionTree) property, out);
 			} else {
 				ObjectPropertyKeyTree key = property.getKey();
-				key.accept(this, out);
+				this.writePropertyKey(property.getKey(), out);
+				
 				if (!key.equals(property.getValue())) {
 					out.append(':').optionalSpace();
 					property.getValue().accept(this, out);
@@ -1322,15 +1345,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	public Void visitObjectPattern(ObjectPatternTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Void visitParameterType(ParameterTypeTree node, WriterHelper out) {
-		node.getName().accept(this, out);
-		if (node.isOptional())
-			out.append('?');
-		writeTypeMaybe(node.getType(), out);
-		return null;
 	}
 
 	@Override
@@ -1557,12 +1571,19 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	}
 
 	@Override
-	public Void visitUnionType(BinaryTypeTree node, WriterHelper out) {
-		node.getLeftType().accept(this, out);
-		out.optionalSpace();
-		out.append('|');
-		out.optionalSpace();
-		node.getRightType().accept(this, out);
+	public Void visitUnionType(CompositeTypeTree node, WriterHelper out) {
+		boolean isFirst = true;
+		for (TypeTree constituent : node.getConstituents()) {
+			//TODO: parens around nested intersection types
+			if (!isFirst) {
+				out.optionalSpace();
+				out.append('|');
+				out.optionalSpace();
+			} else {
+				isFirst = false;
+			}
+			constituent.accept(this, out);
+		}
 		return null;
 	}
 

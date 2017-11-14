@@ -28,7 +28,7 @@ public interface TypeTreeVisitor<R, D> {
 	
 	R visitIndexType(IndexSignatureTree node, D d);
 	
-	R visitInterfaceType(InterfaceDeclarationTree node, D d);
+	R visitInterfaceType(ObjectTypeTree node, D d);
 	
 	R visitIntersectionType(CompositeTypeTree node, D d);
 	

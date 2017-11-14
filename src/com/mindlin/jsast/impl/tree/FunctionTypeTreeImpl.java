@@ -6,15 +6,15 @@ import java.util.Objects;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTypeTree {
 	protected final List<ParameterTree> parameters;
-	protected final List<GenericTypeTree> generics;
+	protected final List<GenericParameterTree> generics;
 	protected final TypeTree returnType;
 	
-	public FunctionTypeTreeImpl(long start, long end, boolean implicit, List<ParameterTree> parameters, List<GenericTypeTree> generics, TypeTree returnType) {
+	public FunctionTypeTreeImpl(long start, long end, boolean implicit, List<ParameterTree> parameters, List<GenericParameterTree> generics, TypeTree returnType) {
 		super(start, end, implicit);
 		this.parameters = parameters;
 		this.generics = generics;
@@ -32,7 +32,7 @@ public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTy
 	}
 	
 	@Override
-	public List<GenericTypeTree> getGenerics() {
+	public List<GenericParameterTree> getGenerics() {
 		return this.generics;
 	}
 	

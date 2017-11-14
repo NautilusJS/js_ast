@@ -8,11 +8,11 @@ import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.CastTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
+import com.mindlin.jsast.impl.tree.CompositeTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
@@ -47,13 +47,11 @@ import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EmptyStatementTree;
-import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -72,7 +70,6 @@ import com.mindlin.jsast.tree.NullLiteralTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternTree;
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -97,15 +94,15 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexTypeTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
+import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
-import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -288,12 +285,6 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public ObjectPropertyKeyTree visitComputedPropertyKey(ComputedPropertyKeyTree node, D ctx) {
-		// TODO finish
-		return (ObjectPropertyKeyTree) node.accept(this.transformation, ctx);
-	}
-	
-	@Override
 	public ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, D ctx) {
 		ExpressionTree oldCondition = node.getCondition();
 		ExpressionTree oldTrueExprn = node.getTrueExpression();
@@ -351,16 +342,10 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitIntersectionType(BinaryTypeTree node, D ctx) {
-		TypeTree oldLeftType = node.getLeftType();
-		TypeTree oldRightType = node.getRightType();
-		
-		TypeTree newLeftType = (TypeTree) oldLeftType.accept(this, ctx);
-		TypeTree newRightType = (TypeTree) oldRightType.accept(this, ctx);
-		
-		if (newLeftType != oldLeftType || newRightType != oldRightType)
-			node = new BinaryTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), newLeftType, node.getKind(),
-					newRightType);
+	public TypeTree visitIntersectionType(CompositeTypeTree node, D ctx) {
+		ArrayList<TypeTree> constituents = new ArrayList<>();
+		if (this.transformAll(node.getConstituents(), constituents, ctx))
+			node = new CompositeTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), node.getKind(), constituents);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -489,16 +474,10 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitUnionType(BinaryTypeTree node, D ctx) {
-		TypeTree oldLeftType = node.getLeftType();
-		TypeTree oldRightType = node.getRightType();
-		
-		TypeTree newLeftType = (TypeTree) oldLeftType.accept(this, ctx);
-		TypeTree newRightType = (TypeTree) oldRightType.accept(this, ctx);
-		
-		if (newLeftType != oldLeftType || newRightType != oldRightType)
-			node = new BinaryTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), newLeftType, node.getKind(),
-					newRightType);
+	public TypeTree visitUnionType(CompositeTypeTree node, D ctx) {
+		ArrayList<TypeTree> constituents = new ArrayList<>();
+		if (this.transformAll(node.getConstituents(), constituents, ctx))
+			node = new CompositeTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), node.getKind(), constituents);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -611,7 +590,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		List<ParameterTree> parameters = node.getParameters();//TODO transform parameters
 		boolean modified = false;
 		
-		IdentifierTree newName = (IdentifierTree) oldName.accept(this, ctx);
+		IdentifierTree newName = (IdentifierTree) (oldName == null ? null : oldName.accept(this, ctx));
 		modified |= newName != oldName;
 		
 		TypeTree newReturnType = oldReturnType == null ? null : (TypeTree) oldReturnType.accept(this, ctx);
@@ -627,7 +606,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		
 		//TODO fix isStrict()? Others?
 		if (modified)
-			node = new FunctionExpressionTreeImpl(node.getStart(), node.getEnd(), node.isAsync(), newName, parameters, newReturnType, node.isArrow(), newBody, node.isStrict(), node.isGenerator());
+			node = new FunctionExpressionTreeImpl(node.getStart(), node.getEnd(), node.isAsync(), newName, node.getGenericParameters(), parameters, newReturnType, node.isArrow(), newBody, node.isStrict(), node.isGenerator());
 		
 		return (ExpressionTree) node.accept(this.transformation, ctx);
 	}
@@ -645,7 +624,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitGenericType(GenericTypeTree node, D ctx) {
+	public TypeTree visitGenericType(GenericParameterTree node, D ctx) {
 		// TODO Auto-generated method stub
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -684,7 +663,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitIndexType(IndexTypeTree node, D ctx) {
+	public TypeTree visitIndexType(IndexSignatureTree node, D ctx) {
 		// TODO Auto-generated method stub
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -696,7 +675,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitInterfaceType(InterfaceTypeTree node, D ctx) {
+	public TypeTree visitInterfaceType(ObjectTypeTree node, D ctx) {
 		// TODO Auto-generated method stub
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -749,12 +728,6 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	public PatternTree visitObjectPattern(ObjectPatternTree node, D ctx) {
 		// TODO Auto-generated method stub
 		return (PatternTree) node.accept(this.transformation, ctx);
-	}
-	
-	@Override
-	public Tree visitParameterType(ParameterTypeTree node, D ctx) {
-		// TODO Auto-generated method stub
-		return node.accept(this.transformation, ctx);
 	}
 	
 	@Override

@@ -30,11 +30,9 @@ import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
@@ -159,7 +157,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			
 			BlockTree newCtorBody = new BlockTreeImpl(oldBodyStart, oldBodyEnd, ctorBody);
 			//TODO fix isStrict
-			FunctionExpressionTree ctorFn = new FunctionExpressionTreeImpl(oldFnStart, oldFnEnd, false, name, ctorParams, null, false, newCtorBody, false, false);
+			FunctionExpressionTree ctorFn = new FunctionExpressionTreeImpl(oldFnStart, oldFnEnd, false, name, null, ctorParams, null, false, newCtorBody, false, false);
 			MethodDefinitionTree ctor = new MethodDefinitionTreeImpl(oldStart, oldEnd, null, false, false, false, PropertyDeclarationType.CONSTRUCTOR, name, null, ctorFn);
 			if (oldCtor != null)
 				properties.set(properties.indexOf(oldCtor), ctor);
