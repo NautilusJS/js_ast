@@ -7,7 +7,7 @@ import com.mindlin.jsast.tree.Tree;
 
 public interface ObjectTypeTree extends TypeTree {
 	
-	List<InterfacePropertyTree> getProperties();
+	List<InterfacePropertyTree> getDeclaredProperties();
 	
 	@Override
 	default Tree.Kind getKind() {
