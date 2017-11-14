@@ -11,7 +11,7 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree, StatementTree {
+public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree {
 	protected final StatementTree body;
 	protected final IdentifierTree name;
 	protected final List<GenericParameterTree> generics;

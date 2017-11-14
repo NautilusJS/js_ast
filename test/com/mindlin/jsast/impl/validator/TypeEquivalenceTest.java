@@ -9,23 +9,34 @@ import org.junit.Test;
 import com.mindlin.jsast.impl.analysis.TypeContext;
 import com.mindlin.jsast.impl.parser.JSParserTest;
 import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.jsast.type.Type;
 
 public class TypeEquivalenceTest {
 	TypeContext ctx = new TypeContext() {
 		@Override
-		public TypeTree getType(String name, List<TypeTree> generics) {
+		public Type getType(String name, List<Type> generics) {
 			return null;
 		}
 		@Override
-		public TypeTree resolveGeneric(String name) {
+		public Type resolveGeneric(String name) {
 			return null;
 		}
 		@Override
-		public TypeTree resolveAliases(TypeTree type) {
+		public Type resolveAliases(Type type) {
 			return type;
 		}
 		@Override
-		public TypeTree thisType() {
+		public Type thisType() {
+			return null;
+		}
+		@Override
+		public Type superType() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		@Override
+		public Type argumentsType() {
+			// TODO Auto-generated method stub
 			return null;
 		}
 	};
