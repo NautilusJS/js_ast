@@ -39,11 +39,11 @@ public interface CharacterStream {
 	 * @return Whether there are that many characters remaining
 	 */
 	boolean hasNext(long num);
-
+	
 	boolean isEOL();
 
 	default boolean isWhitespace() {
-		return Characters.isJsWhitespace(current());
+		return hasNext() && Characters.isJsWhitespace(current());
 	}
 
 	CharacterStream skipWhitespace();

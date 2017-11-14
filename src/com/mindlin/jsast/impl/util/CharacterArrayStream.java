@@ -51,25 +51,47 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	
 	@Override
 	public boolean hasNext(long num) {
+		if (num > Integer.MAX_VALUE)
+			return false;
+		
 		return position < data.length - num;
 	}
 	
 	@Override
 	public boolean isEOL() {
+		if (!hasNext())
+			return false;
+		
 		final char c = current();
 		return c == '\r' || c == '\n';
 	}
 	
 	@Override
 	public CharacterStream skipWhitespace() {
-		while (hasNext() && Characters.isJsWhitespace(data[1 + position]))
+		while (position + 1 < data.length && Characters.isJsWhitespace(data[position + 1]))
 			position++;
 		return this;
 	}
 	
 	@Override
+	public CharacterStream skipWhitespace(boolean passNewlines) {
+		if (passNewlines)
+			return this.skipWhitespace();
+		
+		while (position + 1 < data.length && Characters.isJsWhitespace(data[position + 1]) && data[position + 1] != '\n')
+			position++;
+		
+		return this;
+	}
+	
+	@Override
 	public char peek(long offset) {
-		return data[(int) (position + offset)];
+		long index = position + offset;
+		
+		if (index > data.length)//Also checks if > Integer.MAX_INT
+			throw new IndexOutOfBoundsException("Cannot look ahead by " + offset);
+		
+		return data[(int) index];
 	}
 
 	@Override

@@ -70,8 +70,17 @@ public interface LineMap {
 		
 		public void putNewline(long position) {
 			if (newlinePositions.length == length) {
-				newlinePositions = Arrays.copyOf(newlinePositions, length * 3 / 2 + 1);
+				int newCap = length * 3 / 2 + 1;
+				
+				//Overflow checking stuff
+				if (newCap < length)
+					newCap = Integer.MAX_VALUE - 8;//Something something array constant overhead
+				if (newCap <= length)//Still can't please everyone
+					throw new OutOfMemoryError("Somehow, you managed to overflow array capacity limits. Congrats.");
+				
+				newlinePositions = Arrays.copyOf(newlinePositions, newCap);
 			}
+			
 			newlinePositions[length++] = position;
 		}
 		
