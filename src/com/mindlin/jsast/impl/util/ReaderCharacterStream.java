@@ -100,6 +100,12 @@ public class ReaderCharacterStream extends AbstractCharacterStream {
 	}
 	
 	@Override
+	public CharacterStream skipWhitespace(boolean passNewlines) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
 	public String copyFromMark() {
 		// TODO Auto-generated method stub
 		return null;

@@ -239,10 +239,13 @@ public class JSParser {
 		StatementTree value;
 		Context context = new Context();
 		context.setScriptName(unitName);
+		
 		while ((value = parseStatement(src, context)) != null)
 			elements.add(value);
+		
 		SourceFile source = null;
 		LineMap lines = src.getLines();
+		
 		return new CompilationUnitTreeImpl(0, src.getPosition(), source, lines, elements, false);
 	}
 	

@@ -46,8 +46,12 @@ public interface CharacterStream {
 		return hasNext() && Characters.isJsWhitespace(current());
 	}
 
-	CharacterStream skipWhitespace();
-
+	default CharacterStream skipWhitespace() {
+		return skipWhitespace(true);
+	}
+	
+	CharacterStream skipWhitespace(boolean passNewlines);
+	
 	CharacterStream mark();
 
 	CharacterStream resetToMark();

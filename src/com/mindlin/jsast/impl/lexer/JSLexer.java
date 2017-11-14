@@ -12,6 +12,8 @@ import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
+import com.mindlin.jsast.impl.tree.LineMap;
+import com.mindlin.jsast.impl.tree.LineMap.LineMapBuilder;
 import com.mindlin.jsast.impl.util.BooleanStack;
 import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
@@ -21,6 +23,7 @@ public class JSLexer implements Supplier<Token> {
 	
 	protected final CharacterStream chars;
 	protected Token lookahead = null;
+	protected LineMapBuilder lines = new LineMapBuilder();
 	protected final BooleanStack templateStack = new BooleanStack();
 	
 	public JSLexer(char[] chars) {
@@ -37,6 +40,10 @@ public class JSLexer implements Supplier<Token> {
 	
 	public JSLexer(String src) {
 		this(new CharacterArrayStream(src));
+	}
+	
+	public LineMap getLines() {
+		return lines;
 	}
 	
 	public long getPosition() {
@@ -92,11 +99,13 @@ public class JSLexer implements Supplier<Token> {
 					return Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte)val})).toString();
 				}
 			case '\n':
+				this.lines.putNewline(chars.position());
 				if (chars.hasNext() && chars.peek() == '\r')
 					chars.skip(1);
 				return "";
 			case '\r':
-				if (chars.hasNext() && chars.peek() == '\n')
+				if (chars.hasNext() && chars.peek() == '\n') {
+					this.lines.putNewline(chars.position());
 					chars.skip(1);
 				return "";
 			case 'u': {
@@ -744,8 +753,14 @@ public class JSLexer implements Supplier<Token> {
 				throw new JSEOFException(chars.position());
 			}
 			char c = chars.next();
+			
+			//Mark newline
+			if (c == '\n')
+				this.lines.putNewline(chars.position());
+			
+			//End conditions
 			if (singleLine) {
-				if (c == '\n' ||c == '\r')
+				if (c == '\n' || c == '\r')
 					break;
 			} else if (c == '*' && chars.hasNext() && chars.peek() == '/') {
 				chars.skip(1);
@@ -760,13 +775,19 @@ public class JSLexer implements Supplier<Token> {
 		//Return lookahead if available
 		if (this.lookahead != null) {
 			Token result = this.lookahead;
+			//EOF token is sticky
 			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
 				skip(result);
 			return result;
 		}
 		
+		
 		//Skip whitespace until token
-		chars.skipWhitespace();
+		chars.skipWhitespace(false);
+		while (chars.isEOL()) {//TODO: can isEOL() == false, but isWhitespace() == true happen at this point?
+			this.lines.putNewline(chars.position());
+			chars.skipWhitespace(false);
+		}
 		
 		//Special EOF token
 		if (isEOF())
@@ -846,6 +867,12 @@ public class JSLexer implements Supplier<Token> {
 		return new Token(start + 1, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
+	/**
+	 * Take & return next token if it matches the provided kind and value.
+	 * @param kind
+	 * @param value
+	 * @return next token if it matches, else null
+	 */
 	public Token nextTokenIf(TokenKind kind, Object value) {
 		Token lookahead = peek();
 		if (lookahead.matches(kind, value)) {
@@ -873,6 +900,13 @@ public class JSLexer implements Supplier<Token> {
 		return null;
 	}
 	
+	/**
+	 * Take the next token iff it matches the provided kind & value. If it matches, consume it
+	 * @param kind
+	 * @param value
+	 * @return if the next token matches
+	 * @see #nextTokenIf(TokenKind, Object)
+	 */
 	public boolean nextTokenIs(TokenKind kind, Object value) {
 		return nextTokenIf(kind, value) != null;
 	}
