@@ -14,6 +14,11 @@ public interface LineMap {
 	 */
 	long getLineNumber(long position);
 	
+	/**
+	 * Lookup position
+	 * @param position
+	 * @return
+	 */
 	FilePosition lookup(long position);
 	
 	public static LineMap compile(String s) {
