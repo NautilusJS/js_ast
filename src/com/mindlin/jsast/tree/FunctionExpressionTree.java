@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public interface FunctionExpressionTree extends ExpressionTree {
@@ -17,7 +17,7 @@ public interface FunctionExpressionTree extends ExpressionTree {
 	 * Get generic parameters.
 	 * @return generics (may return null if empty)
 	 */
-	List<GenericTypeTree> getGenericParameters();
+	List<GenericParameterTree> getGenericParameters();
 
 	/**
 	 * Get function parameters.
