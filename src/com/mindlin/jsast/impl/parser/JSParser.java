@@ -41,7 +41,6 @@ import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ExportTreeImpl;
-import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
@@ -54,13 +53,15 @@ import com.mindlin.jsast.impl.tree.IdentifierTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.ImportSpecifierTreeImpl;
 import com.mindlin.jsast.impl.tree.ImportTreeImpl;
-import com.mindlin.jsast.impl.tree.IndexTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.IndexSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.KeyofTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
+import com.mindlin.jsast.impl.tree.LineMap;
 import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
@@ -103,7 +104,6 @@ import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
-import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -147,8 +147,10 @@ import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -240,7 +242,8 @@ public class JSParser {
 		while ((value = parseStatement(src, context)) != null)
 			elements.add(value);
 		SourceFile source = null;
-		return new CompilationUnitTreeImpl(0, src.getPosition(), source, null, elements, false);
+		LineMap lines = src.getLines();
+		return new CompilationUnitTreeImpl(0, src.getPosition(), source, lines, elements, false);
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
@@ -668,11 +671,11 @@ public class JSParser {
 	 * @param context
 	 * @return
 	 */
-	protected List<GenericTypeTree> parseGenericParametersMaybe(JSLexer src, Context context) {
+	protected List<GenericParameterTree> parseGenericParametersMaybe(JSLexer src, Context context) {
 		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LESS_THAN))
 			return Collections.emptyList();
 		
-		ArrayList<GenericTypeTree> generics = new ArrayList<>();
+		ArrayList<GenericParameterTree> generics = new ArrayList<>();
 		
 		//There are no generics (empty '<>')
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
@@ -798,7 +801,7 @@ public class JSParser {
 		
 		IdentifierTree identifier = this.parseIdentifier(null, src, context, false);
 		
-		List<GenericTypeTree> genericParams = this.parseGenericParametersMaybe(src, context);
+		List<GenericParameterTree> genericParams = this.parseGenericParametersMaybe(src, context);
 		
 		expect(TokenKind.OPERATOR, JSOperator.ASSIGNMENT, src, context);
 		
@@ -969,7 +972,7 @@ public class JSParser {
 		
 		//Read optional class identifier
 		IdentifierTree classIdentifier = this.parseIdentifier(null, src, context, true);
-		List<GenericTypeTree> generics = Collections.emptyList();
+		List<GenericParameterTree> generics = Collections.emptyList();
 		if (classIdentifier != null)
 			generics = this.parseGenericParametersMaybe(src, context);
 		
@@ -1196,7 +1199,7 @@ public class JSParser {
 				expect(TokenKind.BRACKET, ']', src, context);
 				expectOperator(JSOperator.COLON, src, context);
 				TypeTree returnType = this.parseType(src, context);
-				type = new IndexTypeTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
+				type = new IndexSignatureTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
 			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Parse function type
 				List<ParameterTree> params = this.parseParameters(src, context, false, null);
@@ -2515,7 +2518,7 @@ public class JSParser {
 	
 	//Function stuff
 
-	FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
+	FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
 		Token startBodyToken = src.peek();
 		
 		//Update context for function
