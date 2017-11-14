@@ -12,7 +12,7 @@ import com.mindlin.jsast.tree.Tree;
 public interface FunctionTypeTree extends TypeTree {
 	List<ParameterTree> getParameters();
 	
-	List<GenericTypeTree> getGenerics();
+	List<GenericParameterTree> getGenerics();
 	
 	TypeTree getReturnType();
 	
@@ -35,5 +35,10 @@ public interface FunctionTypeTree extends TypeTree {
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.FUNCTION_TYPE;
+	}
+	
+	@Override
+	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitFunctionType(this, data);
 	}
 }

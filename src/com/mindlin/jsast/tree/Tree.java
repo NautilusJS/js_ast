@@ -7,11 +7,11 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexTypeTree;
+import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.InterfaceTypeTree;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
@@ -166,10 +166,10 @@ public interface Tree {
 		FUNCTION_TYPE(FunctionTypeTree.class),
 		IDENTIFIER_TYPE(IdentifierTypeTree.class),
 		INTERFACE_PROPERTY(InterfacePropertyTree.class),
-		INDEX_TYPE(IndexTypeTree.class),
-		TYPE_UNION(BinaryTypeTree.class),
-		TYPE_INTERSECTION(BinaryTypeTree.class),
-		GENERIC_PARAM(GenericTypeTree.class),
+		INDEX_TYPE(IndexSignatureTree.class),
+		TYPE_UNION(CompositeTypeTree.class),
+		TYPE_INTERSECTION(CompositeTypeTree.class),
+		GENERIC_PARAM(GenericParameterTree.class),
 		INTERFACE_TYPE(InterfaceTypeTree.class),
 
 		// Array stuff

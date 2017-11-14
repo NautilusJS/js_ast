@@ -11,13 +11,17 @@ public interface InterfaceTypeTree extends TypeTree {
 	 * Generic parameters
 	 * @return generic parameters, else null if not generic type
 	 */
-	List<GenericTypeTree> getGenerics();
+	List<GenericParameterTree> getGenerics();
 	
-	List<InterfacePropertyTree> getProperties();
+	/**
+	 * 
+	 * @return
+	 */
+	List<InterfacePropertyTree> getDeclaredProperties();
 	
 	Set<?> getDeclaredCallSignatures();
 	Set<?> getDeclaredConstructorSignatures();
-	Set<IndexTypeTree> declaredIndices();
+	Set<IndexSignatureTree> declaredIndices();
 	
 	TypeTree resolvedBaseContructor();
 	

@@ -1,14 +1,18 @@
 package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TreeVisitor;
 
 /**
- * Type representing an array of something. For example, <code>Foo[]</code>.
- * Not that <code>[Foo, Bar, Baz]</code> is not an array type, but a {@link TupleTypeTree}.
+ * Type representing an array of something. For example, <code>Foo[]</code> or <code>Array&lt;Foo&gt;</code>.
+ * Not that types in the form of <code>[Foo, Bar, Baz]</code> is not an array type, but a {@link TupleTypeTree}, however
+ * empty arrays (<code>[]</code>) <i>are</i> the same as <code>any[]</code>.
  * @author mailmindlin
  */
 public interface ArrayTypeTree extends TypeTree {
+	/**
+	 * Get base type of array.
+	 * @return
+	 */
 	TypeTree getBaseType();
 	
 	@Override
@@ -17,7 +21,7 @@ public interface ArrayTypeTree extends TypeTree {
 	}
 	
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitArrayType(this, data);
 	}
 }

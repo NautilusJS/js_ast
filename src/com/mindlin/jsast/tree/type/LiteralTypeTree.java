@@ -1,7 +1,6 @@
 package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.LiteralTree;
-import com.mindlin.jsast.tree.TreeVisitor;
 
 public interface LiteralTypeTree<T> extends TypeTree {
 	LiteralTree<T> getValue();
@@ -12,7 +11,7 @@ public interface LiteralTypeTree<T> extends TypeTree {
 	}
 
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
 		throw new UnsupportedOperationException();
 	}
 }

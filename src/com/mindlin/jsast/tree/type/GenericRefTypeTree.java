@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.mindlin.jsast.tree.IdentifierTree;
 
 /**
- * Reference to {@link GenericTypeTree}.
+ * Reference to {@link GenericParameterTree}.
  * @author mailmindlin
  */
 public interface GenericRefTypeTree extends TypeTree {
@@ -19,5 +19,10 @@ public interface GenericRefTypeTree extends TypeTree {
 	 * Get GenericTypeTree referenced.
 	 * @return referenced value
 	 */
-	Optional<GenericTypeTree> getReferenced();
+	Optional<GenericParameterTree> getReferenced();
+	
+	@Override
+	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitGenericRefType(this, data);
+	}
 }

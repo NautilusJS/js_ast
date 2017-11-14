@@ -2,6 +2,11 @@ package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.Tree;
 
+/**
+ * The <code>any</code> type.
+ * 
+ * @author mailmindlin
+ */
 public interface AnyTypeTree extends TypeTree {
 	
 	@Override
