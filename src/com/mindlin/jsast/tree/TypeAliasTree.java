@@ -2,13 +2,13 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public interface TypeAliasTree extends StatementTree {
 	IdentifierTree getAlias();
 	
-	List<GenericTypeTree> getGenericParameters();
+	List<GenericParameterTree> getGenericParameters();
 	
 	TypeTree getValue();
 	

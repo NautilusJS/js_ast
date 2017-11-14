@@ -1,5 +1,7 @@
 package com.mindlin.jsast.tree;
 
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
+
 public interface StatementTreeVisitor<R, D> {
 	R visitBlock(BlockTree node, D d);
 	R visitBreak(BreakTree node, D d);

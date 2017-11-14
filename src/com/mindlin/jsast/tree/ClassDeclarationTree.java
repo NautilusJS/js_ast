@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
@@ -31,7 +31,7 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	 * Get the generic parameters on this class
 	 * @return
 	 */
-	List<GenericTypeTree> getGenerics();
+	List<GenericParameterTree> getGenerics();
 	
 	/**
 	 * Get if this class is abstract
