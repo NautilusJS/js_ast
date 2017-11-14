@@ -8,6 +8,7 @@ import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
