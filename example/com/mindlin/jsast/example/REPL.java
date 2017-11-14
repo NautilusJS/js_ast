@@ -18,15 +18,21 @@ import com.mindlin.jsast.writer.JSWriterOptions;
 public class REPL {
 	public static void main(String[] args) throws IOException {
 		JSParser parser = new JSParser();
+		
 		JSWriterOptions options = new JSWriterOptions();
 		options.indentStyle = "\t";
 		JSWriterImpl writer = new JSWriterImpl(options);
+		
 		TransformerSeries preTransformer = new TransformerSeries();
 		TransformerSeries transformer = new TransformerSeries(new ExpressionFlattenerTransformation(), new DeadCodeRemovalTransformation());
 		TransformerSeries postTransformer = new TransformerSeries(new ExpressionFixerTf(), new ES6Transpiler());
+		
 		@SuppressWarnings("resource")
 		Scanner s = new Scanner(System.in);
+		
 		JSScriptEngine engine = new JSScriptEngine();
+		
+		
 		System.out.println("Nautilus JS transpiler");
 		while (true) {
 			StringBuffer sb = new StringBuffer();
