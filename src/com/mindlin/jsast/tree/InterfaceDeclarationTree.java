@@ -2,11 +2,14 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public interface InterfaceDeclarationTree extends StatementTree {
 	
 	IdentifierTree getIdentifier();
+	
+	List<GenericParameterTree> getGenerics();
 	
 	List<TypeTree> getSupertypes();
 	

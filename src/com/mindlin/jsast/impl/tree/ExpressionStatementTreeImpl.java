@@ -7,6 +7,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 
 public class ExpressionStatementTreeImpl extends AbstractTree implements ExpressionStatementTree {
 	protected final ExpressionTree expression;
+	
 	public ExpressionStatementTreeImpl(long start, long end, ExpressionTree expr) {
 		super(start, end);
 		this.expression = expr;

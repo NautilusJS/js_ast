@@ -6,17 +6,20 @@ import java.util.Objects;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class InterfaceDeclarationTreeImpl extends AbstractTree implements InterfaceDeclarationTree {
 	protected final IdentifierTree name;
+	protected final List<GenericParameterTree> generics;
 	protected final List<TypeTree> supertypes;
 	protected final List<InterfacePropertyTree> properties;
 	
-	public InterfaceDeclarationTreeImpl(long start, long end, IdentifierTree name, List<TypeTree> supertypes,
-			List<InterfacePropertyTree> properties) {
+	public InterfaceDeclarationTreeImpl(long start, long end, IdentifierTree name, List<GenericParameterTree> generics,
+			List<TypeTree> supertypes, List<InterfacePropertyTree> properties) {
 		super(start, end);
 		this.name = name;
+		this.generics = generics;
 		this.supertypes = supertypes;
 		this.properties = properties;
 	}
@@ -24,6 +27,11 @@ public class InterfaceDeclarationTreeImpl extends AbstractTree implements Interf
 	@Override
 	public IdentifierTree getIdentifier() {
 		return this.name;
+	}
+
+	@Override
+	public List<GenericParameterTree> getGenerics() {
+		return this.generics;
 	}
 	
 	@Override
@@ -40,5 +48,4 @@ public class InterfaceDeclarationTreeImpl extends AbstractTree implements Interf
 	protected int hash() {
 		return Objects.hash(getKind(), getIdentifier(), getSupertypes(), getProperties());
 	}
-	
 }

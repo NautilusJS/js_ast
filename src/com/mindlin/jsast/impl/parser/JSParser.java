@@ -1256,7 +1256,7 @@ public class JSParser {
 		expect(TokenKind.BRACKET, '{', src, context);
 		List<InterfacePropertyTree> properties = parseInterfaceBody(src, context);
 		
-		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, superClasses, properties);
+		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, null, superClasses, properties);
 	}
 	
 	/**
