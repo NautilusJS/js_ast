@@ -8,11 +8,13 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree, StatementTree {
 	protected final StatementTree body;
 	protected final IdentifierTree name;
+	protected final List<GenericParameterTree> generics;
 	protected final List<ParameterTree> parameters;
 	protected final TypeTree returnType;
 	protected final boolean strict;
@@ -21,11 +23,12 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	protected final boolean isAsync;
 	protected final boolean isStmt;
 
-	public FunctionExpressionTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
+	public FunctionExpressionTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
 			StatementTree body, boolean strict, boolean generator) {
 		super(start, end);
 		this.isAsync = isAsync;
 		this.name = name;
+		this.generics = generics;
 		this.parameters = parameters;
 		this.returnType = returnType;
 		this.arrow = arrow;
@@ -43,6 +46,11 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	@Override
 	public IdentifierTree getName() {
 		return name;
+	}
+	
+	@Override
+	public List<GenericParameterTree> getGenericParameters() {
+		return this.generics;
 	}
 
 	@Override
