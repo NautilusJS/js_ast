@@ -56,7 +56,7 @@ import com.mindlin.jsast.impl.tree.ImportTreeImpl;
 import com.mindlin.jsast.impl.tree.IndexSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
-import com.mindlin.jsast.impl.tree.InterfaceTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.KeyofTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.LineMap;
@@ -1346,7 +1346,7 @@ public class JSParser {
 			//Inline interface (or object type '{}')
 			//TODO: change to object type
 			List<InterfacePropertyTree> properties = this.parseInterfaceBody(src, context);
-			return new InterfaceTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
+			return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
 			//Tuple (or array type '[]')
 			if (src.nextTokenIs(TokenKind.BRACKET, ']')) {

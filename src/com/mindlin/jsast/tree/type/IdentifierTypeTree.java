@@ -18,12 +18,6 @@ public interface IdentifierTypeTree extends TypeTree {
 	 */
 	List<TypeTree> getGenerics();
 	
-	/**
-	 * Get target type
-	 * @return target, else null if not resolved
-	 */
-	TypeTree getResolvedTarget();
-	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.IDENTIFIER_TYPE;

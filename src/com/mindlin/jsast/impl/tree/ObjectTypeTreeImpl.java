@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Objects;
 
 import com.mindlin.jsast.tree.InterfacePropertyTree;
-import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 
-public class InterfaceTypeTreeImpl extends AbstractTypeTree implements InterfaceDeclarationTree {
+public class ObjectTypeTreeImpl extends AbstractTypeTree implements ObjectTypeTree {
 	protected final List<InterfacePropertyTree> properties;
 	
-	public InterfaceTypeTreeImpl(long start, long end, boolean implicit, List<InterfacePropertyTree> properties) {
+	public ObjectTypeTreeImpl(long start, long end, boolean implicit, List<InterfacePropertyTree> properties) {
 		super(start, end, implicit);
 		this.properties = properties;
 	}
@@ -23,5 +23,5 @@ public class InterfaceTypeTreeImpl extends AbstractTypeTree implements Interface
 	protected int hash() {
 		return Objects.hash(getKind(), getDeclaredProperties());
 	}
-	
+
 }

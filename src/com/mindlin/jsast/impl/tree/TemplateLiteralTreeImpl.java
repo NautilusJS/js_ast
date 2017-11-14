@@ -25,11 +25,6 @@ public class TemplateLiteralTreeImpl extends AbstractTree implements TemplateLit
 	}
 
 	@Override
-	public boolean isComputed() {
-		return !expressions.isEmpty();
-	}
-
-	@Override
 	public List<TemplateElementTree> getQuasis() {
 		return this.quasis;
 	}
