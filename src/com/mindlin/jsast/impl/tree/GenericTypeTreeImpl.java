@@ -3,23 +3,19 @@ package com.mindlin.jsast.impl.tree;
 import java.util.Objects;
 
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class GenericTypeTreeImpl extends AbstractTypeTree implements GenericTypeTree {
+public class GenericTypeTreeImpl extends AbstractTypeTree implements GenericParameterTree {
 	protected final IdentifierTree name;
 	protected final TypeTree supertype;
+	protected final TypeTree defaultValue;
 	
-	public GenericTypeTreeImpl(long start, long end, boolean implicit, IdentifierTree name, TypeTree supertype) {
+	public GenericTypeTreeImpl(long start, long end, boolean implicit, IdentifierTree name, TypeTree supertype, TypeTree defaultValue) {
 		super(start, end, implicit);
 		this.name = name;
 		this.supertype = supertype;
-	}
-	
-	@Override
-	public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
+		this.defaultValue = defaultValue;
 	}
 	
 	@Override
@@ -31,10 +27,14 @@ public class GenericTypeTreeImpl extends AbstractTypeTree implements GenericType
 	public TypeTree getSupertype() {
 		return this.supertype;
 	}
+
+	@Override
+	public TypeTree getDefault() {
+		return this.defaultValue;
+	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getName(), getSupertype());
+		return Objects.hash(getKind(), getName(), getSupertype(), getDefault());
 	}
-	
 }

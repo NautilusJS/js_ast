@@ -15,11 +15,6 @@ public class KeyofTypeTreeImpl extends AbstractTypeTree implements KeyofTypeTree
 	}
 	
 	@Override
-	public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
 	public TypeTree getBaseType() {
 		return baseType;
 	}

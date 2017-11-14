@@ -5,15 +5,15 @@ import java.util.Objects;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	protected final IdentifierTree alias;
-	protected final List<GenericTypeTree> genericParams;
+	protected final List<GenericParameterTree> genericParams;
 	protected final TypeTree value;
 	
-	public TypeAliasTreeImpl(long start, long end, IdentifierTree alias, List<GenericTypeTree> params, TypeTree value) {
+	public TypeAliasTreeImpl(long start, long end, IdentifierTree alias, List<GenericParameterTree> params, TypeTree value) {
 		super(start, end);
 		this.alias = alias;
 		this.genericParams = params;
@@ -26,7 +26,7 @@ public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	}
 
 	@Override
-	public List<GenericTypeTree> getGenericParameters() {
+	public List<GenericParameterTree> getGenericParameters() {
 		return this.genericParams;
 	}
 

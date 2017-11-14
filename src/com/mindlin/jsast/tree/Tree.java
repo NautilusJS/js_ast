@@ -13,10 +13,11 @@ import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
+import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -161,17 +162,17 @@ public interface Tree {
 		NEVER_TYPE,
 		LITERAL_TYPE(LiteralTypeTree.class),
 		MEMBER_TYPE(MemberTypeTree.class),
-		ARRAY_TYPE(ArrayTypeTree.class),
+		ARRAY_TYPE(ArrayTypeTree.class),//TODO merge w/ KEYOF_TYPE to unary generic iface?
 		KEYOF_TYPE(KeyofTypeTree.class),
 		TUPLE_TYPE(TupleTypeTree.class),
 		FUNCTION_TYPE(FunctionTypeTree.class),
-		IDENTIFIER_TYPE(IdentifierTypeTree.class),
+		OBJECT_TYPE(ObjectTypeTree.class),
 		INTERFACE_PROPERTY(InterfacePropertyTree.class),
 		INDEX_TYPE(IndexSignatureTree.class),
 		TYPE_UNION(CompositeTypeTree.class),
 		TYPE_INTERSECTION(CompositeTypeTree.class),
 		GENERIC_PARAM(GenericParameterTree.class),
-		INTERFACE_TYPE(InterfaceTypeTree.class),
+		IDENTIFIER_TYPE(IdentifierTypeTree.class),
 
 		// Array stuff
 		IN(BinaryTree.class),
