@@ -9,6 +9,7 @@ public interface ExpressionTreeVisitor<R, D> {
 	R visitBinary(BinaryTree node, D d);
 	R visitBooleanLiteral(BooleanLiteralTree node, D d);
 	R visitCast(CastTree node, D d);
+	R visitClassDeclaration(ClassDeclarationTree node, D d);
 	R visitConditionalExpression(ConditionalExpressionTree node, D d);
 	R visitFunctionCall(FunctionCallTree node, D d);
 	R visitFunctionExpression(FunctionExpressionTree node, D d);

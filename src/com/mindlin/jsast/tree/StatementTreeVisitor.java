@@ -5,6 +5,7 @@ import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 public interface StatementTreeVisitor<R, D> {
 	R visitBlock(BlockTree node, D d);
 	R visitBreak(BreakTree node, D d);
+	R visitClassDeclaration(ClassDeclarationTree node, D d);
 	R visitContinue(ContinueTree node, D d);
 	R visitDebugger(DebuggerTree node, D d);
 	R visitDoWhileLoop(DoWhileLoopTree node, D d);

@@ -66,4 +66,14 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
 		return visitor.visitClassDeclaration(this, data);
 	}
+	
+	@Override
+	default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitClassDeclaration(this, data);
+	}
+	
+	@Override
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitClassDeclaration(this, data);
+	}
 }

@@ -6,7 +6,7 @@ import java.util.Objects;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDeclarationTree {
@@ -15,9 +15,9 @@ public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDecla
 	protected final boolean isAbstract;
 	protected final List<TypeTree> implementing;
 	protected final List<ClassPropertyTree<?>> properties;
-	protected final List<GenericTypeTree> generics;
+	protected final List<GenericParameterTree> generics;
 	
-	public ClassDeclarationTreeImpl(long start, long end, boolean isAbstract, IdentifierTree name, List<GenericTypeTree> generics, TypeTree superType, List<TypeTree> implementing, List<ClassPropertyTree<?>> properties) {
+	public ClassDeclarationTreeImpl(long start, long end, boolean isAbstract, IdentifierTree name, List<GenericParameterTree> generics, TypeTree superType, List<TypeTree> implementing, List<ClassPropertyTree<?>> properties) {
 		super(start, end);
 		this.isAbstract = isAbstract;
 		this.name = name;
@@ -53,7 +53,7 @@ public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDecla
 	}
 
 	@Override
-	public List<GenericTypeTree> getGenerics() {
+	public List<GenericParameterTree> getGenerics() {
 		return this.generics;
 	}
 	
