@@ -26,7 +26,6 @@ import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.BinaryTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.CaseTreeImpl;
@@ -35,6 +34,7 @@ import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassPropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
+import com.mindlin.jsast.impl.tree.CompositeTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ComputedPropertyKeyTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
@@ -1378,7 +1378,7 @@ public class JSParser {
 			type = this.parseImmediateType(src, context);
 		}
 		
-		//Suppoert member types in form of 'A.B'
+		//Support member types in form of 'A.B'
 		while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
 			type = new MemberTypeTreeImpl(type, parseImmediateType(src, context), false);
 		}
@@ -1393,10 +1393,22 @@ public class JSParser {
 		Token next = src.nextTokenIf(TokenPredicate.TYPE_CONTINUATION);
 		if (next == null)
 			return type;
-		boolean union = next.getValue() == JSOperator.BITWISE_OR;
+		
+		
 		TypeTree left = type;
+		boolean union = next.getValue() == JSOperator.BITWISE_OR;
+		
+		List<TypeTree> constituents = new ArrayList<>();
+		constituents.add(left);
+		
+		//TODO: make less recursive
 		TypeTree right = parseType(src, context);
-		return new BinaryTypeTreeImpl(left.getStart(), right.getEnd(), false, left, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, right);
+		if (right.getKind() == (union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION))//Merge nested unions/intersections
+			constituents.addAll(((CompositeTypeTree)right).getConstituents());
+		else
+			constituents.add(right);
+		
+		return new CompositeTypeTreeImpl(left.getStart(), right.getEnd(), false, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, constituents	);
 	}
 	
 	
