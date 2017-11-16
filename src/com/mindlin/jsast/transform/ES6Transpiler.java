@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
-import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
@@ -23,13 +22,14 @@ import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
-import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ParameterTree;
+import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
@@ -81,23 +81,24 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			ParameterTree param = oldParam;
 			if (param.getAccessModifier() != null) {
 				boolean wasOptional = param.isOptional();
-				ExpressionTree initializer = param.getInitializer();
-				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), null, param.getIdentifier(), param.isRest(), false, null, null);
+				
+				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), null, param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
 				//Inject assignment into constructor
-				//this.[param name]
-				ExpressionTree lhs = new MemberExpressionTreeImpl(Kind.MEMBER_SELECT, new ThisExpressionTreeImpl(-1, -1), param.getIdentifier());
-				ExpressionTree rhs = param.getIdentifier();
-				//Include initializer
-				if (initializer != null)
-					rhs = new BinaryTreeImpl(oldParam.getStart(), oldParam.getEnd(), Kind.LOGICAL_OR, rhs, initializer);
+				//TODO: support destructuring in parameters here
+				if (oldParam.getIdentifier().getKind() != Kind.IDENTIFIER)
+					throw new UnsupportedOperationException("Cannot convert destructuring parameter to property (yet)");
+				
+				//this.[parameter name]
+				IdentifierTree identifier = (IdentifierTree) param.getIdentifier();
+				PatternTree lhs = new MemberExpressionTreeImpl(Kind.MEMBER_SELECT, new ThisExpressionTreeImpl(-1, -1), identifier);
+				
 				//TODO fix for optional (shouldn't overwrite default values)
 				if (wasOptional)
 					throw new UnsupportedOperationException();
-				StatementTree propSetStmt = new ExpressionStatementTreeImpl(new AssignmentTreeImpl(Tree.Kind.ASSIGNMENT, lhs, rhs));
-				ctorBody.add(ctorBodyInjectOffset++, propSetStmt);
-			}
-			
 				
+				//this.[parameter name] = [parameter name] 
+				StatementTree propSetStmt = new ExpressionStatementTreeImpl(new AssignmentTreeImpl(Tree.Kind.ASSIGNMENT, lhs, identifier));
+				ctorBody.add(ctorBodyInjectOffset++, propSetStmt);
 			}
 			
 			if (!Tree.equivalentTo(param, oldParam)) {
@@ -115,7 +116,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 					i.remove();
 					if (property.getValue() != null) {
 						//Inject initializer into constructor
-						ExpressionTree lhs = new MemberExpressionTreeImpl(property.getKey().getKind() == Kind.IDENTIFIER ? Kind.MEMBER_SELECT : Kind.ARRAY_ACCESS, new ThisExpressionTreeImpl(-1, -1), property.getKey());
+						PatternTree lhs = new MemberExpressionTreeImpl(property.getKey().getKind() == Kind.IDENTIFIER ? Kind.MEMBER_SELECT : Kind.ARRAY_ACCESS, new ThisExpressionTreeImpl(-1, -1), property.getKey());
 						StatementTree initializerStmt = new ExpressionStatementTreeImpl(new AssignmentTreeImpl(Tree.Kind.ASSIGNMENT, lhs, property.getValue()));
 						ctorBody.add(ctorBodyInjectOffset++, initializerStmt);
 						ctorModified = true;
@@ -193,6 +194,12 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		if (modified)
 			node = new VariableDeclarationTreeImpl(node.getStart(), node.getEnd(), node.isScoped(), node.isConst(), declarations);
 		return node;
+	}
+
+	@Override
+	public Tree visitMemberExpression(MemberExpressionTree node, ASTTransformerContext d) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }
