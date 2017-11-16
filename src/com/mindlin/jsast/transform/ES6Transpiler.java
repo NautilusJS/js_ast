@@ -97,15 +97,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 				ctorBody.add(ctorBodyInjectOffset++, propSetStmt);
 			}
 			
-			//Cut out initializer
-			if (param.getInitializer() != null) {
-				ExpressionTree initializer = param.getInitializer();
-				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), param.getAccessModifier(), param.getIdentifier(), param.isRest(), param.isOptional(), param.getType(), null);
 				
-				//Inject initializer
-				ExpressionTree rhs = new BinaryTreeImpl(oldParam.getStart(), oldParam.getEnd(), Kind.LOGICAL_OR, param.getIdentifier(), initializer);
-				StatementTree initializerStmt = new ExpressionStatementTreeImpl(new AssignmentTreeImpl(Tree.Kind.ASSIGNMENT, param.getIdentifier(), rhs));
-				ctorBody.add(ctorBodyInjectOffset++, initializerStmt);
 			}
 			
 			if (!Tree.equivalentTo(param, oldParam)) {
