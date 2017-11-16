@@ -192,8 +192,11 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		ArrayList<StatementTree> statements = new ArrayList<>();
 		boolean modified = transformAll(node.getStatements(), statements, ctx);
 		
-		if (modified)
+		if (modified) {
+			statements.removeIf(stmt -> stmt == null);
+			statements.trimToSize();
 			node = new BlockTreeImpl(node.getStart(), node.getEnd(), statements);
+		}
 		
 		return (StatementTree) node.accept(this.transformation, ctx);
 	}

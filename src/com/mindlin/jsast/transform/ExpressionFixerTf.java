@@ -238,7 +238,8 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 		@Override
 		public ExpressionTree visitAssignment(AssignmentTree node, Void d) {
 			//TODO: fix
-			return node.getLeftOperand().accept(this, d);
+			//return node.getLeftOperand().accept(this, d);
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

@@ -2346,13 +2346,11 @@ public class JSParser {
 			} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 			
 			//Ensure that it exited the loop with a closing paren
-			context.pop();
 			expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 			
 			//Sequence, but not lambda
 			return new ParenthesizedTreeImpl(leftParenToken.getStart(), src.getPosition(), new SequenceTreeImpl((List<ExpressionTree>)(List<?>)expressions));
 		}
-		context.pop();
 		//Only one expression
 		expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 		
