@@ -33,4 +33,9 @@ public interface VariableDeclarationTree extends StatementTree, PatternTree {
 	default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitVariableDeclaration(this, data);
 	}
+	
+	@Override
+	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitVariableDeclaration(this, data);
+	}
 }

@@ -11,7 +11,7 @@ public interface ObjectPatternTree extends PatternTree {
 	}
 
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitObjectPattern(this, data);
 	}
 }

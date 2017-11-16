@@ -23,6 +23,7 @@ public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
 	
 	protected String getOperand() {
 		// TODO finish
+		// TODO remove?
 		switch (kind) {
 			case ADDITION:
 				return "+";

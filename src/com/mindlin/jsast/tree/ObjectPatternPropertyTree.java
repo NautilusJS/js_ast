@@ -12,4 +12,9 @@ public interface ObjectPatternPropertyTree extends ObjectPropertyTree, PatternTr
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
+		throw new UnsupportedOperationException();
+	}
 }

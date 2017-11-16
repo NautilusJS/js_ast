@@ -4,12 +4,17 @@ public interface MemberExpressionTree extends BinaryTree, PatternTree {
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return BinaryTree.super.accept(visitor, data);
+		return visitor.visitMemberExpression(this, data);
 	}
 
 	@Override
 	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
-		return BinaryTree.super.accept(visitor, data);
+		return visitor.visitBinary(this, data);//TODO is this going to be bad in the future?
+	}
+	
+	@Override
+	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitMemberExpression(this, data);
 	}
 	
 }

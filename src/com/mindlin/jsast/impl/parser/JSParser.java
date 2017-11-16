@@ -409,7 +409,7 @@ public class JSParser {
 	 * @param operator
 	 * @return
 	 */
-	protected Tree.Kind mapTokenToBinaryTree(Token token) {
+	protected Tree.Kind mapTokenToBinaryKind(Token token) {
 		if (token.isOperator())
 			switch (token.<JSOperator>getValue()) {
 				case ADDITION_ASSIGNMENT:
@@ -539,8 +539,8 @@ public class JSParser {
 				case ASSIGNMENT: {
 					dialect.require("js.parameter.default", expr.getStart());
 					//Turn into default parameter
-					AssignmentTree assignment = (AssignmentTree) expr;
-					PatternTree identifier = this.reinterpretExpressionAsPattern(assignment.getLeftOperand());
+					final AssignmentTree assignment = (AssignmentTree) expr;
+					final PatternTree identifier = assignment.getVariable();
 					
 					if (identifier.getKind() != Kind.IDENTIFIER)
 						dialect.require("js.parameter.destructured", identifier.getStart());
@@ -548,7 +548,7 @@ public class JSParser {
 					// I can't find any example of an expression that can't be used
 					// as a default value (except ones that won't run at all)
 					
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, identifier, false, false, null, assignment.getRightOperand());
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, identifier, false, false, null, assignment.getValue());
 				}
 				case SPREAD: {
 					dialect.require("js.parameter.rest", expr.getStart());
@@ -1924,7 +1924,7 @@ public class JSParser {
 			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
 				final ExpressionTree right = stack.pop();
 				final Token operator = operators.pop();
-				final Kind kind = this.mapTokenToBinaryTree(operator);
+				final Kind kind = this.mapTokenToBinaryKind(operator);
 				final ExpressionTree left = stack.pop();
 				
 				ExpressionTree expression;
@@ -1973,9 +1973,9 @@ public class JSParser {
 		while (!stack.isEmpty()) {
 			final ExpressionTree left = stack.pop();
 			final Token operator = operators.pop();
-			final Kind kind = this.mapTokenToBinaryTree(operator);
+			final Kind kind = this.mapTokenToBinaryKind(operator);
 			if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
-				expr = new AssignmentTreeImpl(kind, left, expr);
+				expr = new AssignmentTreeImpl(kind, this.reinterpretExpressionAsPattern(left), expr);
 			else
 				expr = new BinaryTreeImpl(kind, left, expr);
 		}
@@ -2049,7 +2049,7 @@ public class JSParser {
 				return new ArrayPatternTreeImpl(expr.getStart(), expr.getEnd(), elements);
 			}
 			case ASSIGNMENT:
-				return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), reinterpretExpressionAsPattern(((AssignmentTree)expr).getLeftOperand()), reinterpretExpressionAsPattern(((AssignmentTree)expr).getRightOperand()));
+				return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), ((AssignmentTree)expr).getVariable(), ((AssignmentTree)expr).getValue());
 			case ASSIGNMENT_PATTERN:
 			case ARRAY_PATTERN:
 			case IDENTIFIER:
@@ -2086,16 +2086,21 @@ public class JSParser {
 			throw new JSSyntaxException("Not assignment target", src.getPosition());
 		
 		Token assignmentOperator = src.nextToken();
+		
+		PatternTree variable;
 		if (assignmentOperator.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-			expr = reinterpretExpressionAsPattern(expr);
+			variable = reinterpretExpressionAsPattern(expr);
 		} else {
+			//For update-assignment operators (e.g., +=, *=), the LHS can't be a full pattern.
+			variable = (PatternTree) expr;//IdentifierTree/MemberExpressionTree already PatternTree's
+			//TODO throw descriptive error if syntax is bad here (expr is not a PatternTree)
 			context.isAssignmentTarget(false);
 			context.isBindingElement(false);
 		}
 		
 		
 		final ExpressionTree right = this.parseAssignment(null, src, context.coverGrammarIsolated());
-		return new AssignmentTreeImpl(startToken.getStart(), right.getEnd(), this.mapTokenToBinaryTree(assignmentOperator), expr, right);
+		return new AssignmentTreeImpl(startToken.getStart(), variable.getEnd(), this.mapTokenToBinaryKind(assignmentOperator), variable, right);
 	}
 	
 	/**

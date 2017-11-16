@@ -1,5 +1,6 @@
 package com.mindlin.jsast.tree;
 
+//TODO: merge with AssignmentTree?
 public interface AssignmentPatternTree extends PatternTree {
 	PatternTree getLeft();
 	
@@ -11,7 +12,7 @@ public interface AssignmentPatternTree extends PatternTree {
 	}
 
 	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitAssignmentPattern(this, data);
 	}
 }

@@ -7,9 +7,11 @@ package com.mindlin.jsast.tree;
  * @see AssignmentPatternTree
  * @author mailmindlin
  */
-public interface PatternTree extends ExpressionTree {
+public interface PatternTree extends Tree {
 	@Override
-	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
-		return this.accept((TreeVisitor<R, D>) visitor, data);
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return this.accept((PatternTreeVisitor<R, D>) visitor, data);
 	}
+	
+	<R, D> R accept(PatternTreeVisitor<R, D> visitor, D data);
 }
