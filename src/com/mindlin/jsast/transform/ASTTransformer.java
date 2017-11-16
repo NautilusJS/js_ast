@@ -160,10 +160,10 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public ExpressionTree visitAssignment(AssignmentTree node, D ctx) {
-		ExpressionTree oldLHS = node.getLeftOperand();
-		ExpressionTree oldRHS = node.getRightOperand();
+		PatternTree oldLHS = node.getVariable();
+		ExpressionTree oldRHS = node.getValue();
 		
-		ExpressionTree newLHS = (ExpressionTree) oldLHS.accept(this, ctx);
+		PatternTree newLHS = (PatternTree) oldLHS.accept(this, ctx);
 		ExpressionTree newRHS = (ExpressionTree) oldRHS.accept(this, ctx);
 		
 		if (oldLHS != newLHS || oldRHS != newRHS)
@@ -527,9 +527,9 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public ExpressionTree visitAssignmentPattern(AssignmentPatternTree node, D ctx) {
+	public PatternTree visitAssignmentPattern(AssignmentPatternTree node, D ctx) {
 		// TODO Auto-generated method stub
-		return (ExpressionTree) node.accept(this.transformation, ctx);
+		return (PatternTree) node.accept(this.transformation, ctx);
 	}
 	
 	@Override

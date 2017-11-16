@@ -8,6 +8,7 @@ import com.mindlin.jsast.tree.IdentifierTree;
  * Reference to {@link GenericParameterTree}.
  * @author mailmindlin
  */
+@Deprecated
 public interface GenericRefTypeTree extends TypeTree {
 	/**
 	 * Get name of ref
