@@ -107,6 +107,7 @@ public class JSLexer implements Supplier<Token> {
 				if (chars.hasNext() && chars.peek() == '\n') {
 					this.lines.putNewline(chars.position());
 					chars.skip(1);
+				}
 				return "";
 			case 'u': {
 				//Unicode escape
@@ -722,14 +723,14 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	protected String scanRegExpFlags() {
-		chars.mark();
+		StringBuilder sb = new StringBuilder();
 		while (!isEOF()) {
 			char c = chars.peek();
 			if (c != 'g' && c!= 'i' && c!= 'm' && c != 'y')
 				break;
-			chars.next();
+			sb.append(chars.next());
 		}
-		return chars.copyFromMark();
+		return sb.toString();
 	}
 	
 	public Token finishRegExpLiteral(Token start) {
