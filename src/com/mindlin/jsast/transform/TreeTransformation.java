@@ -221,11 +221,6 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default TypeTree visitGenericType(GenericParameterTree node, D d) {
-		return node;
-	}
-	
-	@Override
 	default Tree visitIdentifier(IdentifierTree node, D d) {
 		return node;
 	}

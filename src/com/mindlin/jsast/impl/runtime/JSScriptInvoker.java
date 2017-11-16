@@ -19,13 +19,11 @@ import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EmptyStatementTree;
-import com.mindlin.jsast.tree.EnumDeclarationTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -38,6 +36,7 @@ import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
+import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.NullLiteralTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
@@ -68,15 +67,15 @@ import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.GenericRefTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexTypeTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
+import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
-import com.mindlin.jsast.tree.type.ParameterTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 
@@ -140,8 +139,8 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 
 	@Override
 	public Object visitAssignment(AssignmentTree node, RuntimeScope d) {
-		Object value = JSRuntimeUtils.dereference(node.getRightOperand().accept(this, d));
-		Object target = node.getLeftOperand().accept(this, d);
+		Object value = JSRuntimeUtils.dereference(node.getValue().accept(this, d));
+		Object target = node.getVariable().accept(this, d);//TODO: use custom LHS target TreeVisitor thing
 		
 		if (target == null || !(target instanceof Reference))
 			throw new JSException("Invalid left hand side of assignment");
@@ -308,11 +307,6 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitComputedPropertyKey(ComputedPropertyKeyTree node, RuntimeScope d) {
-		return node.getExpression().accept(this, d);
-	}
-
-	@Override
 	public Object visitConditionalExpression(ConditionalExpressionTree node, RuntimeScope d) {
 		ExpressionTree branch = JSRuntimeUtils.toBoolean(node.getCondition().accept(this, d)) ? node.getTrueExpression() : node.getFalseExpression();
 		return branch.accept(this, d);
@@ -454,11 +448,6 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitGenericType(GenericTypeTree node, RuntimeScope d) {
-		return null;
-	}
-
-	@Override
 	public Object visitIdentifier(IdentifierTree node, RuntimeScope d) {
 		return new Reference() {
 			@Override
@@ -494,7 +483,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitIndexType(IndexTypeTree node, RuntimeScope d) {
+	public Object visitIndexType(IndexSignatureTree node, RuntimeScope d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -505,12 +494,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitInterfaceType(InterfaceTypeTree node, RuntimeScope d) {
-		return null;
-	}
-
-	@Override
-	public Object visitIntersectionType(BinaryTypeTree node, RuntimeScope d) {
+	public Object visitIntersectionType(CompositeTypeTree node, RuntimeScope d) {
 		return null;
 	}
 
@@ -552,12 +536,6 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 
 	@Override
 	public Object visitObjectPattern(ObjectPatternTree node, RuntimeScope d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object visitParameterType(ParameterTypeTree node, RuntimeScope d) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -678,7 +656,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitUnionType(BinaryTypeTree node, RuntimeScope d) {
+	public Object visitUnionType(CompositeTypeTree node, RuntimeScope d) {
 		return null;
 	}
 
@@ -726,6 +704,17 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	public Object visitAwait(AwaitTree node, RuntimeScope d) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Object visitInterfaceType(ObjectTypeTree node, RuntimeScope d) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visitMemberExpression(MemberExpressionTree node, RuntimeScope d) {
+		return this.visitBinary(node, d);
 	}
 	
 }

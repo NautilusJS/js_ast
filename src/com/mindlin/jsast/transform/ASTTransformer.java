@@ -624,12 +624,6 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public TypeTree visitGenericType(GenericParameterTree node, D ctx) {
-		// TODO Auto-generated method stub
-		return (TypeTree) node.accept(this.transformation, ctx);
-	}
-	
-	@Override
 	public Tree visitIdentifier(IdentifierTree node, D ctx) {
 		return node.accept(this.transformation, ctx);
 	}

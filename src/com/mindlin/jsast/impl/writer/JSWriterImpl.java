@@ -1047,6 +1047,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			}
 		}
 		
+		
 		//Write parameters
 		this.writeFunctionParameters(node.getParameters(), node.isArrow(), out);
 		
@@ -1093,12 +1094,6 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitGenericRefType(GenericRefTypeTree node, WriterHelper out) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Void visitGenericType(GenericParameterTree node, WriterHelper out) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}

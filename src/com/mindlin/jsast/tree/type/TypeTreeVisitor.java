@@ -22,8 +22,6 @@ public interface TypeTreeVisitor<R, D> {
 	
 	R visitGenericRefType(GenericRefTypeTree node, D d);
 	
-	R visitGenericType(GenericParameterTree node, D d);
-	
 	R visitIdentifierType(IdentifierTypeTree node, D d);
 	
 	R visitIndexType(IndexSignatureTree node, D d);
