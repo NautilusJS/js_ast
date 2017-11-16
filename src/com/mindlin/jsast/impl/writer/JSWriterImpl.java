@@ -48,6 +48,7 @@ import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
+import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.NullLiteralTree;
@@ -488,7 +489,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitAssignment(AssignmentTree node, WriterHelper out) {
-		node.getLeftOperand().accept(this, out);
+		node.getVariable().accept(this, out);
 		out.optionalSpace();
 		switch (node.getKind()) {
 			case ASSIGNMENT:
@@ -524,7 +525,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 				throw new IllegalArgumentException();
 		}
 		out.append('=').optionalSpace();
-		node.getRightOperand().accept(this, out);
+		node.getValue().accept(this, out);
 		return null;
 	}
 
@@ -1680,5 +1681,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		node.getValue().accept(this, out);
 		out.finishStatement(true);
 		return null;
+	}
+
+	@Override
+	public Void visitMemberExpression(MemberExpressionTree node, WriterHelper d) {
+		return this.visitBinary(node, d);
 	}
 }
