@@ -8,7 +8,7 @@ public interface JSObject {
 	Object getMember(String key);
 
 	Object getMember(Symbol key);
-
+	
 	default Object getSlot(int index) {
 		return getMember(Integer.toString(index));
 	}
@@ -37,8 +37,10 @@ public interface JSObject {
 		return hasMember(Integer.toString(index));
 	}
 
-	boolean isInstanceOf(Object other);
-
+	boolean isInstanceOf(Object maybeParent);
+	
+	boolean isInstance(Object maybeChild);
+	
 	default String getType() {
 		return "object";
 	}
@@ -50,4 +52,6 @@ public interface JSObject {
 	boolean isFrozen();
 
 	boolean isSealed();
+	
+	String getClassName();
 }

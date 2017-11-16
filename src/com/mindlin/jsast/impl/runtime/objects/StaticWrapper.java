@@ -47,4 +47,14 @@ public class StaticWrapper extends AbstractJSObject {
 	public String toString() {
 		return "class " + clazz.getSimpleName();
 	}
+
+	@Override
+	public boolean isInstance(Object maybeChild) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getClassName() {
+		return clazz.getSimpleName();
+	}
 }

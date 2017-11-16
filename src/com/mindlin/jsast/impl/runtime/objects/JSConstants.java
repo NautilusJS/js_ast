@@ -11,6 +11,12 @@ public final class JSConstants {
 		}
 	};
 	
+	@JSGlobal("Infinity")
+	public static final Object INFINITY = Double.POSITIVE_INFINITY;
+	
+	@JSGlobal("NaN")
+	public static final Object NAN = Double.NaN;
+	
 	@JSGlobal("Symbol")
 	public static JSFunction SYMBOL = new JSFunction() {
 		@Override
