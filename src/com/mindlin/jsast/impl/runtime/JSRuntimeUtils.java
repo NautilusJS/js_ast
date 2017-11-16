@@ -10,16 +10,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import com.mindlin.jsast.exception.JSTypeError;
+import com.mindlin.jsast.impl.runtime.objects.JSConstants;
 import com.mindlin.jsast.impl.runtime.objects.JSObject;
 import com.mindlin.jsast.impl.runtime.objects.Symbol;
 
 public class JSRuntimeUtils {
-	public static final Object UNDEFINED = new Object() {
-		@Override
-		public String toString() {
-			return "undefined";
-		}
-	};
+	public static final Object UNDEFINED = JSConstants.UNDEFINED;
 	
 	protected static Map<Class<?>, Method> ifaceMethods = new ConcurrentHashMap<>();
 	
@@ -58,8 +54,10 @@ public class JSRuntimeUtils {
 
 	public static boolean toBoolean(Object value) {
 		value = dereference(value);
+		
 		if (value == null || value == UNDEFINED)
 			return false;
+		
 		if (value instanceof Boolean)
 			return (Boolean) value;
 		
@@ -106,10 +104,12 @@ public class JSRuntimeUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Object invoke(Object target, Object thiz, Object... args) throws JSTypeError {
+		target = dereference(target);
 		if (target instanceof JSObject)
 			return ((JSObject) target).call(thiz, args);
 		else if (target instanceof Function)
 			return ((Function<Object[], Object>)target).apply(args);
+		
 		Method m;
 		if (target instanceof Method) {
 			m = (Method) target;
