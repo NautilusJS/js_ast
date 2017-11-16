@@ -30,12 +30,14 @@ import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportTree;
 import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
+import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.NullLiteralTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
+import com.mindlin.jsast.tree.PatternOrExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.ReturnTree;
@@ -99,7 +101,7 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	}
 	
 	@Override
-	default ExpressionTree visitAssignmentPattern(AssignmentPatternTree node, D d) {
+	default PatternTree visitAssignmentPattern(AssignmentPatternTree node, D d) {
 		return node;
 	}
 	
@@ -265,6 +267,11 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	
 	@Override
 	default StatementTree visitLabeledStatement(LabeledStatementTree node, D d) {
+		return node;
+	}
+
+	@Override
+	default PatternOrExpressionTree visitMemberExpression(MemberExpressionTree node, D d) {
 		return node;
 	}
 	

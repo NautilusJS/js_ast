@@ -26,7 +26,6 @@ import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -195,11 +194,4 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			node = new VariableDeclarationTreeImpl(node.getStart(), node.getEnd(), node.isScoped(), node.isConst(), declarations);
 		return node;
 	}
-
-	@Override
-	public Tree visitMemberExpression(MemberExpressionTree node, ASTTransformerContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 }

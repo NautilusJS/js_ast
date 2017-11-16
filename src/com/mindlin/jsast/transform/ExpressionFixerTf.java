@@ -25,6 +25,7 @@ import com.mindlin.jsast.tree.NullLiteralTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
+import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.SequenceTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -137,10 +138,11 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 	public ExpressionTree visitAssignment(AssignmentTree node, ASTTransformerContext d) {
 		Tree.Kind kind = node.getKind();
 		int precedence = precedence(kind);
-		ExpressionTree lhs = node.getLeftOperand(), rhs = node.getRightOperand(), oldLhs = lhs, oldRhs = rhs;
+		PatternTree lhs = node.getVariable(), oldLhs = lhs;
+		ExpressionTree rhs = node.getValue(), oldRhs = rhs;
 		
-		if (precedence(lhs.getKind()) < precedence)
-			lhs = new ParenthesizedTreeImpl(lhs.getStart(), lhs.getEnd(), lhs);
+		//LHS options are always greater precedence than assignment ops
+		
 		if (precedence(rhs.getKind()) < precedence)
 			rhs = new ParenthesizedTreeImpl(rhs.getStart(), rhs.getEnd(), rhs);
 		
@@ -235,6 +237,7 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 
 		@Override
 		public ExpressionTree visitAssignment(AssignmentTree node, Void d) {
+			//TODO: fix
 			return node.getLeftOperand().accept(this, d);
 		}
 
