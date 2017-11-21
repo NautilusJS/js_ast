@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
+import com.mindlin.jsast.fs.FilePosition;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
@@ -44,6 +45,14 @@ public class JSLexer implements Supplier<Token> {
 	
 	public LineMap getLines() {
 		return lines;
+	}
+	
+	public FilePosition getResolvedPosition() {
+		return this.lines.lookup(this.chars.position());
+	}
+	
+	public FilePosition resolvePosition(long position) {
+		return this.lines.lookup(position);
 	}
 	
 	public long getPosition() {
@@ -784,11 +793,16 @@ public class JSLexer implements Supplier<Token> {
 		
 		
 		//Skip whitespace until token
+		while (chars.hasNext() && Characters.isJsWhitespace(chars.peek())) {
+			if (chars.next() == '\n')
+				this.lines.putNewline(chars.position());
+		}/*
 		chars.skipWhitespace(false);
-		while (chars.isEOL()) {//TODO: can isEOL() == false, but isWhitespace() == true happen at this point?
-			this.lines.putNewline(chars.position());
+		while (!isEOF() && chars.isWhitespace()) {//TODO: can isEOL() == false, but isWhitespace() == true happen at this point?
+			
 			chars.skipWhitespace(false);
-		}
+		}*/
+		System.out.println("Taking token");
 		
 		//Special EOF token
 		if (isEOF())
@@ -836,7 +850,7 @@ public class JSLexer implements Supplier<Token> {
 			String identifierName = this.nextIdentifier();
 			if (identifierName == null) {
 				//Couldn't even parse an identifier
-				throw new JSSyntaxException("Illegal syntax at " + start);
+				throw new JSSyntaxException("Illegal syntax", resolvePosition(start));
 			} else if (identifierName.equals("true") || identifierName.equals("false")) {
 				//Boolean literal
 				kind = TokenKind.BOOLEAN_LITERAL;

@@ -160,9 +160,9 @@ public class JSParser {
 	 * @param token
 	 * @param value
 	 */
-	private static void expect(Token token, TokenKind kind) {
+	private static void expect(Token token, TokenKind kind, JSLexer src) {
 		if (token.getKind() != kind)
-			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getStart());
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, src.resolvePosition(token.getStart()));
 	}
 	
 	/**
@@ -170,37 +170,37 @@ public class JSParser {
 	 * @param token
 	 * @param value
 	 */
-	private static void expect(Token token, Object value) {
+	private static void expect(Token token, Object value, JSLexer src) {
 		if (!Objects.equals(token.getValue(), value))
-			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, src.resolvePosition(token.getStart()));
 	}
 	
 	private static Token expect(Token token, TokenKind kind, Object value, JSLexer src, Context context) {
 		if (token == null)
 			token = src.nextToken();
 		if (token.getKind() != kind)
-			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getStart());
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, src.resolvePosition(token.getStart()));
 		if (!Objects.equals(token.getValue(), value))
-			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getStart());
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, src.resolvePosition(token.getStart()));
 		return token;
 	}
 	
 	private static Token expect(TokenKind kind, Object value, JSLexer src, Context context) {
 		Token t = src.nextToken();
-		expect(t, kind);
-		expect(t, value);
+		expect(t, kind, src);
+		expect(t, value, src);
 		return t;
 	}
 	
-	private static void expect(Token token, TokenKind kind, Object value) {
-		expect(token, kind);
-		expect(token, value);
+	private static void expect(Token token, TokenKind kind, Object value, JSLexer src) {
+		expect(token, kind, src);
+		expect(token, value, src);
 	}
 	
 	private static Token expect(Token token, TokenKind kind, JSLexer src, Context context) {
 		if (token == null)
 			token = src.nextToken();
-		expect(token, kind);
+		expect(token, kind, src);
 		return token;
 	}
 	
@@ -862,7 +862,7 @@ public class JSParser {
 				}
 			} else if (isConst) {
 				//No initializer
-				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getStart());
+				throw new JSSyntaxException("Missing initializer in constant declaration", src.resolvePosition(identifier.getStart()));
 			}
 			
 			if (type == null && initializer != null) {
@@ -1197,7 +1197,7 @@ public class JSParser {
 			} else if (next.matches(TokenKind.BRACKET, '[')) {
 				//Parse index type
 				Token id = src.nextToken();
-				expect(id, TokenKind.IDENTIFIER);
+				expect(id, TokenKind.IDENTIFIER, src);
 				propname = new IdentifierTreeImpl(id);
 				
 				optional = false;
@@ -1226,7 +1226,7 @@ public class JSParser {
 			properties.add(new InterfacePropertyTreeImpl(start, src.getPosition(), readonly, propname, optional, type));
 		}
 		
-		expect(next, TokenKind.BRACKET, '}');
+		expect(next, TokenKind.BRACKET, '}', src);
 		
 		if (properties.isEmpty())
 			return Collections.emptyList();
@@ -1434,7 +1434,7 @@ public class JSParser {
 		Token t;
 		while ((t = src.nextTokenIf(TokenKind.BRACKET, '}')) == null)
 			statements.add(this.parseStatement(src, context));
-		expect(t, '}');
+		expect(t, '}', src);
 		return new BlockTreeImpl(openBraceToken.getStart(), src.getPosition(), statements);
 	}
 	
@@ -1514,7 +1514,7 @@ public class JSParser {
 			
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
-		expect(next, TokenKind.BRACKET, '}');
+		expect(next, TokenKind.BRACKET, '}', src);
 		cases.trimToSize();
 		
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
@@ -2143,7 +2143,7 @@ public class JSParser {
 					if (param != result.get(result.size() - 1))
 						throw new JSSyntaxException("Rest parameter must be the last", param.getStart(), param.getEnd());
 					
-					expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+					expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src);
 					result.trimToSize();
 					return result;
 				}
@@ -2215,7 +2215,7 @@ public class JSParser {
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		//Expect to end with a right paren
-		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS);
+		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src);
 		//Compress ArrayList (not strictly needed, but why not?)
 		result.trimToSize();
 		return result;
