@@ -88,18 +88,18 @@ public interface LineMap {
 		public long getLineNumber(long position) {
 			// Binary search to get the line number
 			int lo = 0;
-			int hi = length;
+			int hi = length - 1;
 			while (lo < hi) {
 				int idx = (hi - lo) / 2 + lo;
 				long val = newlinePositions[idx];
 				if (val > position)
-					hi = idx;
+					hi = idx - 1;
 				else if (val < position)
-					lo = idx;
+					lo = idx + 1;
 				else
-					return idx;
+					return idx + 2;//TODO: test (maybe should be return idx + 1)
 			}
-			return lo;// lo==hi
+			return lo + 2;// lo==hi
 		}
 		
 		@Override
