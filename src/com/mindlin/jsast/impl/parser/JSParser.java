@@ -216,7 +216,7 @@ public class JSParser {
 		Token t = src.nextToken();
 		if (t.isSpecial() && (!context.isStrict() || t.getValue() == JSSpecialGroup.SEMICOLON))
 			return t;
-		throw new JSSyntaxException("Illegal token " + t + "; expected EOL");
+		throw new JSSyntaxException("Illegal token " + t + "; expected EOL", src.resolvePosition(t.getStart()));
 	}
 	
 	//Parser properties
@@ -310,7 +310,7 @@ public class JSParser {
 					case IN:
 					case INSTANCEOF:
 					default:
-						throw new JSSyntaxException("Unexpected keyword " + next.getValue(), next.getStart());
+						throw new JSSyntaxException("Unexpected keyword " + next.getValue(), src.resolvePosition(next.getStart()));
 				}
 			}
 			case BRACKET:
@@ -993,7 +993,7 @@ public class JSParser {
 			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS)) {
 				dialect.require("js.class.inheritance", next.getStart());
 				if (superClass != null)
-					throw new JSSyntaxException("Classes may not extend multiple classes", next.getStart(), next.getEnd());
+					throw new JSSyntaxException("Classes may not extend multiple classes", src.resolvePosition(next.getStart()), src.resolvePosition(next.getEnd()));
 				superClass = this.parseType(src, context);
 				next = src.nextToken();
 			}
@@ -1040,7 +1040,7 @@ public class JSParser {
 					src.skip(lookahead);
 					//Check for 'abstract' keyword
 					if (!isClassAbstract)
-						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", lookahead.getStart(), lookahead.getEnd());
+						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", src.resolvePosition(lookahead.getStart()), src.resolvePosition(lookahead.getEnd()));
 					if (isPropertyAbstract)
 						throw new JSUnexpectedTokenException(lookahead);
 					
