@@ -9,6 +9,6 @@ public interface ExpressionTree extends Tree, PatternOrExpressionTree {
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return this.accept(visitor, data);
+		return this.accept((ExpressionTreeVisitor<R, D>) visitor, data);
 	}
 }

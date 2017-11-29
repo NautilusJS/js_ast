@@ -20,7 +20,7 @@ public interface TypeAliasTree extends StatementTree {
 	IdentifierTree getAlias();
 
 	/**
-	 * @return generic parameters
+	 * @return generic parameters (not null)
 	 */
 	List<GenericParameterTree> getGenericParameters();
 	

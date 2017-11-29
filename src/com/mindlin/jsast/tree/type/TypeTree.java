@@ -14,6 +14,6 @@ public interface TypeTree extends Tree {
 	
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return this.accept(visitor, data);
+		return this.accept((TypeTreeVisitor<R, D>) visitor, data);
 	}
 }
