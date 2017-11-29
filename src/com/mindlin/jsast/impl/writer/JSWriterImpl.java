@@ -126,6 +126,20 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		type.accept(this, out);
 	}
 	
+	void writeGenericParameter(GenericParameterTree param, WriterHelper out) {
+		param.getName().accept(this, out);
+		if (param.getSupertype() != null) {
+			out.appendIsolated("extends");
+			param.getSupertype().accept(this, out);
+		}
+		if (param.getDefault() != null) {
+			out.optionalSpace();
+			out.append('=');
+			out.optionalSpace();
+			param.getDefault().accept(this, out);
+		}
+	}
+	
 	void writeMethodDefinition(MethodDefinitionTree method, WriterHelper out) {
 		//Write access modifier; public is implied
 		if (method.getAccess() == AccessModifier.PROTECTED)
@@ -736,6 +750,13 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		if (node.getIdentifier() != null) {
 			out.append(options.space);
 			node.getIdentifier().accept(this, out);
+			
+			//Write generics list
+			if (node.getGenerics() != null && !node.getGenerics().isEmpty()) {
+				out.append('<');
+				writeList(node.getGenerics(), out, this::writeGenericParameter, wh -> wh.append(',').optionalSpace());
+				out.append('>');
+			}
 		}
 		if (node.getSuperType() != null) {
 			out.appendIsolated("extends");
@@ -1044,6 +1065,12 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 			if (node.getName() != null) {
 				out.append(options.space);
 				node.getName().accept(this, out);
+			}
+			
+			if (node.getGenericParameters() != null && !node.getGenericParameters().isEmpty()) {
+				out.append('<');
+				writeList(node.getGenericParameters(), out, this::writeGenericParameter, wh -> wh.append(',').optionalSpace());
+				out.append('>');
 			}
 		}
 		
