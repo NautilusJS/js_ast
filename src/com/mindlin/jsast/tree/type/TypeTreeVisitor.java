@@ -20,8 +20,6 @@ public interface TypeTreeVisitor<R, D> {
 	
 	R visitFunctionType(FunctionTypeTree node, D d);
 	
-	R visitGenericRefType(GenericRefTypeTree node, D d);
-	
 	R visitIdentifierType(IdentifierTypeTree node, D d);
 	
 	R visitIndexType(IndexSignatureTree node, D d);

@@ -97,7 +97,6 @@ import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericRefTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
@@ -615,12 +614,6 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	
 	@Override
 	public TypeTree visitFunctionType(FunctionTypeTree node, D ctx) {
-		// TODO Auto-generated method stub
-		return (TypeTree) node.accept(this.transformation, ctx);
-	}
-	
-	@Override
-	public TypeTree visitGenericRefType(GenericRefTypeTree node, D ctx) {
 		// TODO Auto-generated method stub
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
