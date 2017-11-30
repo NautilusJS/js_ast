@@ -1208,7 +1208,7 @@ public class JSParser {
 				TypeTree returnType = this.parseType(src, context);
 				type = new IndexSignatureTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
 			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
-				//Parse function type
+				//Parse call signature (TODO: refactor)
 				List<ParameterTree> params = this.parseParameters(src, context, false, null);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
@@ -1242,7 +1242,10 @@ public class JSParser {
 		
 		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
 		
+		//Get declared name
 		IdentifierTree name = this.parseIdentifier(null, src, context, false);
+		
+		//...extends A, B, ..., C
 		List<TypeTree> superClasses;
 		if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS)) {
 			superClasses = new ArrayList<>();
@@ -1254,6 +1257,7 @@ public class JSParser {
 		}
 		
 		expect(TokenKind.BRACKET, '{', src, context);
+		//Parse body
 		List<InterfacePropertyTree> properties = parseInterfaceBody(src, context);
 		
 		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, null, superClasses, properties);

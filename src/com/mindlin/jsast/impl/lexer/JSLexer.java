@@ -802,7 +802,7 @@ public class JSLexer implements Supplier<Token> {
 			
 			chars.skipWhitespace(false);
 		}*/
-		System.out.println("Taking token");
+//		System.out.println("Taking token");
 		
 		//Special EOF token
 		if (isEOF())

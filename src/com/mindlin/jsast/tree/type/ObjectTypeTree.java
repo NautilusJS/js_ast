@@ -16,7 +16,6 @@ public interface ObjectTypeTree extends TypeTree {
 
 	@Override
 	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
-		//return visitor.visitInterfaceType(this, data);
-		return null;//TODO finish
+		return visitor.visitInterfaceType(this, data);
 	}
 }
