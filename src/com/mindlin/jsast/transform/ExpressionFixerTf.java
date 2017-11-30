@@ -3,6 +3,7 @@ package com.mindlin.jsast.transform;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.CastTreeImpl;
+import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
@@ -44,7 +45,7 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
  * 
  * @author mailmindlin
  */
-public class ExpressionFixerTf implements TreeTransformation<ASTTransformerContext> {
+public class ExpressionFixerTf implements TreeTransformation<Void> {
 	protected int precedence(Tree.Kind kind) {
 		switch (kind) {
 			case IDENTIFIER:
@@ -135,7 +136,7 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 	}
 	
 	@Override
-	public ExpressionTree visitAssignment(AssignmentTree node, ASTTransformerContext d) {
+	public ExpressionTree visitAssignment(AssignmentTree node, Void d) {
 		Tree.Kind kind = node.getKind();
 		int precedence = precedence(kind);
 		PatternTree lhs = node.getVariable(), oldLhs = lhs;
@@ -152,16 +153,20 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 		return node;
 	}
 	
+	protected ExpressionTree wrap(ExpressionTree expr) {
+		return new ParenthesizedTreeImpl(expr.getStart(), expr.getEnd(), expr);
+	}
+	
 	@Override
-	public ExpressionTree visitBinary(BinaryTree node, ASTTransformerContext d) {
+	public ExpressionTree visitBinary(BinaryTree node, Void d) {
 		Tree.Kind kind = node.getKind();
 		int precedence = precedence(kind);
 		ExpressionTree lhs = node.getLeftOperand(), rhs = node.getRightOperand(), oldLhs = lhs, oldRhs = rhs;
 		
 		if (precedence(lhs.getKind()) < precedence)
-			lhs = new ParenthesizedTreeImpl(lhs.getStart(), lhs.getEnd(), lhs);
+			lhs = wrap(lhs);
 		if (precedence(rhs.getKind()) < precedence)
-			rhs = new ParenthesizedTreeImpl(rhs.getStart(), rhs.getEnd(), rhs);
+			rhs = wrap(rhs);
 		
 		if (lhs != oldLhs || rhs != oldRhs) {
 			if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
@@ -174,7 +179,7 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 	}
 	
 	@Override
-	public ExpressionTree visitCast(CastTree node, ASTTransformerContext d) {
+	public ExpressionTree visitCast(CastTree node, Void d) {
 		ExpressionTree expr = node.getExpression();
 		if (precedence(node.getKind()) > precedence(expr.getKind())) {
 			expr = new ParenthesizedTreeImpl(expr.getStart(), expr.getEnd(), expr);
@@ -184,13 +189,27 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 	}
 	
 	@Override
-	public ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, ASTTransformerContext d) {
-		// TODO Auto-generated method stub
-		return TreeTransformation.super.visitConditionalExpression(node, d);
+	public ExpressionTree visitConditionalExpression(ConditionalExpressionTree node, Void d) {
+		int basePrecedence = precedence(node.getKind());
+		
+		ExpressionTree condition = node.getCondition();
+		if (basePrecedence > precedence(condition.getKind()))
+			condition = wrap(condition);
+		ExpressionTree trueExpr = node.getTrueExpression();
+		if (basePrecedence > precedence(trueExpr.getKind()))
+			trueExpr = wrap(trueExpr);
+		ExpressionTree falseExpr = node.getFalseExpression();
+		if (basePrecedence > precedence(falseExpr.getKind()))
+			falseExpr = wrap(trueExpr);
+		
+		if (condition != node.getCondition() || trueExpr != node.getTrueExpression() || falseExpr != node.getFalseExpression())
+			return new ConditionalExpressionTreeImpl(condition, trueExpr, falseExpr);
+		
+		return node;
 	}
 	
 	@Override
-	public StatementTree visitExpressionStatement(ExpressionStatementTree node, ASTTransformerContext d) {
+	public StatementTree visitExpressionStatement(ExpressionStatementTree node, Void d) {
 		//Fix expressions starting with empty object literals, as they're misinterperted as empty blocks.
 		ExpressionTree left = node.getExpression().accept(new LeftmostThingFinder(), null);
 		if (left == null)
@@ -202,13 +221,13 @@ public class ExpressionFixerTf implements TreeTransformation<ASTTransformerConte
 	}
 
 	@Override
-	public ExpressionTree visitNew(NewTree node, ASTTransformerContext d) {
+	public ExpressionTree visitNew(NewTree node, Void d) {
 		// TODO Auto-generated method stub
 		return TreeTransformation.super.visitNew(node, d);
 	}
 	
 	@Override
-	public ExpressionTree visitUnary(UnaryTree node, ASTTransformerContext d) {
+	public ExpressionTree visitUnary(UnaryTree node, Void d) {
 		ExpressionTree expr = node.getExpression();
 		
 		if (precedence(expr.getKind()) < precedence(node.getKind())) {
