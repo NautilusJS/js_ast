@@ -88,6 +88,88 @@ public interface JSDialect {
 				return false;
 			}
 		},
+		TYPESCRIPT_11 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "ts.parameter.optional":
+					case "ts.visibility":
+					case "ts.visibility.public":
+					case "ts.visibility.private":
+					case "ts.types":
+						return true;
+				}
+				if (JSStandardDialect.ES5.supports(feature))
+					return true;
+				return false;
+			}
+		},
+		TYPESCRIPT_13 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "ts.visibility.protected":
+					case "ts.types.tuple":
+						return true;
+				}
+				if (JSStandardDialect.ES5.supports(feature) || JSStandardDialect.TYPESCRIPT_11.supports(feature))
+					return true;
+				return false;
+			}
+		},
+		TYPESCRIPT_14 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "ts.types.union":
+					case "ts.types.alias":
+					case "ts.types.enum.const":
+						return true;
+				}
+				if (JSStandardDialect.ES6.supports(feature) || JSStandardDialect.TYPESCRIPT_13.supports(feature))
+					return true;
+				return false;
+			}
+		},
+		TYPESCRIPT_15 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "ts.namespace":
+					case "js.decorator":
+						return true;
+				}
+				if (JSStandardDialect.ES6.supports(feature) || JSStandardDialect.TYPESCRIPT_14.supports(feature))
+					return true;
+				return false;
+			}
+		},
+		TYPESCRIPT_16 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "ts.types.intersection":
+					case "ts.class.abstract":
+						return true;
+				}
+				if (JSStandardDialect.ES6.supports(feature) || JSStandardDialect.TYPESCRIPT_15.supports(feature))
+					return true;
+				return false;
+			}
+		},
+		TYPESCRIPT_17 {
+			@Override
+			public boolean supports(String feature) {
+				switch (feature) {
+					case "ts.types.this":
+					case "ts.types.literal.string":
+						return true;
+				}
+				if (JSStandardDialect.ES6.supports(feature) || JSStandardDialect.TYPESCRIPT_16.supports(feature))
+					return true;
+				return false;
+			}
+		},
 		TYPESCRIPT {
 			@Override
 			public boolean supports(String feature) {
@@ -98,6 +180,7 @@ public interface JSDialect {
 					case "ts.types.union":
 					case "ts.types.interface":
 					case "ts.types.cast":
+					case "ts.types.this":
 					case "ts.class.abstract":
 						return true;
 				}
