@@ -245,6 +245,8 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 				return rhs.accept(this, d);
 			case ADDITION:
 				return JSRuntimeUtils.add(lhs,  rhs.accept(this, d));
+			default:
+				break;
 		}
 		
 		double l = JSRuntimeUtils.toNumber(lhs).doubleValue(), r = JSRuntimeUtils.toNumber(rhs.accept(this, d)).doubleValue();
@@ -259,6 +261,8 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 				return l % r;
 			case EXPONENTIATION:
 				return Math.pow(l, r);
+			default:
+				break;
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -640,7 +644,9 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 			case LOGICAL_NOT:
 				return !JSRuntimeUtils.toBoolean(expr.accept(this, d));
 			case DELETE:
-				
+				throw new UnsupportedOperationException();
+			default:
+				break;
 		}
 		
 		//TODO finish
