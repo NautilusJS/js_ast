@@ -2,10 +2,16 @@ package com.mindlin.jsast.fs;
 
 import java.nio.file.Path;
 
+import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 
 public class MemorySourceFile implements SourceFile {
-
+	protected char[] data;
+	
+	public MemorySourceFile(char[] data) {
+		this.data = data;
+	}
+	
 	@Override
 	public Path getPath() {
 		// TODO Auto-generated method stub
@@ -14,8 +20,7 @@ public class MemorySourceFile implements SourceFile {
 
 	@Override
 	public CharacterStream getSourceStream() {
-		// TODO Auto-generated method stub
-		return null;
+		return new CharacterArrayStream(data);
 	}
 
 	@Override
