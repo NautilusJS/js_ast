@@ -2,7 +2,6 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 

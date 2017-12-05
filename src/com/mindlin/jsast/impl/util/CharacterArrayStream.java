@@ -59,7 +59,7 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	
 	@Override
 	public boolean isEOL() {
-		if (!hasNext())
+		if (!hasNext() || position < 0)
 			return false;
 		
 		final char c = current();
@@ -78,8 +78,9 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 		if (passNewlines)
 			return this.skipWhitespace();
 		
-		while (position + 1 < data.length && Characters.isJsWhitespace(data[position + 1]) && data[position + 1] != '\n')
-			position++;
+		while (position + 1 < data.length && Characters.isJsWhitespace(data[position + 1]))
+			if (data[++position] == '\n')
+				break;
 		
 		return this;
 	}
