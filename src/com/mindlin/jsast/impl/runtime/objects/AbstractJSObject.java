@@ -7,14 +7,21 @@ import com.mindlin.jsast.exception.JSTypeError;
 import com.mindlin.jsast.impl.runtime.JSRuntimeUtils;
 
 public abstract class AbstractJSObject implements JSObject {
+	/**
+	 * If this class is currently frozen
+	 */
 	protected boolean frozen;
+	/**
+	 * If this class is currently sealed
+	 */
 	protected boolean sealed;
+	
 	public final Map<Object, PropertyDescriptor> members;
-
+	
 	public AbstractJSObject() {
 		this(new HashMap<>());
 	}
-
+	
 	public AbstractJSObject(Map<Object, PropertyDescriptor> members) {
 		this.members = members;
 	}
