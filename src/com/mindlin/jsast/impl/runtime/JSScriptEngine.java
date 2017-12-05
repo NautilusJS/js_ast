@@ -9,12 +9,21 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import com.mindlin.jsast.impl.parser.JSDialect;
 import com.mindlin.jsast.impl.parser.JSParser;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 
 public class JSScriptEngine implements ScriptEngine, Compilable {
 	NestedBindings engineBindings = new NestedBindings(JSScriptEngineFactory.getInstance().globalBindings, ScriptContext.ENGINE_SCOPE);
-	JSParser parser = new JSParser();
+	protected final JSParser parser;
+	
+	public JSScriptEngine() {
+		this(JSDialect.JSStandardDialect.EVERYTHING);
+	}
+	
+	public JSScriptEngine(JSDialect dialect) {
+		this.parser = new JSParser(dialect);
+	}
 
 	@Override
 	public Object eval(String script, ScriptContext context) throws ScriptException {
@@ -70,6 +79,10 @@ public class JSScriptEngine implements ScriptEngine, Compilable {
 
 	@Override
 	public Bindings getBindings(int scope) {
+		if (scope == ScriptContext.GLOBAL_SCOPE)
+			return JSScriptEngineFactory.getInstance().globalBindings;
+		if (scope == ScriptContext.ENGINE_SCOPE)
+			return this.engineBindings;
 		// TODO Auto-generated method stub
 		return null;
 	}
