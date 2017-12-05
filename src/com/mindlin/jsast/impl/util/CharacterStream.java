@@ -43,7 +43,7 @@ public interface CharacterStream {
 	boolean isEOL();
 
 	default boolean isWhitespace() {
-		return hasNext() && Characters.isJsWhitespace(current());
+		return position() >= 0 && hasNext() && Characters.isJsWhitespace(current());
 	}
 
 	default CharacterStream skipWhitespace() {
