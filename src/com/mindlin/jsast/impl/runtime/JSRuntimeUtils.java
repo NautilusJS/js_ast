@@ -170,6 +170,7 @@ public class JSRuntimeUtils {
 		throw new JSTypeError("Cannot access slot " + slot + " on " + target);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Object getMember(Object target, String member) {
 		target = dereference(target);
 		if (target instanceof JSObject)
@@ -180,6 +181,7 @@ public class JSRuntimeUtils {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Object getMember(Object target, Symbol member) {
 		target = dereference(target);
 		if (target instanceof JSObject)
@@ -190,6 +192,7 @@ public class JSRuntimeUtils {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static void setSlot(Object target, int slot, Object value) {
 		target = dereference(target);
 		if (target instanceof List) {
