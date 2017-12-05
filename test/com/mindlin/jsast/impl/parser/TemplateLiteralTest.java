@@ -21,7 +21,7 @@ public class TemplateLiteralTest {
 		TemplateLiteralTree template = parseExpression("`Hello`", Kind.TEMPLATE_LITERAL);
 		
 		List<TemplateElementTree> quasis = template.getQuasis();
-		assertEquals(quasis.size(), 1);
+		assertEquals(1, quasis.size());
 		
 		TemplateElementTree t0 = quasis.get(0);
 		assertEquals("Hello", t0.getCooked());
@@ -32,12 +32,12 @@ public class TemplateLiteralTest {
 		TemplateLiteralTree template = parseExpression("`${1+2}`", Kind.TEMPLATE_LITERAL);
 
 		List<TemplateElementTree> quasis = template.getQuasis();
-		assertEquals(quasis.size(), 2);
+		assertEquals(2, quasis.size());
 		assertEquals("", quasis.get(0).getCooked());
 		assertEquals("", quasis.get(1).getCooked());
 		
 		List<ExpressionTree> exprs = template.getExpressions();
-		assertEquals(exprs.size(), 1);
+		assertEquals(1, exprs.size());
 		BinaryTree expr = assertKind(exprs.get(0), Kind.ADDITION);
 		assertLiteral(1, expr.getLeftOperand());
 		assertLiteral(2, expr.getRightOperand());
@@ -46,7 +46,13 @@ public class TemplateLiteralTest {
 	@Test
 	public void testTemplateComplex() {
 		TemplateLiteralTree template = parseExpression("`Hello, ${'world!'}`", Kind.TEMPLATE_LITERAL);
+		List<TemplateElementTree> quasis = template.getQuasis();
+		assertEquals(2, quasis.size());
+		assertEquals("Hello, ", quasis.get(0).getCooked());
+		assertEquals("", quasis.get(1).getCooked());
 		
-		//TODO check
+		List<ExpressionTree> exprs = template.getExpressions();
+		assertEquals(1, exprs.size());
+		assertLiteral("world!", exprs.get(0));
 	}
 }

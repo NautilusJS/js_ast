@@ -18,10 +18,6 @@ public class TypeEquivalenceTest {
 			return null;
 		}
 		@Override
-		public Type resolveGeneric(String name) {
-			return null;
-		}
-		@Override
 		public Type resolveAliases(Type type) {
 			return type;
 		}

@@ -13,6 +13,7 @@ import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
+import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.Tree;
@@ -26,7 +27,7 @@ import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 @SuiteClasses({ArrayLiteralTest.class, AssignmentTest.class, BinaryExpressionTest.class, ClassDeclarationTest.class, DoLoopTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, InterfaceDeclarationTest.class, LambdaTest.class, OperatorTest.class, RegExpLiteralTest.class, StatementTest.class, TemplateLiteralTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })
 public class JSParserTest {
 	
-	protected static final void assertLiteral(ExpressionTree expr, String value) {
+	protected static final void assertLiteral(String value, ExpressionTree expr) {
 		assertEquals(Kind.STRING_LITERAL, expr.getKind());
 		assertEquals(value, ((StringLiteralTree)expr).getValue());
 	}
@@ -44,6 +45,16 @@ public class JSParserTest {
 	}
 	
 	protected static final void assertIdentifier(String name, ExpressionTree expr) {
+		assertEquals(Kind.IDENTIFIER, expr.getKind());
+		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	protected static final void assertIdentifier(String name, PatternTree expr) {
+		assertEquals(Kind.IDENTIFIER, expr.getKind());
+		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	protected static final void assertIdentifier(String name, IdentifierTree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
 	}
@@ -86,12 +97,12 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected static <T extends StatementTree> T parseStatement(String stmt) {
+	public static <T extends StatementTree> T parseStatement(String stmt) {
 		return (T) new JSParser().parseStatement(new JSLexer(stmt), new Context());
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected static <T extends StatementTree> T parseStatement(String stmt, Kind kind) {
+	public static <T extends StatementTree> T parseStatement(String stmt, Kind kind) {
 		T result = (T) new JSParser().parseStatement(new JSLexer(stmt), new Context());
 		assertEquals(kind, result.getKind());
 		return result;
@@ -103,7 +114,7 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected static <T extends ExpressionTree> T parseExpression(String expr) {
+	public static <T extends ExpressionTree> T parseExpression(String expr) {
 		JSLexer lexer = new JSLexer(expr);
 		T result = (T) new JSParser().parseNextExpression(lexer, new Context());
 		assertTrue("Not all of expression was consumed. Read until " + lexer.getPosition(), lexer.isEOF());
@@ -111,9 +122,14 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected static <T extends ExpressionTree> T parseExpression(String expr, Kind kind) {
+	public static <T extends ExpressionTree> T parseExpression(String expr, Kind kind) {
 		T result = (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
 		assertEquals(kind, result.getKind());
 		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T extends TypeTree> T parseType(String type) {
+		return (T) new JSParser().parseType(new JSLexer(type), new Context());
 	}
 }

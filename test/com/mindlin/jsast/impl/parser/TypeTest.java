@@ -1,23 +1,25 @@
 package com.mindlin.jsast.impl.parser;
 
-import static org.junit.Assert.*;
+import static com.mindlin.jsast.impl.parser.JSParserTest.assertIdentifier;
+import static com.mindlin.jsast.impl.parser.JSParserTest.assertSpecialType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
-import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
-import com.mindlin.jsast.tree.type.TupleTypeTree;
-import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.Tree.Kind;
-
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import com.mindlin.jsast.tree.type.ArrayTypeTree;
+import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.IdentifierTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
+import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
+import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class TypeTest {
 	
@@ -31,20 +33,20 @@ public class TypeTest {
 	}
 	
 	static void assertIdentifierType(String name, int numGenerics, TypeTree type) {
-		assertEquals(Kind.IDENTIFIER_TYPE, type.getKind());
+		assertEquals(Kind.OBJECT_TYPE, type.getKind());
 		assertIdentifier(name, ((IdentifierTypeTree)type).getIdentifier());
 		assertEquals(numGenerics, ((IdentifierTypeTree)type).getGenerics().size());
 	}
 	
 	@Test
 	public void testIdentifierType() {
-		IdentifierTypeTree type = parseType("Foo", Kind.IDENTIFIER_TYPE);
+		IdentifierTypeTree type = parseType("Foo", Kind.OBJECT_TYPE);
 		assertIdentifierType("Foo", 0, type);
 	}
 	
 	@Test
 	public void testIdentifierTypeWithGeneric() {
-		IdentifierTypeTree type = parseType("Foo<T>", Kind.IDENTIFIER_TYPE);
+		IdentifierTypeTree type = parseType("Foo<T>", Kind.OBJECT_TYPE);
 		assertIdentifierType("Foo", 1, type);
 		assertIdentifierType("T", 0, type.getGenerics().get(0));
 	}
@@ -73,7 +75,7 @@ public class TypeTest {
 	
 	@Test
 	public void testIdentifierTypeWithGenerics() {
-		IdentifierTypeTree type = parseType("Map<K,V>", Kind.IDENTIFIER_TYPE);
+		IdentifierTypeTree type = parseType("Map<K,V>", Kind.OBJECT_TYPE);
 		assertIdentifierType("Map", 2, type);
 		assertIdentifierType("K", 0, type.getGenerics().get(0));
 		assertIdentifierType("V", 0, type.getGenerics().get(1));
@@ -81,33 +83,38 @@ public class TypeTest {
 	
 	@Test
 	public void testUnionType() {
-		BinaryTypeTree type = parseType("A | B", Kind.TYPE_UNION);
-		assertIdentifierType("A", 0, type.getLeftType());
-		assertIdentifierType("B", 0, type.getRightType());
+		CompositeTypeTree type = parseType("A | B", Kind.TYPE_UNION);
+		assertIdentifierType("A", 0, type.getConstituents().get(0));
+		assertIdentifierType("B", 0, type.getConstituents().get(1));
 	}
 	
 	@Test
 	public void testIntersectionType() {
-		BinaryTypeTree type = parseType("A & B", Kind.TYPE_INTERSECTION);
-		assertIdentifierType("A", 0, type.getLeftType());
-		assertIdentifierType("B", 0, type.getRightType());
+		CompositeTypeTree type = parseType("A & B", Kind.TYPE_INTERSECTION);
+		assertIdentifierType("A", 0, type.getConstituents().get(0));
+		assertIdentifierType("B", 0, type.getConstituents().get(1));
 	}
 	
 	@Test
 	public void testIntersectionTypeWithGenerics() {
-		BinaryTypeTree type = parseType("A<T> & B<R>", Kind.TYPE_INTERSECTION);
-		assertIdentifierType("A", 1, type.getLeftType());
-		assertIdentifierType("T", 0, ((IdentifierTypeTree)type.getLeftType()).getGenerics().get(0));
-		assertIdentifierType("B", 1, type.getRightType());
-		assertIdentifierType("R", 0, ((IdentifierTypeTree)type.getRightType()).getGenerics().get(0));
+		CompositeTypeTree type = parseType("A<T> & B<R>", Kind.TYPE_INTERSECTION);
+		assertEquals(2, type.getConstituents().size());
+		
+		TypeTree leftType = type.getConstituents().get(0);
+		assertIdentifierType("A", 1, leftType);
+		assertIdentifierType("T", 0, ((IdentifierTypeTree) leftType).getGenerics().get(0));
+		
+		TypeTree rightType = type.getConstituents().get(1);
+		assertIdentifierType("B", 1, rightType);
+		assertIdentifierType("R", 0, ((IdentifierTypeTree)rightType).getGenerics().get(0));
 	}
 	
 	@Test
 	public void testSimpleInlineInterfaceType() {
-		InterfaceTypeTree type = parseType("{a:Foo}", Kind.INTERFACE_TYPE);
-		assertEquals(1, type.getProperties().size());
+		ObjectTypeTree type = parseType("{a:Foo}", Kind.OBJECT_TYPE);
+		assertEquals(1, type.getDeclaredProperties().size());
 		
-		InterfacePropertyTree prop0 = type.getProperties().get(0);
+		InterfacePropertyTree prop0 = type.getDeclaredProperties().get(0);
 		ObjectPropertyKeyTree key0 = prop0.getKey();
 		assertFalse(key0.isComputed());
 		assertIdentifier("a", key0);
@@ -124,12 +131,12 @@ public class TypeTest {
 	
 	@Test
 	public void testParentheticalType() {
-		BinaryTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
-		assertIdentifierType("A", 0, intersection.getLeftType());
+		CompositeTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
+		assertIdentifierType("A", 0, intersection.getConstituents().get(0));
 		
-		assertEquals(Kind.TYPE_UNION, intersection.getRightType().getKind());
-		BinaryTypeTree union = (BinaryTypeTree) intersection.getRightType();
-		assertIdentifierType("B", 0, union.getLeftType());
-		assertIdentifierType("C", 0, union.getRightType());
+		assertEquals(Kind.TYPE_UNION, intersection.getConstituents().get(1).getKind());
+		CompositeTypeTree union = (CompositeTypeTree) intersection.getConstituents().get(1);
+		assertIdentifierType("B", 0, union.getConstituents().get(0));
+		assertIdentifierType("C", 0, union.getConstituents().get(1));
 	}
 }

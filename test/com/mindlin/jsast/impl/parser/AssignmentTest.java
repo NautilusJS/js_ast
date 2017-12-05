@@ -12,19 +12,19 @@ public class AssignmentTest {
 	@Test
 	public void testAssignment() {
 		AssignmentTree assignment = parseExpression("x=y", Kind.ASSIGNMENT);
-		assertIdentifier("x", assignment.getLeftOperand());
-		assertIdentifier("y", assignment.getRightOperand());
+		assertIdentifier("x", assignment.getVariable());
+		assertIdentifier("y", assignment.getValue());
 	}
 	
 	@Test
 	public void testChainedAssignment() {
 		AssignmentTree assignment = parseExpression("x=y=z", Kind.ASSIGNMENT);
-		assertIdentifier("x", assignment.getLeftOperand());
-		assertEquals(Tree.Kind.ASSIGNMENT, assignment.getRightOperand().getKind());
+		assertIdentifier("x", assignment.getVariable());
+		assertEquals(Tree.Kind.ASSIGNMENT, assignment.getValue().getKind());
 		
-		AssignmentTree yzAssignment = (AssignmentTree) assignment.getRightOperand();
-		assertIdentifier("y", yzAssignment.getLeftOperand());
-		assertIdentifier("z", yzAssignment.getRightOperand());
+		AssignmentTree yzAssignment = (AssignmentTree) assignment.getValue();
+		assertIdentifier("y", yzAssignment.getVariable());
+		assertIdentifier("z", yzAssignment.getValue());
 	}
 	
 	@Test
