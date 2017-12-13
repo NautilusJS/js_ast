@@ -1,7 +1,6 @@
 package com.mindlin.jsast.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.assertIdentifier;
-import static com.mindlin.jsast.impl.parser.JSParserTest.assertSpecialType;
+import static com.mindlin.jsast.impl.parser.JSParserTest.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -10,7 +9,9 @@ import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
+import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
+import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
@@ -33,20 +34,49 @@ public class TypeTest {
 	}
 	
 	static void assertIdentifierType(String name, int numGenerics, TypeTree type) {
-		assertEquals(Kind.OBJECT_TYPE, type.getKind());
+		assertEquals(Kind.IDENTIFIER_TYPE, type.getKind());
 		assertIdentifier(name, ((IdentifierTypeTree)type).getIdentifier());
 		assertEquals(numGenerics, ((IdentifierTypeTree)type).getGenerics().size());
 	}
 	
 	@Test
+	public void testBracketCast() {
+		CastTree expr = parseExpression("<Foo> x", Kind.CAST);
+		assertIdentifierType("Foo", 0, expr.getType());
+		assertIdentifier("x", expr.getExpression());
+	}
+	
+	@Test
+	public void testAsCast() {
+		CastTree expr = parseExpression("x as Foo", Kind.CAST);
+		assertIdentifierType("Foo", 0, expr.getType());
+		assertIdentifier("x", expr.getExpression());
+	}
+	
+	@Test
+	public void testAsPrecedence() {
+		//See stackoverflow.com/a/28316948/2759984
+		{
+			//`<SomeType> x.id` should parse as `<SomeType> (x.id)`
+			CastTree cast = parseExpression("<SomeType> x.id", Kind.CAST);
+			assertIdentifierType("SomeType", 0, cast.getType());
+			
+			MemberExpressionTree expr = assertKind(Kind.MEMBER_SELECT, cast.getExpression());
+			assertIdentifier("x", expr.getLeftOperand());
+			assertIdentifier("id", expr.getRightOperand());
+		}
+		//TODO: more precedence tests?
+	}
+	
+	@Test
 	public void testIdentifierType() {
-		IdentifierTypeTree type = parseType("Foo", Kind.OBJECT_TYPE);
+		IdentifierTypeTree type = parseType("Foo", Kind.IDENTIFIER_TYPE);
 		assertIdentifierType("Foo", 0, type);
 	}
 	
 	@Test
 	public void testIdentifierTypeWithGeneric() {
-		IdentifierTypeTree type = parseType("Foo<T>", Kind.OBJECT_TYPE);
+		IdentifierTypeTree type = parseType("Foo<T>", Kind.IDENTIFIER_TYPE);
 		assertIdentifierType("Foo", 1, type);
 		assertIdentifierType("T", 0, type.getGenerics().get(0));
 	}
@@ -75,7 +105,7 @@ public class TypeTest {
 	
 	@Test
 	public void testIdentifierTypeWithGenerics() {
-		IdentifierTypeTree type = parseType("Map<K,V>", Kind.OBJECT_TYPE);
+		IdentifierTypeTree type = parseType("Map<K,V>", Kind.IDENTIFIER_TYPE);
 		assertIdentifierType("Map", 2, type);
 		assertIdentifierType("K", 0, type.getGenerics().get(0));
 		assertIdentifierType("V", 0, type.getGenerics().get(1));
