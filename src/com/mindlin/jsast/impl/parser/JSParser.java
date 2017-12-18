@@ -1319,9 +1319,9 @@ public class JSParser {
 			//No generics on 'this'
 			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, Collections.emptyList());
 		} else if (startToken.isIdentifier()) {
-					//Check for 'keyof X'
 			switch (startToken.<String>getValue()) {
 				case "keyof": {
+					//Check for 'keyof X'
 					TypeTree baseType = parseType(src, context);
 					return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), false, baseType);
 				}
@@ -1836,6 +1836,7 @@ public class JSParser {
 //					return 3;
 					return -1;
 				case QUESTION_MARK:
+					//Ternary expressions handled elsewhere
 //					return 4;
 					return -1;
 				case LOGICAL_OR:
@@ -2600,8 +2601,12 @@ public class JSParser {
 		if (startBodyToken.matches(TokenKind.BRACKET, '{')) {
 			src.skip(startBodyToken);
 			body = this.parseBlock(startBodyToken, src, ctx);
-		} else
+		} else if (arrow) {
 			body = new ReturnTreeImpl(parseNextExpression(src, ctx.coverGrammarIsolated()));
+		} else {
+			//TODO: function signature declaration
+			throw new JSSyntaxException("Functions must have a body", src.resolvePosition(startBodyToken.getStart()));
+		}
 		
 		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, ctx.isStrict(), generator);
 		ctx.pop();
