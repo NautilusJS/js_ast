@@ -284,8 +284,8 @@ public class LambdaTest {
 		
 		
 		//Check returned function
-		ReturnTree result = assertKind(lambda.getBody(), Kind.RETURN);
-		FunctionExpressionTree lambda1 = assertKind(result.getExpression(), Kind.FUNCTION_EXPRESSION);
+		ReturnTree result = assertKind(Kind.RETURN, lambda.getBody());
+		FunctionExpressionTree lambda1 = assertKind(Kind.FUNCTION_EXPRESSION, result.getExpression());
 		assertTrue(lambda1.isArrow());
 		List<ParameterTree> params1 = lambda1.getParameters();
 		assertEquals(1, params1.size());
@@ -296,7 +296,7 @@ public class LambdaTest {
 		assertNull(param1_1.getInitializer());
 		assertIdentifier("y", param1_1.getIdentifier());
 		
-		ReturnTree result1 = assertKind(lambda1.getBody(), Kind.RETURN);
+		ReturnTree result1 = assertKind(Kind.RETURN, lambda1.getBody());
 		assertIdentifier("x", result1.getExpression());
 	}
 }

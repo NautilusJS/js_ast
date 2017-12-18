@@ -60,7 +60,7 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected static final <T extends Tree> T assertKind(Tree tree, Tree.Kind kind) {
+	protected static final <T extends Tree> T assertKind(Tree.Kind kind, Tree tree) {
 		assertEquals(kind, tree.getKind());
 		return (T) tree;
 	}

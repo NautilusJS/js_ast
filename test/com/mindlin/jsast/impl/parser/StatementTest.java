@@ -98,16 +98,16 @@ public class StatementTest {
 		LabeledStatementTree labelled = parseStatement("x:;", Tree.Kind.LABELED_STATEMENT);
 		
 		assertIdentifier("x", labelled.getName());
-		assertKind(labelled.getStatement(), Tree.Kind.EMPTY_STATEMENT);
+		assertKind(Tree.Kind.EMPTY_STATEMENT, labelled.getStatement());
 		
 		
 		labelled = parseStatement("x:y:;", Tree.Kind.LABELED_STATEMENT);
 		
 		assertIdentifier("x", labelled.getName());
 		
-		labelled = assertKind(labelled.getStatement(), Tree.Kind.LABELED_STATEMENT);
+		labelled = assertKind(Tree.Kind.LABELED_STATEMENT, labelled.getStatement());
 		assertIdentifier("y", labelled.getName());
 		
-		assertKind(labelled.getStatement(), Tree.Kind.EMPTY_STATEMENT);
+		assertKind(Tree.Kind.EMPTY_STATEMENT, labelled.getStatement());
 	}
 }
