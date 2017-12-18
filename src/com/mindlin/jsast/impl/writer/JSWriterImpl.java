@@ -90,6 +90,7 @@ import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
@@ -1701,5 +1702,10 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitMemberExpression(MemberExpressionTree node, WriterHelper d) {
 		return this.visitBinary(node, d);
+	}
+
+	@Override
+	public Void visitLiteralType(LiteralTypeTree<?> node, WriterHelper d) {
+		return node.getValue().accept(this, d);
 	}
 }
