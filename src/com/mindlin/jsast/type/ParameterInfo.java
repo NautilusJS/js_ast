@@ -1,8 +1,8 @@
 package com.mindlin.jsast.type;
 
+import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
-import com.mindlin.jsast.tree.property.AccessModifier;
 
 public class ParameterInfo {
 	protected AccessModifier access;
