@@ -50,9 +50,18 @@ public class LiteralType<T> implements Type {
 			return true;
 		if (other == null)
 			return false;
-		if (!(other instanceof LiteralType))
+		if (!(other instanceof LiteralType) || this.getKind() != ((Type) other).getKind())
 			return false;
 		
+		//TODO: check this predicate
+		if (this.getKind() == Kind.NUMBER_LITERAL && Double.isNaN((double) this.getValue()) && Double.isNaN((double) ((LiteralType<?>) other).getValue()))
+			return true;
+		
 		return Objects.equals(this.getValue(), ((LiteralType<?>) other).getValue());
+	}
+	
+	@Override
+	public String toString() {
+		return super.toString() + "{" + this.getValue() + "}";
 	}
 }
