@@ -59,9 +59,10 @@ public interface Signature {
 		int result = parameters.size();
 		for (ListIterator<ParameterInfo> i = parameters.listIterator(parameters.size() - 1); i.hasPrevious(); result--) {
 			ParameterInfo param = i.previous();
-			if (!(param.isOptional() || param.isRest()))
+			if (!(param.isOptional() || param.isRest() || param.getInitializer() != null))
 				return result;
 		}
+		
 		return 0;
 	}
 }
