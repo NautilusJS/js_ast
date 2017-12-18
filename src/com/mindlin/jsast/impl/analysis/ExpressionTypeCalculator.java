@@ -1,111 +1,80 @@
 package com.mindlin.jsast.impl.analysis;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.mindlin.jsast.impl.analysis.ExpressionTypeCalculator.TypeContext;
-import com.mindlin.jsast.impl.tree.FunctionTypeTreeImpl;
-import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
-import com.mindlin.jsast.impl.tree.SpecialTypeTreeImpl;
-import com.mindlin.jsast.impl.validator.TypeInheritanceValidator;
+import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
-import com.mindlin.jsast.tree.ArrayPatternTree;
-import com.mindlin.jsast.tree.AssignmentPatternTree;
 import com.mindlin.jsast.tree.AssignmentTree;
 import com.mindlin.jsast.tree.BinaryTree;
-import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
-import com.mindlin.jsast.tree.BreakTree;
 import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
-import com.mindlin.jsast.tree.CommentNode;
-import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
+import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
-import com.mindlin.jsast.tree.ContinueTree;
-import com.mindlin.jsast.tree.DebuggerTree;
-import com.mindlin.jsast.tree.DoWhileLoopTree;
-import com.mindlin.jsast.tree.EmptyStatementTree;
-import com.mindlin.jsast.tree.EnumDeclarationTree;
-import com.mindlin.jsast.tree.ExportTree;
-import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ForEachLoopTree;
-import com.mindlin.jsast.tree.ForLoopTree;
+import com.mindlin.jsast.tree.ExpressionTreeVisitor;
 import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.IfTree;
-import com.mindlin.jsast.tree.ImportTree;
-import com.mindlin.jsast.tree.InterfaceDeclarationTree;
-import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.NewTree;
 import com.mindlin.jsast.tree.NullLiteralTree;
 import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
-import com.mindlin.jsast.tree.ObjectPatternTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
-import com.mindlin.jsast.tree.ReturnTree;
 import com.mindlin.jsast.tree.SequenceTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
-import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
-import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TryTree;
-import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
-import com.mindlin.jsast.tree.VariableDeclarationTree;
-import com.mindlin.jsast.tree.WhileLoopTree;
-import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
-import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.BinaryTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericRefTypeTree;
-import com.mindlin.jsast.tree.type.GenericTypeTree;
-import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexTypeTree;
-import com.mindlin.jsast.tree.type.InterfaceTypeTree;
-import com.mindlin.jsast.tree.type.MemberTypeTree;
-import com.mindlin.jsast.tree.type.ParameterTypeTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
-import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.jsast.type.CompositeType;
+import com.mindlin.jsast.type.IntrinsicType;
+import com.mindlin.jsast.type.LiteralType;
+import com.mindlin.jsast.type.Signature;
+import com.mindlin.jsast.type.Type;
+import com.mindlin.jsast.type.TypeMember;
+import com.mindlin.jsast.type.TypeParameter;
+import com.mindlin.jsast.type.TypeParameter.RebindableTypeParameter;
 
-public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeContext> {
+/**
+ * ExpressionTree -> Type
+ * @author mailmindlin
+ *
+ */
+public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, ReadonlyContext> {
 	
-	protected static class TypeContext {
-		public TypeTree lookupIdentifierType(String identifier) {
-			return null;
+	protected List<Type> resolveGenericsList(List<GenericParameterTree> genericDecls, ReadonlyContext ctx) {
+		Map<String, TypeParameter> generics = new HashMap<>();
+		for (GenericParameterTree genericDecl : genericDecls) {
+			String name = genericDecl.getName().getName();
+			TypeParameter param;
+			if (genericDecl.getDefault() == null && genericDecl.getSupertype() == null)
+				param = new TypeParameter(null, null);
+			//TODO: finish
 		}
 		
-		public FunctionTypeTree lookupFunctionType(String identifier) {
-			return null;
-		}
+		List<Type> result = new ArrayList<>(genericDecls.size());
+		
+		//TODO: finish
+		return result;
 	}
 	
 	@Override
-	public TypeTree visitAnyType(AnyTypeTree node, TypeContext d) {
-		return node;
-	}
-
-	@Override
-	public TypeTree visitSpecialType(SpecialTypeTree node, TypeContext d) {
-		return node;
-	}
-
-	@Override
-	public TypeTree visitArrayLiteral(ArrayLiteralTree node, TypeContext d) {
-		List<TypeTree> types = new ArrayList<>(node.getElements().size());
+	public Type visitArrayLiteral(ArrayLiteralTree node, ReadonlyContext d) {
+		List<Type> types = new ArrayList<>(node.getElements().size());
 		node.getElements().stream()
+			//TODO: flatmap spreads here
 			.map(expression -> expression.accept(this, d))
 			.reduce(new ArrayList<TypeTree>(), (tuple, type) -> {
 				for (TypeTree t : tuple) {
@@ -119,41 +88,26 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public TypeTree visitArrayPattern(ArrayPatternTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitArrayType(ArrayTypeTree node, TypeContext d) {
-		return node;
-	}
-
-	@Override
-	public TypeTree visitAssignment(AssignmentTree node, TypeContext d) {
-		if (node.getKind() == Kind.ASSIGNMENT)
-			return node.getRightOperand().accept(this, d);
-		//(a += b) is equivalent to (a = a + b), so defer to visitBinary().
-		//visitBinary() is written to map the OPNAME_ASSIGNMENT kinds to OPNAME internally.
-		return this.visitBinary(node, d);
-	}
-
-	@Override
-	public TypeTree visitAssignmentPattern(AssignmentPatternTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	@Override
-	public TypeTree visitAwait(AwaitTree node, TypeContext d) {
+	public Type visitAssignment(AssignmentTree node, ReadonlyContext d) {
+		if (node.getKind() == Kind.ASSIGNMENT)
+			return node.getValue().accept(this, d);
+		//(a += b) is equivalent to (a = a + b), so defer to visitBinary().
+		//visitBinary() is written to map the [OPNAME]_ASSIGNMENT kinds to OPNAME internally.
+		//For update assignments, the variable can't be a PatternTree that isn't an ExpressionTree.
+		return this.visitBinary(new BinaryTreeImpl(node.getStart(), node.getEnd(), node.getKind(), (ExpressionTree) node.getVariable(), node.getValue()), d);//TODO: finish
+	}
+
+	@Override
+	public Type visitAwait(AwaitTree node, ReadonlyContext d) {
+		Type exprType = node.getExpression().accept(this, d);
 		//TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TypeTree visitBinary(BinaryTree node, TypeContext d) {
+	public Type visitBinary(BinaryTree node, ReadonlyContext d) {
 		ExpressionTree lhs = node.getLeftOperand();
 		ExpressionTree rhs = node.getRightOperand();
 		
@@ -196,7 +150,7 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 			case RIGHT_SHIFT_ASSIGNMENT:
 			case UNSIGNED_RIGHT_SHIFT:
 			case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-				return new SpecialTypeTreeImpl(SpecialType.NUMBER);
+				return IntrinsicType.NUMBER;//TODO implement int32/int64 restrictions
 			case INSTANCEOF:
 			case IN:
 			case LESS_THAN:
@@ -207,13 +161,13 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 			case GREATER_THAN_EQUAL:
 			case STRICT_EQUAL:
 			case STRICT_NOT_EQUAL:
-				return new SpecialTypeTreeImpl(SpecialType.BOOLEAN);
+				return IntrinsicType.BOOLEAN;
 			case LOGICAL_AND:
 			case LOGICAL_OR: {
-				TypeTree leftType = lhs.accept(this, d);
-				TypeTree rightType = rhs.accept(this, d);
+				Type leftType = lhs.accept(this, d);
+				Type rightType = rhs.accept(this, d);
 				//Can be used as selectors, so union of both sides
-				return TypeInheritanceValidator.union(null, leftType, rightType);
+				return TypeCalculator.union(d, true, leftType, rightType);
 			}
 			default:
 				return null;
@@ -222,301 +176,119 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 	}
 
 	@Override
-	public TypeTree visitBlock(BlockTree node, TypeContext d) {
-		return null;
+	public Type visitBooleanLiteral(BooleanLiteralTree node, ReadonlyContext d) {
+		return IntrinsicType.BOOLEAN;//TODO: boolean literal?
 	}
 
 	@Override
-	public TypeTree visitBooleanLiteral(BooleanLiteralTree node, TypeContext d) {
-		return new SpecialTypeTreeImpl(SpecialType.BOOLEAN);
+	public Type visitCast(CastTree node, ReadonlyContext d) {
+		return node.getType().accept(new TypeExpressionResolver(), d);
 	}
 
 	@Override
-	public TypeTree visitBreak(BreakTree node, TypeContext d) {
-		return null;
+	public Type visitConditionalExpression(ConditionalExpressionTree node, ReadonlyContext d) {
+		return TypeCalculator.union(d, true, node.getTrueExpression().accept(this, d), node.getFalseExpression().accept(this, d));
 	}
 
 	@Override
-	public TypeTree visitCast(CastTree node, TypeContext d) {
-		return node.getType();
-	}
-
-	@Override
-	public TypeTree visitClassDeclaration(ClassDeclarationTree node, TypeContext d) {
-		throw new UnsupportedOperationException("Not yet supported");
-	}
-
-	@Override
-	public TypeTree visitComment(CommentNode node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitCompilationUnit(CompilationUnitTree node, TypeContext d) {
+	public Type visitFunctionCall(FunctionCallTree node, ReadonlyContext d) {
+		Type fnType = node.getCallee().accept(this, d);
+		//return fnType.getReturnType();
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TypeTree visitComputedPropertyKey(ComputedPropertyKeyTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitConditionalExpression(ConditionalExpressionTree node, TypeContext d) {
-		return TypeInheritanceValidator.union(null, node.getTrueExpression().accept(this, d), node.getFalseExpression().accept(this, d));
-	}
-
-	@Override
-	public TypeTree visitContinue(ContinueTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitDebugger(DebuggerTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitDoWhileLoop(DoWhileLoopTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitEmptyStatement(EmptyStatementTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitEnumDeclaration(EnumDeclarationTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitExport(ExportTree node, TypeContext d) {
-		//TODO not sure if export has a value
-		throw new UnsupportedOperationException("Not yet supported");
-	}
-
-	@Override
-	public TypeTree visitExpressionStatement(ExpressionStatementTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitForEachLoop(ForEachLoopTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitForLoop(ForLoopTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitFunctionCall(FunctionCallTree node, TypeContext d) {
-		FunctionTypeTree fnType = null;//TODO lookup function
-		return fnType.getReturnType();
-	}
-
-	@Override
-	public TypeTree visitFunctionExpression(FunctionExpressionTree node, TypeContext d) {
-		return new FunctionTypeTreeImpl(node.getStart(), node.getEnd(), true, node.getParameters(), Collections.emptyList(), node.getReturnType());
-	}
-
-	@Override
-	public TypeTree visitFunctionType(FunctionTypeTree node, TypeContext d) {
-		return node;
-	}
-
-	@Override
-	public TypeTree visitGenericRefType(GenericRefTypeTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitGenericType(GenericTypeTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitIdentifier(IdentifierTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitIdentifierType(IdentifierTypeTree node, TypeContext d) {
-		return node;
-	}
-
-	@Override
-	public TypeTree visitIf(IfTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitImport(ImportTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitIndexType(IndexTypeTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitInterfaceDeclaration(InterfaceDeclarationTree node, TypeContext d) {
-		//return TypeInheritanceValidator.reduceInterface(d, node.getSupertypes(), node.getProperties());
-		return null;
-	}
-
-	@Override
-	public TypeTree visitInterfaceType(InterfaceTypeTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitIntersectionType(BinaryTypeTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitLabeledStatement(LabeledStatementTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitMemberType(MemberTypeTree node, TypeContext d) {
-		//We accept it to optionally reduce the given base type.
-		TypeTree baseType = node.getBaseType().accept(this, d);
+	public Type visitFunctionExpression(FunctionExpressionTree node, ReadonlyContext d) {
+		RebindableTypeParameter thisParam = TypeParameter.unbound();//Parameter to use for 'this' types
 		
+		Map<String, TypeParameter> generics = new HashMap<>();
+		
+		//TODO: finish
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Type visitIdentifier(IdentifierTree node, ReadonlyContext d) {
+		return d.getVar(node.getName()).getCurrentType();
+	}
+
+	@Override
+	public Type visitNew(NewTree node, ReadonlyContext d) {
+		Type calleeType = node.getCallee().accept(this, d);
+		
+		List<Type> arguments = new ArrayList<>(node.getArguments().size());
+		for (ExpressionTree argument : node.getArguments())
+			arguments.add(argument.accept(this, d));
+		
+		//TODO: discover constructors on calleeType
+		Collection<Signature> constructors = TypeCalculator.restrictSignatures(d, null, Collections.emptyList(), arguments);
+		
+		return constructors.iterator().next().getReturnType();
+	}
+
+	@Override
+	public Type visitNull(NullLiteralTree node, ReadonlyContext d) {
+		return IntrinsicType.NULL;
+	}
+
+	@Override
+	public Type visitNumericLiteral(NumericLiteralTree node, ReadonlyContext d) {
+		return LiteralType.of(node.getValue());
+	}
+
+	@Override
+	public Type visitObjectLiteral(ObjectLiteralTree node, ReadonlyContext d) {
+		node.getProperties();
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public TypeTree visitNew(NewTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitNull(NullLiteralTree node, TypeContext d) {
-		return new SpecialTypeTreeImpl(SpecialType.NULL);
-	}
-
-	@Override
-	public TypeTree visitNumericLiteral(NumericLiteralTree node, TypeContext d) {
-		return new SpecialTypeTreeImpl(SpecialType.NUMBER);
-	}
-
-	@Override
-	public TypeTree visitObjectLiteral(ObjectLiteralTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitObjectPattern(ObjectPatternTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitParameterType(ParameterTypeTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitParentheses(ParenthesizedTree node, TypeContext d) {
-		return node.getExpression().accept(this, d);
-	}
-
-	@Override
-	public TypeTree visitRegExpLiteral(RegExpLiteralTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitReturn(ReturnTree node, TypeContext d) {
-		return node.getExpression().accept(this, d);
-	}
-
-	@Override
-	public TypeTree visitSequence(SequenceTree node, TypeContext d) {
+	public Type visitSequence(SequenceTree node, ReadonlyContext d) {
 		if (node.getExpressions().isEmpty())
 			return null;
 		return node.getExpressions().get(node.getExpressions().size() - 1).accept(this, d);
 	}
 
 	@Override
-	public TypeTree visitStringLiteral(StringLiteralTree node, TypeContext d) {
-		return new LiteralTypeTreeImpl<String>(node, true);
+	public Type visitStringLiteral(StringLiteralTree node, ReadonlyContext d) {
+		return new LiteralType<String>(Type.Kind.STRING_LITERAL, node.getValue());
 	}
 
 	@Override
-	public TypeTree visitSuper(SuperExpressionTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
+	public Type visitSuper(SuperExpressionTree node, ReadonlyContext d) {
+		return d.superType();
+	}
+	
+	@Override
+	public Type visitTemplateLiteral(TemplateLiteralTree node, ReadonlyContext d) {
+		return IntrinsicType.STRING;
 	}
 
 	@Override
-	public TypeTree visitSwitch(SwitchTree node, TypeContext d) {
-		return null;
+	public Type visitThis(ThisExpressionTree node, ReadonlyContext d) {
+		return d.thisType();
 	}
 
 	@Override
-	public TypeTree visitTemplateLiteral(TemplateLiteralTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitThis(ThisExpressionTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TypeTree visitThrow(ThrowTree node, TypeContext d) {
-		return new SpecialTypeTreeImpl(SpecialType.NEVER);
-	}
-
-	@Override
-	public TypeTree visitTry(TryTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitTupleType(TupleTypeTree node, TypeContext d) {
-		return node;
-	}
-
-	@Override
-	public TypeTree visitUnary(UnaryTree node, TypeContext d) {
+	public Type visitUnary(UnaryTree node, ReadonlyContext d) {
 		switch (node.getKind()) {
 			case BITWISE_NOT:
 			case PREFIX_INCREMENT:
 			case POSTFIX_INCREMENT:
 			case PREFIX_DECREMENT:
 			case POSTFIX_DECREMENT:
-				return new SpecialTypeTreeImpl(SpecialType.NUMBER);
+				return IntrinsicType.NUMBER;//TODO restriction
 			case LOGICAL_NOT:
 			case DELETE:
 			case UNARY_PLUS:
 			case UNARY_MINUS:
-				return new SpecialTypeTreeImpl(SpecialType.BOOLEAN);
+				return IntrinsicType.BOOLEAN;
 			case TYPEOF:
-				return new SpecialTypeTreeImpl(SpecialType.STRING);
+				return IntrinsicType.STRING;//TODO: union of "string" | "number" | ...
 			case VOID:
-				return new SpecialTypeTreeImpl(SpecialType.VOID);
+				return IntrinsicType.VOID;
 			case YIELD:
 			case YIELD_GENERATOR:
 				//TODO this is wrong.
@@ -531,27 +303,46 @@ public class ExpressionTypeCalculator implements TreeVisitor<TypeTree, TypeConte
 	}
 
 	@Override
-	public TypeTree visitUnionType(BinaryTypeTree node, TypeContext d) {
-		return TypeInheritanceValidator.reduce(null, node);
+	public Type visitParentheses(ParenthesizedTree node, ReadonlyContext d) {
+		return node.getExpression().accept(this, d);
 	}
 
 	@Override
-	public TypeTree visitVariableDeclaration(VariableDeclarationTree node, TypeContext d) {
-		return null;
+	public Type visitRegExpLiteral(RegExpLiteralTree node, ReadonlyContext d) {
+		return d.getType("RegExp");
 	}
-
+	
 	@Override
-	public TypeTree visitWhileLoop(WhileLoopTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitWith(WithTree node, TypeContext d) {
-		return null;
-	}
-
-	@Override
-	public TypeTree visitTypeAlias(TypeAliasTree node, TypeContext d) {
+	public Type visitClassDeclaration(ClassDeclarationTree node, ReadonlyContext d) {
+		RebindableTypeParameter thisTP = TypeParameter.unbound();
+		//TODO: resolve super type(s)
+		List<TypeMember> staticProps = new ArrayList<>();
+		List<Signature> constructSignatures = new ArrayList<>();
+		List<TypeMember> props = new ArrayList<>();
+		List<Signature> callSignatures = new ArrayList<>();
+		
+		for (ClassPropertyTree<?> property : node.getProperties()) {
+			switch (property.getDeclarationType()) {
+				case ASYNC_METHOD:
+					break;
+				case CONSTRUCTOR:
+					break;
+				case FIELD:
+					break;
+				case GENERATOR:
+					break;
+				case GETTER:
+					break;
+				case METHOD:
+					break;
+				case SETTER:
+					break;
+				default:
+					break;
+				
+			}
+		}
+		// TODO Auto-generated method stub
 		return null;
 	}
 }
