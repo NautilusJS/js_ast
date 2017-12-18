@@ -38,7 +38,7 @@ public class TemplateLiteralTest {
 		
 		List<ExpressionTree> exprs = template.getExpressions();
 		assertEquals(1, exprs.size());
-		BinaryTree expr = assertKind(exprs.get(0), Kind.ADDITION);
+		BinaryTree expr = assertKind(Kind.ADDITION, exprs.get(0));
 		assertLiteral(1, expr.getLeftOperand());
 		assertLiteral(2, expr.getRightOperand());
 	}
