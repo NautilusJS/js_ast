@@ -56,7 +56,6 @@ import com.mindlin.jsast.impl.tree.ImportTreeImpl;
 import com.mindlin.jsast.impl.tree.IndexSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfacePropertyTreeImpl;
-import com.mindlin.jsast.impl.tree.ObjectTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.KeyofTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.LineMap;
@@ -71,6 +70,7 @@ import com.mindlin.jsast.impl.tree.ObjectLiteralPropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectPatternPropertyTreeImpl;
 import com.mindlin.jsast.impl.tree.ObjectPatternTreeImpl;
+import com.mindlin.jsast.impl.tree.ObjectTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.RegExpLiteralTreeImpl;
@@ -928,6 +928,17 @@ public class JSParser {
 		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
 	
+	/**
+	 * Parse a {@code return} or {@code throw} statement.
+	 * <p>
+	 * Note that {@code yield} expressions aren't unary statements, as they can
+	 * evaluate to a value.
+	 * </p>
+	 * @param keywordToken
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	protected ExpressiveStatementTree parseUnaryStatement(Token keywordToken, JSLexer src, Context context) {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (!(keywordToken.getValue() == JSKeyword.RETURN || keywordToken.getValue() == JSKeyword.THROW))
@@ -946,7 +957,14 @@ public class JSParser {
 		else
 			return new ThrowTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
 	}
-
+	
+	/**
+	 * Parse labeled statement. In form of {@code LABEL: STATEMENT}.
+	 * @param identifier
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	protected LabeledStatementTree parseLabeledStatement(IdentifierTree identifier, JSLexer src, Context context) {
 		StatementTree statement = this.parseStatement(src, context);
 		context.registerStatementLabel(identifier.getName(), identifier.getStart());
@@ -1285,7 +1303,7 @@ public class JSParser {
 				return this.parseFunctionType(src, context);
 			return null;
 		}
-		return parseType(src, context);
+		return this.parseType(src, context);
 	}
 	
 	protected TypeTree parseFunctionType(JSLexer src, Context context) {
@@ -1301,7 +1319,7 @@ public class JSParser {
 			//No generics on 'this'
 			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, Collections.emptyList());
 		} else if (startToken.isIdentifier()) {
-			//Check for 'keyof X'
+					//Check for 'keyof X'
 			switch (startToken.<String>getValue()) {
 				case "keyof": {
 					TypeTree baseType = parseType(src, context);
@@ -1342,6 +1360,7 @@ public class JSParser {
 				}
 			}
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
+			//void type
 			return new SpecialTypeTreeImpl(startToken);
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION)) {
 			//Function
@@ -1496,7 +1515,7 @@ public class JSParser {
 		
 		ArrayList<CaseTree> cases = new ArrayList<>();
 		Token next;
-		while ((next = src.nextToken()).isKeyword()) {
+		while ((next = src.nextTokenIf(TokenKind.KEYWORD)) != null) {
 			ExpressionTree caseExpr;
 			if (next.getValue() == JSKeyword.CASE)
 				caseExpr = this.parseNextExpression(src, context);
@@ -1518,7 +1537,7 @@ public class JSParser {
 			
 			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
-		expect(next, TokenKind.BRACKET, '}', src);
+		src.expect(TokenKind.BRACKET, '}');
 		cases.trimToSize();
 		
 		return new SwitchTreeImpl(switchKeywordToken.getStart(), src.getPosition(), expression, cases);
@@ -1783,7 +1802,7 @@ public class JSParser {
 		if (operatorToken == null)
 			return expr;
 		context.isAssignmentTarget(false).isBindingElement(false).push();
-		final ExpressionTree right = parseExponentiation(null, src, context.coverGrammarIsolated());
+		final ExpressionTree right = this.parseExponentiation(null, src, context.coverGrammarIsolated());
 		context.pop();
 		return new BinaryTreeImpl(expr.getStart(), right.getEnd(), Tree.Kind.EXPONENTIATION, expr, right);
 	}
@@ -1873,6 +1892,13 @@ public class JSParser {
 		return -1;
 	}
 	
+	/**
+	 * Parse binary expression
+	 * @param startToken
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	protected ExpressionTree parseBinaryExpression(Token startToken, JSLexer src, Context context) {
 		if (startToken == null)
 			startToken = src.nextToken();
@@ -1935,10 +1961,11 @@ public class JSParser {
 				if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
 					expression = new MemberExpressionTreeImpl(kind, left, right);
 				else if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
-					throw new JSSyntaxException("This shouldn't be happening", operator.getStart());
+					throw new JSSyntaxException("This shouldn't be happening", src.resolvePosition(operator.getStart()), src.resolvePosition(operator.getEnd()));
 				else
 					expression = new BinaryTreeImpl(kind, left, right);
-				stack.add(expression);
+				
+				stack.add(expression);//Push expression onto stack
 				
 				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek(), context);
 			}
@@ -1978,6 +2005,8 @@ public class JSParser {
 			final ExpressionTree left = stack.pop();
 			final Token operator = operators.pop();
 			final Kind kind = this.mapTokenToBinaryKind(operator);
+			//TODO: fix for member expressions
+			//TODO: can we make assignment statement
 			if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
 				expr = new AssignmentTreeImpl(kind, this.reinterpretExpressionAsPattern(left), expr);
 			else
@@ -2096,8 +2125,13 @@ public class JSParser {
 			variable = reinterpretExpressionAsPattern(expr);
 		} else {
 			//For update-assignment operators (e.g., +=, *=), the LHS can't be a full pattern.
+			//LHS can only be an IdentifierTree or MemberExpressionTree
+			if (!(expr.getKind() == Kind.IDENTIFIER || expr.getKind() == Kind.MEMBER_SELECT || expr.getKind() == Kind.ARRAY_ACCESS))
+				throw new JSSyntaxException("Update assignment LHS cannot be arbitrary pattern", src.resolvePosition(expr.getStart()), src.resolvePosition(expr.getEnd()));
+			
 			variable = (PatternTree) expr;//IdentifierTree/MemberExpressionTree already PatternTree's
-			//TODO throw descriptive error if syntax is bad here (expr is not a PatternTree)
+			
+			//No longer assignment/binding target
 			context.isAssignmentTarget(false);
 			context.isBindingElement(false);
 		}
@@ -2213,7 +2247,7 @@ public class JSParser {
 			Token assignment = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT);
 			ExpressionTree defaultValue = null;
 			if (assignment != null)
-				defaultValue = parseAssignment(null, src, context);
+				defaultValue = this.parseAssignment(null, src, context);
 			
 			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), access, new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
@@ -3173,6 +3207,7 @@ public class JSParser {
 			return this;
 		}
 		
+		//TODO: remove?
 		public Context registerGenericParam(String name, long position) throws JSSyntaxException {
 			for (ContextData data = this.data; data != null; data = data.parent)
 				if (data.genericNames != null && data.genericNames.contains(name))
