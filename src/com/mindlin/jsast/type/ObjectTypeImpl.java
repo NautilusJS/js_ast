@@ -1,17 +1,17 @@
 package com.mindlin.jsast.type;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class ObjectTypeImpl implements ObjectType {
 	List<TypeParameter> generics;
 	TypeParameter thisTP;
-	Set<TypeMember> props;
-	Set<Signature> callSignatures;
-	Set<Signature> constructSignatures;
-	Set<IndexInfo> indices;
+	Collection<TypeMember> props;
+	Collection<Signature> callSignatures;
+	Collection<Signature> constructSignatures;
+	Collection<IndexInfo> indices;
 	
-	public ObjectTypeImpl(List<TypeParameter> generics, TypeParameter thisTP, Set<TypeMember> props, Set<Signature> callSignatures, Set<Signature> constructSignatures, Set<IndexInfo> indices) {
+	public ObjectTypeImpl(List<TypeParameter> generics, TypeParameter thisTP, Collection<TypeMember> props, Collection<Signature> callSignatures, Collection<Signature> constructSignatures, Collection<IndexInfo> indices) {
 		this.generics = generics;
 		this.thisTP = thisTP;
 		this.props = props;
@@ -31,23 +31,51 @@ public class ObjectTypeImpl implements ObjectType {
 	}
 
 	@Override
-	public Set<TypeMember> declaredProperties() {
+	public Collection<TypeMember> declaredProperties() {
 		return this.props;
 	}
 
 	@Override
-	public Set<Signature> declaredCallSignatures() {
+	public Collection<Signature> declaredCallSignatures() {
 		return this.callSignatures;
 	}
 
 	@Override
-	public Set<Signature> declaredConstructSignatures() {
+	public Collection<Signature> declaredConstructSignatures() {
 		return this.constructSignatures;
 	}
 
 	@Override
-	public Set<IndexInfo> declaredIndexInfo() {
+	public Collection<IndexInfo> declaredIndexInfo() {
 		return this.indices;
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(super.toString());
+		
+		{
+			sb.append('<');
+			boolean first = true;
+			for (TypeParameter param : this.getTypeParameters()) {
+				if (!first)
+					sb.append(", ");
+				sb.append(param);
+				first = false;
+			}
+			sb.append('>');
+		}
+		
+		sb.append('{');
+		
+		boolean first = true;
+		for (TypeMember prop : this.declaredProperties()) {
+			sb.append("\n\t");
+			sb.append(prop);
+		}
+		
+		
+		sb.append('}');
+		return sb.toString();
+	}
 }

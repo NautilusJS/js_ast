@@ -1,6 +1,6 @@
 package com.mindlin.jsast.type;
 
-import java.util.Set;
+import java.util.Collection;
 
 public interface ObjectType extends Type, GenericType {
 	/**
@@ -9,13 +9,15 @@ public interface ObjectType extends Type, GenericType {
 	 */
 	TypeParameter thisType();
 	
-	Set<TypeMember> declaredProperties();
 	
-	Set<Signature> declaredCallSignatures();
+	Collection<TypeMember> declaredProperties();
 	
-	Set<Signature> declaredConstructSignatures();
+	Collection<Signature> declaredCallSignatures();
 	
-	Set<IndexInfo> declaredIndexInfo();
+	Collection<Signature> declaredConstructSignatures();
+	
+	Collection<IndexInfo> declaredIndexInfo();
+	
 	
 	@Override
 	default Type.Kind getKind() {
