@@ -72,6 +72,7 @@ import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
@@ -714,6 +715,11 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	@Override
 	public Object visitMemberExpression(MemberExpressionTree node, RuntimeScope d) {
 		return this.visitBinary(node, d);
+	}
+
+	@Override
+	public Object visitLiteralType(LiteralTypeTree<?> node, RuntimeScope d) {
+		return null;
 	}
 	
 }

@@ -2,9 +2,12 @@ package com.mindlin.jsast.type;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import com.mindlin.jsast.impl.analysis.TypeCalculator;
+import com.mindlin.jsast.impl.analysis.TypeContext;
 import com.mindlin.jsast.impl.analysis.TypeExpressionResolver;
 import com.mindlin.jsast.impl.parser.JSParserTest;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -13,11 +16,46 @@ public class TypeInheritanceTest {
 	static Type parseType(String typeStr) {
 		//Parse to AST
 		TypeTree ast = JSParserTest.parseType(typeStr);
-		System.out.println(ast);
 		//Resolve to type
-		Type result = ast.accept(new TypeExpressionResolver(), null);
-		System.out.println(result);
+		Type result = ast.accept(new TypeExpressionResolver(), DEFAULT_CTX);
 		return result;
+	}
+	
+	static Type OBJECT = parseType("{}");
+	public static TypeContext DEFAULT_CTX = new TypeContext() {
+
+		@Override
+		public Type getType(String name, List<Type> generics) {
+			switch (name) {
+				case "Object":
+					return OBJECT;
+			}
+			return null;
+		}
+
+		@Override
+		public Type resolveAliases(Type type) {
+			return type;
+		}
+
+		@Override
+		public Type thisType() {
+			return null;
+		}
+
+		@Override
+		public Type superType() {
+			return null;
+		}
+
+		@Override
+		public Type argumentsType() {
+			return null;
+		}
+	};
+	
+	static boolean subtype(Type parent, Type child) {
+		return TypeCalculator.isSubtype(null, child, parent);
 	}
 	
 	static void assertSubtype(Type parent, Type child) {
@@ -66,10 +104,11 @@ public class TypeInheritanceTest {
 	
 	@Test
 	public void testIntersectionSubtype() {
-		Type strings = TypeCalculator.intersection(null,LiteralType.of("a"), LiteralType.of("b"), LiteralType.of(1));
+		Type strings = parseType("'a' & 'b' & 1");
 		assertSubtype(IntrinsicType.STRING, strings);
 		assertSubtype(IntrinsicType.NUMBER, strings);
 		assertSubtype(LiteralType.of("a"), strings);
+		assertSubtype(parseType("'a' & 'b'"), strings);
 	}
 	
 	@Test
@@ -99,9 +138,16 @@ public class TypeInheritanceTest {
 		Type t1 = parseType("{foo: string}");
 		Type t2 = parseType("{foo: any}");
 		Type t3 = parseType("any");
+		Type t4 = parseType("{foo?: string}");
 		
-		assertSubtype(t1, t2);
+		assertSubtype(t2, t1);
 		assertSubtype(t1, t3);
+		assertSubtype(t4, t1);
+	}
+	
+	@Test
+	public void testObjectSimpleAssignable() {
+		
 	}
 	
 	@Test
@@ -162,6 +208,17 @@ public class TypeInheritanceTest {
 			Type i2 = parseType("{bar: number, foo: string}");
 			
 			assertTrue(TypeCalculator.areIdentical(null, i1, i2));
+		}
+	}
+	
+	@Test
+	public void testIfaceAssignment() {
+		{
+			Type i1 = parseType("{id: number; name?: string}");
+			Type i2 = parseType("{id: 1234}");
+			Type i3 = parseType("{id: 1234; name: 'hello'}");
+			
+			assertTrue(TypeCalculator.isAssignableTo(DEFAULT_CTX, i1, i2));
 		}
 	}
 }
