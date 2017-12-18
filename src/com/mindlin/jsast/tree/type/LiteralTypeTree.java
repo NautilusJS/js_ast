@@ -12,6 +12,6 @@ public interface LiteralTypeTree<T> extends TypeTree {
 
 	@Override
 	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
+		return visitor.visitLiteralType(this, data);
 	}
 }

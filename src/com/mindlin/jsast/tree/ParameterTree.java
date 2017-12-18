@@ -1,7 +1,7 @@
 package com.mindlin.jsast.tree;
 
-import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 /**
  * Represents a parameter declaration (this is used when defining a function, not when

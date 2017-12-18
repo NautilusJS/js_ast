@@ -28,6 +28,8 @@ public interface TypeTreeVisitor<R, D> {
 	
 	R visitIntersectionType(CompositeTypeTree node, D d);
 	
+	R visitLiteralType(LiteralTypeTree<?> node, D d);
+	
 	R visitMemberType(MemberTypeTree node, D d);
 	
 	R visitSpecialType(SpecialTypeTree node, D d);

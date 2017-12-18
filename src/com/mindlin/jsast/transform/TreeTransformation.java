@@ -65,6 +65,7 @@ import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
@@ -255,6 +256,11 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	
 	@Override
 	default StatementTree visitLabeledStatement(LabeledStatementTree node, D d) {
+		return node;
+	}
+	
+	@Override
+	default TypeTree visitLiteralType(LiteralTypeTree<?> node, D d) {
 		return node;
 	}
 
