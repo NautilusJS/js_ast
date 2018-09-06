@@ -549,19 +549,19 @@ public class JSParser {
 					// I can't find any example of an expression that can't be used
 					// as a default value (except ones that won't run at all)
 					
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, identifier, false, false, null, assignment.getValue());
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), identifier, false, false, null, assignment.getValue());
 				}
 				case SPREAD: {
 					dialect.require("js.parameter.rest", expr.getStart());
 					//Turn into rest parameter
 					PatternTree identifier = this.reinterpretExpressionAsPattern(((UnaryTree)expr).getExpression());
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, identifier, true, false, null, null);
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), identifier, true, false, null, null);
 				}
 				case ARRAY_LITERAL:
 				case OBJECT_LITERAL:
 					dialect.require("js.parameter.destructured", expr.getStart());
 					//Turn into destructuring parameter
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), null, this.reinterpretExpressionAsPattern(expr), false, false, null, null);
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), this.reinterpretExpressionAsPattern(expr), false, false, null, null);
 				default:
 					break;
 			}
@@ -571,6 +571,19 @@ public class JSParser {
 		}
 		
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart());
+	}
+	
+	AccessModifier reinterpretAsAccessModifier(JSKeyword keyword) {
+		switch (keyword) {
+			case PUBLIC:
+				return AccessModifier.PUBLIC;
+			case PROTECTED:
+				return AccessModifier.PROTECTED;
+			case PRIVATE:
+				return AccessModifier.PRIVATE;
+			default:
+				return null;
+		}
 	}
 	
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
@@ -1081,12 +1094,7 @@ public class JSParser {
 						if (accessModifier != null)
 							throw new JSUnexpectedTokenException(lookahead);
 						
-						if (keyword == JSKeyword.PUBLIC)
-							accessModifier = AccessModifier.PUBLIC;
-						if (keyword == JSKeyword.PROTECTED)
-							accessModifier = AccessModifier.PROTECTED;
-						else if (keyword == JSKeyword.PRIVATE)
-							accessModifier = AccessModifier.PRIVATE;
+						accessModifier = reinterpretAsAccessModifier(keyword);
 					} else {
 						//next isn't a modifier
 						break;
@@ -2194,25 +2202,30 @@ public class JSParser {
 		
 		do {
 			Token identifier = src.nextToken();
+			
+			boolean readonly = false;
 			AccessModifier access = null;
-			if (allowAccessModifiers && identifier.isKeyword() && identifier.getValue() == JSKeyword.PUBLIC || identifier.getValue() == JSKeyword.PROTECTED || identifier.getValue() == JSKeyword.PRIVATE) {
-				dialect.require("ts.parameter.accessModifier", identifier.getStart());
-				switch (identifier.<JSKeyword>getValue()) {
-					case PUBLIC:
-						access = AccessModifier.PUBLIC;
+			if (allowAccessModifiers) {
+				//Up to 2 keywords (e.g., 'public readonly')
+				for (int i = 0; i < 2; i++) {
+					if (identifier.matches(TokenKind.IDENTIFIER, "readonly")) {
+						dialect.require("ts.parameter.accessModifier", identifier.getStart());
+						if (readonly)
+							throw new JSSyntaxException("Duplicate readonly modifier", src.resolvePosition(identifier.getStart()));
+						readonly = true;
+					} else if (TokenPredicate.ACCESS_MODIFIER.test(identifier)) {
+						dialect.require("ts.parameter.accessModifier", identifier.getStart());
+						if (access != null)
+							throw new JSSyntaxException("Duplicate access modifier", src.resolvePosition(identifier.getStart()));
+						access = reinterpretAsAccessModifier(identifier.getValue());
+					} else {
 						break;
-					case PROTECTED:
-						access = AccessModifier.PROTECTED;
-						break;
-					case PRIVATE:
-						access = AccessModifier.PRIVATE;
-						break;
-					default:
-						//Should *never* happen
-						throw new JSSyntaxException("Unexpected keyword: " + identifier, identifier.getStart());
+					}
+					
+					identifier = src.nextToken();
 				}
-				identifier = src.nextToken();
 			}
+			
 			if (!identifier.isIdentifier()) {
 				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 					//We have ourselves a rest parameter.
@@ -2227,11 +2240,15 @@ public class JSParser {
 					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
 						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
 					
+					//TODO: keep references to access modifier tokens for better error messages
+					if (access != null)
+						throw new JSSyntaxException("A parameter property cannot be declared via rest parameter", src.getResolvedPosition());
+					
 					//Rest parameters must be at the end
 					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 						throw new JSSyntaxException("Rest parameter must be the last", src.getPosition());
 					
-					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), null, (IdentifierTree)expr.getExpression(), true, false, type, null));
+					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), (IdentifierTree)expr.getExpression(), true, false, type, null));
 					break;
 				}
 				throw new JSUnexpectedTokenException(identifier);
@@ -2252,7 +2269,7 @@ public class JSParser {
 			if (assignment != null)
 				defaultValue = this.parseAssignment(null, src, context);
 			
-			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), access, new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
+			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), readonly, access, new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		//Expect to end with a right paren
@@ -2291,7 +2308,7 @@ public class JSParser {
 		//Parse default value, if exists
 		ExpressionTree defaultValue = ((optionalToken == null && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(null, src, context) : null;
 		
-		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), null, (IdentifierTree)lastParam, false, optionalToken != null, type, defaultValue));
+		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), (IdentifierTree)lastParam, false, optionalToken != null, type, defaultValue));
 		((ArrayList<?>) parameters).trimToSize();
 		
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
@@ -2346,7 +2363,7 @@ public class JSParser {
 		if (TokenPredicate.PARAMETER_TYPE_START.test(src.peek())) {
 			//Lambda expression where the first parameter has an explicit type/is optional/has default value
 			
-			return upgradeGroupToLambdaFunction(leftParenToken.getStart(), null, expr, src, context);
+			return this.upgradeGroupToLambdaFunction(leftParenToken.getStart(), null, expr, src, context);
 		}
 		
 		//There are multiple expressions here

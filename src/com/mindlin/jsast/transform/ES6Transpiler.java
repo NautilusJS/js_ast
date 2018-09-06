@@ -94,7 +94,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			if (param.getAccessModifier() != null) {
 				boolean wasOptional = param.isOptional();
 				
-				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), null, param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
+				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
 				//Inject assignment into constructor
 				//TODO: support destructuring in parameters here
 				if (oldParam.getIdentifier().getKind() != Kind.IDENTIFIER)

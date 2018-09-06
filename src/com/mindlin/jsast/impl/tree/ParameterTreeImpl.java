@@ -9,6 +9,7 @@ import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
+	protected final boolean readonly;
 	protected final AccessModifier access;
 	protected final boolean rest;
 	protected final boolean optional;
@@ -16,22 +17,57 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	protected final ExpressionTree initializer;
 	protected final PatternTree identifier;
 	
+	/**
+	 * Simple pattern -> ParameterTree
+	 * @param identifier
+	 */
 	public ParameterTreeImpl(PatternTree identifier) {
 		this(identifier.getStart(), identifier.getEnd(), identifier);
 	}
 	
+	/**
+	 * Simple pattern -> ParameterTree
+	 * @param start
+	 * @param end
+	 * @param identifier
+	 */
 	public ParameterTreeImpl(long start, long end, PatternTree identifier) {
-		this(start, end, null, identifier, false, false, null, null);
+		this(start, end, identifier, false, false, null, null);
 	}
 	
-	public ParameterTreeImpl(long start, long end, AccessModifier access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
+	/**
+	 * Constructor for if you don't want any access modifiers
+	 * @param start
+	 * @param end
+	 * @param identifier
+	 * @param rest
+	 * @param optional
+	 * @param type
+	 * @param initializer
+	 */
+	public ParameterTreeImpl(long start, long end, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
+		this(start, end, false, null, identifier, rest, optional, type, initializer);
+	}
+	
+	public ParameterTreeImpl(long start, long end, boolean readonly, AccessModifier access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
 		super(start, end);
+		this.readonly = readonly;
 		this.access = access;
 		this.rest = rest;
 		this.optional = optional;
 		this.identifier = identifier;
 		this.type = type;
 		this.initializer = initializer;
+	}
+
+	@Override
+	public boolean isReadonly() {
+		return this.readonly;
+	}
+	
+	@Override
+	public AccessModifier getAccessModifier() {
+		return access;
 	}
 	
 	@Override
@@ -57,11 +93,6 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	@Override
 	public PatternTree getIdentifier() {
 		return identifier;
-	}
-	
-	@Override
-	public AccessModifier getAccessModifier() {
-		return access;
 	}
 	
 	@Override
