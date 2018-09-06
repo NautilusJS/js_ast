@@ -15,6 +15,7 @@ public interface StatementTreeVisitor<R, D> {
 	R visitExpressionStatement(ExpressionStatementTree node, D d);
 	R visitForEachLoop(ForEachLoopTree node, D d);
 	R visitForLoop(ForLoopTree node, D d);
+	R visitFunctionDeclaration(FunctionDeclarationTree node, D d);
 	R visitIf(IfTree node, D d);
 	R visitImport(ImportTree node, D d);
 	R visitInterfaceDeclaration(InterfaceDeclarationTree node, D d);

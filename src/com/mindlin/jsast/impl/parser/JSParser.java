@@ -18,6 +18,8 @@ import com.mindlin.jsast.impl.lexer.JSLexer.RegExpTokenInfo;
 import com.mindlin.jsast.impl.lexer.JSLexer.TemplateTokenInfo;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
+import com.mindlin.jsast.impl.tree.AbstractFunctionTree.FunctionDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.AbstractFunctionTree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
 import com.mindlin.jsast.impl.tree.AnyTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
@@ -45,7 +47,6 @@ import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForEachLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
-import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.GenericTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
@@ -111,6 +112,7 @@ import com.mindlin.jsast.tree.ExpressiveStatementTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
+import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.GotoTree;
 import com.mindlin.jsast.tree.IdentifierTree;
@@ -151,6 +153,7 @@ import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
+
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class JSParser {
@@ -2572,20 +2575,19 @@ public class JSParser {
 	}
 	
 	//Function stuff
-
-	FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
+	protected FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
 		Token startBodyToken = src.peek();
 		
 		//Update context for function
-		ctx.push();
+		if (generator)
+			ctx.pushGenerator();
+		else
+			ctx.pushFunction();
+		
 		if (async) {
 			dialect.require("js.function.async", startPos);
 			ctx.allowAwait(true);
 		}
-		if (generator)
-			ctx.enterGenerator();
-		else
-			ctx.enterFunction();
 		
 		
 		//Read function body
@@ -2601,12 +2603,15 @@ public class JSParser {
 			throw new JSSyntaxException("Functions must have a body", src.resolvePosition(startBodyToken.getStart()));
 		}
 		
-		FunctionExpressionTree result = new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, ctx.isStrict(), generator);
+		// Get this before we pop the context
+		boolean strict = ctx.isStrict();
+		
 		ctx.pop();
 		//You can't assign to a function
 		ctx.isAssignmentTarget(false);
 		ctx.isBindingElement(false);
-		return result;
+		
+		return new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, ctx.isStrict(), generator);
 	}
 	
 	protected FunctionExpressionTree parseFunctionExpression(Token functionKeywordToken, JSLexer src, Context context) {
@@ -2654,7 +2659,20 @@ public class JSParser {
 		TypeTree returnType = this.parseTypeMaybe(src, context, true);
 		
 		//Finish body
-		return finishFunctionBody(startPos, async, identifier, generics, params, returnType, false, generator, src, context);
+		return this.finishFunctionBody(startPos, async, identifier, generics, params, returnType, false, generator, src, context);
+	}
+	
+	protected FunctionDeclarationTree reinterpretFunctionAsDeclaration(FunctionExpressionTree expr, JSLexer src, Context context) {
+		//TODO: assert that this is good (e.g., not an arrow fn)
+		return new FunctionDeclarationTreeImpl(expr.getStart(), expr.getEnd(), expr.isAsync(), expr.getName(), expr.getGenericParameters(), expr.getParameters(), expr.getReturnType(), expr.getBody(), expr.isStrict(), expr.isGenerator());
+	}
+	
+	protected FunctionDeclarationTree parseFunctionDeclaration(Token functionKeywordToken, JSLexer src, Context context) {
+		// Parse as expression, then reinterpret
+		//TODO: find a better way to do this
+		FunctionExpressionTree expr = this.parseFunctionExpression(functionKeywordToken, src, context);
+		
+		return this.reinterpretFunctionAsDeclaration(expr, src, context);
 	}
 	
 	//Literals
@@ -2904,6 +2922,7 @@ public class JSParser {
 			case KEYWORD:
 				switch (operatorToken.<JSKeyword>getValue()) {
 					case VOID:
+						//TODO: is this correct?
 						if (src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
 							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
 						kind = Tree.Kind.VOID;
@@ -3144,8 +3163,9 @@ public class JSParser {
 		 * 
 		 * @return self
 		 */
-		public Context enterFunction() {
-			data.inFunction = true;
+		public Context pushFunction() {
+			this.data = new ContextData(this.data, false);
+			this.data.inFunction = true;
 			return this;
 		}
 
@@ -3167,7 +3187,8 @@ public class JSParser {
 		 * 
 		 * @return self
 		 */
-		public Context enterGenerator() {
+		public Context pushGenerator() {
+			this.data = new ContextData(this.data, false);
 			data.inGenerator = true;
 			return this;
 		}
@@ -3264,10 +3285,20 @@ public class JSParser {
 			Set<String> labels;
 
 			public ContextData() {
-				this.parent = null;
+				this(null, false);
+			}
+			
+			public ContextData(ContextData parent) {
+				this(parent, true);
 			}
 
-			public ContextData(ContextData parent) {
+			public ContextData(ContextData parent, boolean inherit) {
+				this.parent = parent;
+				if (inherit)
+					this.inheritFrom(parent);
+			}
+			
+			private void inheritFrom(ContextData source) {
 				this.isStrict = parent.isStrict;
 				this.inFunction = parent.inFunction;
 				this.inSwitch = parent.inSwitch;
@@ -3278,7 +3309,6 @@ public class JSParser {
 				this.allowIn = parent.allowIn;
 				this.allowAwait = parent.allowAwait;
 				this.isMaybeParam = parent.isMaybeParam;
-				this.parent = parent;
 			}
 		}
 	}

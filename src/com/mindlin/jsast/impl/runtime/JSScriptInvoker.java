@@ -30,6 +30,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
+import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
@@ -435,7 +436,8 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 			return null;
 		};
 		
-		if (node.getKind() == Kind.FUNCTION)
+		//TODO: fix per splitting off FunctionDeclarationTree
+		if (node.getKind() == Kind.FUNCTION_DECLARATION)
 			d.bindings.put(node.getName().getName(), f);
 		return f;
 	}
@@ -719,6 +721,12 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 
 	@Override
 	public Object visitLiteralType(LiteralTypeTree<?> node, RuntimeScope d) {
+		return null;
+	}
+
+	@Override
+	public Object visitFunctionDeclaration(FunctionDeclarationTree node, RuntimeScope d) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	

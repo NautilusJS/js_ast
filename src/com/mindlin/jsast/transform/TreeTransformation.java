@@ -24,6 +24,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
+import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
@@ -186,6 +187,11 @@ public interface TreeTransformation<D> extends TreeVisitor<Tree, D> {
 	
 	@Override
 	default StatementTree visitExpressionStatement(ExpressionStatementTree node, D d) {
+		return node;
+	}
+
+	@Override
+	default StatementTree visitFunctionDeclaration(FunctionDeclarationTree node, D d) {
 		return node;
 	}
 	
