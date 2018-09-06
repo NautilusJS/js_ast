@@ -144,6 +144,7 @@ import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.jsast.tree.VariableDeclarationOrPatternTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
@@ -1680,7 +1681,7 @@ public class JSParser {
 				if (declarations.getDeclarations().get(0).getInitializer() != null)
 					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getInitializer().getStart());
 				
-				return parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, src, context);
+				return this.parsePartialForEachLoopTree(forKeywordToken, declarations, isOf, src, context);
 			}
 			initializer = declarations;
 			expectEOL(src, context);
@@ -1744,7 +1745,7 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, PatternTree pattern, boolean isForEach, JSLexer src, Context context) {
+	protected ForEachLoopTree parsePartialForEachLoopTree(Token forKeywordToken, VariableDeclarationOrPatternTree pattern, boolean isForEach, JSLexer src, Context context) {
 		final ExpressionTree right = isForEach ? this.parseAssignment(null, src, context) : this.parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		StatementTree statement = this.parseStatement(src, context);
@@ -2982,7 +2983,7 @@ public class JSParser {
 						updates = false;
 						break;
 					case LESS_THAN: {
-						//Bracket casting
+						//Angle bracket casting
 						dialect.require("ts.types.cast", src.getPosition());
 						TypeTree type = this.parseType(src, context);
 						expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);

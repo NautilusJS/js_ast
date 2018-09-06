@@ -13,7 +13,7 @@ import java.util.List;
  * @see VariableDeclaratorTree
  * @author mailmindlin
  */
-public interface VariableDeclarationTree extends DeclarationTree, PatternTree {
+public interface VariableDeclarationTree extends DeclarationTree, VariableDeclarationOrPatternTree {
 	List<VariableDeclaratorTree> getDeclarations();
 	
 	/**
