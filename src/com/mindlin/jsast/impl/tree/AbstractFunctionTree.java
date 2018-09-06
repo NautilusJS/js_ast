@@ -3,7 +3,9 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
+import com.mindlin.jsast.tree.FunctionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -11,19 +13,17 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class FunctionExpressionTreeImpl extends AbstractTree implements FunctionExpressionTree {
+public abstract class AbstractFunctionTree extends AbstractTree implements FunctionTree {
 	protected final StatementTree body;
 	protected final IdentifierTree name;
 	protected final List<GenericParameterTree> generics;
 	protected final List<ParameterTree> parameters;
 	protected final TypeTree returnType;
 	protected final boolean strict;
-	protected final boolean arrow;
 	protected final boolean generator;
 	protected final boolean isAsync;
-	protected final boolean isStmt;
 
-	public FunctionExpressionTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
+	public AbstractFunctionTree(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType,
 			StatementTree body, boolean strict, boolean generator) {
 		super(start, end);
 		this.isAsync = isAsync;
@@ -31,11 +31,9 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 		this.generics = generics;
 		this.parameters = parameters;
 		this.returnType = returnType;
-		this.arrow = arrow;
 		this.body = body;
 		this.strict = strict;
 		this.generator = generator;
-		this.isStmt = generator || (name != null);
 	}
 
 	@Override
@@ -64,18 +62,8 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	}
 
 	@Override
-	public boolean isArrow() {
-		return arrow;
-	}
-
-	@Override
 	public boolean isGenerator() {
 		return generator;
-	}
-
-	@Override
-	public Tree.Kind getKind() {
-		return isStmt ? Kind.FUNCTION : Kind.FUNCTION_EXPRESSION;
 	}
 
 	@Override
@@ -92,5 +80,28 @@ public class FunctionExpressionTreeImpl extends AbstractTree implements Function
 	protected int hash() {
 		//TODO hash isStrict()?
 		return Objects.hash(getKind(), isAsync(), getName(), getParameters(), getReturnType(), isArrow(), getBody(), isStrict(), isGenerator());
+	}
+	
+	public static class FunctionExpressionTreeImpl extends AbstractFunctionTree implements FunctionExpressionTree {
+		protected final boolean arrow;
+		
+		public FunctionExpressionTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
+				StatementTree body, boolean strict, boolean generator) {
+			super(start, end, isAsync, name, generics, parameters, returnType, body, strict, generator);
+			
+			this.arrow = arrow;
+		}
+
+		@Override
+		public boolean isArrow() {
+			return arrow;
+		}
+	}
+	
+	public static class FunctionDeclarationTreeImpl extends AbstractFunctionTree implements FunctionDeclarationTree {
+		public FunctionDeclarationTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType,
+				StatementTree body, boolean strict, boolean generator) {
+			super(start, end, isAsync, name, generics, parameters, returnType, body, strict, generator);
+		}
 	}
 }

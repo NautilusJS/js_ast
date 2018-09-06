@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
-import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.type.AnyTypeTree;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
@@ -28,8 +27,8 @@ public interface Tree {
 	public static enum Kind {
 		// Data structures
 		COMPILATION_UNIT(CompilationUnitTree.class),
-		FUNCTION(FunctionExpressionTree.class, false, true, true, false),
 		FUNCTION_EXPRESSION(FunctionExpressionTree.class),
+		FUNCTION_DECLARATION(FunctionDeclarationTree.class),
 
 		// Loops
 		FOR_IN_LOOP(ForEachLoopTree.class),
@@ -46,6 +45,7 @@ public interface Tree {
 		UNARY_PLUS(UnaryTree.class),
 		UNARY_MINUS(UnaryTree.class),
 		DELETE(UnaryTree.class),
+		VOID(UnaryTree.class),
 
 		// Binary operators
 		ADDITION(BinaryTree.class),
@@ -196,7 +196,6 @@ public interface Tree {
 		TEMPLATE_ELEMENT(TemplateElementTree.class),
 		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
 		OTHER,
-		VOID(VoidTree.class),
 
 		// Comments
 		COMMENT(CommentNode.class),

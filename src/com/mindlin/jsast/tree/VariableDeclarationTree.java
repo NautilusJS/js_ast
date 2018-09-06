@@ -13,7 +13,7 @@ import java.util.List;
  * @see VariableDeclaratorTree
  * @author mailmindlin
  */
-public interface VariableDeclarationTree extends StatementTree, PatternTree {
+public interface VariableDeclarationTree extends DeclarationTree, PatternTree {
 	List<VariableDeclaratorTree> getDeclarations();
 	
 	/**
@@ -49,19 +49,9 @@ public interface VariableDeclarationTree extends StatementTree, PatternTree {
 	default Tree.Kind getKind() {
 		return Tree.Kind.VARIABLE_DECLARATION;
 	}
-	
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitVariableDeclaration(this, data);
-	}
 
 	@Override
 	default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
-		return visitor.visitVariableDeclaration(this, data);
-	}
-	
-	@Override
-	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitVariableDeclaration(this, data);
 	}
 }
