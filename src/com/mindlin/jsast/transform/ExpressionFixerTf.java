@@ -229,14 +229,12 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 	@Override
 	public ExpressionTree visitUnary(UnaryTree node, Void d) {
 		ExpressionTree expr = node.getExpression();
+		//TODO: handle expr == null (possible if node.getKind() == VOID)
 		
 		if (precedence(expr.getKind()) < precedence(node.getKind())) {
 			expr = new ParenthesizedTreeImpl(expr.getStart(), expr.getEnd(), expr);
 			
-			if (node.getKind() == Kind.VOID)
-				node = new UnaryTreeImpl.VoidTreeImpl(expr);
-			else
-				node = new UnaryTreeImpl(node.getStart(), node.getEnd(), expr, node.getKind());
+			node = new UnaryTreeImpl(node.getStart(), node.getEnd(), expr, node.getKind());
 		}
 		
 		return node;

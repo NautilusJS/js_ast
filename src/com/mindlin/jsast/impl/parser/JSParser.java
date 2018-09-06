@@ -142,7 +142,6 @@ import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
 import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
-import com.mindlin.jsast.tree.UnaryTree.VoidTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
@@ -289,12 +288,11 @@ public class JSParser {
 						return this.parseSwitchStatement(next, src, context);
 					case TRY:
 						return this.parseTryStatement(next, src, context);
-					case VOID:
-						return this.parseVoid(next, src, context);
 					case WHILE:
 						return this.parseWhileLoop(next, src, context);
 					case WITH:
 						return this.parseWithStatement(next, src, context);
+					case VOID:
 					case DELETE:
 					case NEW:
 					case TYPEOF:
@@ -946,9 +944,10 @@ public class JSParser {
 		
 		ExpressionTree expr;
 		if (keywordToken.getValue() == JSKeyword.RETURN && src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
-			expr = new UnaryTreeImpl.VoidTreeImpl(src.getPosition(), src.getPosition(), null);
+			//TODO: can't we just allow expr to be null?
+			expr = new UnaryTreeImpl(src.getPosition(), src.getPosition(), null, Tree.Kind.VOID);
 		else
-			expr = parseNextExpression(src, context);
+			expr = this.parseNextExpression(src, context);
 		
 		expectEOL(src, context);
 		
@@ -2438,12 +2437,6 @@ public class JSParser {
 		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
 	}
 	
-	protected VoidTree parseVoid(Token voidKeywordToken, JSLexer src, Context context) {
-		voidKeywordToken = expect(voidKeywordToken, TokenKind.KEYWORD, JSKeyword.VOID, src, context);
-		ExpressionTree expr = parseNextExpression(src, context);
-		return new UnaryTreeImpl.VoidTreeImpl(voidKeywordToken.getStart(), src.getPosition(), expr);
-	}
-	
 	protected ExpressionTree parseLeftSideExpression(Token t, JSLexer src, Context context, boolean allowCall) {
 		if (t == null)
 			t = src.nextToken();
@@ -2900,7 +2893,6 @@ public class JSParser {
 	
 	/**
 	 * Parse an unary expression (in form of {@code {OP} {EXPR}} or {@code {EXPR} {OP}}).
-	 * 
 	 */
 	protected ExpressionTree parseUnaryExpression(Token operatorToken, JSLexer src, Context context) {
 		if (operatorToken == null)
@@ -2913,7 +2905,7 @@ public class JSParser {
 				switch (operatorToken.<JSKeyword>getValue()) {
 					case VOID:
 						if (src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
-							return new UnaryTreeImpl.VoidTreeImpl(operatorToken.getStart(), src.getPosition(), null);
+							return new UnaryTreeImpl(operatorToken.getStart(), src.getPosition(), null, Tree.Kind.VOID);
 						kind = Tree.Kind.VOID;
 						break;
 					case TYPEOF:
@@ -2978,11 +2970,10 @@ public class JSParser {
 				//Check if the target can be modified
 				if (!Validator.canBeAssigned(expression, dialect))
 					throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", operatorToken.getStart());
-			} else if (context.isStrict() && kind == Tree.Kind.DELETE && expression.getKind() == Tree.Kind.IDENTIFIER)
-				throw new JSSyntaxException("Cannot delete unqualified identifier " + ((IdentifierTree)expression).getName() + " in strict mode", operatorToken.getStart());
-			else if (kind == Tree.Kind.VOID)
-				//Because it's a special little snowflake
-				return new UnaryTreeImpl.VoidTreeImpl(operatorToken, expression);
+			} else if (context.isStrict() && kind == Tree.Kind.DELETE && expression.getKind() == Tree.Kind.IDENTIFIER) {
+				String identName = ((IdentifierTree)expression).getName();
+				throw new JSSyntaxException("Cannot delete unqualified identifier " + identName + " in strict mode", src.resolvePosition(operatorToken.getStart()));
+			}
 			
 			return new UnaryTreeImpl(operatorToken.getStart(), expression.getEnd(), expression, kind);
 		} else {
