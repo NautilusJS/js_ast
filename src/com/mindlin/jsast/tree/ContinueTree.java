@@ -1,7 +1,7 @@
 package com.mindlin.jsast.tree;
 
 /**
- * A tree for the <code>continue</code> statement. Example:
+ * A tree for the {@code continue} statement. Example:
  * <code>
  * outer:
  * for (var i = 2; i < 100; i++)

@@ -8,7 +8,7 @@ import com.mindlin.jsast.tree.Tree;
 
 /**
  * Represents a function type. May be written as
- * <code><...GENERICS>(...PARAMETERS) => RETURN_TYPE</code>.
+ * {@code <...GENERICS>(...PARAMETERS) => RETURN_TYPE}.
  * 
  * @author mailmindlin
  */

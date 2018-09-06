@@ -12,8 +12,8 @@ public interface ArrayLiteralTree extends ExpressionTree {
 	 * Get list of elements in literal, in order.
 	 * <p>
 	 * Note that this list may contain elements with the value of
-	 * <code>null</code>. This behavior is correct; the elements represent
-	 * elements with the value of <code>undefined</code> (the value, not the
+	 * {@code null}. This behavior is correct; the elements represent
+	 * elements with the value of {@code undefined} (the value, not the
 	 * identifier). This makes it easier on the parser in cases (TODO: maybe
 	 * explain more?), so whatever.
 	 * </p>

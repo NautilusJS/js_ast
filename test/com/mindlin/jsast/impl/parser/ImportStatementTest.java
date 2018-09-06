@@ -10,7 +10,7 @@ import static com.mindlin.jsast.impl.parser.JSParserTest.*;
 public class ImportStatementTest {
 
 	/**
-	 * Pretty exhaustive tests for <code>import</code> statement parsing.
+	 * Pretty exhaustive tests for {@code import} statement parsing.
 	 * I honestly can't think of any (non-trivial) test cases that could be added.
 	 */
 	@Test

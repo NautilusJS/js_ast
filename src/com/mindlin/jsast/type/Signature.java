@@ -22,7 +22,7 @@ public interface Signature {
 	
 	/**
 	 * Get maximum acceptable number of type arguments.
-	 * Because {@link #getTypeParameters()} may return <code>null</code> if no
+	 * Because {@link #getTypeParameters()} may return {@code null} if no
 	 * type parameters are present, using this method is just a bit cleaner than
 	 * putting a null check everywhere.
 	 * 
@@ -49,7 +49,7 @@ public interface Signature {
 	/**
 	 * Get the minimum required number of arguments (number of parameters excluding optional and rest parameters).
 	 * <p>
-	 * For example, a signature with parameters <code>(a: P, b?: Q)</code> would require 1 argument.
+	 * For example, a signature with parameters {@code (a: P, b?: Q)} would require 1 argument.
 	 * </p> 
 	 * @return minimum required number of arguments
 	 */

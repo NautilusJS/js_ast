@@ -3,7 +3,7 @@ package com.mindlin.jsast.tree.type;
 import com.mindlin.jsast.tree.Tree;
 
 /**
- * The <code>any</code> type.
+ * The {@code any} type.
  * 
  * @author mailmindlin
  */

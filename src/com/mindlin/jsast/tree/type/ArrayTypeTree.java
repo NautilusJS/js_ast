@@ -3,9 +3,9 @@ package com.mindlin.jsast.tree.type;
 import com.mindlin.jsast.tree.Tree;
 
 /**
- * Type representing an array of something. For example, <code>Foo[]</code> or <code>Array&lt;Foo&gt;</code>.
- * Not that types in the form of <code>[Foo, Bar, Baz]</code> is not an array type, but a {@link TupleTypeTree}, however
- * empty arrays (<code>[]</code>) <i>are</i> the same as <code>any[]</code>.
+ * Type representing an array of something. For example, {@code Foo[]} or {@code Array<Foo>}.
+ * Not that types in the form of {@code [Foo, Bar, Baz]} is not an array type, but a {@link TupleTypeTree}, however
+ * empty arrays ({@code []}) <i>are</i> the same as {@code any[]}.
  * @author mailmindlin
  */
 public interface ArrayTypeTree extends TypeTree {

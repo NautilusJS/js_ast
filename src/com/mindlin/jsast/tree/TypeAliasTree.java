@@ -7,7 +7,7 @@ import com.mindlin.jsast.tree.type.TypeTree;
 
 /**
  * Statement declaring a TypeScript type alias. Written in form
- * <code>type ALIASNAME = TYPE</code>, where ALIASNAME is an identifier
+ * {@code type ALIASNAME = TYPE}, where ALIASNAME is an identifier
  * representing the name of the alias, and TYPE is a type statement.
  * 
  * @author Liam

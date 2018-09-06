@@ -1792,9 +1792,9 @@ public class JSParser {
 	}
 
 	/**
-	 * Unlike most binary operators, <code>**</code> has right-associativity, which means:
+	 * Unlike most binary operators, {@code **} has right-associativity, which means:
 	 * <ol>
-	 * <li><code>a**b**c</code> is interperted as <code>a**(b**c)</code></li>
+	 * <li>{@code a**b**c} is interperted as {@code a**(b**c)}</li>
 	 * <li>A lot of extra code has to be written to handle it</li>
 	 * </ol>
 	 * @param t
@@ -3176,7 +3176,7 @@ public class JSParser {
 
 		/**
 		 * Marks this level of the context as being in a function body. Allows
-		 * the use of <code>return</code> statements.
+		 * the use of {@code return} statements.
 		 * 
 		 * @return self
 		 */
@@ -3188,7 +3188,7 @@ public class JSParser {
 
 		/**
 		 * Marks this level of the context as being in a switch statement.
-		 * Allows the use of <code>break</code>
+		 * Allows the use of {@code break}.
 		 * 
 		 * @return self
 		 */
@@ -3200,7 +3200,7 @@ public class JSParser {
 		/**
 		 * Marks this level of the context as being in a generator function.
 		 * Allows the same expressions as being in a normal function, in
-		 * addition to <code>yield</code> and <code>yield*</code>.
+		 * addition to {@code yield} and {@code yield*}.
 		 * 
 		 * @return self
 		 */
@@ -3212,7 +3212,7 @@ public class JSParser {
 
 		/**
 		 * Marks this level of the context as being in a loop. Allows
-		 * <code>break</code> and <break>continue</break> statements
+		 * {@code break} and {@code continue} statements.
 		 * 
 		 * @return self
 		 */
@@ -3268,18 +3268,22 @@ public class JSParser {
 			boolean isStrict = false;
 			/**
 			 * Whether the parser is currently inside a function statement.
-			 * Allows the <code>return</code> keyword.
+			 * Allows the {@code return} keyword.
 			 */
 			boolean inFunction = false;
 			/**
 			 * Whether the parser is currently inside a switch statement. Allows
-			 * the <code>break</code> keyword.
+			 * the {@code break} keyword.
 			 */
 			boolean inSwitch = false;
+			/**
+			 * True if the parser is in a generator.
+			 * Allows the {@code yield} and {@code yield*} keywords.
+			 */
 			boolean inGenerator = false;
 			/**
 			 * Whether the parser is currently inside a loop statement. Allows
-			 * the <code>break</code> and <code>continue</code> statements.
+			 * the {@code break} and {@code continue} statements.
 			 */
 			boolean inLoop = false;
 			boolean isAssignmentTarget = false;

@@ -31,7 +31,7 @@ public interface CharacterStream {
 	boolean hasNext();
 
 	/**
-	 * Whether this CharacterStream has at least <code>num</code> more
+	 * Whether this CharacterStream has at least {@code num} more
 	 * characters.
 	 * 
 	 * @param num

@@ -24,7 +24,7 @@ public interface VariableInfo {
 	boolean isAssignable();
 	
 	/**
-	 * Return if this variable is a meta var (e.g., <code>this</code>, <code>super</code>, <code>arguments</code>).
+	 * Return if this variable is a meta var (e.g., {@code this}, {@code super}, {@code arguments}).
 	 * @return if meta
 	 */
 	boolean isMetaVar();

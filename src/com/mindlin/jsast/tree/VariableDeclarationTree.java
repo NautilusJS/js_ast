@@ -18,8 +18,8 @@ public interface VariableDeclarationTree extends DeclarationTree, PatternTree {
 	
 	/**
 	 * If variables declared under this tree are declared in the block scope.
-	 * In other terms, whether this was initialized with a <code>let</code>
-	 * or <code>const</code> keyword.
+	 * In other terms, whether this was initialized with a {@code let}
+	 * or {@code const} keyword.
 	 * <p>
 	 * If this is true, the variables declared under this tree are limited to
 	 * the scope of the block, statement, or expression on which it is used.
@@ -35,9 +35,9 @@ public interface VariableDeclarationTree extends DeclarationTree, PatternTree {
 	
 	/**
 	 * If variables declared under this tree are constants. More specifically,
-	 * whether this was initialized with a <code>const</code> keyword.
+	 * whether this was initialized with a {@code const} keyword.
 	 * <p>
-	 * If this method returns <code>true</code>, all declarations MUST have an
+	 * If this method returns {@code true}, all declarations MUST have an
 	 * initializer.
 	 * </p>
 	 * 

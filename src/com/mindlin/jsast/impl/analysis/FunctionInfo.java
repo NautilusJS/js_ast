@@ -13,7 +13,7 @@ public interface FunctionInfo extends VariableInfo {
 	 * A pure function has the following properties:
 	 * <ul>
 	 * <li>It has no side effects</li>
-	 * <li>It's deterministic: for some <code>x</code>, <code>f(x) == f(x)</code></li>
+	 * <li>It's deterministic: for some {@code x}, {@code f(x) == f(x)}</li>
 	 * </ul>
 	 * TODO: maybe require halting?
 	 * @return if function is pure

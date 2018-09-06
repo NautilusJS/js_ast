@@ -20,7 +20,7 @@ public interface GenericParameterTree extends TypeTree {
 	
 	/**
 	 * Supertype of generic parameter. For example, if declared as
-	 * <code>T extends Foo</code>, this method would return Foo.
+	 * {@code T extends Foo}, this method would return Foo.
 	 * 
 	 * @return supertype, else null if not present
 	 */

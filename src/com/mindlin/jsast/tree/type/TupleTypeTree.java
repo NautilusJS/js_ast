@@ -5,10 +5,10 @@ import java.util.List;
 import com.mindlin.jsast.tree.Tree;
 
 /**
- * Tuple type. For all types in form of <code>[T1, T2, ..., Tn]</code>.
+ * Tuple type. For all types in form of {@code [T1, T2, ..., Tn]}.
  * <p>
- * Note that empty tuples (<code>[]</code>) are not valid. Instead, they are treated as
- * {@link ArrayTypeTree} <code>any[]</code>.
+ * Note that empty tuples ({@code []}) are not valid. Instead, they are treated as
+ * {@link ArrayTypeTree} {@code any[]}.
  * </p>
  * @author mailmindlin
  *

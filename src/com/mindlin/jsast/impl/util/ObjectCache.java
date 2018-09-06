@@ -75,6 +75,9 @@ public class ObjectCache<E> {
 		}
 	}
 	
+	/**
+	 * Remove entries that have been enqueued
+	 */
 	protected void clearOldEntries() {
 		for(Object x; (x = queue.poll()) != null; ) {
 			synchronized (queue) {

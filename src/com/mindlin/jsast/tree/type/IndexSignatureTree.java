@@ -3,14 +3,14 @@ package com.mindlin.jsast.tree.type;
 import com.mindlin.jsast.tree.Tree;
 
 /**
- * Index signature: properties in form of <code>[key: T]: R</code>.
+ * Index signature: properties in form of {@code [key: T]: R}.
  * 
  * @author mailmindlin
  *
  */
 public interface IndexSignatureTree extends TypeTree {
 	/**
-	 * Get type being used to index. Should be either <code>string</code> or <code>number</code>.
+	 * Get type being used to index. Should be either {@code string} or {@code number}.
 	 * 
 	 * @return
 	 */

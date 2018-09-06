@@ -91,12 +91,12 @@ public final class Characters {
 
 	/**
 	 * Converts a character to a hexdecimal digit. If passed character is not a
-	 * hexdecimal character (not <code>[0-9a-fA-F]</code>), this method returns
+	 * hexdecimal character (not {@code [0-9a-fA-F]}), this method returns
 	 * -1.
 	 * 
 	 * @param c
 	 *            Digit character to parse
-	 * @return Value of hex digit (<code>0-16</code>), or -1 if invalid.
+	 * @return Value of hex digit ({@code 0-16}), or -1 if invalid.
 	 */
 	public static int asHexDigit(char c) {
 		if (c >= '0' && c <= '9')
