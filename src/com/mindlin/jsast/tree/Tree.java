@@ -25,61 +25,121 @@ import com.mindlin.jsast.tree.type.TypeTree;
 //https://github.com/javaparser/javaparser
 public interface Tree {
 	public static enum Kind {
-		// Data structures
+		// ===== Data structures =====
+		// Program
 		COMPILATION_UNIT(CompilationUnitTree.class),
-		FUNCTION_EXPRESSION(FunctionExpressionTree.class),
-		FUNCTION_DECLARATION(FunctionDeclarationTree.class),
+		
+		// Comments
+		COMMENT(CommentNode.class),
+		
+		// Function
+		PARAMETER(ParameterTree.class),
 
+		// ===== Statements =====
+		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
+		EMPTY_STATEMENT(EmptyStatementTree.class),
+		
+		// Control flow structures
+		BLOCK(BlockTree.class),
+		DEBUGGER(DebuggerTree.class),
+		
+		// Control flow statements
+		LABELED_STATEMENT(LabeledStatementTree.class),
+		BREAK(BreakTree.class),
+		CONTINUE(ContinueTree.class),
+		RETURN(ReturnTree.class),
+		AWAIT(AwaitTree.class),
+		YIELD(UnaryTree.class),
+		YIELD_GENERATOR(UnaryTree.class),
+		
+		// Choice
+		IF(IfTree.class),
+		SWITCH(SwitchTree.class),
+		CASE(CaseTree.class),
+		WITH(WithTree.class),
+		
+		// Exceptions
+		THROW(ThrowTree.class),
+		TRY(TryTree.class),
+		CATCH(CatchTree.class),
+		
 		// Loops
+		WHILE_LOOP(WhileLoopTree.class),
+		DO_WHILE_LOOP(DoWhileLoopTree.class),
+		FOR_LOOP(ForLoopTree.class),
 		FOR_IN_LOOP(ForEachLoopTree.class),
 		FOR_OF_LOOP(ForEachLoopTree.class), // Special
-		FOR_LOOP(ForLoopTree.class),
-		DO_WHILE_LOOP(DoWhileLoopTree.class),
-		WHILE_LOOP(WhileLoopTree.class),
+		
+		// ===== Declarations =====
+		FUNCTION_DECLARATION(FunctionDeclarationTree.class),
+		VARIABLE_DECLARATION(VariableDeclarationTree.class),
+		VARIABLE_DECLARATOR(VariableDeclaratorTree.class),
+		
 
+		// ===== Expressions =====
+		
+		// Prototype-based
+		THIS_EXPRESSION(ThisExpressionTree.class),
+		SUPER_EXPRESSION(SuperExpressionTree.class),
+		
+		//TODO: categorize
+		FUNCTION_EXPRESSION(FunctionExpressionTree.class),
+
+		// Literals
+		BOOLEAN_LITERAL(BooleanLiteralTree.class),
+		NULL_LITERAL(NullLiteralTree.class),
+		NUMERIC_LITERAL(NumericLiteralTree.class),
+		REGEXP_LITERAL(RegExpLiteralTree.class),
+		STRING_LITERAL(StringLiteralTree.class),
+		
+		// Literal-like (but more expression-y)
+		ARRAY_LITERAL(ArrayLiteralTree.class),
+		OBJECT_LITERAL(ObjectLiteralTree.class),
+		OBJECT_LITERAL_PROPERTY(ObjectLiteralPropertyTree.class),
+		
+		// Templates
+		TAGGED_TEMPLATE,//TODO: fix
+		TEMPLATE_LITERAL(TemplateLiteralTree.class),
+		TEMPLATE_ELEMENT(TemplateElementTree.class),
+		
 		// Unary operators
+		UNARY_PLUS(UnaryTree.class),
+		UNARY_MINUS(UnaryTree.class),
+		TYPEOF(UnaryTree.class),
+		VOID(UnaryTree.class),
+		DELETE(UnaryTree.class),
+		
+		// Update expressions
 		POSTFIX_DECREMENT(UnaryTree.class),
 		POSTFIX_INCREMENT(UnaryTree.class),
 		PREFIX_DECREMENT(UnaryTree.class),
 		PREFIX_INCREMENT(UnaryTree.class),
-		UNARY_PLUS(UnaryTree.class),
-		UNARY_MINUS(UnaryTree.class),
-		DELETE(UnaryTree.class),
-		VOID(UnaryTree.class),
 
 		// Binary operators
+		IN(BinaryTree.class),
+		INSTANCEOF(BinaryTree.class),
+		
+		// Binary math
 		ADDITION(BinaryTree.class),
 		SUBTRACTION(BinaryTree.class),
 		MULTIPLICATION(BinaryTree.class),
 		DIVISION(BinaryTree.class),
 		REMAINDER(BinaryTree.class),
 		EXPONENTIATION(BinaryTree.class),
-		LEFT_SHIFT(BinaryTree.class),
-		RIGHT_SHIFT(BinaryTree.class),
-		UNSIGNED_RIGHT_SHIFT(BinaryTree.class),
 
 		// Bitwise operators
 		BITWISE_AND(BinaryTree.class),
 		BITWISE_OR(BinaryTree.class),
 		BITWISE_XOR(BinaryTree.class),
 		BITWISE_NOT(UnaryTree.class),
+		LEFT_SHIFT(BinaryTree.class),
+		RIGHT_SHIFT(BinaryTree.class),
+		UNSIGNED_RIGHT_SHIFT(BinaryTree.class),
 
-		// Assignment operators
-		ASSIGNMENT(AssignmentTree.class),
-		ADDITION_ASSIGNMENT(AssignmentTree.class),
-		SUBTRACTION_ASSIGNMENT(AssignmentTree.class),
-		MULTIPLICATION_ASSIGNMENT(AssignmentTree.class),
-		DIVISION_ASSIGNMENT(AssignmentTree.class),
-		REMAINDER_ASSIGNMENT(AssignmentTree.class),
-		EXPONENTIATION_ASSIGNMENT(AssignmentTree.class),
-		LEFT_SHIFT_ASSIGNMENT(AssignmentTree.class),
-		RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
-		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
-
-		// Assignment bitwise operators
-		BITWISE_AND_ASSIGNMENT(AssignmentTree.class),
-		BITWISE_OR_ASSIGNMENT(AssignmentTree.class),
-		BITWISE_XOR_ASSIGNMENT(AssignmentTree.class),
+		// Logical operators
+		LOGICAL_AND(BinaryTree.class),
+		LOGICAL_OR(BinaryTree.class),
+		LOGICAL_NOT(UnaryTree.class),
 
 		// Comparison operators
 		EQUAL(BinaryTree.class),
@@ -91,121 +151,105 @@ public interface Tree {
 		GREATER_THAN_EQUAL(BinaryTree.class),
 		LESS_THAN_EQUAL(BinaryTree.class),
 
-		// Logical operators
-		LOGICAL_AND(BinaryTree.class),
-		LOGICAL_OR(BinaryTree.class),
-		LOGICAL_NOT(UnaryTree.class),
+		// Assignment operators
+		ASSIGNMENT(AssignmentTree.class),
+		ADDITION_ASSIGNMENT(AssignmentTree.class),
+		SUBTRACTION_ASSIGNMENT(AssignmentTree.class),
+		MULTIPLICATION_ASSIGNMENT(AssignmentTree.class),
+		DIVISION_ASSIGNMENT(AssignmentTree.class),
+		REMAINDER_ASSIGNMENT(AssignmentTree.class),
 
-		// Literals
-		BOOLEAN_LITERAL(BooleanLiteralTree.class),
-		NULL_LITERAL(NullLiteralTree.class),
-		NUMERIC_LITERAL(NumericLiteralTree.class),
-		REGEXP_LITERAL(RegExpLiteralTree.class),
-		STRING_LITERAL(StringLiteralTree.class),
-		TEMPLATE_LITERAL(TemplateLiteralTree.class),
-		ARRAY_LITERAL(ArrayLiteralTree.class),
-		OBJECT_LITERAL(ObjectLiteralTree.class),
-		OBJECT_LITERAL_PROPERTY(ObjectLiteralPropertyTree.class),
+		// Assignment bitwise operators
+		BITWISE_AND_ASSIGNMENT(AssignmentTree.class),
+		BITWISE_OR_ASSIGNMENT(AssignmentTree.class),
+		BITWISE_XOR_ASSIGNMENT(AssignmentTree.class),
+		EXPONENTIATION_ASSIGNMENT(AssignmentTree.class),
+		LEFT_SHIFT_ASSIGNMENT(AssignmentTree.class),
+		RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
+		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
 
 		// Misc. operators
 		SEQUENCE(SequenceTree.class),
 		PARENTHESIZED(ParenthesizedTree.class),
-		INSTANCEOF(BinaryTree.class),
 
 		// Member access
 		ARRAY_ACCESS(BinaryTree.class),
 		MEMBER_SELECT(MemberExpressionTree.class),
 
-		// Control structures
-		BLOCK(BlockTree.class),
-		CATCH(CatchTree.class),
-		EMPTY_STATEMENT(EmptyStatementTree.class),
-		SWITCH(SwitchTree.class),
-		TRY(TryTree.class),
-
 		// Control flow modifiers
-		AWAIT(AwaitTree.class),
-		CASE(CaseTree.class),
-		RETURN(ReturnTree.class),
-		THROW(ThrowTree.class),
-		IF(IfTree.class),
-		WITH(WithTree.class),
 		CONDITIONAL(ConditionalExpressionTree.class),
-		YIELD(UnaryTree.class),
-		YIELD_GENERATOR(UnaryTree.class),
-
-		// GOTO stuff
-		LABELED_STATEMENT(LabeledStatementTree.class),
-		CONTINUE(ContinueTree.class),
-		BREAK(BreakTree.class),
-		DEBUGGER(DebuggerTree.class),
 
 		// Module stuff
 		IMPORT(ImportTree.class),
 		IMPORT_SPECIFIER(ImportSpecifierTree.class),
 		EXPORT(ExportTree.class),
 
-		// Class stuff
-		CLASS_DECLARATION(ClassDeclarationTree.class),
-		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
-		ENUM_DECLARATION(EnumDeclarationTree.class),
-		CLASS_PROPERTY(ClassPropertyTree.class),
-		METHOD_DEFINITION(MethodDefinitionTree.class),
-
-		// Type stuff
-		CAST(CastTree.class),
-		TYPE_ALIAS(TypeAliasTree.class),
-		
-		ANY_TYPE(AnyTypeTree.class),
-		SPECIAL_TYPE(SpecialTypeTree.class),
-		NEVER_TYPE,
-		LITERAL_TYPE(LiteralTypeTree.class),
-		MEMBER_TYPE(MemberTypeTree.class),
-		ARRAY_TYPE(ArrayTypeTree.class),//TODO merge w/ KEYOF_TYPE to unary generic iface?
-		KEYOF_TYPE(KeyofTypeTree.class),
-		TUPLE_TYPE(TupleTypeTree.class),
-		FUNCTION_TYPE(FunctionTypeTree.class),
-		OBJECT_TYPE(ObjectTypeTree.class),
-		INTERFACE_PROPERTY(InterfacePropertyTree.class),
-		INDEX_TYPE(IndexSignatureTree.class),
-		TYPE_UNION(CompositeTypeTree.class),
-		TYPE_INTERSECTION(CompositeTypeTree.class),
-		GENERIC_PARAM(GenericParameterTree.class),
-		IDENTIFIER_TYPE(IdentifierTypeTree.class),
-
 		// Array stuff
-		IN(BinaryTree.class),
-		SPREAD(UnaryTree.class),
+		SPREAD(UnaryTree.class),//TODO: make custom inheritance
 
 		// Method invocation
 		NEW(NewTree.class),
 		FUNCTION_INVOCATION(FunctionCallTree.class),
-		PARAMETER(ParameterTree.class),
 
 		// Variable stuff
-		VARIABLE_DECLARATION(VariableDeclarationTree.class),
-		VARIABLE_DECLARATOR(VariableDeclaratorTree.class),
 		IDENTIFIER(IdentifierTree.class),
-		THIS_EXPRESSION(ThisExpressionTree.class),
-		SUPER_EXPRESSION(SuperExpressionTree.class),
-
-		// Prototype stuff
-		TYPEOF(UnaryTree.class),
 
 		ERROR(ErroneousTree.class),
-		TEMPLATE_ELEMENT(TemplateElementTree.class),
-		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
 		OTHER,
-
-		// Comments
-		COMMENT(CommentNode.class),
 		
-		//Destructuring patterns
+		// ===== Properties =====
+		// These are used for object literals, classes, interfaces, etc.
+		PROPERTY(PropertyTree.class),//TODO: finish
+		ASSIGNMENT_PROPERTY,
+		METHOD_DEFINITION(MethodDefinitionTree.class),
+		INDEX_TYPE(IndexSignatureTree.class),
+		CALL_SIGNATURE,
+		
+		// ===== Patterns =====
 		OBJECT_PATTERN(ObjectPatternTree.class),
-		OBJECT_PATTERN_PROPERTY(ObjectPatternPropertyTree.class),
 		ARRAY_PATTERN(ArrayPatternTree.class),
 		ASSIGNMENT_PATTERN(AssignmentPatternTree.class),
+		
+		// ===== Classes =====
+		CLASS_DECLARATION(ClassDeclarationTree.class),
+		CLASS_EXPRESSION(ClassDeclarationTree.class),//TODO: custom type
+		CLASS_PROPERTY(ClassPropertyTree.class),
+		
+		// ===== Typing ======
+		
+		// Type-modified expressions
+		CAST(CastTree.class),
+		
+		// Type declarations
+		TYPE_ALIAS(TypeAliasTree.class),
+		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
+		ENUM_DECLARATION(EnumDeclarationTree.class),
+		
+		// Built-in types
+		ANY_TYPE(AnyTypeTree.class),
+		SPECIAL_TYPE(SpecialTypeTree.class),
+		NEVER_TYPE,
+		LITERAL_TYPE(LiteralTypeTree.class),
+		
+		// Generics
+		GENERIC_PARAM(GenericParameterTree.class),
+		IDENTIFIER_TYPE(IdentifierTypeTree.class),
+		
+		// Type literals
+		TUPLE_TYPE(TupleTypeTree.class),
+		FUNCTION_TYPE(FunctionTypeTree.class),
+		OBJECT_TYPE(ObjectTypeTree.class),
+		
+		// Type expressions
+		MEMBER_TYPE(MemberTypeTree.class),
+		ARRAY_TYPE(ArrayTypeTree.class),//TODO merge w/ KEYOF_TYPE to unary generic iface?
+		KEYOF_TYPE(KeyofTypeTree.class),
+		TYPE_UNION(CompositeTypeTree.class),
+		TYPE_INTERSECTION(CompositeTypeTree.class),
+		//TODO: clean up
+		INTERFACE_PROPERTY(InterfacePropertyTree.class),
 		;
+		
 		private final Class<? extends Tree> iface;
 		private final boolean expr, litr, stmt, typ;
 
