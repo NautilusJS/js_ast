@@ -1,18 +1,18 @@
 package com.mindlin.jsast.type;
 
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
 
 public class ParameterInfo {
-	protected AccessModifier access;
+	protected Modifiers access;
 	protected PatternTree identifier;
 	protected boolean rest;
 	protected boolean optional;
 	protected Type declaredType;
 	protected ExpressionTree initializer;
 	
-	public ParameterInfo(AccessModifier access, PatternTree identifier, boolean rest, boolean optional, Type declaredType, ExpressionTree initializer) {
+	public ParameterInfo(Modifiers access, PatternTree identifier, boolean rest, boolean optional, Type declaredType, ExpressionTree initializer) {
 		this.access = access;
 		this.identifier = identifier;
 		this.rest = rest;
@@ -21,7 +21,7 @@ public class ParameterInfo {
 		this.initializer = initializer;
 	}
 	
-	public AccessModifier getAccessModifier() {
+	public Modifiers getModifiers() {
 		return this.access;
 	}
 	

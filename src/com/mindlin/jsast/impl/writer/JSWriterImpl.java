@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.mindlin.jsast.impl.util.Characters;
+import com.mindlin.jsast.tree.Modifiers.AccessModifier;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ArrayPatternTree;
 import com.mindlin.jsast.tree.AssignmentPatternTree;
@@ -24,7 +25,6 @@ import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CommentNode;
 import com.mindlin.jsast.tree.CompilationUnitTree;
@@ -40,6 +40,7 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
+import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
@@ -1014,8 +1015,9 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	protected void writeFunctionParameter(ParameterTree param, WriterHelper out) {
 		if (param.isRest())
 			out.append("...");
-		else if (param.getAccessModifier() != null) {
-			switch (param.getAccessModifier()) {
+		else if (param.getModifiers() != null) {
+			//TODO: fixme
+			switch (param.getModifiers().getAccess()) {
 				case PUBLIC:
 					out.append("public");
 					break;
@@ -1026,7 +1028,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 					out.append("private");
 					break;
 				default:
-					throw new IllegalArgumentException("Unknown access modifier: " + param.getAccessModifier() + " at " + param.getStart());
+					throw new IllegalArgumentException("Unknown access modifier: " + param.getModifiers() + " at " + param.getStart());
 			}
 			out.append(options.space);
 		}
@@ -1707,5 +1709,11 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 	@Override
 	public Void visitLiteralType(LiteralTypeTree<?> node, WriterHelper d) {
 		return node.getValue().accept(this, d);
+	}
+
+	@Override
+	public Void visitFunctionDeclaration(FunctionDeclarationTree node, WriterHelper d) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

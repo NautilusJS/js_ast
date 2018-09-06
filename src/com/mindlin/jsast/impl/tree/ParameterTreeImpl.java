@@ -2,15 +2,14 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
-	protected final boolean readonly;
-	protected final AccessModifier access;
+	protected final Modifiers access;
 	protected final boolean rest;
 	protected final boolean optional;
 	protected final TypeTree type;
@@ -46,12 +45,11 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	 * @param initializer
 	 */
 	public ParameterTreeImpl(long start, long end, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
-		this(start, end, false, null, identifier, rest, optional, type, initializer);
+		this(start, end, Modifiers.NONE, identifier, rest, optional, type, initializer);
 	}
 	
-	public ParameterTreeImpl(long start, long end, boolean readonly, AccessModifier access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
+	public ParameterTreeImpl(long start, long end, Modifiers access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
 		super(start, end);
-		this.readonly = readonly;
 		this.access = access;
 		this.rest = rest;
 		this.optional = optional;
@@ -59,15 +57,10 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 		this.type = type;
 		this.initializer = initializer;
 	}
-
-	@Override
-	public boolean isReadonly() {
-		return this.readonly;
-	}
 	
 	@Override
-	public AccessModifier getAccessModifier() {
-		return access;
+	public Modifiers getModifiers() {
+		return this.access;
 	}
 	
 	@Override
@@ -97,6 +90,6 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getAccessModifier(), getIdentifier(), isRest(), isOptional(), getType(), getInitializer());
+		return Objects.hash(getKind(), getModifiers(), getIdentifier(), isRest(), isOptional(), getType(), getInitializer());
 	}
 }

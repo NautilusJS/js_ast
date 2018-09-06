@@ -1,6 +1,5 @@
 package com.mindlin.jsast.tree;
 
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 /**
@@ -21,15 +20,7 @@ public interface ParameterTree extends Tree {
 	 * @return this parameter's access modifier, else {@code null} if not
 	 *         present
 	 */
-	AccessModifier getAccessModifier();
-	
-	/**
-	 * Get if readonly modifier is present.
-	 * 
-	 * @return Whether or not the {@code readonly} modifier is present on this
-	 *         parameter.
-	 */
-	boolean isReadonly();
+	Modifiers getModifiers();
 	
 	/**
 	 * Return if this parameter is a rest parameter.

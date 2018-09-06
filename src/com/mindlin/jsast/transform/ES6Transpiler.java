@@ -18,6 +18,7 @@ import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
@@ -91,7 +92,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		for (ListIterator<ParameterTree> i = ctorParams.listIterator(); i.hasNext();) {
 			final ParameterTree oldParam = i.next();
 			ParameterTree param = oldParam;
-			if (param.getAccessModifier() != null) {
+			if (param.getModifiers() != null) {
 				boolean wasOptional = param.isOptional();
 				
 				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
@@ -142,6 +143,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		if (ctorModified) {
 			//Copy positioning from old constructor, if possible
 			long oldStart = -1, oldEnd = -1, oldFnStart = -1, oldFnEnd = -1, oldBodyStart = -1, oldBodyEnd = -1;
+			Modifiers oldModifiers = Modifiers.NONE;
 			IdentifierTree name;
 			if (oldCtor != null) {
 				oldStart = oldCtor.getStart();
@@ -154,6 +156,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 				oldBodyStart = oldCtorFn.getBody().getStart();
 				oldBodyEnd = oldCtorFn.getBody().getEnd();
 				
+				oldModifiers = oldCtor.getModifiers();//TODO: check modifiers are good
 				name = oldCtorFn.getName();
 			} else {
 				name = new IdentifierTreeImpl(-1, -1, "constructor");
@@ -163,7 +166,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			BlockTree newCtorBody = new BlockTreeImpl(oldBodyStart, oldBodyEnd, ctorBody);
 			//TODO fix isStrict
 			FunctionExpressionTree ctorFn = new FunctionExpressionTreeImpl(oldFnStart, oldFnEnd, false, name, null, ctorParams, null, false, newCtorBody, false, false);
-			MethodDefinitionTree ctor = new MethodDefinitionTreeImpl(oldStart, oldEnd, null, false, false, false, PropertyDeclarationType.CONSTRUCTOR, name, null, ctorFn);
+			MethodDefinitionTree ctor = new MethodDefinitionTreeImpl(oldStart, oldEnd, oldModifiers, PropertyDeclarationType.CONSTRUCTOR, name, null, ctorFn);
 			if (oldCtor != null)
 				properties.set(properties.indexOf(oldCtor), ctor);
 			else

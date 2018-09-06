@@ -1,17 +1,21 @@
 package com.mindlin.jsast.type;
 
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.jsast.tree.Modifiers.AccessModifier;
 
 public class TypeMember {
-	AccessModifier access;
+	Modifiers modifiers;
 	boolean required = true;
-	boolean readonly = false;
 	Type key;
 	Type value;
 	
 	public TypeMember(boolean required, boolean readonly, Type key, Type value) {
+		this(required, readonly ? Modifiers.READONLY : Modifiers.NONE, key, value);
+	}
+	
+	public TypeMember(boolean required, Modifiers modifiers, Type key, Type value) {
 		this.required = required;
-		this.readonly = readonly;
+		this.modifiers = modifiers;
 		this.key = key;
 		this.value = value;
 	}
@@ -21,7 +25,7 @@ public class TypeMember {
 	}
 	
 	public boolean isReadonly() {
-		return this.readonly;
+		return this.modifiers.isReadonly();
 	}
 	
 	public Type getName() {
@@ -33,7 +37,7 @@ public class TypeMember {
 	}
 	
 	public AccessModifier getAccess() {
-		return this.access;
+		return this.modifiers.getAccess();
 	}
 	
 	@Override

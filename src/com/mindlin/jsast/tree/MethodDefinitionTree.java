@@ -2,7 +2,10 @@ package com.mindlin.jsast.tree;
 
 public interface MethodDefinitionTree extends ClassPropertyTree<FunctionExpressionTree>, ObjectLiteralPropertyTree {
 	
-	boolean isAbstract();
+	@Deprecated
+	default boolean isAbstract() {
+		return this.getModifiers().isAbstract();
+	}
 	
 	@Override
 	default Tree.Kind getKind() {
@@ -12,8 +15,7 @@ public interface MethodDefinitionTree extends ClassPropertyTree<FunctionExpressi
 	@Override
 	default boolean equivalentTo(Tree other) {
 		return ClassPropertyTree.super.equivalentTo(other)
-				&& (other instanceof MethodDefinitionTree)
-				&& (this.isAbstract() == ((MethodDefinitionTree)other).isAbstract());
+				&& (other instanceof MethodDefinitionTree);
 	}
 
 	@Override

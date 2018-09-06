@@ -1,5 +1,9 @@
 package com.mindlin.jsast.tree;
 
+import java.util.Objects;
+
+import com.mindlin.jsast.tree.Modifiers.AccessModifier;
+
 /**
  * Repre
  * @author mailmindlin
@@ -17,14 +21,20 @@ public interface ClassPropertyTree<T extends ExpressionTree> extends TypedProper
 	 * Whether the property is static or not
 	 * @return
 	 */
-	boolean isStatic();
+	@Deprecated
+	default boolean isStatic() {
+		return this.getModifiers().isStatic();
+	}
 	
 	/**
 	 * Get the access modifier on this property. Not null.
 	 * @return
 	 */
-	AccessModifier getAccess();
-
+	@Deprecated
+	default AccessModifier getAccess() {
+		return this.getModifiers().getAccess();
+	}
+	
 	/**
 	 * Get the type of this property. Not null.
 	 * @return
@@ -42,10 +52,8 @@ public interface ClassPropertyTree<T extends ExpressionTree> extends TypedProper
 		
 		ClassPropertyTree<?> o = (ClassPropertyTree<?>) other;
 		
-		return this.isReadonly() == o.isReadonly()
-				&& this.getKind() == o.getKind()
-				&& this.isStatic() == o.isStatic()
-				&& this.getAccess() == o.getAccess()
+		return this.getKind() == o.getKind()
+				&& Objects.equals(this.getModifiers(), o.getModifiers())
 				&& this.getDeclarationType() == o.getDeclarationType()
 				&& Tree.equivalentTo(this.getKey(), o.getKey())
 				&& Tree.equivalentTo(this.getType(), o.getType())
@@ -65,11 +73,5 @@ public interface ClassPropertyTree<T extends ExpressionTree> extends TypedProper
 		GENERATOR,
 		CONSTRUCTOR,
 		FIELD;
-	}
-
-	public static enum AccessModifier {
-		PUBLIC,
-		PROTECTED,
-		PRIVATE,
 	}
 }

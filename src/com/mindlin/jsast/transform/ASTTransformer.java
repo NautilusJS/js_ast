@@ -252,7 +252,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 					FunctionExpressionTree oldValue = methodDef.getValue();
 					FunctionExpressionTree newValue = (FunctionExpressionTree) oldValue.accept(this, ctx);
 					if (oldValue != newValue)
-						newProperty = new MethodDefinitionTreeImpl(methodDef.getStart(), methodDef.getEnd(), methodDef.getAccess(), methodDef.isAbstract(), methodDef.isReadonly(), methodDef.isStatic(), methodDef.getDeclarationType(), methodDef.getKey(), methodDef.getType(), newValue);
+						newProperty = new MethodDefinitionTreeImpl(methodDef.getStart(), methodDef.getEnd(), methodDef.getModifiers(), methodDef.getDeclarationType(), methodDef.getKey(), methodDef.getType(), newValue);
 				}
 			} else {
 				//TODO finish

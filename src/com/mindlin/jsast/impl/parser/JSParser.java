@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.BiPredicate;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
@@ -93,6 +94,9 @@ import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
+import com.mindlin.jsast.impl.util.Pair;
+import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.jsast.tree.Modifiers.AccessModifier;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
 import com.mindlin.jsast.tree.BlockTree;
@@ -100,7 +104,6 @@ import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
@@ -154,7 +157,6 @@ import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
-
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class JSParser {
@@ -339,7 +341,7 @@ public class JSParser {
 						break;
 				}
 				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON))
-					return this.parseLabeledStatement(this.parseIdentifier(next, src, context, false), src, context);
+					return this.parseLabeledStatement(this.parseIdentifier(next, src, context), src, context);
 			}
 			//Fallthrough intentional
 			case BOOLEAN_LITERAL:
@@ -562,7 +564,7 @@ public class JSParser {
 				case OBJECT_LITERAL:
 					dialect.require("js.parameter.destructured", expr.getStart());
 					//Turn into destructuring parameter
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), this.reinterpretExpressionAsPattern(expr), false, false, null, null);
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), this.reinterpretExpressionAsPattern(expr));
 				default:
 					break;
 			}
@@ -574,17 +576,92 @@ public class JSParser {
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart());
 	}
 	
-	AccessModifier reinterpretAsAccessModifier(JSKeyword keyword) {
-		switch (keyword) {
-			case PUBLIC:
-				return AccessModifier.PUBLIC;
-			case PROTECTED:
-				return AccessModifier.PROTECTED;
-			case PRIVATE:
-				return AccessModifier.PRIVATE;
-			default:
-				return null;
+	protected Modifiers parseAccessModifier(Token token, Context context) {
+		if (token.isIdentifier()) {
+			String value = token.getValue();
+			switch (value) {
+				case "readonly":
+					return Modifiers.READONLY;
+				case "abstract":
+					return Modifiers.ABSTRACT;
+				default:
+					break;
+			}
+		} else if (token.isKeyword()) {
+			switch (token.<JSKeyword>getValue()) {
+				case STATIC:
+					return Modifiers.STATIC;
+				case PUBLIC:
+					return Modifiers.PUBLIC;
+				case PRIVATE:
+					return Modifiers.PRIVATE;
+				case PROTECTED:
+					return Modifiers.PROTECTED;
+				default:
+					break;
+			}
 		}
+		
+		return null;
+	}
+	
+	protected Modifiers parseModifiers(BiPredicate<Modifiers, Token> filter, boolean expectPatternAfter, JSLexer src, Context context) {
+		Modifiers result = Modifiers.NONE;
+		List<Pair<Token, Modifiers>> modifiers = new ArrayList<>();
+		//TODO: better error messages
+		
+		if (expectPatternAfter)
+			src.mark();
+		
+		while (true) {
+			Token next = src.peek();
+			Modifiers modifier = parseAccessModifier(next, context);
+			
+			if (modifier == null) {
+				// We're done here
+				break;
+			}
+			
+			dialect.require("ts.parameter.accessModifier", next.getStart());
+			
+			// Check if blacklisted
+			if (!filter.test(modifier, next)) {
+				throw new JSUnexpectedTokenException(next, "Unsupported modifier: '" + modifier + "'");
+			}
+			
+			// Overlap
+			if (Modifiers.intersection(result, modifier).any()) {
+				//TODO: Emit other token for duplicated modifier
+				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", src.resolvePosition(next.getStart()));
+			} else if (modifier.getAccess() != null && result.getAccess() != null) {
+				//TODO: finish
+				throw new JSSyntaxException("Duplicate visibility modifier", src.resolvePosition(next.getStart()));
+			}
+			
+			// Be able to backtrack if we have a variable with a modifier-like name
+			if (expectPatternAfter) {
+				//Move up mark
+				src.unmark();
+				src.mark();
+			}
+			src.skip(next);
+			
+			result = Modifiers.union(result, modifier);
+			modifiers.add(new Pair<>(next, modifier));
+		}
+		
+		if (expectPatternAfter && !modifiers.isEmpty()) {
+			//TODO: better signature for parseIdentifierMaybe that fits better here?
+			src.mark();
+			if (this.parseIdentifierMaybe(src, context) == null) {
+				
+			} else {
+				src.reset();
+			}
+		}
+		
+		
+		return result;
 	}
 	
 	protected ExpressionTree parsePrimaryExpression(Token t, JSLexer src, Context context) {
@@ -597,7 +674,7 @@ public class JSParser {
 					//Abstract class
 					return this.parseClass(t, src, context);
 				
-				return this.parseIdentifier(t, src, context, false);
+				return this.parseIdentifier(t, src, context);
 			case NUMERIC_LITERAL:
 				if (context.isStrict()) {
 					//TODO throw error on implicit octal
@@ -700,7 +777,7 @@ public class JSParser {
 			return generics;
 		
 		do {
-			IdentifierTree identifier = this.parseIdentifier(null, src, context, false);
+			IdentifierTree identifier = this.parseIdentifier(src, context);
 			
 			context.registerGenericParam(identifier.getName(), identifier.getStart());
 			
@@ -750,7 +827,7 @@ public class JSParser {
 		
 		ArrayList<ImportSpecifierTree> importSpecifiers = new ArrayList<>();
 		
-		IdentifierTree defaultMemberIdentifier = this.parseIdentifier(null, src, context, true);
+		IdentifierTree defaultMemberIdentifier = this.parseIdentifierMaybe(src, context);
 		if (defaultMemberIdentifier != null) {
 			//import defaultMember...
 			importSpecifiers.add(new ImportSpecifierTreeImpl(defaultMemberIdentifier));
@@ -769,17 +846,17 @@ public class JSParser {
 			//import (defaultMember,)? * as name ...
 			IdentifierTree identifier = new IdentifierTreeImpl(t.getStart(), t.getEnd(), "*");
 			t = expect(TokenKind.KEYWORD, JSKeyword.AS, src, context);
-			IdentifierTree alias = this.parseIdentifier(null, src, context, false);
+			IdentifierTree alias = this.parseIdentifier(src, context);
 			importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
 		} else if (src.nextTokenIs(TokenKind.BRACKET, '{')) {
 			//import (defaultMember,)? {...} ...
 			do {
 				//member (as alias)?,
-				IdentifierTree identifier = this.parseIdentifier(null, src, context, false);
+				IdentifierTree identifier = this.parseIdentifier(src, context);
 				
 				IdentifierTree alias = identifier;
 				if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS))
-					alias = this.parseIdentifier(null, src, context, false);
+					alias = this.parseIdentifier(src, context);
 				
 				importSpecifiers.add(new ImportSpecifierTreeImpl(identifier.getStart(), alias.getEnd(), identifier, alias, false));
 			} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
@@ -821,7 +898,7 @@ public class JSParser {
 	protected TypeAliasTree parseTypeAlias(Token typeToken, JSLexer src, Context context) {
 		typeToken = expect(typeToken, TokenKind.IDENTIFIER, "type", src, context);
 		
-		IdentifierTree identifier = this.parseIdentifier(null, src, context, false);
+		IdentifierTree identifier = this.parseIdentifier(src, context);
 		
 		List<GenericParameterTree> genericParams = this.parseGenericParametersMaybe(src, context);
 		
@@ -861,7 +938,7 @@ public class JSParser {
 		List<VariableDeclaratorTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
 		do {
-			IdentifierTree identifier = this.parseIdentifier(null, src, context, false);
+			IdentifierTree identifier = this.parseIdentifier(src, context);
 			
 			//Check if a type is available
 			TypeTree type = this.parseTypeMaybe(src, context, false);
@@ -1000,11 +1077,13 @@ public class JSParser {
 		final long classStartPos = classKeywordToken.getStart();
 		
 		//Support abstract classes
-		boolean isClassAbstract = false;
+		final boolean isClassAbstract;
 		if (classKeywordToken.matches(TokenKind.IDENTIFIER, "abstract")) {
 			dialect.require("ts.class.abstract", classKeywordToken.getStart());
 			classKeywordToken = src.nextToken();
 			isClassAbstract = true;
+		} else {
+			isClassAbstract = false;
 		}
 		
 		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
@@ -1012,7 +1091,7 @@ public class JSParser {
 		dialect.require("js.class", classKeywordToken.getStart());
 		
 		//Read optional class identifier
-		IdentifierTree classIdentifier = this.parseIdentifier(null, src, context, true);
+		IdentifierTree classIdentifier = this.parseIdentifierMaybe(src, context);
 		List<GenericParameterTree> generics = Collections.emptyList();
 		if (classIdentifier != null)
 			generics = this.parseGenericParametersMaybe(src, context);
@@ -1049,68 +1128,26 @@ public class JSParser {
 		next = null;
 		
 		ArrayList<ClassPropertyTree<?>> properties = new ArrayList<>();
+		final Modifiers propModFilter = Modifiers.union(Modifiers.VISIBILITY, Modifiers.STATIC, Modifiers.READONLY, Modifiers.ABSTRACT);
+		
 		while (!src.peek().matches(TokenKind.BRACKET, '}')) {
+			//TODO: refactor into own method
 			//Start position of our next index
 			final long propertyStartPos = src.peek().getStart();
 			
 			//Aspects of property
 			PropertyDeclarationType methodType = null;
-			AccessModifier accessModifier = null;//Defaults to PUBLIC
-			boolean readonly = false;//Readonly modifier
-			boolean isStatic = false;
-			boolean isPropertyAbstract = false;
+			Modifiers modifier = this.parseModifiers((nextMod, token) -> {
+				if (nextMod.isStatic())
+					dialect.require("js.class.static", token.getStart());
+				
+				if (nextMod.isAbstract() && !isClassAbstract)
+					throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", src.resolvePosition(token.getStart()), src.resolvePosition(token.getEnd()));
+				return !nextMod.subtract(propModFilter).any();
+			}, true, src, context);
+			
 			Token modifierToken = null;//Store token of modifier for later error stuff
 			
-			//We can have up to 3 modifiers (ex. 'public static readonly')
-			for (int i = 0; i < 3; i++) {
-				//Check for 'readonly' modifier
-				Token lookahead = src.peek();
-				if (lookahead.matches(TokenKind.IDENTIFIER, "readonly")) {
-					src.skip(lookahead);
-					if (readonly)//Readonly already set
-						throw new JSUnexpectedTokenException(lookahead);
-					readonly = true;
-				} else if (lookahead.matches(TokenKind.IDENTIFIER, "abstract")) {
-					src.skip(lookahead);
-					//Check for 'abstract' keyword
-					if (!isClassAbstract)
-						throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", src.resolvePosition(lookahead.getStart()), src.resolvePosition(lookahead.getEnd()));
-					if (isPropertyAbstract)
-						throw new JSUnexpectedTokenException(lookahead);
-					
-					modifierToken = lookahead;
-					isPropertyAbstract = true;
-				} else if (lookahead.isKeyword()) {
-					JSKeyword keyword = lookahead.getValue();
-					
-					if (keyword == JSKeyword.STATIC) {
-						src.skip(lookahead);
-						if (isStatic)
-							throw new JSUnexpectedTokenException(lookahead);
-						dialect.require("js.class.static", lookahead.getStart());
-						isStatic = true;
-					} else if (keyword == JSKeyword.PUBLIC || keyword == JSKeyword.PROTECTED || keyword == JSKeyword.PRIVATE) {
-						src.skip(lookahead);
-						//Check that there weren't other access modifiers.
-						if (accessModifier != null)
-							throw new JSUnexpectedTokenException(lookahead);
-						
-						accessModifier = reinterpretAsAccessModifier(keyword);
-					} else {
-						//next isn't a modifier
-						break;
-					}
-				} else {
-					//next isn't a modifier
-					break;
-				}
-			}
-			
-			//Default accessModifier to PUBLIC if not set
-			if (accessModifier == null)
-				accessModifier = AccessModifier.PUBLIC;
-			
-
 			//Parse property key and optionally more modifiers
 			//TODO make sure that this works with the other modifiers (ex., is 'get readonly foo();' allowed?)
 			//I'm not sure if this is *correct* js/ts, but let's go with it.
@@ -1157,8 +1194,8 @@ public class JSParser {
 				
 				if (!key.isComputed() && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
 					//Promote to constructor
-					if (methodType != null || isPropertyAbstract) {
-						String modifierName = isPropertyAbstract ? "abstract" : methodType.name();
+					if (methodType != null || modifier.isAbstract()) {
+						String modifierName = modifier.isAbstract() ? "abstract" : methodType.name();
 						throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
 					}
 					
@@ -1169,8 +1206,8 @@ public class JSParser {
 					methodType = PropertyDeclarationType.METHOD;
 				}
 				
-				property = this.parseMethodDefinition(propertyStartPos, isPropertyAbstract, isStatic, readonly, accessModifier, methodType, key, src, context);
-			} else if (methodType != null || isPropertyAbstract || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
+				property = this.parseMethodDefinition(propertyStartPos, modifier, methodType, key, src, context);
+			} else if (methodType != null || modifier.isAbstract() || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
 				//TODO also check for fields named 'new'?
 				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 			} else {
@@ -1183,7 +1220,7 @@ public class JSParser {
 					value = this.parseAssignment(null, src, context);
 				//Fields end with a semicolon
 				expectEOL(src, context);
-				property = new ClassPropertyTreeImpl<ExpressionTree>(propertyStartPos, src.getPosition(), accessModifier, readonly, isStatic, methodType, key, fieldType, value);
+				property = new ClassPropertyTreeImpl<ExpressionTree>(propertyStartPos, src.getPosition(), modifier, methodType, key, fieldType, value);
 			}
 			
 			properties.add(property);
@@ -1203,20 +1240,17 @@ public class JSParser {
 	 */
 	List<InterfacePropertyTree> parseInterfaceBody(JSLexer src, Context context) {
 		ArrayList<InterfacePropertyTree> properties = new ArrayList<>();
+		Modifiers propModsFilter = Modifiers.READONLY;
+		
 		Token next;
 		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
 			long start = next.getStart();
 			
-			boolean readonly = false;
+			Modifiers modifiers = this.parseModifiers((nextMod, t) -> nextMod.subtract(propModsFilter).any(), true, src, context);
+			
 			IdentifierTree propname;
 			boolean optional;
 			TypeTree type;
-			
-			if (next.matches(TokenKind.IDENTIFIER, "readonly")) {
-				//Starts with 'readonly' keyword
-				readonly = true;
-				next = src.nextToken();
-			}
 			
 			if (next.isIdentifier()) {
 				//Is simple identifier => property/method
@@ -1252,7 +1286,7 @@ public class JSParser {
 			//Optionally consume semicolon at end
 			src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
 			
-			properties.add(new InterfacePropertyTreeImpl(start, src.getPosition(), readonly, propname, optional, type));
+			properties.add(new InterfacePropertyTreeImpl(start, src.getPosition(), modifiers, propname, optional, type));
 		}
 		
 		expect(next, TokenKind.BRACKET, '}', src);
@@ -1272,7 +1306,7 @@ public class JSParser {
 		dialect.require("ts.types.interface", interfaceKeywordToken.getStart());
 		
 		//Get declared name
-		IdentifierTree name = this.parseIdentifier(null, src, context, false);
+		IdentifierTree name = this.parseIdentifier(src, context);
 		
 		//...extends A, B, ..., C
 		List<TypeTree> superClasses;
@@ -1480,7 +1514,7 @@ public class JSParser {
 		if (keywordToken.getValue() != JSKeyword.BREAK && keywordToken.getValue() != JSKeyword.CONTINUE)
 			throw new JSUnexpectedTokenException(keywordToken);
 		
-		IdentifierTree label = this.parseIdentifier(null, src, context, true);
+		IdentifierTree label = this.parseIdentifierMaybe(src, context);
 		
 		final long start = keywordToken.getStart();
 		expectEOL(src, context);
@@ -1569,7 +1603,7 @@ public class JSParser {
 		Token next;
 		while ((next = src.nextTokenIf(TokenKind.IDENTIFIER, "catch")) != null) {
 			expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-			IdentifierTree param = this.parseIdentifier(null, src, context, false);
+			IdentifierTree param = this.parseIdentifier(src, context);
 			
 			//Optional param type
 			TypeTree type = this.parseTypeMaybe(src, context, false);
@@ -2204,27 +2238,13 @@ public class JSParser {
 		do {
 			Token identifier = src.nextToken();
 			
-			boolean readonly = false;
-			AccessModifier access = null;
+			Modifiers modifier;
 			if (allowAccessModifiers) {
-				//Up to 2 keywords (e.g., 'public readonly')
-				for (int i = 0; i < 2; i++) {
-					if (identifier.matches(TokenKind.IDENTIFIER, "readonly")) {
-						dialect.require("ts.parameter.accessModifier", identifier.getStart());
-						if (readonly)
-							throw new JSSyntaxException("Duplicate readonly modifier", src.resolvePosition(identifier.getStart()));
-						readonly = true;
-					} else if (TokenPredicate.ACCESS_MODIFIER.test(identifier)) {
-						dialect.require("ts.parameter.accessModifier", identifier.getStart());
-						if (access != null)
-							throw new JSSyntaxException("Duplicate access modifier", src.resolvePosition(identifier.getStart()));
-						access = reinterpretAsAccessModifier(identifier.getValue());
-					} else {
-						break;
-					}
-					
-					identifier = src.nextToken();
-				}
+				Modifiers filter = Modifiers.union(Modifiers.VISIBILITY, Modifiers.READONLY);
+				modifier = this.parseModifiers((next, token) -> next.subtract(filter).any(), true, src, context);
+			} else {
+				//TODO: maybe just null?
+				modifier = Modifiers.NONE;
 			}
 			
 			if (!identifier.isIdentifier()) {
@@ -2242,21 +2262,21 @@ public class JSParser {
 						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
 					
 					//TODO: keep references to access modifier tokens for better error messages
-					if (access != null)
+					if (modifier != null && modifier.any())
 						throw new JSSyntaxException("A parameter property cannot be declared via rest parameter", src.getResolvedPosition());
 					
 					//Rest parameters must be at the end
 					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 						throw new JSSyntaxException("Rest parameter must be the last", src.getPosition());
 					
-					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), (IdentifierTree)expr.getExpression(), true, false, type, null));
+					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), modifier, (IdentifierTree)expr.getExpression(), true, false, type, null));
 					break;
 				}
 				throw new JSUnexpectedTokenException(identifier);
 			}
 			
 			//Check if it's an optional parameter
-			boolean optional = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null;
+			boolean optional = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
 			if (prevOptional && !optional)
 				throw new JSSyntaxException("A required parameter cannot follow an optional parameter", src.getPosition());
 			prevOptional |= optional;
@@ -2270,8 +2290,8 @@ public class JSParser {
 			if (assignment != null)
 				defaultValue = this.parseAssignment(null, src, context);
 			
-			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), readonly, access, new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
-		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
+			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), modifier, new IdentifierTreeImpl(identifier), false, optional, type, defaultValue));
+		} while (!src.isEOF() && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 		
 		//Expect to end with a right paren
 		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src);
@@ -2495,7 +2515,7 @@ public class JSParser {
 				//Static member access
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
-				ExpressionTree property = this.parseIdentifier(null, src, context, false);
+				ExpressionTree property = this.parseIdentifier(src, context);
 				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
 			} else if ((t = src.nextTokenIf(token -> (token.getKind() == TokenKind.TEMPLATE_LITERAL && token.<TemplateTokenInfo>getValue().head))) != null) {
 				//TODO Tagged template literal
@@ -2531,54 +2551,75 @@ public class JSParser {
 		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), functionSelectExpression, arguments);
 	}
 	
-	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, Context context, boolean optional) {
-		//Keep reference to lookahead (if applicable) to skip over it at the end
-		Token lookahead = null;
-		if (identifierToken == null)
-			lookahead = identifierToken = src.peek();
-		
+	/**
+	 * Coerces {@code identifierToken} to an identifier, if possible in the current context.
+	 * @param identifierToken
+	 * @param src
+	 * @param context
+	 * @return
+	 * @throws JSSyntaxException If {@code identifierToken} is an invalid 
+	 */
+	protected String asIdentifier(Token identifierToken, JSLexer src, Context context) throws JSSyntaxException {
 		//'yield' can be an identifier if yield expressions aren't allowed in the current context
 		if (identifierToken.matches(TokenKind.KEYWORD, JSKeyword.YIELD)) {
-			if (!context.allowYield())
-				identifierToken = identifierToken.reinterpretAsIdentifier();
-			else if (optional)
-				return null;
-			else
+			if (context.allowYield())
 				throw new JSSyntaxException("'yield' not allowed as identifier", identifierToken.getStart());
+			else
+				identifierToken = identifierToken.reinterpretAsIdentifier();
 		}
 		
-		
-		if (!identifierToken.isIdentifier()) {
-			if (optional)
-				return null;
-			throw new JSUnexpectedTokenException(identifierToken, TokenKind.IDENTIFIER);
-		}
-		
+		expect(identifierToken, TokenKind.IDENTIFIER, src);
 		
 		//Check that our identifier has a valid name
 		String name = identifierToken.getValue();
 		
 		//'await' not allowed when in a context that it could be a keyword.
 		if (context.allowAwait() && name.equals("await")) {
-			if (optional)
-				return null;
 			throw new JSSyntaxException("'await' not allowed as indentifier in context", identifierToken.getStart());
 		}
 		
 		//'arguments' and 'eval' not allowed as identifiers in strict mode
 		//TODO support 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static' as illegal strict mode identifiers
+		//TODO: aren't we checking for 'yield' twice?
 		if (context.isStrict() && (name.equals("arguments") || name.equals("eval") || name.equals("yield"))) {
-			if (optional)
-				return null;
 			throw new JSSyntaxException("'" + name + "' not allowed as identifier in strict mode", identifierToken.getStart());
 		}
 		
-		//Skip lookahead if applicable
-		if (lookahead != null)
-			src.skip(lookahead);
+		return name;
+	}
+	
+	protected IdentifierTree parseIdentifierMaybe(JSLexer src, Context context) {
+		//Keep reference to lookahead (if applicable) to skip over it at the end
+		Token lookahead = src.peek();
+		
+		String name;
+		try {
+			name = this.asIdentifier(lookahead, src, context);
+		} catch (JSSyntaxException e) {
+			return null;
+		}
+		
+		//Skip lookahead
+		src.skip(lookahead);
+		
+		return new IdentifierTreeImpl(lookahead.getStart(), lookahead.getEnd(), name);
+	}
+	
+	protected IdentifierTree parseIdentifier(JSLexer src, Context context) {
+		return this.parseIdentifier(src.nextToken(), src, context);
+	}
+	
+	//TODO: drop support for signature
+	@Deprecated
+	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, Context context) {
+		if (identifierToken == null)
+			identifierToken = src.nextToken();
+		
+		String name = this.asIdentifier(identifierToken, src, context);
 		
 		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), name);
 	}
+	
 	
 	protected ThisExpressionTree parseThis(Token thisKeywordToken, JSLexer src, Context ctx) {
 		return new ThisExpressionTreeImpl(expect(thisKeywordToken, TokenKind.KEYWORD, JSKeyword.THIS, src, ctx));
@@ -2629,7 +2670,7 @@ public class JSParser {
 		ctx.isAssignmentTarget(false);
 		ctx.isBindingElement(false);
 		
-		return new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, ctx.isStrict(), generator);
+		return new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, strict, generator);
 	}
 	
 	protected FunctionExpressionTree parseFunctionExpression(Token functionKeywordToken, JSLexer src, Context context) {
@@ -2785,7 +2826,7 @@ public class JSParser {
 	protected ObjectPropertyKeyTree parseObjectPropertyKey(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		long start = lookahead.getStart();
-		IdentifierTree id = this.parseIdentifier(null, src, context, true);
+		IdentifierTree id = this.parseIdentifierMaybe(src, context);
 		if (id != null)
 			return id;
 		
@@ -2827,7 +2868,7 @@ public class JSParser {
 		}
 	}
 	
-	protected MethodDefinitionTree parseMethodDefinition(long startPos, boolean isAbstract, boolean isStatic, boolean isReadonly, AccessModifier accessModifier, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
+	protected MethodDefinitionTree parseMethodDefinition(long startPos, Modifiers modifiers, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
 		List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR, null);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
@@ -2838,13 +2879,15 @@ public class JSParser {
 		
 		FunctionTypeTree type = new FunctionTypeTreeImpl(startPos, src.getPosition(), true, params, Collections.emptyList(), returnType);
 		
-		FunctionExpressionTree fn = null;
-		if (!isAbstract)
-			fn = this.finishFunctionBody(startPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, null, params, returnType, false, methodType == PropertyDeclarationType.GENERATOR, src, context);
-		else
+		FunctionExpressionTree fn;
+		if (modifiers.isAbstract()) {
 			expectEOL(src, context);
+			fn = null;
+		} else {
+			fn = this.finishFunctionBody(startPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, null, params, returnType, false, methodType == PropertyDeclarationType.GENERATOR, src, context);
+		}
 		
-		return new MethodDefinitionTreeImpl(startPos, src.getPosition(), accessModifier, isAbstract, isReadonly, isStatic, methodType, key, type, fn);
+		return new MethodDefinitionTreeImpl(startPos, src.getPosition(), modifiers, methodType, key, type, fn);
 	}
 	
 	protected ObjectLiteralPropertyTree parseObjectProperty(JSLexer src, Context context) {
@@ -2888,7 +2931,7 @@ public class JSParser {
 			if (methodType == null)
 				methodType = PropertyDeclarationType.METHOD;
 			
-			return this.parseMethodDefinition(startPos, false, false, false, null, methodType, key, src, context);
+			return this.parseMethodDefinition(startPos, Modifiers.NONE, methodType, key, src, context);
 		} else if (methodType != null)
 			throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
 		else if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COLON) != null) {

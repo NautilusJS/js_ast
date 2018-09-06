@@ -97,7 +97,7 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 		
 		List<ParameterInfo> parameters = new ArrayList<>(fn.getParameters().size());
 		for (ParameterTree param : fn.getParameters())
-			parameters.add(new ParameterInfo(param.getAccessModifier(), param.getIdentifier(), param.isRest(), param.isOptional(), param.getType().accept(this, localCtx), param.getInitializer()));
+			parameters.add(new ParameterInfo(param.getModifiers(), param.getIdentifier(), param.isRest(), param.isOptional(), param.getType().accept(this, localCtx), param.getInitializer()));
 		
 		//TODO: null return type => implicit void?
 		Type returnType = fn.getReturnType() == null ? null : fn.getReturnType().accept(this, localCtx);

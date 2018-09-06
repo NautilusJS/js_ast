@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.Modifiers.AccessModifier;
 import com.mindlin.jsast.type.CompositeType;
 import com.mindlin.jsast.type.IndexInfo;
 import com.mindlin.jsast.type.IntrinsicType;
