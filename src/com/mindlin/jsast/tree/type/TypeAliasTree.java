@@ -1,28 +1,28 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.jsast.tree.type;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.type.GenericParameterTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.jsast.tree.DeclarationStatementTree;
+import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.NamedDeclarationTree;
+import com.mindlin.jsast.tree.StatementTreeVisitor;
+import com.mindlin.jsast.tree.Tree;
 
 /**
  * Statement declaring a TypeScript type alias. Written in form
  * {@code type ALIASNAME = TYPE}, where ALIASNAME is an identifier
  * representing the name of the alias, and TYPE is a type statement.
  * 
- * @author Liam
- *
+ * @author mailmindlin
  */
-public interface TypeAliasTree extends StatementTree {
-	/**
-	 * @return name of alias
-	 */
-	IdentifierTree getAlias();
-
+public interface TypeAliasTree extends NamedDeclarationTree, DeclarationStatementTree {
+	@Override
+	IdentifierTree getName();
+	
 	/**
 	 * @return generic parameters (not null)
 	 */
-	List<GenericParameterTree> getGenericParameters();
+	List<TypeParameterDeclarationTree> getTypeParameters();
 	
 	TypeTree getValue();
 	

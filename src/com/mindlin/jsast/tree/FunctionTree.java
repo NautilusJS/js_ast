@@ -1,48 +1,13 @@
 package com.mindlin.jsast.tree;
 
-import java.util.List;
-
-import com.mindlin.jsast.tree.type.GenericParameterTree;
-import com.mindlin.jsast.tree.type.TypeTree;
-
-public interface FunctionTree extends Tree {
+public interface FunctionTree extends SignatureDeclarationTree {
 	/**
 	 * Get function identifier.
 	 * Null if arrow function (see {@link #isArrow()})
 	 * @return name
 	 */
-	IdentifierTree getName();
-	
-	/**
-	 * Get generic parameters.
-	 * @return generics (may return null if empty)
-	 */
-	List<GenericParameterTree> getGenericParameters();
-
-	/**
-	 * Get function parameters.
-	 * @return parameters
-	 */
-	List<ParameterTree> getParameters();
-	
-	/**
-	 * Get <strong>declared</strong> function return type.
-	 * <p>
-	 * Note: the type provided by this method is <strong>wrong</strong> if this function is:
-	 * <ul>
-	 * 	<li>
-	 * 		A generator (in which case, the *actual* return type is {@code Generator<getReturnType()>}).
-	 * 		See {@link #isGenerator()}.
-	 * 	</li>
-	 * 	<li>
-	 * 		async (in which case, the *actual* return type is {@code Promise<getReturnType()>}).
-	 * 		See {@link #isAsync()}.
-	 * 	</li>
-	 * </ul>
-	 * </p>
-	 * @return declared return type
-	 */
-	TypeTree getReturnType();
+	@Override
+	PropertyName getName();
 	
 	/**
 	 * Get function body.

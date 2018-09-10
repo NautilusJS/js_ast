@@ -1,11 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface StringLiteralTree extends LiteralTree<String>, ObjectPropertyKeyTree {
-	
-	@Override
-	default boolean isComputed() {
-		return false;
-	}
+public interface StringLiteralTree extends LiteralTree<String>, PropertyName {
 	
 	@Override
 	default Tree.Kind getKind() {

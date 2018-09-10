@@ -1,6 +1,8 @@
 package com.mindlin.jsast.tree;
 
-public interface ExportTree extends ExpressiveStatementTree {
+public interface ExportTree extends StatementTree {
+	ExpressionTree getExpression();
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.EXPORT;

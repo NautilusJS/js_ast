@@ -1,14 +1,13 @@
 package com.mindlin.jsast.tree;
 
-public interface InterfacePropertyTree extends TypedPropertyTree {
-	
-	boolean isOptional();
+public interface DecoratorTree extends Tree {
+	ExpressionTree getExpression();
 	
 	@Override
-	default Tree.Kind getKind() {
-		return Tree.Kind.INTERFACE_PROPERTY;
+	default Kind getKind() {
+		return Kind.DECORATOR;
 	}
-
+	
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
 		throw new UnsupportedOperationException();

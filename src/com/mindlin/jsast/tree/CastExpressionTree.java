@@ -10,7 +10,10 @@ import com.mindlin.jsast.tree.type.TypeTree;
  * 
  * @author mailmindlin
  */
-public interface CastExpressionTree extends ExpressiveExpressionTree {
+public interface CastExpressionTree extends ExpressionTree {
+	
+	ExpressionTree getExpression();
+	
 	/**
 	 * Get the type that the expression was cast to
 	 * @return type casted to

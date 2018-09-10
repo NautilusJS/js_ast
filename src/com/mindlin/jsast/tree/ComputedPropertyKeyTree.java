@@ -1,11 +1,8 @@
 package com.mindlin.jsast.tree;
 
-public interface ComputedPropertyKeyTree extends ExpressiveExpressionTree, ObjectPropertyKeyTree {
+public interface ComputedPropertyKeyTree extends DeclarationName {
 	
-	@Override
-	default boolean isComputed() {
-		return true;
-	}
+	ExpressionTree getExpression();
 	
 	@Override
 	default Kind getKind() {

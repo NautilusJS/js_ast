@@ -3,21 +3,31 @@ package com.mindlin.jsast.tree;
 import java.util.Iterator;
 import java.util.List;
 
+import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassExpressionTree;
+import com.mindlin.jsast.tree.SignatureDeclarationTree.CallSignatureTree;
+import com.mindlin.jsast.tree.SignatureDeclarationTree.ConstructSignatureTree;
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
+import com.mindlin.jsast.tree.comment.CommentNode;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.ConditionalTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.jsast.tree.type.InferTypeTree;
+import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
+import com.mindlin.jsast.tree.type.MappedTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
+import com.mindlin.jsast.tree.type.ParenthesizedTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeAliasTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
@@ -27,21 +37,33 @@ public interface Tree {
 	public static enum Kind {
 		// ===== Data structures =====
 		// Program
+		COMPILATION_BUNDLE,
 		COMPILATION_UNIT(CompilationUnitTree.class),
+		
+		// Decorators
+		DECORATOR(DecoratorTree.class),
 		
 		// Comments
 		COMMENT(CommentNode.class),
+		JSDOC_DIRECTIVE,
+		JSDOC_ANNOTATION,
 		
 		// Function
 		PARAMETER(ParameterTree.class),
+		
+		// Misc.
+		ERROR(ErroneousTree.class),
+		OTHER,
 
 		// ===== Statements =====
 		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
 		EMPTY_STATEMENT(EmptyStatementTree.class),
+		DIRECTIVE(DirectiveTree.class),
 		
 		// Control flow structures
 		BLOCK(BlockTree.class),
 		DEBUGGER(DebuggerTree.class),
+		WITH(WithTree.class),
 		
 		// Control flow statements
 		LABELED_STATEMENT(LabeledStatementTree.class),
@@ -55,8 +77,7 @@ public interface Tree {
 		// Choice
 		IF(IfTree.class),
 		SWITCH(SwitchTree.class),
-		CASE(CaseTree.class),
-		WITH(WithTree.class),
+		CASE(SwitchCaseTree.class),
 		
 		// Exceptions
 		THROW(ThrowTree.class),
@@ -68,12 +89,21 @@ public interface Tree {
 		DO_WHILE_LOOP(DoWhileLoopTree.class),
 		FOR_LOOP(ForLoopTree.class),
 		FOR_IN_LOOP(ForEachLoopTree.class),
-		FOR_OF_LOOP(ForEachLoopTree.class), // Special
+		FOR_OF_LOOP(ForEachLoopTree.class),
 		
 		// ===== Declarations =====
 		FUNCTION_DECLARATION(FunctionDeclarationTree.class),
 		VARIABLE_DECLARATION(VariableDeclarationTree.class),
 		VARIABLE_DECLARATOR(VariableDeclaratorTree.class),
+		
+		// TS declarations
+		ENUM_DECLARATION(EnumDeclarationTree.class),
+		MODULE_DECLARATION,
+		
+		// 'Fake' declarations
+		TYPE_ALIAS(TypeAliasTree.class),
+		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
+		CLASS_DECLARATION(ClassDeclarationTree.class),
 		
 
 		// ===== Expressions =====
@@ -84,6 +114,7 @@ public interface Tree {
 		
 		//TODO: categorize
 		FUNCTION_EXPRESSION(FunctionExpressionTree.class),
+		CLASS_EXPRESSION(ClassExpressionTree.class),
 
 		// Literals
 		BOOLEAN_LITERAL(BooleanLiteralTree.class),
@@ -95,7 +126,7 @@ public interface Tree {
 		// Literal-like (but more expression-y)
 		ARRAY_LITERAL(ArrayLiteralTree.class),
 		OBJECT_LITERAL(ObjectLiteralTree.class),
-		OBJECT_LITERAL_PROPERTY(ObjectLiteralPropertyTree.class),
+		OBJECT_LITERAL_PROPERTY(ObjectLiteralElement.class),
 		
 		// Templates
 		TAGGED_TEMPLATE,//TODO: fix
@@ -116,40 +147,40 @@ public interface Tree {
 		PREFIX_INCREMENT(UnaryTree.class),
 
 		// Binary operators
-		IN(BinaryTree.class),
-		INSTANCEOF(BinaryTree.class),
+		IN(BinaryExpressionTree.class),
+		INSTANCEOF(BinaryExpressionTree.class),
 		
 		// Binary math
-		ADDITION(BinaryTree.class),
-		SUBTRACTION(BinaryTree.class),
-		MULTIPLICATION(BinaryTree.class),
-		DIVISION(BinaryTree.class),
-		REMAINDER(BinaryTree.class),
-		EXPONENTIATION(BinaryTree.class),
+		ADDITION(BinaryExpressionTree.class),
+		SUBTRACTION(BinaryExpressionTree.class),
+		MULTIPLICATION(BinaryExpressionTree.class),
+		DIVISION(BinaryExpressionTree.class),
+		REMAINDER(BinaryExpressionTree.class),
+		EXPONENTIATION(BinaryExpressionTree.class),
 
 		// Bitwise operators
-		BITWISE_AND(BinaryTree.class),
-		BITWISE_OR(BinaryTree.class),
-		BITWISE_XOR(BinaryTree.class),
+		BITWISE_AND(BinaryExpressionTree.class),
+		BITWISE_OR(BinaryExpressionTree.class),
+		BITWISE_XOR(BinaryExpressionTree.class),
 		BITWISE_NOT(UnaryTree.class),
-		LEFT_SHIFT(BinaryTree.class),
-		RIGHT_SHIFT(BinaryTree.class),
-		UNSIGNED_RIGHT_SHIFT(BinaryTree.class),
+		LEFT_SHIFT(BinaryExpressionTree.class),
+		RIGHT_SHIFT(BinaryExpressionTree.class),
+		UNSIGNED_RIGHT_SHIFT(BinaryExpressionTree.class),
 
 		// Logical operators
-		LOGICAL_AND(BinaryTree.class),
-		LOGICAL_OR(BinaryTree.class),
+		LOGICAL_AND(BinaryExpressionTree.class),
+		LOGICAL_OR(BinaryExpressionTree.class),
 		LOGICAL_NOT(UnaryTree.class),
 
 		// Comparison operators
-		EQUAL(BinaryTree.class),
-		NOT_EQUAL(BinaryTree.class),
-		STRICT_EQUAL(BinaryTree.class),
-		STRICT_NOT_EQUAL(BinaryTree.class),
-		GREATER_THAN(BinaryTree.class),
-		LESS_THAN(BinaryTree.class),
-		GREATER_THAN_EQUAL(BinaryTree.class),
-		LESS_THAN_EQUAL(BinaryTree.class),
+		EQUAL(BinaryExpressionTree.class),
+		NOT_EQUAL(BinaryExpressionTree.class),
+		STRICT_EQUAL(BinaryExpressionTree.class),
+		STRICT_NOT_EQUAL(BinaryExpressionTree.class),
+		GREATER_THAN(BinaryExpressionTree.class),
+		LESS_THAN(BinaryExpressionTree.class),
+		GREATER_THAN_EQUAL(BinaryExpressionTree.class),
+		LESS_THAN_EQUAL(BinaryExpressionTree.class),
 
 		// Assignment operators
 		ASSIGNMENT(AssignmentTree.class),
@@ -169,18 +200,18 @@ public interface Tree {
 		UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(AssignmentTree.class),
 
 		// Misc. operators
-		SEQUENCE(SequenceTree.class),
+		SEQUENCE(SequenceExpressionTree.class),
 		PARENTHESIZED(ParenthesizedTree.class),
 
 		// Member access
-		ARRAY_ACCESS(BinaryTree.class),
+		ARRAY_ACCESS(BinaryExpressionTree.class),
 		MEMBER_SELECT(MemberExpressionTree.class),
 
 		// Control flow modifiers
 		CONDITIONAL(ConditionalExpressionTree.class),
 
 		// Module stuff
-		IMPORT(ImportTree.class),
+		IMPORT(ImportDeclarationTree.class),
 		IMPORT_SPECIFIER(ImportSpecifierTree.class),
 		EXPORT(ExportTree.class),
 
@@ -193,46 +224,44 @@ public interface Tree {
 
 		// Variable stuff
 		IDENTIFIER(IdentifierTree.class),
-
-		ERROR(ErroneousTree.class),
-		OTHER,
 		
 		// ===== Properties =====
 		// These are used for object literals, classes, interfaces, etc.
-		PROPERTY(PropertyTree.class),//TODO: finish
-		ASSIGNMENT_PROPERTY,
-		METHOD_DEFINITION(MethodDefinitionTree.class),
-		INDEX_TYPE(IndexSignatureTree.class),
-		CALL_SIGNATURE,
+		
+		// Signatures
+		PROPERTY_SIGNATURE,
+		METHOD_SIGNATURE(MethodSignatureTree.class),
+		INDEX_SIGNATURE(IndexSignatureTree.class),
+		CALL_SIGNATURE(CallSignatureTree.class),
+		CONSTRUCT_SIGNATURE(ConstructSignatureTree.class),
+		
+		// Declarations
+		ASSIGNMENT_PROPERTY(AssignmentPropertyTree.class),
+		SHORTHAND_ASSIGNMENT_PROPERTY(ShorthandAssignmentPropertyTree.class),
+		PROPERTY_DECLARATION(PropertyDeclarationTree.class),
+		METHOD_DECLARATION(MethodDeclarationTree.class),
+		CONSTRUCTOR_DECLARATION(ConstructorDeclarationTree.class),
+		GET_ACCESSOR_DECLARATION(GetAccessorDeclarationTree.class),
+		SET_ACCESSOR_DECLARATION(SetAccessorDeclarationTree.class),
 		
 		// ===== Patterns =====
 		OBJECT_PATTERN(ObjectPatternTree.class),
 		ARRAY_PATTERN(ArrayPatternTree.class),
 		ASSIGNMENT_PATTERN(AssignmentPatternTree.class),
-		
-		// ===== Classes =====
-		CLASS_DECLARATION(ClassDeclarationTree.class),
-		CLASS_EXPRESSION(ClassDeclarationTree.class),//TODO: custom type
-		CLASS_PROPERTY(ClassPropertyTree.class),
+		SHORTHAND_ASSIGNMENT_PATTERN(ShorthandAssignmentPatternTree.class),
+		REST_PATTERN(RestPatternElementTree.class),
 		
 		// ===== Typing ======
 		
 		// Type-modified expressions
-		CAST(CastTree.class),
-		
-		// Type declarations
-		TYPE_ALIAS(TypeAliasTree.class),
-		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
-		ENUM_DECLARATION(EnumDeclarationTree.class),
+		CAST(CastExpressionTree.class),
 		
 		// Built-in types
-		ANY_TYPE(AnyTypeTree.class),
 		SPECIAL_TYPE(SpecialTypeTree.class),
-		NEVER_TYPE,
 		LITERAL_TYPE(LiteralTypeTree.class),
 		
 		// Generics
-		GENERIC_PARAM(GenericParameterTree.class),
+		TYPE_PARAMETER_DECLARATION(TypeParameterDeclarationTree.class),
 		IDENTIFIER_TYPE(IdentifierTypeTree.class),
 		
 		// Type literals
@@ -242,12 +271,16 @@ public interface Tree {
 		
 		// Type expressions
 		MEMBER_TYPE(MemberTypeTree.class),
-		ARRAY_TYPE(ArrayTypeTree.class),//TODO merge w/ KEYOF_TYPE to unary generic iface?
+		ARRAY_TYPE(ArrayTypeTree.class),
 		KEYOF_TYPE(KeyofTypeTree.class),
 		TYPE_UNION(CompositeTypeTree.class),
 		TYPE_INTERSECTION(CompositeTypeTree.class),
-		//TODO: clean up
-		INTERFACE_PROPERTY(InterfacePropertyTree.class),
+		
+		// Complex type expressions
+		INFER_TYPE(InferTypeTree.class),
+		CONDITIONAL_TYPE(ConditionalTypeTree.class),
+		PARENTHESIZED_TYPE(ParenthesizedTypeTree.class),
+		MAPPED_TYPE(MappedTypeTree.class),
 		;
 		
 		private final Class<? extends Tree> iface;
@@ -336,8 +369,6 @@ public interface Tree {
 	 * @see #getStart()
 	 */
 	long getEnd();
-	
-	boolean isMutable();
 
 	<R, D> R accept(TreeVisitor<R, D> visitor, D data);
 	

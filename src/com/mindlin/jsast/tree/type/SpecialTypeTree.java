@@ -20,6 +20,7 @@ public interface SpecialTypeTree extends TypeTree {
 	}
 	
 	public static enum SpecialType {
+		ANY,
 		NEVER,
 		VOID,
 		NULL,

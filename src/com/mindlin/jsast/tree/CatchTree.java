@@ -1,14 +1,14 @@
 package com.mindlin.jsast.tree;
 
-import com.mindlin.jsast.tree.type.TypeTree;
-
 public interface CatchTree extends Tree {
+	/**
+	 * Get declared parameter.
+	 * @return declared parameter (may be null)
+	 */
+	VariableDeclaratorTree getParameter();
+	
 	BlockTree getBlock();
-
-	IdentifierTree getParameter();
-
-	TypeTree getType();
-
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.CATCH;
@@ -35,9 +35,6 @@ public interface CatchTree extends Tree {
 			return false;
 		
 		if (!Tree.equivalentTo(this.getParameter(), other.getParameter()))
-			return false;
-		
-		if (!Tree.equivalentTo(this.getType(), other.getType()))
 			return false;
 		
 		return true;

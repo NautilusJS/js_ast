@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-public interface ImportTree extends StatementTree {
+public interface ImportDeclarationTree extends StatementTree {
 	List<ImportSpecifierTree> getSpecifiers();
 
 	StringLiteralTree getSource();

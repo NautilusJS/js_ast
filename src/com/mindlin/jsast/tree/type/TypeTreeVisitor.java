@@ -14,15 +14,11 @@ import com.mindlin.jsast.tree.TreeVisitor;
  * @see TreeVisitor
  */
 public interface TypeTreeVisitor<R, D> {
-	R visitAnyType(AnyTypeTree node, D d);
-	
 	R visitArrayType(ArrayTypeTree node, D d);
 	
 	R visitFunctionType(FunctionTypeTree node, D d);
 	
 	R visitIdentifierType(IdentifierTypeTree node, D d);
-	
-	R visitIndexType(IndexSignatureTree node, D d);
 	
 	R visitInterfaceType(ObjectTypeTree node, D d);
 	

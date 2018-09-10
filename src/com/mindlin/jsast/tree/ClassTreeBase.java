@@ -2,27 +2,25 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.annotation.Optional;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public interface ClassTreeBase extends Tree {
+public interface ClassTreeBase extends DecoratableTree, Tree {
 	/**
 	 * Get class identifier name
 	 */
-	@Optional IdentifierTree getIdentifier();
+	IdentifierTree getName();
 	
 	/**
 	 * Get the generic parameters on this class
 	 * @return
 	 */
-	List<TypeParameterDeclarationTree> getGenerics();
+	List<TypeParameterDeclarationTree> getTypeParameters();
 	
 	/**
 	 * Get the class that this class extends, if available.
 	 * @return super type, else null if not applicable
 	 */
-	@Optional
 	TypeTree getSuperType();
 	
 	/**
@@ -57,10 +55,40 @@ public interface ClassTreeBase extends Tree {
 		ClassTreeBase o = (ClassTreeBase) other;
 		
 		return this.isAbstract() == o.isAbstract()
-			&& Tree.equivalentTo(this.getIdentifier(), o.getIdentifier())
-			&& Tree.equivalentTo(this.getGenerics(), o.getGenerics())
+			&& Tree.equivalentTo(this.getName(), o.getName())
+			&& Tree.equivalentTo(this.getTypeParameters(), o.getTypeParameters())
 			&& Tree.equivalentTo(this.getSuperType(), o.getSuperType())
 			&& Tree.equivalentTo(this.getImplementing(), o.getImplementing())
 			&& Tree.equivalentTo(this.getProperties(), o.getProperties());//TODO fix for order
+	}
+	
+	public static interface ClassExpressionTree extends ClassTreeBase, ExpressionTree {
+		@Override
+		default Kind getKind() {
+			return Tree.Kind.CLASS_EXPRESSION;
+		}
+		
+		@Override
+		default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
+			return visitor.visitClassExpression(this, data);
+		}
+	}
+	
+	public static interface ClassDeclarationTree extends ClassTreeBase, NamedDeclarationTree, DeclarationStatementTree {
+		/**
+		 * May be null in some cases (e.g., {@code export default class ...}).
+		 */
+		@Override
+		IdentifierTree getName();
+		
+		@Override
+		default Kind getKind() {
+			return Tree.Kind.CLASS_DECLARATION;
+		}
+		
+		@Override
+		default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
+			return visitor.visitClassDeclaration(this, data);
+		}
 	}
 }

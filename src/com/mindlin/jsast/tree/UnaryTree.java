@@ -1,6 +1,8 @@
 package com.mindlin.jsast.tree;
 
-public interface UnaryTree extends ExpressiveExpressionTree {
+public interface UnaryTree extends ExpressionTree {
+	
+	ExpressionTree getExpression();
 	
 	@Override
 	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {

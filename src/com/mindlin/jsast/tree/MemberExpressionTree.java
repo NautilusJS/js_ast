@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface MemberExpressionTree extends BinaryTree, PatternTree {
+public interface MemberExpressionTree extends BinaryExpressionTree, PatternTree {
 
 	@Override
 	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {

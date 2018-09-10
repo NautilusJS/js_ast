@@ -1,6 +1,7 @@
 package com.mindlin.jsast.tree;
 
 public interface FunctionExpressionTree extends FunctionTree, ExpressionTree {
+	
 	@Override
 	default Kind getKind() {
 		return Tree.Kind.FUNCTION_EXPRESSION;

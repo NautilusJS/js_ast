@@ -1,11 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface NumericLiteralTree extends LiteralTree<Number>, ObjectPropertyKeyTree {
-	
-	@Override
-	default boolean isComputed() {
-		return false;
-	}
+public interface NumericLiteralTree extends LiteralTree<Number>, PropertyName {
 	
 	@Override
 	default Tree.Kind getKind() {

@@ -2,7 +2,10 @@ package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public interface VariableDeclaratorTree extends Tree {
+public interface VariableDeclaratorTree extends NamedDeclarationTree {
+	
+	@Override
+	DeclarationName getName();
 	
 	/**
 	 * Get any initializer for this variable. For parameters, this is the
@@ -18,14 +21,6 @@ public interface VariableDeclaratorTree extends Tree {
 	 * @return type (or null)
 	 */
 	TypeTree getType();
-	
-	/**
-	 * Get the pattern of the variable declared. Note that this is not
-	 * necessarily an {@link IdentifierTree}.
-	 * 
-	 * @return identifier
-	 */
-	PatternTree getIdentifier();
 	
 	@Override
 	default Tree.Kind getKind() {

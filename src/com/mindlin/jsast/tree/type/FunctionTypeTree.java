@@ -19,7 +19,7 @@ public interface FunctionTypeTree extends TypeTree {
 	 */
 	List<ParameterTree> getParameters();
 	
-	List<GenericParameterTree> getGenerics();
+	List<TypeParameterDeclarationTree> getGenerics();
 	
 	TypeTree getReturnType();
 	

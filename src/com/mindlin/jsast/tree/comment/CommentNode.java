@@ -1,7 +1,10 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.jsast.tree.comment;
+
+import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.TreeVisitor;
 
 public interface CommentNode extends Tree {
-	String getText();
+	String getComment();
 
 	@Override
 	default Tree.Kind getKind() {

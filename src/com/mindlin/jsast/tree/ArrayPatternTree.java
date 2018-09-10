@@ -6,15 +6,17 @@ import java.util.List;
  * A tree for ES6 array destructuring operators.
  * Example:
  * <code>
- * const array = [1, 2, 3];
- * const [i, j, k] = array;
+ * const [i, j, k] = [1, 2, 3];
  * //i = 1, j = 2, k = 3
  * </code>
  * @author mailmindlin
  */
 public interface ArrayPatternTree extends PatternTree {
 	/**
-	 * Get the elements of the array destructuring in order
+	 * Get the elements of the array destructuring in order.
+	 * <br/>
+	 * Note that elements may be null (for skipping).
+	 * 
 	 * @return elements
 	 */
 	List<PatternTree> getElements();

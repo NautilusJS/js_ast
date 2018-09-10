@@ -2,12 +2,11 @@ package com.mindlin.jsast.tree.type;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.Tree;
 
 public interface ObjectTypeTree extends TypeTree {
 	
-	List<InterfacePropertyTree> getDeclaredProperties();
+	List<TypeElementTree> getDeclaredMembers();
 	
 	@Override
 	default Tree.Kind getKind() {

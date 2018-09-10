@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface FunctionDeclarationTree extends FunctionTree, DeclarationTree {
+public interface FunctionDeclarationTree extends DecoratableTree, FunctionTree, DeclarationStatementTree {
 	/**
 	 * {@inheritDoc}
 	 * <br/>

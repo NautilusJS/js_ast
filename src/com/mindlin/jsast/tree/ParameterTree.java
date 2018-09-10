@@ -12,7 +12,7 @@ import com.mindlin.jsast.tree.type.TypeTree;
  * 
  * @author mailmindlin
  */
-public interface ParameterTree extends Tree {
+public interface ParameterTree extends DecoratableTree, Tree {
 	
 	/**
 	 * Get the access modifier for this parameter.
@@ -30,13 +30,6 @@ public interface ParameterTree extends Tree {
 	boolean isRest();
 	
 	PatternTree getIdentifier();
-	
-	/**
-	 * If declared as an optional parameter.
-	 * 
-	 * @return optional
-	 */
-	boolean isOptional();
 	
 	/**
 	 * Get declared type.

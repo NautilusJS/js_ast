@@ -2,8 +2,9 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-public interface SequenceTree extends ExpressionTree {
-	List<ExpressionTree> getExpressions();
+public interface SequenceExpressionTree extends ExpressionTree {
+	
+	List<ExpressionTree> getElements();
 	
 	@Override
 	default Tree.Kind getKind() {
