@@ -11,16 +11,26 @@ public class Modifiers {
 	public static final int FLAG_READONLY  = 1 << 4;
 	//Skip a few so we can stay the same as java.lang.reflect.Modifier values
 	public static final int FLAG_ABSTRACT  = 1 << 10;
+	/**
+	 * Flagged as optional ('?')
+	 */
+	public static final int FLAG_OPTIONAL  = 1 << 25;
+	/**
+	 * Flagged as 'definite assignment' ('!')
+	 */
+	public static final int FLAG_DEFINITE  = 1 << 26;
 	
 	//TODO: better name?
 	public static final Modifiers NONE = Modifiers.wrap(0);
 	public static final Modifiers PUBLIC = Modifiers.wrap(FLAG_PUBLIC);
 	public static final Modifiers PRIVATE = Modifiers.wrap(FLAG_PRIVATE);
 	public static final Modifiers PROTECTED = Modifiers.wrap(FLAG_PROTECTED);
-	public static final Modifiers VISIBILITY = Modifiers.wrap(FLAG_PUBLIC | FLAG_PRIVATE | FLAG_PROTECTED);
 	public static final Modifiers STATIC = Modifiers.wrap(FLAG_STATIC);
 	public static final Modifiers READONLY = Modifiers.wrap(FLAG_READONLY);
 	public static final Modifiers ABSTRACT = Modifiers.wrap(FLAG_ABSTRACT);
+	public static final Modifiers DEFINITE = Modifiers.wrap(FLAG_DEFINITE);
+	
+	public static final Modifiers MASK_VISIBILITY = Modifiers.wrap(FLAG_PUBLIC | FLAG_PRIVATE | FLAG_PROTECTED);
 	
 	public static Modifiers union(Modifiers...accessModifiers) {
 		int flags = 0;
@@ -94,6 +104,14 @@ public class Modifiers {
 	
 	public boolean isReadonly() {
 		return (this.flags & Modifiers.FLAG_READONLY) != 0;
+	}
+	
+	public boolean isOptional() {
+		return (this.flags & Modifiers.FLAG_OPTIONAL) != 0;
+	}
+	
+	public boolean isDefinite() {
+		return (this.flags & Modifiers.FLAG_DEFINITE) != 0;
 	}
 	
 	public AccessModifier getAccess() {
