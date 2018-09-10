@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface BinaryTree extends ExpressionTree {
+public interface BinaryExpressionTree extends ExpressionTree {
 	ExpressionTree getLeftOperand();
 	
 	ExpressionTree getRightOperand();
@@ -17,7 +17,7 @@ public interface BinaryTree extends ExpressionTree {
 		if (getKind() != other.getKind() || this.hashCode() != other.hashCode())
 			return false;
 		
-		BinaryTree b = (BinaryTree) other;
+		BinaryExpressionTree b = (BinaryExpressionTree) other;
 		return getLeftOperand().equivalentTo(b.getLeftOperand()) && getRightOperand().equivalentTo(b.getRightOperand());
 	}
 }

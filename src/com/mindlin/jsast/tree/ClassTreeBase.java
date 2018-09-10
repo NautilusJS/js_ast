@@ -2,19 +2,27 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.annotation.Optional;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
+public interface ClassTreeBase extends Tree {
 	/**
-	 * Get class identifier name, else null if not set
+	 * Get class identifier name
 	 */
-	IdentifierTree getIdentifier();
+	@Optional IdentifierTree getIdentifier();
+	
+	/**
+	 * Get the generic parameters on this class
+	 * @return
+	 */
+	List<TypeParameterDeclarationTree> getGenerics();
 	
 	/**
 	 * Get the class that this class extends, if available.
 	 * @return super type, else null if not applicable
 	 */
+	@Optional
 	TypeTree getSuperType();
 	
 	/**
@@ -25,13 +33,7 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 	/**
 	 * Get the properties for this class
 	 */
-	List<ClassPropertyTree<?>> getProperties();
-	
-	/**
-	 * Get the generic parameters on this class
-	 * @return
-	 */
-	List<GenericParameterTree> getGenerics();
+	List<ClassElementTree> getProperties();
 	
 	/**
 	 * Get if this class is abstract
@@ -48,11 +50,11 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 		if (this == other)
 			return true;
 		
-		if (other == null || this.getKind() == other.getKind() && !(other instanceof ClassDeclarationTree) || this.hashCode() != other.hashCode())
+		if (other == null || this.getKind() == other.getKind() && !(other instanceof ClassTreeBase) || this.hashCode() != other.hashCode())
 			return false;
 		
 		
-		ClassDeclarationTree o = (ClassDeclarationTree) other;
+		ClassTreeBase o = (ClassTreeBase) other;
 		
 		return this.isAbstract() == o.isAbstract()
 			&& Tree.equivalentTo(this.getIdentifier(), o.getIdentifier())
@@ -60,20 +62,5 @@ public interface ClassDeclarationTree extends ExpressionTree, StatementTree {
 			&& Tree.equivalentTo(this.getSuperType(), o.getSuperType())
 			&& Tree.equivalentTo(this.getImplementing(), o.getImplementing())
 			&& Tree.equivalentTo(this.getProperties(), o.getProperties());//TODO fix for order
-	}
-	
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitClassDeclaration(this, data);
-	}
-	
-	@Override
-	default <R, D> R accept(StatementTreeVisitor<R, D> visitor, D data) {
-		return visitor.visitClassDeclaration(this, data);
-	}
-	
-	@Override
-	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
-		return visitor.visitClassDeclaration(this, data);
 	}
 }

@@ -9,7 +9,7 @@ import com.mindlin.jsast.tree.Tree;
  * @author mailmindlin
  * @see GenericRefTypeTree
  */
-public interface GenericParameterTree extends TypeTree {
+public interface TypeParameterDeclarationTree extends TypeTree {
 	
 	/**
 	 * Name of generic parameter.
@@ -28,13 +28,14 @@ public interface GenericParameterTree extends TypeTree {
 	
 	/**
 	 * Default value of parameter
+	 * 
 	 * @return default value, else null if not present
 	 */
 	TypeTree getDefault();
 	
 	@Override
 	default Tree.Kind getKind() {
-		return Tree.Kind.GENERIC_PARAM;
+		return Tree.Kind.TYPE_PARAMETER_DECLARATION;
 	}
 	
 	@Override
