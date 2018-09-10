@@ -47,12 +47,12 @@ public interface SourceFile {
 		return idx;
 	}
 	
-	default FilePosition getOffsetPosotion(long offset) {
+	default SourcePosition getOffsetPosotion(long offset) {
 		long[] offsets = lineOffsets();
 		int line = Arrays.binarySearch(offsets, offset);
 		if (line < 0)
 			line = 1 - line;
 		int col = (int) (offset - offsets[line]);
-		return new FilePosition(line, col);
+		return new SourcePosition(this, offset, line, col);
 	}
 }

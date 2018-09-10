@@ -3,6 +3,8 @@ package com.mindlin.jsast.tree;
 import java.util.Iterator;
 import java.util.List;
 
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassTreeBase.ClassExpressionTree;
 import com.mindlin.jsast.tree.SignatureDeclarationTree.CallSignatureTree;
@@ -354,13 +356,17 @@ public interface Tree {
 	 * @return the kind of this tree.
 	 */
 	Kind getKind();
+	
+	SourceRange getRange();
 
 	/**
 	 * Get the start position of this tree.
 	 * @return the start position of this element, else -1 if not available
 	 * @see #getEnd()
 	 */
-	long getStart();
+	default SourcePosition getStart() {
+		return this.getRange().getStart();
+	}
 
 	/**
 	 * Get the end position of this tree.
@@ -368,7 +374,9 @@ public interface Tree {
 	 * @return the end position of this element, else -1 if not available
 	 * @see #getStart()
 	 */
-	long getEnd();
+	default SourcePosition getEnd() {
+		return this.getRange().getEnd();
+	}
 
 	<R, D> R accept(TreeVisitor<R, D> visitor, D data);
 	

@@ -1,20 +1,20 @@
 package com.mindlin.jsast.exception;
 
-import com.mindlin.jsast.fs.FilePosition;
+import com.mindlin.jsast.fs.SourcePosition;
 
 public class JSException extends RuntimeException {
 	private static final long serialVersionUID = -2503501961662070326L;
 	
-	private final FilePosition position;
+	private final SourcePosition position;
 	
 	public JSException() {
 		super();
 		this.position = null;
 	}
 
-	public JSException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	protected JSException(String message, SourcePosition position, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
-		this.position = null;
+		this.position = position;
 	}
 
 	public JSException(String message, Throwable cause) {
@@ -32,7 +32,7 @@ public class JSException extends RuntimeException {
 		this.position = null;
 	}
 	
-	public FilePosition getPosition() {
+	public SourcePosition getPosition() {
 		return this.position;
 	}
 }
