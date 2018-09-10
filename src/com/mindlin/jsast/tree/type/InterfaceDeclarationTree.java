@@ -3,12 +3,15 @@ package com.mindlin.jsast.tree.type;
 import java.util.List;
 
 import com.mindlin.jsast.tree.DeclarationStatementTree;
+import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.NamedDeclarationTree;
 import com.mindlin.jsast.tree.StatementTreeVisitor;
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
 
 public interface InterfaceDeclarationTree extends NamedDeclarationTree, DeclarationStatementTree {
+	
+	@Override
+	IdentifierTree getName();
 	
 	List<TypeParameterDeclarationTree> getTypeParameters();
 	

@@ -2,6 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+import com.mindlin.jsast.tree.type.TypeElementTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -40,14 +41,14 @@ public interface SignatureDeclarationTree extends NamedDeclarationTree {
 	 */
 	TypeTree getReturnType();
 	
-	public static interface CallSignatureTree extends SignatureDeclarationTree {
+	public static interface CallSignatureTree extends SignatureDeclarationTree, TypeElementTree {
 		@Override
 		default Kind getKind() {
 			return Tree.Kind.CALL_SIGNATURE;
 		}
 	}
 	
-	public static interface ConstructSignatureTree extends SignatureDeclarationTree {
+	public static interface ConstructSignatureTree extends SignatureDeclarationTree, TypeElementTree {
 		@Override
 		default Kind getKind() {
 			return Tree.Kind.CONSTRUCT_SIGNATURE;

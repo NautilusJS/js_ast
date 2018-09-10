@@ -28,6 +28,7 @@ public class Modifiers {
 	public static final Modifiers STATIC = Modifiers.wrap(FLAG_STATIC);
 	public static final Modifiers READONLY = Modifiers.wrap(FLAG_READONLY);
 	public static final Modifiers ABSTRACT = Modifiers.wrap(FLAG_ABSTRACT);
+	public static final Modifiers OPTIONAL = Modifiers.wrap(FLAG_OPTIONAL);
 	public static final Modifiers DEFINITE = Modifiers.wrap(FLAG_DEFINITE);
 	
 	public static final Modifiers MASK_VISIBILITY = Modifiers.wrap(FLAG_PUBLIC | FLAG_PRIVATE | FLAG_PROTECTED);
