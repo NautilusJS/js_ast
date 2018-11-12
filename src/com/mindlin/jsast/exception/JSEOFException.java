@@ -5,12 +5,9 @@ import com.mindlin.jsast.fs.SourcePosition;
 public class JSEOFException extends JSSyntaxException {
 	private static final long serialVersionUID = -193254378704376443L;
 	
-	public JSEOFException(long position) {
+	@Deprecated
+	public JSEOFException(SourcePosition position) {
 		this("Unexpected EOF", position);
-	}
-	
-	public JSEOFException(String message, long position) {
-		super(message, position);
 	}
 	
 	public JSEOFException(String message, SourcePosition position) {

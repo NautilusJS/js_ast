@@ -6,6 +6,14 @@ import java.util.Objects;
 public class SourceRange implements Serializable {
 	private static final long serialVersionUID = -1130923738278939904L;
 	
+	public static SourceRange startingFrom(SourcePosition start) {
+		return new SourceRange(start, null);
+	}
+	
+	public static SourceRange endingAt(SourcePosition end) {
+		return new SourceRange(null, end);
+	}
+	
 	protected SourcePosition start;
 	protected SourcePosition end;
 	

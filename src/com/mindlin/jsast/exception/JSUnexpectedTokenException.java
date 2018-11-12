@@ -7,7 +7,7 @@ public class JSUnexpectedTokenException extends JSSyntaxException {
 	private static final long serialVersionUID = -5669873573919357134L;
 
 	public JSUnexpectedTokenException(Token token) {
-		super("Unexpected token " + token, token == null ? -1 : token.getStart(), token.getEnd());
+		super("Unexpected token " + token, token == null ? null : token.getStart(), token == null ? null : token.getEnd());
 	}
 
 	public JSUnexpectedTokenException(Token token, TokenKind expectedKind) {

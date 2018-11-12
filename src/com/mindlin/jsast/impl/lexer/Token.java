@@ -1,31 +1,33 @@
 package com.mindlin.jsast.impl.lexer;
 
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 
 public class Token {
 	protected final TokenKind kind;
-	protected final long position;
+	protected final SourceRange range;
 	protected final String text;
 	protected final Object value;
 
-	public Token(long position, TokenKind kind, String text, Object value) {
-		this.position = position;
+	public Token(SourceRange range, TokenKind kind, String text, Object value) {
+		this.range = range;
 		this.kind = kind;
 		this.text = text;
 		this.value = value;
 	}
-
-	public long getStart() {
-		return position;
+	
+	public SourceRange getRange() {
+		return this.range;
 	}
 
-	public long getLength() {
-		return text == null ? 0 : text.length();
+	public SourcePosition getStart() {
+		return this.range.getStart();
 	}
 
-	public long getEnd() {
-		return getStart() + getLength();
+	public SourcePosition getEnd() {
+		return this.range.getEnd();
 	}
 
 	public String getText() {
@@ -115,7 +117,8 @@ public class Token {
 			default:
 				throw new UnsupportedOperationException(this + " cannot be reinterpreted as an identifier");
 		}
-		return new Token(getStart(), TokenKind.IDENTIFIER, getText(), value);
+		
+		return new Token(this.range, TokenKind.IDENTIFIER, getText(), value);
 	}
 
 	@Override

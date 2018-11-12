@@ -18,11 +18,6 @@ public class JSSyntaxException extends JSException {
 		this(message + " at " + position);
 	}
 	
-	@Deprecated
-	public JSSyntaxException(String message, long start, long end) {
-		this(message + " at " + start + "..." + end);
-	}
-	
 	public JSSyntaxException(String message, SourcePosition start, SourcePosition end) {
 		this(message + " at " + start + "..." + end);
 	}
