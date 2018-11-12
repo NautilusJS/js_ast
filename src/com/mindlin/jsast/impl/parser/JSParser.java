@@ -14,6 +14,8 @@ import java.util.function.BiPredicate;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
 import com.mindlin.jsast.fs.SourceFile;
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.lexer.JSLexer.RegExpTokenInfo;
 import com.mindlin.jsast.impl.lexer.JSLexer.TemplateTokenInfo;
@@ -95,23 +97,20 @@ import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.impl.util.Pair;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.Modifiers.AccessModifier;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.CatchTree;
-import com.mindlin.jsast.tree.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ClassPropertyTree.PropertyDeclarationType;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.DebuggerTree;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.ExportTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ExpressiveStatementTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
@@ -122,12 +121,12 @@ import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
 import com.mindlin.jsast.tree.ImportTree;
-import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.LiteralTree;
 import com.mindlin.jsast.tree.LoopTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ObjectPatternPropertyTree;
@@ -145,7 +144,6 @@ import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
-import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationOrPatternTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
@@ -156,7 +154,9 @@ import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
+import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class JSParser {
@@ -167,7 +167,7 @@ public class JSParser {
 	 */
 	private static void expect(Token token, TokenKind kind, JSLexer src) {
 		if (token.getKind() != kind)
-			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, src.resolvePosition(token.getStart()));
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getRange());
 	}
 	
 	/**
@@ -177,16 +177,16 @@ public class JSParser {
 	 */
 	private static void expect(Token token, Object value, JSLexer src) {
 		if (!Objects.equals(token.getValue(), value))
-			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, src.resolvePosition(token.getStart()));
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getRange());
 	}
 	
 	private static Token expect(Token token, TokenKind kind, Object value, JSLexer src, Context context) {
 		if (token == null)
 			token = src.nextToken();
 		if (token.getKind() != kind)
-			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, src.resolvePosition(token.getStart()));
+			throw new JSSyntaxException("Illegal token " + token + "; expected kind " + kind, token.getRange());
 		if (!Objects.equals(token.getValue(), value))
-			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, src.resolvePosition(token.getStart()));
+			throw new JSSyntaxException("Illegal token " + token + "; expected value " + value, token.getRange());
 		return token;
 	}
 	
@@ -221,7 +221,7 @@ public class JSParser {
 		Token t = src.nextToken();
 		if (t.isSpecial() && (!context.isStrict() || t.getValue() == JSSpecialGroup.SEMICOLON))
 			return t;
-		throw new JSSyntaxException("Illegal token " + t + "; expected EOL", src.resolvePosition(t.getStart()));
+		throw new JSSyntaxException("Illegal token " + t + "; expected EOL", t.getRange());
 	}
 	
 	//Parser properties
@@ -244,6 +244,7 @@ public class JSParser {
 		StatementTree value;
 		Context context = new Context();
 		context.setScriptName(unitName);
+		SourcePosition start = src.getPosition();
 		
 		while ((value = parseStatement(src, context)) != null)
 			elements.add(value);
@@ -251,7 +252,7 @@ public class JSParser {
 		SourceFile source = null;
 		LineMap lines = src.getLines();
 		
-		return new CompilationUnitTreeImpl(0, src.getPosition(), source, lines, elements, false);
+		return new CompilationUnitTreeImpl(start, src.getPosition(), source, lines, elements, false);
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
@@ -314,7 +315,7 @@ public class JSParser {
 					case IN:
 					case INSTANCEOF:
 					default:
-						throw new JSSyntaxException("Unexpected keyword " + next.getValue(), src.resolvePosition(next.getStart()));
+						throw new JSSyntaxException("Unexpected keyword " + next.getValue(), next.getStart());
 				}
 			}
 			case BRACKET:
@@ -375,7 +376,7 @@ public class JSParser {
 	}
 	
 	protected ExpressionStatementTree finishExpressionStatement(ExpressionTree expression, JSLexer src, Context context) {
-		long end = expectEOL(src, context).getEnd();
+		SourcePosition end = expectEOL(src, context).getEnd();
 		//TODO convert to directive tree
 		if (!context.isStrict() && expression.getKind() == Kind.STRING_LITERAL && "use strict".equals(((LiteralTree<?>)expression).getValue()))
 			context.enterStrict();
@@ -557,7 +558,7 @@ public class JSParser {
 				case SPREAD: {
 					dialect.require("js.parameter.rest", expr.getStart());
 					//Turn into rest parameter
-					PatternTree identifier = this.reinterpretExpressionAsPattern(((UnaryTree)expr).getExpression());
+					PatternTree identifier = this.reinterpretExpressionAsPattern(((UnaryTree) expr).getExpression());
 					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), identifier, true, false, null, null);
 				}
 				case ARRAY_LITERAL:
@@ -569,7 +570,7 @@ public class JSParser {
 					break;
 			}
 		} catch (JSSyntaxException e) {
-			//Betterize error messages
+			//TODO: Betterize error messages
 			throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart(), e);
 		}
 		
@@ -632,10 +633,10 @@ public class JSParser {
 			// Overlap
 			if (Modifiers.intersection(result, modifier).any()) {
 				//TODO: Emit other token for duplicated modifier
-				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", src.resolvePosition(next.getStart()));
+				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", next.getStart());
 			} else if (modifier.getAccess() != null && result.getAccess() != null) {
 				//TODO: finish
-				throw new JSSyntaxException("Duplicate visibility modifier", src.resolvePosition(next.getStart()));
+				throw new JSSyntaxException("Duplicate visibility modifier", next.getStart());
 			}
 			
 			// Be able to backtrack if we have a variable with a modifier-like name
@@ -778,8 +779,6 @@ public class JSParser {
 		
 		do {
 			IdentifierTree identifier = this.parseIdentifier(src, context);
-			
-			context.registerGenericParam(identifier.getName(), identifier.getStart());
 			
 			TypeTree supertype = null;
 			if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
@@ -954,7 +953,7 @@ public class JSParser {
 				}
 			} else if (isConst) {
 				//No initializer
-				throw new JSSyntaxException("Missing initializer in constant declaration", src.resolvePosition(identifier.getStart()));
+				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getRange());
 			}
 			
 			if (type == null && initializer != null) {
@@ -1011,13 +1010,15 @@ public class JSParser {
 						break;
 				}
 			}
-			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), identifier, type, initializer));
+			SourceRange pos = new SourceRange(identifier.getStart(), src.getPosition());
+			declarations.add(new VariableDeclaratorTreeImpl(pos, identifier, type, initializer));
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		if (!inFor)
 			expectEOL(src, context);
 		
-		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
+		SourceRange pos = new SourceRange(keywordToken.getStart(), src.getPosition());
+		return new VariableDeclarationTreeImpl(pos, isScoped, isConst, declarations);
 	}
 	
 	/**
@@ -1031,15 +1032,14 @@ public class JSParser {
 	 * @param context
 	 * @return
 	 */
-	protected ExpressiveStatementTree parseUnaryStatement(Token keywordToken, JSLexer src, Context context) {
+	protected StatementTree parseUnaryStatement(Token keywordToken, JSLexer src, Context context) {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
 		if (!(keywordToken.getValue() == JSKeyword.RETURN || keywordToken.getValue() == JSKeyword.THROW))
 			throw new JSUnexpectedTokenException(keywordToken);
 		
 		ExpressionTree expr;
 		if (keywordToken.getValue() == JSKeyword.RETURN && src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
-			//TODO: can't we just allow expr to be null?
-			expr = new UnaryTreeImpl(src.getPosition(), src.getPosition(), null, Tree.Kind.VOID);
+			expr = null;
 		else
 			expr = this.parseNextExpression(src, context);
 		
@@ -1074,7 +1074,7 @@ public class JSParser {
 		if (classKeywordToken == null)
 			classKeywordToken = src.nextToken();
 		
-		final long classStartPos = classKeywordToken.getStart();
+		final SourcePosition classStartPos = classKeywordToken.getStart();
 		
 		//Support abstract classes
 		final boolean isClassAbstract;
@@ -1106,7 +1106,7 @@ public class JSParser {
 			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS)) {
 				dialect.require("js.class.inheritance", next.getStart());
 				if (superClass != null)
-					throw new JSSyntaxException("Classes may not extend multiple classes", src.resolvePosition(next.getStart()), src.resolvePosition(next.getEnd()));
+					throw new JSSyntaxException("Classes may not extend multiple classes", next.getRange());
 				superClass = this.parseType(src, context);
 				next = src.nextToken();
 			}
@@ -1133,7 +1133,7 @@ public class JSParser {
 		while (!src.peek().matches(TokenKind.BRACKET, '}')) {
 			//TODO: refactor into own method
 			//Start position of our next index
-			final long propertyStartPos = src.peek().getStart();
+			final SourcePosition propertyStartPos = src.peek().getStart();
 			
 			//Aspects of property
 			PropertyDeclarationType methodType = null;
@@ -1142,7 +1142,7 @@ public class JSParser {
 					dialect.require("js.class.static", token.getStart());
 				
 				if (nextMod.isAbstract() && !isClassAbstract)
-					throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", src.resolvePosition(token.getStart()), src.resolvePosition(token.getEnd()));
+					throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", token.getRange());
 				return !nextMod.subtract(propModFilter).any();
 			}, true, src, context);
 			
@@ -1244,7 +1244,7 @@ public class JSParser {
 		
 		Token next;
 		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
-			long start = next.getStart();
+			SourcePosition start = next.getStart();
 			
 			Modifiers modifiers = this.parseModifiers((nextMod, t) -> nextMod.subtract(propModsFilter).any(), true, src, context);
 			
@@ -1516,14 +1516,15 @@ public class JSParser {
 		
 		IdentifierTree label = this.parseIdentifierMaybe(src, context);
 		
-		final long start = keywordToken.getStart();
+		final SourcePosition start = keywordToken.getStart();
 		expectEOL(src, context);
-		final long end = src.getPosition();
+		final SourcePosition end = src.getPosition();
+		SourceRange pos = new SourceRange(start, end);
 		
 		if (keywordToken.getValue() == JSKeyword.BREAK)
-			return new AbstractGotoTree.BreakTreeImpl(start, end, label);
+			return new AbstractGotoTree.BreakTreeImpl(pos, label);
 		else if (keywordToken.getValue() == JSKeyword.CONTINUE)
-			return new AbstractGotoTree.ContinueTreeImpl(start, end, label);
+			return new AbstractGotoTree.ContinueTreeImpl(pos, label);
 		throw new JSUnexpectedTokenException(keywordToken);
 	}
 	
@@ -1546,8 +1547,9 @@ public class JSParser {
 			else
 				elseStatement = this.parseStatement(src, context);
 		} else {
-			elseStatement = new EmptyStatementTreeImpl(src.getPosition(), src.getPosition());
+			elseStatement = null;
 		}
+		
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
 	
@@ -2007,7 +2009,7 @@ public class JSParser {
 				if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
 					expression = new MemberExpressionTreeImpl(kind, left, right);
 				else if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
-					throw new JSSyntaxException("This shouldn't be happening", src.resolvePosition(operator.getStart()), src.resolvePosition(operator.getEnd()));
+					throw new JSSyntaxException("This shouldn't be happening", operator.getRange());
 				else
 					expression = new BinaryTreeImpl(kind, left, right);
 				
@@ -2173,7 +2175,7 @@ public class JSParser {
 			//For update-assignment operators (e.g., +=, *=), the LHS can't be a full pattern.
 			//LHS can only be an IdentifierTree or MemberExpressionTree
 			if (!(expr.getKind() == Kind.IDENTIFIER || expr.getKind() == Kind.MEMBER_SELECT || expr.getKind() == Kind.ARRAY_ACCESS))
-				throw new JSSyntaxException("Update assignment LHS cannot be arbitrary pattern", src.resolvePosition(expr.getStart()), src.resolvePosition(expr.getEnd()));
+				throw new JSSyntaxException("Update assignment LHS cannot be arbitrary pattern", expr.getRange());
 			
 			variable = (PatternTree) expr;//IdentifierTree/MemberExpressionTree already PatternTree's
 			
@@ -2263,7 +2265,7 @@ public class JSParser {
 					
 					//TODO: keep references to access modifier tokens for better error messages
 					if (modifier != null && modifier.any())
-						throw new JSSyntaxException("A parameter property cannot be declared via rest parameter", src.getResolvedPosition());
+						throw new JSSyntaxException("A parameter property cannot be declared via rest parameter", src.getPosition());
 					
 					//Rest parameters must be at the end
 					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
@@ -2303,7 +2305,7 @@ public class JSParser {
 	/**
 	 * Upgrade a group expression to a lambda function
 	 */
-	protected FunctionExpressionTree upgradeGroupToLambdaFunction(long startPos, List<ExpressionTree> expressions, ExpressionTree lastParam, JSLexer src, Context context) {
+	protected FunctionExpressionTree upgradeGroupToLambdaFunction(SourcePosition startPos, List<ExpressionTree> expressions, ExpressionTree lastParam, JSLexer src, Context context) {
 		dialect.require("js.function.lambda", startPos);
 		
 		List<ParameterTree> parameters = new ArrayList<>();
@@ -2634,7 +2636,7 @@ public class JSParser {
 	}
 	
 	//Function stuff
-	protected FunctionExpressionTree finishFunctionBody(long startPos, boolean async, IdentifierTree identifier, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
+	protected FunctionExpressionTree finishFunctionBody(SourcePosition start, boolean async, IdentifierTree identifier, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
 		Token startBodyToken = src.peek();
 		
 		//Update context for function
@@ -2644,7 +2646,7 @@ public class JSParser {
 			ctx.pushFunction();
 		
 		if (async) {
-			dialect.require("js.function.async", startPos);
+			dialect.require("js.function.async", start);
 			ctx.allowAwait(true);
 		}
 		
@@ -2659,7 +2661,7 @@ public class JSParser {
 			body = new ReturnTreeImpl(parseNextExpression(src, ctx.coverGrammarIsolated()));
 		} else {
 			//TODO: function signature declaration
-			throw new JSSyntaxException("Functions must have a body", src.resolvePosition(startBodyToken.getStart()));
+			throw new JSSyntaxException("Functions must have a body", startBodyToken.getRange());
 		}
 		
 		// Get this before we pop the context
@@ -2670,14 +2672,14 @@ public class JSParser {
 		ctx.isAssignmentTarget(false);
 		ctx.isBindingElement(false);
 		
-		return new FunctionExpressionTreeImpl(startPos, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, strict, generator);
+		return new FunctionExpressionTreeImpl(start, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, strict, generator);
 	}
 	
 	protected FunctionExpressionTree parseFunctionExpression(Token functionKeywordToken, JSLexer src, Context context) {
 		if (functionKeywordToken == null)
 			functionKeywordToken = src.nextToken();
 		
-		long startPos = functionKeywordToken.getStart();
+		SourcePosition startPos = functionKeywordToken.getStart();
 		
 		//The first token could be an async modifier
 		boolean async = false;
@@ -2825,7 +2827,7 @@ public class JSParser {
 	
 	protected ObjectPropertyKeyTree parseObjectPropertyKey(JSLexer src, Context context) {
 		Token lookahead = src.peek();
-		long start = lookahead.getStart();
+		SourcePosition start = lookahead.getStart();
 		IdentifierTree id = this.parseIdentifierMaybe(src, context);
 		if (id != null)
 			return id;
@@ -2868,7 +2870,7 @@ public class JSParser {
 		}
 	}
 	
-	protected MethodDefinitionTree parseMethodDefinition(long startPos, Modifiers modifiers, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
+	protected MethodDefinitionTree parseMethodDefinition(SourcePosition startPos, Modifiers modifiers, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
 		List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR, null);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
@@ -2891,7 +2893,7 @@ public class JSParser {
 	}
 	
 	protected ObjectLiteralPropertyTree parseObjectProperty(JSLexer src, Context context) {
-		final long startPos = src.getPosition();
+		final SourcePosition startPos = src.getPosition();
 		
 		PropertyDeclarationType methodType = null;
 		ObjectPropertyKeyTree key = null;
@@ -3052,7 +3054,7 @@ public class JSParser {
 					throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", operatorToken.getStart());
 			} else if (context.isStrict() && kind == Tree.Kind.DELETE && expression.getKind() == Tree.Kind.IDENTIFIER) {
 				String identName = ((IdentifierTree)expression).getName();
-				throw new JSSyntaxException("Cannot delete unqualified identifier " + identName + " in strict mode", src.resolvePosition(operatorToken.getStart()));
+				throw new JSSyntaxException("Cannot delete unqualified identifier " + identName + " in strict mode", operatorToken.getStart());
 			}
 			
 			return new UnaryTreeImpl(operatorToken.getStart(), expression.getEnd(), expression, kind);
@@ -3285,19 +3287,7 @@ public class JSParser {
 			return this;
 		}
 		
-		//TODO: remove?
-		public Context registerGenericParam(String name, long position) throws JSSyntaxException {
-			for (ContextData data = this.data; data != null; data = data.parent)
-				if (data.genericNames != null && data.genericNames.contains(name))
-					throw new JSSyntaxException("Duplicate generic parameter '" + name + "'", position);
-			if (this.data.genericNames == null)
-				//TODO maybe carry some names from parent to decrease average traversal distance
-				this.data.genericNames = new HashSet<>();
-			this.data.genericNames.add(name);
-			return this;
-		}
-		
-		public Context registerStatementLabel(String name, long position) {
+		public Context registerStatementLabel(String name, SourcePosition position) {
 			for (ContextData data = this.data; data != null; data = data.parent)
 				if (data.labels != null && data.labels.contains(name))
 					throw new JSSyntaxException("Duplicate statement label '" + name + "'", position);
@@ -3340,10 +3330,6 @@ public class JSParser {
 			boolean allowAwait = false;
 			boolean isMaybeParam = false;
 			final ContextData parent;
-			/**
-			 * Set of generic names
-			 */
-			Set<String> genericNames;
 			/**
 			 * Set of statement labels
 			 */
