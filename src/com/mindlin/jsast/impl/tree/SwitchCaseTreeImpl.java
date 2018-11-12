@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.jsast.tree.SwitchCaseTree;
 
-public class CaseTreeImpl extends AbstractTree implements CaseTree {
+public class SwitchCaseTreeImpl extends AbstractTree implements SwitchCaseTree {
 	protected final ExpressionTree expression;
 	protected final List<? extends StatementTree> statements;
 	
-	public CaseTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, List<? extends StatementTree> statements) {
+	public SwitchCaseTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, List<? extends StatementTree> statements) {
 		super(start, end);
 		this.expression = expression;
 		this.statements = statements;
@@ -24,7 +24,7 @@ public class CaseTreeImpl extends AbstractTree implements CaseTree {
 	}
 	
 	@Override
-	public List<? extends StatementTree> getStatements() {
+	public List<? extends StatementTree> getBody() {
 		return this.statements;
 	}
 	
@@ -35,6 +35,6 @@ public class CaseTreeImpl extends AbstractTree implements CaseTree {
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getExpression(), getStatements(), isDefault());
+		return Objects.hash(getKind(), getExpression(), getBody(), isDefault());
 	}
 }

@@ -33,7 +33,7 @@ import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.BooleanLiteralTreeImpl;
-import com.mindlin.jsast.impl.tree.CaseTreeImpl;
+import com.mindlin.jsast.impl.tree.SwitchCaseTreeImpl;
 import com.mindlin.jsast.impl.tree.CastTreeImpl;
 import com.mindlin.jsast.impl.tree.CatchTreeImpl;
 import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
@@ -1582,7 +1582,7 @@ public class JSParser {
 			}
 			statements.trimToSize();
 			
-			cases.add(new CaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
+			cases.add(new SwitchCaseTreeImpl(next.getStart(), src.getPosition(), caseExpr, statements));
 		}
 		src.expect(TokenKind.BRACKET, '}');
 		cases.trimToSize();
