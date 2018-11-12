@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -11,7 +12,7 @@ public class ForEachLoopTreeImpl extends AbstractLoopTree implements ForEachLoop
 	protected final PatternTree variable;
 	protected final boolean of;
 	protected final ExpressionTree expression;
-	public ForEachLoopTreeImpl(long start, long end, PatternTree variable, boolean of, ExpressionTree expression, StatementTree statement) {
+	public ForEachLoopTreeImpl(SourcePosition start, SourcePosition end, PatternTree variable, boolean of, ExpressionTree expression, StatementTree statement) {
 		super(start, end, statement);
 		this.variable = variable;
 		this.of = of;

@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
@@ -14,7 +15,7 @@ public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTy
 	protected final List<GenericParameterTree> generics;
 	protected final TypeTree returnType;
 	
-	public FunctionTypeTreeImpl(long start, long end, boolean implicit, List<ParameterTree> parameters, List<GenericParameterTree> generics, TypeTree returnType) {
+	public FunctionTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, List<ParameterTree> parameters, List<GenericParameterTree> generics, TypeTree returnType) {
 		super(start, end, implicit);
 		this.parameters = parameters;
 		this.generics = generics;

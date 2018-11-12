@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.CaseTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -11,7 +12,7 @@ public class CaseTreeImpl extends AbstractTree implements CaseTree {
 	protected final ExpressionTree expression;
 	protected final List<? extends StatementTree> statements;
 	
-	public CaseTreeImpl(long start, long end, ExpressionTree expression, List<? extends StatementTree> statements) {
+	public CaseTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, List<? extends StatementTree> statements) {
 		super(start, end);
 		this.expression = expression;
 		this.statements = statements;

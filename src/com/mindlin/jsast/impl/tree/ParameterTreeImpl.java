@@ -2,8 +2,9 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -30,7 +31,7 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	 * @param end
 	 * @param identifier
 	 */
-	public ParameterTreeImpl(long start, long end, PatternTree identifier) {
+	public ParameterTreeImpl(SourcePosition start, SourcePosition end, PatternTree identifier) {
 		this(start, end, identifier, false, false, null, null);
 	}
 	
@@ -44,11 +45,11 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	 * @param type
 	 * @param initializer
 	 */
-	public ParameterTreeImpl(long start, long end, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
+	public ParameterTreeImpl(SourcePosition start, SourcePosition end, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
 		this(start, end, Modifiers.NONE, identifier, rest, optional, type, initializer);
 	}
 	
-	public ParameterTreeImpl(long start, long end, Modifiers access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
+	public ParameterTreeImpl(SourcePosition start, SourcePosition end, Modifiers access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
 		super(start, end);
 		this.access = access;
 		this.rest = rest;

@@ -1,5 +1,6 @@
 package com.mindlin.jsast.impl.tree;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.AssignmentTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -14,7 +15,7 @@ public class AssignmentTreeImpl extends AbstractTree implements AssignmentTree {
 		this(variable.getStart(), value.getEnd(), kind, variable, value);
 	}
 	
-	public AssignmentTreeImpl(long start, long end, Kind kind, PatternTree variable, ExpressionTree value) {
+	public AssignmentTreeImpl(SourcePosition start, SourcePosition end, Kind kind, PatternTree variable, ExpressionTree value) {
 		super(start, end);
 		this.kind = kind;
 		this.variable = variable;

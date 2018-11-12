@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.StringLiteralTree;
 
@@ -12,7 +13,7 @@ public class StringLiteralTreeImpl extends AbstractTree implements StringLiteral
 		this(t.getStart(), t.getEnd(), t.getValue());
 	}
 	
-	public StringLiteralTreeImpl(long start, long end, String value) {
+	public StringLiteralTreeImpl(SourcePosition start, SourcePosition end, String value) {
 		super(start, end);
 		this.value = value;
 	}

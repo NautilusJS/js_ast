@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.NullLiteralTree;
 
@@ -10,7 +11,7 @@ public class NullLiteralTreeImpl extends AbstractTree implements NullLiteralTree
 		this(t.getStart(), t.getEnd());
 	}
 	
-	public NullLiteralTreeImpl(long start, long end) {
+	public NullLiteralTreeImpl(SourcePosition start, SourcePosition end) {
 		super(start, end);
 	}
 	

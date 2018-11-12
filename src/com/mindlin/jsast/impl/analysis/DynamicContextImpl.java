@@ -131,7 +131,7 @@ public class DynamicContextImpl implements DynamicContext {
 	@Override
 	public ReadonlyContext snapshot() {
 		// TODO Auto-generated method stub
-		throw new JSUnsupportedException("DynamicContext#snapshot()", -1);
+		throw new JSUnsupportedException("DynamicContext#snapshot()", null);
 	}
 
 	@Override

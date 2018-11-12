@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -10,7 +11,7 @@ public class ForLoopTreeImpl extends AbstractConditionalLoopTree implements ForL
 	protected final StatementTree initializer;
 	protected final ExpressionTree update;
 	
-	public ForLoopTreeImpl(long start, long end, StatementTree initializer, ExpressionTree condition, ExpressionTree update, StatementTree statement) {
+	public ForLoopTreeImpl(SourcePosition start, SourcePosition end, StatementTree initializer, ExpressionTree condition, ExpressionTree update, StatementTree statement) {
 		super(start, end, condition, statement);
 		this.initializer = initializer;
 		this.update = update;

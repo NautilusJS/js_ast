@@ -3,10 +3,11 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.InterfacePropertyTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class InterfaceDeclarationTreeImpl extends AbstractTree implements InterfaceDeclarationTree {
@@ -15,7 +16,7 @@ public class InterfaceDeclarationTreeImpl extends AbstractTree implements Interf
 	protected final List<TypeTree> supertypes;
 	protected final List<InterfacePropertyTree> properties;
 	
-	public InterfaceDeclarationTreeImpl(long start, long end, IdentifierTree name, List<GenericParameterTree> generics,
+	public InterfaceDeclarationTreeImpl(SourcePosition start, SourcePosition end, IdentifierTree name, List<GenericParameterTree> generics,
 			List<TypeTree> supertypes, List<InterfacePropertyTree> properties) {
 		super(start, end);
 		this.name = name;

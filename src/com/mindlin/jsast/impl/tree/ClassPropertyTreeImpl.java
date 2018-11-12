@@ -2,9 +2,10 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ClassPropertyTree;
 import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -12,7 +13,7 @@ public class ClassPropertyTreeImpl<T extends ExpressionTree> extends AbstractTyp
 	protected final T value;
 	protected final PropertyDeclarationType declaration;
 	
-	public ClassPropertyTreeImpl(long start, long end, Modifiers modifiers, PropertyDeclarationType declaration, ObjectPropertyKeyTree key, TypeTree type, T value) {
+	public ClassPropertyTreeImpl(SourcePosition start, SourcePosition end, Modifiers modifiers, PropertyDeclarationType declaration, ObjectPropertyKeyTree key, TypeTree type, T value) {
 		super(start, end, modifiers, key, type);
 		this.declaration = declaration;
 		this.value = value;

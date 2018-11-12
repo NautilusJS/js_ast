@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -9,7 +10,7 @@ public class IndexSignatureTreeImpl extends AbstractTypeTree implements IndexSig
 	protected final TypeTree idxType;
 	protected final TypeTree returnType;
 	
-	public IndexSignatureTreeImpl(long start, long end, boolean implicit, TypeTree idxType, TypeTree returnType) {
+	public IndexSignatureTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, TypeTree idxType, TypeTree returnType) {
 		super(start, end, implicit);
 		this.idxType = idxType;
 		this.returnType = returnType;

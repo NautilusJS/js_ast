@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
 import com.mindlin.jsast.tree.PropertyDeclarationTree;
@@ -12,7 +13,7 @@ public abstract class AbstractTypedPropertyTree extends AbstractTree implements 
 	protected final ObjectPropertyKeyTree key;
 	protected final TypeTree type;
 	
-	public AbstractTypedPropertyTree(long start, long end, Modifiers modifiers, ObjectPropertyKeyTree key, TypeTree type) {
+	public AbstractTypedPropertyTree(SourcePosition start, SourcePosition end, Modifiers modifiers, ObjectPropertyKeyTree key, TypeTree type) {
 		super(start, end);
 		this.modifiers = modifiers;
 		this.key = key;

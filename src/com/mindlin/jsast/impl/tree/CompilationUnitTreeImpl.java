@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourceFile;
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.StatementTree;
 
@@ -13,7 +14,7 @@ public class CompilationUnitTreeImpl extends AbstractTree implements Compilation
 	protected final List<StatementTree> sourceElements;
 	protected final boolean isStrict;
 	
-	public CompilationUnitTreeImpl(long start, long end, SourceFile source, LineMap lineMap, List<StatementTree> sourceElements, boolean isStrict) {
+	public CompilationUnitTreeImpl(SourcePosition start, SourcePosition end, SourceFile source, LineMap lineMap, List<StatementTree> sourceElements, boolean isStrict) {
 		super(start, end);
 		this.source = source;
 		this.lineMap = lineMap;

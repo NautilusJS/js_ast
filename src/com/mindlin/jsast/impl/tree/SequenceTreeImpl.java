@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.SequenceTree;
 
@@ -13,7 +14,7 @@ public class SequenceTreeImpl extends AbstractTree implements SequenceTree {
 		this(expressions.get(0).getStart(), expressions.get(expressions.size() - 1).getEnd(), expressions);
 	}
 	
-	public SequenceTreeImpl(long start, long end, List<ExpressionTree> expressions) {
+	public SequenceTreeImpl(SourcePosition start, SourcePosition end, List<ExpressionTree> expressions) {
 		super(start, end);
 		this.expressions = expressions;
 	}

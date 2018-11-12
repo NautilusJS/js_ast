@@ -1,6 +1,7 @@
 package com.mindlin.jsast.exception;
 
 import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 
 public class JSSyntaxException extends JSException {
 	private static final long serialVersionUID = 8236793790942441074L;
@@ -19,7 +20,11 @@ public class JSSyntaxException extends JSException {
 	}
 	
 	public JSSyntaxException(String message, SourcePosition start, SourcePosition end) {
-		this(message + " at " + start + "..." + end);
+		this(message, new SourceRange(start, end));
+	}
+	
+	public JSSyntaxException(String message, SourceRange pos) {
+		this(message + " at " + pos);
 	}
 	
 	public JSSyntaxException(String message, JSException cause) {

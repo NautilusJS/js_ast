@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
 
@@ -10,7 +11,7 @@ public class BooleanLiteralTreeImpl extends AbstractTree implements BooleanLiter
 	public BooleanLiteralTreeImpl(Token t) {
 		this(t.getStart(), t.getEnd(), t.getValue());
 	}
-	public BooleanLiteralTreeImpl(long start, long end, boolean value) {
+	public BooleanLiteralTreeImpl(SourcePosition start, SourcePosition end, boolean value) {
 		super(start, end);
 		this.value = value;
 	}

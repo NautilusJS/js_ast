@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
 import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
@@ -10,7 +11,7 @@ public class ObjectLiteralPropertyTreeImpl extends AbstractTree implements Objec
 	protected final ObjectPropertyKeyTree name;
 	protected final ExpressionTree value;
 	
-	public ObjectLiteralPropertyTreeImpl(long start, long end, ObjectPropertyKeyTree name, ExpressionTree value) {
+	public ObjectLiteralPropertyTreeImpl(SourcePosition start, SourcePosition end, ObjectPropertyKeyTree name, ExpressionTree value) {
 		super(start, end);
 		this.name = name;
 		this.value = value;

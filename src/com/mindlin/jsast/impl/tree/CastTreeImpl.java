@@ -2,14 +2,15 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.CastTree;
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.CastExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class CastTreeImpl extends AbstractExpressiveExpressionTree implements CastTree {
+public class CastTreeImpl extends AbstractExpressiveExpressionTree implements CastExpressionTree {
 	protected final TypeTree type;
 	
-	public CastTreeImpl(long start, long end, ExpressionTree expression, TypeTree type) {
+	public CastTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, TypeTree type) {
 		super(start, end, expression);
 		this.type = type;
 	}

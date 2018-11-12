@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
 
@@ -10,7 +11,7 @@ public class FunctionCallTreeImpl extends AbstractTree implements FunctionCallTr
 	protected final ExpressionTree functionSelect;
 	protected final List<? extends ExpressionTree> arguments;
 	
-	public FunctionCallTreeImpl(long start, long end, ExpressionTree functionSelect, List<? extends ExpressionTree> args) {
+	public FunctionCallTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree functionSelect, List<? extends ExpressionTree> args) {
 		super(start, end);
 		this.functionSelect = functionSelect;
 		this.arguments = args;

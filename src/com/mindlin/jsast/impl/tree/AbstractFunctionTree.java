@@ -3,13 +3,13 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.FunctionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.StatementTree;
-import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -23,7 +23,7 @@ public abstract class AbstractFunctionTree extends AbstractTree implements Funct
 	protected final boolean generator;
 	protected final boolean isAsync;
 
-	public AbstractFunctionTree(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType,
+	public AbstractFunctionTree(SourcePosition start, SourcePosition end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType,
 			StatementTree body, boolean strict, boolean generator) {
 		super(start, end);
 		this.isAsync = isAsync;
@@ -85,7 +85,7 @@ public abstract class AbstractFunctionTree extends AbstractTree implements Funct
 	public static class FunctionExpressionTreeImpl extends AbstractFunctionTree implements FunctionExpressionTree {
 		protected final boolean arrow;
 		
-		public FunctionExpressionTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
+		public FunctionExpressionTreeImpl(SourcePosition start, SourcePosition end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
 				StatementTree body, boolean strict, boolean generator) {
 			super(start, end, isAsync, name, generics, parameters, returnType, body, strict, generator);
 			
@@ -99,7 +99,7 @@ public abstract class AbstractFunctionTree extends AbstractTree implements Funct
 	}
 	
 	public static class FunctionDeclarationTreeImpl extends AbstractFunctionTree implements FunctionDeclarationTree {
-		public FunctionDeclarationTreeImpl(long start, long end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType,
+		public FunctionDeclarationTreeImpl(SourcePosition start, SourcePosition end, boolean isAsync, IdentifierTree name, List<GenericParameterTree> generics, List<ParameterTree> parameters, TypeTree returnType,
 				StatementTree body, boolean strict, boolean generator) {
 			super(start, end, isAsync, name, generics, parameters, returnType, body, strict, generator);
 		}

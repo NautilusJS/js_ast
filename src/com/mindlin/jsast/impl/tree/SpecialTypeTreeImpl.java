@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 import com.mindlin.jsast.impl.parser.JSKeyword;
@@ -39,7 +40,7 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 		this(t.getStart(), t.getEnd(), mapType(t), false);
 	}
 	
-	public SpecialTypeTreeImpl(long start, long end, SpecialType type, boolean implicit) {
+	public SpecialTypeTreeImpl(SourcePosition start, SourcePosition end, SpecialType type, boolean implicit) {
 		super(start, end, implicit);
 		this.type = type;
 	}

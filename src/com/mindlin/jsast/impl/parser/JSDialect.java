@@ -1,10 +1,11 @@
 package com.mindlin.jsast.impl.parser;
 
 import com.mindlin.jsast.exception.JSUnsupportedException;
+import com.mindlin.jsast.fs.SourcePosition;
 
 public interface JSDialect {
 	boolean supports(String feature);
-	default void require(String feature, long position) {
+	default void require(String feature, SourcePosition position) {
 		if (!supports(feature))
 			throw new JSUnsupportedException(feature, position);
 	}

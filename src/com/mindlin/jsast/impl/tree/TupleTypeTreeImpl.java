@@ -3,13 +3,14 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class TupleTypeTreeImpl extends AbstractTypeTree implements TupleTypeTree {
 	protected final List<TypeTree> slots;
 	
-	public TupleTypeTreeImpl(long start, long end, boolean implicit, List<TypeTree> slots) {
+	public TupleTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, List<TypeTree> slots) {
 		super(start, end, implicit);
 		this.slots = slots;
 	}

@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 
@@ -13,7 +14,7 @@ public class ConditionalExpressionTreeImpl extends AbstractTree implements Condi
 		this(condition.getStart(), alternate.getEnd(), condition, concequent, alternate);
 	}
 
-	public ConditionalExpressionTreeImpl(long start, long end, ExpressionTree condition, ExpressionTree concequent,
+	public ConditionalExpressionTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree condition, ExpressionTree concequent,
 			ExpressionTree alternate) {
 		super(start, end);
 		this.condition = condition;

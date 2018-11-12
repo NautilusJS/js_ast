@@ -3,8 +3,9 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.ClassDeclarationTree;
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ClassPropertyTree;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -17,7 +18,7 @@ public class ClassDeclarationTreeImpl extends AbstractTree implements ClassDecla
 	protected final List<ClassPropertyTree<?>> properties;
 	protected final List<GenericParameterTree> generics;
 	
-	public ClassDeclarationTreeImpl(long start, long end, boolean isAbstract, IdentifierTree name, List<GenericParameterTree> generics, TypeTree superType, List<TypeTree> implementing, List<ClassPropertyTree<?>> properties) {
+	public ClassDeclarationTreeImpl(SourcePosition start, SourcePosition end, boolean isAbstract, IdentifierTree name, List<GenericParameterTree> generics, TypeTree superType, List<TypeTree> implementing, List<ClassPropertyTree<?>> properties) {
 		super(start, end);
 		this.isAbstract = isAbstract;
 		this.name = name;
