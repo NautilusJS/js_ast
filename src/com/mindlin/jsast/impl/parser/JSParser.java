@@ -270,49 +270,49 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
-		Token next = src.nextToken();
-		switch (next.getKind()) {
+		Token lookahead = src.nextToken();
+		switch (lookahead.getKind()) {
 			case KEYWORD: {
-				switch (next.<JSKeyword>getValue()) {
+				switch (lookahead.<JSKeyword>getValue()) {
 					case BREAK:
 					case CONTINUE:
-						return this.parseGotoStatement(next, src, context);
+						return this.parseGotoStatement(src.skip(lookahead), src, context);
 					case DEBUGGER:
-						return this.parseDebugger(next, src, context);
+						return this.parseDebugger(src.skip(lookahead), src, context);
 					case CLASS:
-						return this.parseClassDeclaration(next, src, context);
+						return this.parseClassDeclaration(src.skip(lookahead), src, context);
 					case CONST:
 					case LET:
 					case VAR:
-						return this.parseVariableDeclaration(next, src, context, false);
+						return this.parseVariableDeclaration(src.skip(lookahead), src, context, false);
 					case DO:
-						return this.parseDoWhileLoop(next, src, context);
+						return this.parseDoWhileLoop(src.skip(lookahead), src, context);
 					case ENUM:
-						return this.parseEnum(next, src, context);
+						return this.parseEnum(src.skip(lookahead), src, context);
 					case EXPORT:
-						return this.parseExportStatement(next, src, context);
+						return this.parseExportStatement(src.skip(lookahead), src, context);
 					case FOR:
-						return this.parseForStatement(next, src, context);
+						return this.parseForStatement(src.skip(lookahead), src, context);
 					case FUNCTION:
 					case FUNCTION_GENERATOR:
-						return this.finishExpressionStatement(this.parseFunctionExpression(next, src, context), src, context);
+						return this.finishExpressionStatement(this.parseFunctionExpression(src.skip(lookahead), src, context), src, context);
 					case IF:
-						return this.parseIfStatement(next, src, context);
+						return this.parseIfStatement(src.skip(lookahead), src, context);
 					case IMPORT:
-						return this.parseImportStatement(next, src, context);
+						return this.parseImportStatement(src.skip(lookahead), src, context);
 					case INTERFACE:
-						return this.parseInterface(next, src, context);
+						return this.parseInterface(src.skip(lookahead), src, context);
 					case RETURN:
 					case THROW:
-						return this.parseUnaryStatement(next, src, context);
+						return this.parseUnaryStatement(src.skip(lookahead), src, context);
 					case SWITCH:
-						return this.parseSwitchStatement(next, src, context);
+						return this.parseSwitchStatement(src.skip(lookahead), src, context);
 					case TRY:
-						return this.parseTryStatement(next, src, context);
+						return this.parseTryStatement(src.skip(lookahead), src, context);
 					case WHILE:
-						return this.parseWhileLoop(next, src, context);
+						return this.parseWhileLoop(src.skip(lookahead), src, context);
 					case WITH:
-						return this.parseWithStatement(next, src, context);
+						return this.parseWithStatement(src.skip(lookahead), src, context);
 					case VOID:
 					case DELETE:
 					case NEW:
@@ -320,7 +320,7 @@ public class JSParser {
 					case YIELD:
 					case SUPER:
 					case THIS:
-						return this.parseExpressionStatement(next, src, context);
+						return this.parseExpressionStatement(src, context);
 					case CASE:
 					case FINALLY:
 					case DEFAULT:
@@ -329,34 +329,36 @@ public class JSParser {
 					case IN:
 					case INSTANCEOF:
 					default:
-						throw new JSSyntaxException("Unexpected keyword " + next.getValue(), next.getStart());
+						throw new JSSyntaxException("Unexpected keyword " + src.skip(lookahead).getValue(), lookahead.getRange());
 				}
 			}
 			case BRACKET:
-				if (next.<Character>getValue() == '{')
-					return this.parseBlock(next, src, context);
+				if (lookahead.<Character>getValue() == '{')
+					return this.parseBlock(src.skip(lookahead), src, context);
 				else
-					return this.parseExpressionStatement(next, src, context);
+					return this.parseExpressionStatement(src.skip(lookahead), src, context);
 			case OPERATOR:
-				return this.parseExpressionStatement(next, src, context);
+				return this.parseExpressionStatement(src.skip(lookahead), src, context);
 			case IDENTIFIER: {
-				switch (next.<String>getValue()) {
+				// We need another lookahead to make this decision
+				src.skip(lookahead);
+				switch (lookahead.<String>getValue()) {
 					case "type":
 						if (src.peek().getKind() != TokenKind.IDENTIFIER)
 							break;
-						return this.parseTypeAlias(next, src, context);
+						return this.parseTypeAlias(lookahead, src, context);
 					case "async":
 						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
-							return this.finishExpressionStatement(this.parseFunctionExpression(next, src, context), src, context);
+							return this.finishExpressionStatement(this.parseFunctionExpression(lookahead, src, context), src, context);
 					case "await":
 						if (!context.allowAwait())
 							break;
-						return this.parseAwait(next, src, context);
+						return this.parseAwait(lookahead, src, context);
 					default:
 						break;
 				}
 				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON))
-					return this.parseLabeledStatement(this.parseIdentifier(next, src, context), src, context);
+					return this.parseLabeledStatement(this.parseIdentifier(lookahead, src, context), src, context);
 			}
 			//Fallthrough intentional
 			case BOOLEAN_LITERAL:
@@ -365,14 +367,14 @@ public class JSParser {
 			case REGEX_LITERAL:
 			case TEMPLATE_LITERAL:
 			case NULL_LITERAL:
-				return this.parseExpressionStatement(next, src, context);
+				return this.parseExpressionStatement(src.skip(lookahead), src, context);
 			case SPECIAL:
-				switch (next.<JSSpecialGroup>getValue()) {
+				switch (lookahead.<JSSpecialGroup>getValue()) {
 					case EOF:
 						return null;
 					case EOL:
 					case SEMICOLON:
-						return new EmptyStatementTreeImpl(next);
+						return new EmptyStatementTreeImpl(src.skip(lookahead));
 					default:
 						break;
 				}
@@ -385,8 +387,8 @@ public class JSParser {
 		return null;
 	}
 	
-	protected StatementTree parseExpressionStatement(Token token, JSLexer src, Context context) {
-		return this.finishExpressionStatement(this.parseNextExpression(token, src, context), src, context);
+	protected StatementTree parseExpressionStatement(JSLexer src, Context context) {
+		return this.finishExpressionStatement(this.parseNextExpression(src, context), src, context);
 	}
 	
 	protected StatementTree finishExpressionStatement(ExpressionTree expression, JSLexer src, Context context) {
@@ -1929,7 +1931,6 @@ public class JSParser {
 	 * @return
 	 */
 	protected ExpressionTree parseExponentiation(Token t, JSLexer src, Context context) {
-		
 		context.isolateCoverGrammar();
 		final ExpressionTree expr = this.parseUnaryExpression(t, src, context);
 		context.inheritCoverGrammar();
