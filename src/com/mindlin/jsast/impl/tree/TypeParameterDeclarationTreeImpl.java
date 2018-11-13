@@ -4,16 +4,16 @@ import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class GenericTypeTreeImpl extends AbstractTypeTree implements GenericParameterTree {
+public class TypeParameterDeclarationTreeImpl extends AbstractTree implements TypeParameterDeclarationTree {
 	protected final IdentifierTree name;
 	protected final TypeTree supertype;
 	protected final TypeTree defaultValue;
 	
-	public GenericTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, IdentifierTree name, TypeTree supertype, TypeTree defaultValue) {
-		super(start, end, implicit);
+	public TypeParameterDeclarationTreeImpl(SourcePosition start, SourcePosition end, IdentifierTree name, TypeTree supertype, TypeTree defaultValue) {
+		super(start, end);
 		this.name = name;
 		this.supertype = supertype;
 		this.defaultValue = defaultValue;
