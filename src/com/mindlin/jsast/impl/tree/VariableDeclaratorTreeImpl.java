@@ -37,13 +37,13 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 	}
 	
 	@Override
-	public PatternTree getIdentifier() {
+	public PatternTree getName() {
 		return identifier;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getIdentifier(), getType(), getInitializer());
+		return Objects.hash(getKind(), getName(), getType(), getInitializer());
 	}
 	
 }

@@ -597,13 +597,13 @@ public class JSParser {
 					// I can't find any example of an expression that can't be used
 					// as a default value (except ones that won't run at all)
 					
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), identifier, false, false, null, assignment.getValue());
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), Modifiers.NONE, identifier, false, null, assignment.getValue());
 				}
 				case SPREAD: {
 					dialect.require("js.parameter.rest", expr.getStart());
 					//Turn into rest parameter
 					PatternTree identifier = this.reinterpretExpressionAsPattern(((UnaryTree) expr).getExpression());
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), identifier, true, false, null, null);
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), Modifiers.NONE, identifier, true, null, null);
 				}
 				case ARRAY_LITERAL:
 				case OBJECT_LITERAL:
@@ -845,7 +845,7 @@ public class JSParser {
 		do {
 			ExpressionTree expr;
 			if (src.peek().matches(TokenKind.OPERATOR, JSOperator.SPREAD))
-				expr = this.parseSpread(null, src, context);
+				expr = this.parseSpread(src, context);
 			else
 				expr = this.parseAssignment(null, src, context.coverGrammarIsolated());
 			result.add(expr);
@@ -924,7 +924,7 @@ public class JSParser {
 			// TODO finish
 			throw new UnsupportedOperationException();
 		}
-		ExpressionTree expr = parseNextExpression(null, src, context);
+		ExpressionTree expr = parseNextExpression(src, context);
 		
 		//Optionally consume semicolon
 		src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
@@ -1048,15 +1048,13 @@ public class JSParser {
 						break;
 				}
 			}
-			SourceRange pos = new SourceRange(identifier.getStart(), src.getPosition());
-			declarations.add(new VariableDeclaratorTreeImpl(pos, identifier, type, initializer));
+			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), identifier, type, initializer));
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		if (!inFor)
 			expectEOL(src, context);
 		
-		SourceRange pos = new SourceRange(keywordToken.getStart(), src.getPosition());
-		return new VariableDeclarationTreeImpl(pos, isScoped, isConst, declarations);
+		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
 	}
 	
 	/**
@@ -1079,7 +1077,7 @@ public class JSParser {
 		if (keywordToken.getValue() == JSKeyword.RETURN && src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
 			expr = null;
 		else
-			expr = this.parseNextExpression(null, src, context);
+			expr = this.parseNextExpression(src, context);
 		
 		expectEOL(src, context);
 		
@@ -1111,7 +1109,7 @@ public class JSParser {
 		
 		List<TypeParameterDeclarationTree> typeParams = this.parseGenericParametersMaybe(src, context);
 		
-		List<ParameterTree> params = this.parseParameters(src, context, false, null);
+		List<ParameterTree> params = this.parseParameters(null, false, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		TypeTree returnType = this.parseTypeMaybe(src, context, false);
@@ -1284,7 +1282,7 @@ public class JSParser {
 			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Some type of method
 				
-				if (!key.isComputed() && key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
+				if (key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
 					//Promote to constructor
 					if (methodType != null || modifier.isAbstract()) {
 						String modifierName = modifier.isAbstract() ? "abstract" : methodType.name();
@@ -1363,7 +1361,7 @@ public class JSParser {
 				type = new IndexSignatureTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
 			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Parse call signature (TODO: refactor)
-				List<ParameterTree> params = this.parseParameters(src, context, false, null);
+				List<ParameterTree> params = this.parseParameters(null, false, src, context);
 				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 				TypeTree returnType = this.parseTypeMaybe(src, context, false);
 				
@@ -1384,7 +1382,6 @@ public class JSParser {
 		
 		if (properties.isEmpty())
 			return Collections.emptyList();
-		properties.trimToSize();
 		return properties;
 	}
 	
@@ -1618,12 +1615,11 @@ public class JSParser {
 		final SourcePosition start = keywordToken.getStart();
 		expectEOL(src, context);
 		final SourcePosition end = src.getPosition();
-		SourceRange pos = new SourceRange(start, end);
 		
 		if (keywordToken.getValue() == JSKeyword.BREAK)
-			return new AbstractGotoTree.BreakTreeImpl(pos, label);
+			return new AbstractGotoTree.BreakTreeImpl(start, end, label);
 		else if (keywordToken.getValue() == JSKeyword.CONTINUE)
-			return new AbstractGotoTree.ContinueTreeImpl(pos, label);
+			return new AbstractGotoTree.ContinueTreeImpl(start, end, label);
 		throw new JSUnexpectedTokenException(keywordToken);
 	}
 	
@@ -1733,7 +1729,7 @@ public class JSParser {
 		
 		context.push();
 		context.allowIn(true);
-		ExpressionTree expression = parseNextExpression(src, context);
+		ExpressionTree expression = this.parseNextExpression(src, context);
 		context.pop();
 		
 		src.expect(JSOperator.RIGHT_PARENTHESIS);
@@ -1751,7 +1747,7 @@ public class JSParser {
 			whileKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.WHILE, src, context);
 		
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		ExpressionTree condition = parseNextExpression(src, context);
+		ExpressionTree condition = this.parseNextExpression(src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		//Parse loop statement
@@ -1853,7 +1849,7 @@ public class JSParser {
 	protected ForLoopTree parsePartialForLoopTree(Token forKeywordToken, StatementTree initializer, JSLexer src, Context context) {
 		ExpressionTree condition = null;
 		if (!src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
-			condition = parseNextExpression(src, context);
+			condition = this.parseNextExpression(src, context);
 			expectSemicolon(src, context);
 		}
 		ExpressionTree update = src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS) ? null : parseNextExpression(src, context);
@@ -1904,8 +1900,8 @@ public class JSParser {
 	 * @param isStrict
 	 * @return
 	 */
-	protected ExpressionTree parseNextExpression(Token t, JSLexer src, Context context) {
-		ExpressionTree result = this.parseAssignment(t, src, context.coverGrammarIsolated());
+	protected ExpressionTree parseNextExpression(JSLexer src, Context context) {
+		ExpressionTree result = this.parseAssignment(null, src, context.coverGrammarIsolated());
 		
 		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
 			return result;
@@ -1914,7 +1910,7 @@ public class JSParser {
 		expressions.add(result);
 		
 		do {
-			expressions.add(parseAssignment(null, src, context.coverGrammarIsolated()));
+			expressions.add(this.parseAssignment(null, src, context.coverGrammarIsolated()));
 		} while (!src.isEOF() && src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 			
 		expressions.trimToSize();
@@ -2296,6 +2292,37 @@ public class JSParser {
 		return new AssignmentTreeImpl(startToken.getStart(), variable.getEnd(), this.mapTokenToBinaryKind(assignmentOperator), variable, right);
 	}
 	
+	protected ParameterTree parseParameter(JSLexer src, Context context) {
+		SourcePosition start = src.getPosition();
+		if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+			// 'fake' this-parameter
+			this.dialect.require("ts.types", src.getPosition());
+			IdentifierTree name = new IdentifierTreeImpl(src.nextToken());
+			TypeTree type = this.parseTypeMaybe(src, context, true);
+			// Initializers not allowed
+			if (src.peek().matches(TokenKind.OPERATOR, JSOperator.EQUAL))
+				throw new JSSyntaxException("This-parameters may not have default values", src.nextToken().getRange());
+			return new ParameterTreeImpl(start, src.getPosition(), Modifiers.NONE, name, false, type, null);
+		}
+		
+		Modifiers modifiers = this.parseModifiers(Modifiers.union(Modifiers.MASK_VISIBILITY, Modifiers.READONLY), true, src, context);
+		
+		boolean rest = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.SPREAD);
+		PatternTree name = this.parsePattern(src, context);
+		
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK))
+			modifiers = modifiers.combine(Modifiers.OPTIONAL);
+		
+		TypeTree type = this.parseTypeMaybe(src, context, true);
+		
+		// Parse initializer
+		ExpressionTree initializer = null;
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.EQUAL))
+			initializer = this.parseAssignment(null, src, context);
+		
+		return new ParameterTreeImpl(start, src.getPosition(), modifiers, name, rest, type, initializer);
+	}
+	
 	/**
 	 * Parse function parameters. This method will consume all parameters up to
 	 * a closing (right) parenthesis (which will also be consumed).
@@ -2309,7 +2336,7 @@ public class JSParser {
 	 *            was called
 	 *            TODO clarify
 	 */
-	protected List<ParameterTree> parseParameters(JSLexer src, Context context, boolean allowAccessModifiers, List<ParameterTree> previous) {
+	protected List<ParameterTree> parseParameters(List<ParameterTree> previous, boolean allowAccessModifiers, JSLexer src, Context context) {
 		if (src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 			return Collections.emptyList();
 		
@@ -2345,64 +2372,8 @@ public class JSParser {
 			}
 		}
 		
-		do {
-			Token identifier = src.nextToken();
-			
-			Modifiers modifier;
-			if (allowAccessModifiers) {
-				modifier = this.parseModifiers(Modifiers.union(Modifiers.MASK_VISIBILITY, Modifiers.READONLY), true, src, context);
-			} else {
-				//TODO: maybe just null?
-				modifier = Modifiers.NONE;
-			}
-			
-			if (!identifier.isIdentifier()) {
-				if (identifier.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
-					//We have ourselves a rest parameter.
-					Token spread = identifier;
-					UnaryTree expr = this.parseSpread(spread, src, context);
-					
-					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK) != null)
-						throw new JSSyntaxException("Rest parameters cannot be optional", src.getPosition());
-					
-					TypeTree type = this.parseTypeMaybe(src, context, false);
-					
-					if (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT) != null)
-						throw new JSSyntaxException("Rest parameters cannot have a default value", src.getPosition());
-					
-					//TODO: keep references to access modifier tokens for better error messages
-					if (modifier != null && modifier.any())
-						throw new JSSyntaxException("A parameter property cannot be declared via rest parameter", src.getPosition());
-					
-					//Rest parameters must be at the end
-					if (!src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
-						throw new JSSyntaxException("Rest parameter must be last", src.getPosition());
-					
-					result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), modifier, (IdentifierTree)expr.getExpression(), true, type, null));
-					break;
-				}
-				throw new JSUnexpectedTokenException(identifier);
-			}
-			
-			//Check if it's an optional parameter
-			boolean optional = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
-			if (prevOptional && !optional)
-				throw new JSSyntaxException("A required parameter cannot follow an optional parameter", src.getPosition());
-			prevOptional |= optional;
-			if (optional)
-				modifier = modifier.combine(Modifiers.OPTIONAL);
-			
-			//Parse optional parameter type
-			TypeTree type = this.parseTypeMaybe(src, context, false);
-			
-			//Parse optional default value
-			Token assignment = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASSIGNMENT);
-			ExpressionTree defaultValue = null;
-			if (assignment != null)
-				defaultValue = this.parseAssignment(null, src, context);
-			
-			result.add(new ParameterTreeImpl(identifier.getStart(), src.getPosition(), modifier, new IdentifierTreeImpl(identifier), false, type, defaultValue));
-		} while (!src.isEOF() && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
+		//TODO: validation?
+		result.addAll(this.parseList(this::parseParameter, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.COMMA), src, context));
 		
 		//Expect to end with a right paren
 		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src);
@@ -2448,7 +2419,7 @@ public class JSParser {
 		((ArrayList<?>) parameters).trimToSize();
 		
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
-			parameters = this.parseParameters(src, context, false, parameters);
+			parameters = this.parseParameters(parameters, false, src, context);
 		
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		expectOperator(JSOperator.LAMBDA, src, context);
@@ -2483,7 +2454,7 @@ public class JSParser {
 			//Lambda w/ 1 rest operator
 			dialect.require("js.function.lambda", leftParenToken.getStart());
 			dialect.require("js.parameter.rest", src.peek().getStart());
-			List<ParameterTree> param = reinterpretExpressionAsParameterList(this.parseSpread(null, src, context));
+			List<ParameterTree> param = reinterpretExpressionAsParameterList(this.parseSpread(src, context));
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 			expectOperator(JSOperator.LAMBDA, src, context);
 			return this.finishFunctionBody(leftParenToken.getStart(), false, null, null, param, null, true, false, src, context);
@@ -2511,7 +2482,7 @@ public class JSParser {
 				if (src.peek().matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 					dialect.require("js.parameter.rest", leftParenToken.getStart());
 					//Rest parameter. Must be lambda expression
-					expressions.add(this.parseSpread(null, src, context));
+					expressions.add(this.parseSpread(src, context));
 					
 					//Upgrade to lambda
 					dialect.require("js.function.lambda", leftParenToken.getStart());
@@ -2558,8 +2529,8 @@ public class JSParser {
 		return new ParenthesizedTreeImpl(leftParenToken.getStart(), src.getPosition(), expr);
 	}
 	
-	protected UnaryTree parseSpread(Token spreadToken, JSLexer src, Context context) {
-		spreadToken = expect(spreadToken, TokenKind.OPERATOR, JSOperator.SPREAD, src, context);
+	protected UnaryTree parseSpread(JSLexer src, Context context) {
+		Token spreadToken = expect(TokenKind.OPERATOR, JSOperator.SPREAD, src, context);
 		dialect.require("js.operator.spread", spreadToken.getStart());
 		
 		context.isolateCoverGrammar();
@@ -2582,7 +2553,7 @@ public class JSParser {
 			throw new JSUnexpectedTokenException(t);
 		}
 		
-		final ExpressionTree callee = parseLeftSideExpression(null, src, context.coverGrammarIsolated(), false);
+		final ExpressionTree callee = parseLeftSideExpression(src, context.coverGrammarIsolated(), false);
 		
 		final List<ExpressionTree> args;
 		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null)
@@ -2593,46 +2564,45 @@ public class JSParser {
 		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
 	}
 	
-	protected ExpressionTree parseLeftSideExpression(Token t, JSLexer src, Context context, boolean allowCall) {
-		if (t == null)
-			t = src.nextToken();
+	protected ExpressionTree parseLeftSideExpression(JSLexer src, Context context, boolean allowCall) {
 		boolean prevAllowIn = context.allowIn();
 		context.allowIn(true);
 		
 		ExpressionTree expr;
-		if (context.inFunction() && t.matches(TokenKind.KEYWORD, JSKeyword.SUPER))
-			expr = this.parseSuper(t, src, context);
+		if (context.inFunction() && src.peek().matches(TokenKind.KEYWORD, JSKeyword.SUPER))
+			expr = this.parseSuper(null, src, context);
 		else {
 			context.isolateCoverGrammar();
-			if (t.matches(TokenKind.KEYWORD, JSKeyword.NEW))
-				expr = this.parseNew(t, src, context);
+			if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.NEW))
+				expr = this.parseNew(null, src, context);
 			else
-				expr = this.parsePrimaryExpression(t, src, context);
+				expr = this.parsePrimaryExpression(null, src, context);
 			context.inheritCoverGrammar();
 		}
 		
 		while (true) {
+			Token lookahead = src.peek();
 			if (src.nextTokenIs(TokenKind.BRACKET, '[')) {
 				//Computed member access expressions
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
-				ExpressionTree property = this.parseNextExpression(null, src, context.coverGrammarIsolated());
+				ExpressionTree property = this.parseNextExpression(src, context.coverGrammarIsolated());
 				expect(TokenKind.BRACKET, ']', src, context);
 				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.ARRAY_ACCESS, expr, property);
-			} else if (allowCall && (t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null) {
+			} else if (allowCall && lookahead.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
 				//Function call
 				context.isBindingElement(false);
 				context.isAssignmentTarget(false);
-				expr = this.parseFunctionCall(expr, t, src, context);
+				expr = this.parseFunctionCall(expr, null, src, context);
 			} else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
 				//Static member access
 				context.isBindingElement(false);
 				context.isAssignmentTarget(true);
 				ExpressionTree property = this.parseIdentifier(src, context);
 				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
-			} else if ((t = src.nextTokenIf(token -> (token.getKind() == TokenKind.TEMPLATE_LITERAL && token.<TemplateTokenInfo>getValue().head))) != null) {
+			} else if (lookahead.getKind() == TokenKind.TEMPLATE_LITERAL && lookahead.<TemplateTokenInfo>getValue().head) {
 				//TODO Tagged template literal
-				return this.parseLiteral(t, src, context);
+				return this.parseLiteral(null, src, context);
 			} else {
 				break;
 			}
@@ -2769,7 +2739,7 @@ public class JSParser {
 			src.skip(startBodyToken);
 			body = this.parseBlock(startBodyToken, src, ctx);
 		} else if (arrow) {
-			body = new ReturnTreeImpl(this.parseNextExpression(null, src, ctx.coverGrammarIsolated()));
+			body = new ReturnTreeImpl(this.parseNextExpression(src, ctx.coverGrammarIsolated()));
 		} else {
 			//TODO: function signature declaration
 			throw new JSSyntaxException("Functions must have a body", startBodyToken.getRange());
@@ -2823,7 +2793,7 @@ public class JSParser {
 		
 		//Parse parameters
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		List<ParameterTree> params = this.parseParameters(src, context, false, null);
+		List<ParameterTree> params = this.parseParameters(null, false, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		
@@ -2885,7 +2855,7 @@ public class JSParser {
 				quasis.add(new TemplateElementTreeImpl(literalToken.getStart(), literalToken.getEnd(), literalToken.getText(), quasi.cooked));
 				
 				while (!quasi.tail) {
-					expressions.add(this.parseNextExpression(null, src, context));
+					expressions.add(this.parseNextExpression(src, context));
 					
 					Token t = src.nextToken();
 					quasi = t.getValue();
@@ -2914,7 +2884,7 @@ public class JSParser {
 				values.add(null);
 				continue;
 			} else if (lookahead.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
-				values.add(this.parseSpread(null, src, context));
+				values.add(this.parseSpread(src, context));
 				if (!src.peek().matches(TokenKind.BRACKET, ']')) {
 					context.isAssignmentTarget(false);
 					context.isBindingElement(false);
@@ -2956,7 +2926,7 @@ public class JSParser {
 			case BRACKET:
 				//Computed property
 				if (lookahead.<Character>getValue() == '[') {
-					ExpressionTree expr = this.parseNextExpression(null, src, context);
+					ExpressionTree expr = this.parseNextExpression(src, context);
 					expect(TokenKind.BRACKET, ']', src, context);
 					return new ComputedPropertyKeyTreeImpl(lookahead.getStart(), src.getPosition(), expr);
 				}
@@ -2985,7 +2955,7 @@ public class JSParser {
 	}
 	
 	protected MethodDefinitionTree parseMethodDefinition(SourcePosition startPos, Modifiers modifiers, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
-		List<ParameterTree> params = this.parseParameters(src, context, methodType == PropertyDeclarationType.CONSTRUCTOR, null);
+		List<ParameterTree> params = this.parseParameters(null, methodType == PropertyDeclarationType.CONSTRUCTOR, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		TypeTree returnType = null;
@@ -3176,14 +3146,14 @@ public class JSParser {
 			context.pop();
 			operatorToken = src.nextTokenIf(t->(t.isOperator() && (t.getValue() == JSOperator.INCREMENT || t.getValue() == JSOperator.DECREMENT)));
 			if (operatorToken != null)
-				return parseUnaryPostfix(result, operatorToken, src, context);
+				return this.parseUnaryPostfix(result, operatorToken, src, context);
 			return result;
 		}
 	}
 	
 	protected UnaryTree parseUnaryPostfix(ExpressionTree expr, Token operatorToken, JSLexer src, Context context) {
 		if (expr == null)
-			expr = this.parseLeftSideExpression(null, src, context.pushed(), true);
+			expr = this.parseLeftSideExpression(src, context.pushed(), true);
 		if (!Validator.canBeAssigned(expr, dialect))
 			throw new JSSyntaxException("Invalid left-hand side expression in " + operatorToken.getKind() + " expression", expr.getStart());
 		Kind kind;
