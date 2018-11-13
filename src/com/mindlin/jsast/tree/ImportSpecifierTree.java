@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface ImportSpecifierTree extends Tree {
+public interface ImportSpecifierTree extends Tree, UnvisitableTree {
 	IdentifierTree getAlias();
 
 	IdentifierTree getImported();
@@ -10,10 +10,5 @@ public interface ImportSpecifierTree extends Tree {
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.IMPORT_SPECIFIER;
-	}
-
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
 	}
 }

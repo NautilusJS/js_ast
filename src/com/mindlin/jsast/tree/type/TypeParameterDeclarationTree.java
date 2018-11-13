@@ -2,6 +2,7 @@ package com.mindlin.jsast.tree.type;
 
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.UnvisitableTree;
 
 /**
  * Generic type parameter (not argument).
@@ -9,7 +10,7 @@ import com.mindlin.jsast.tree.Tree;
  * @author mailmindlin
  * @see GenericRefTypeTree
  */
-public interface TypeParameterDeclarationTree extends TypeTree {
+public interface TypeParameterDeclarationTree extends Tree, UnvisitableTree {
 	
 	/**
 	 * Name of generic parameter.
@@ -36,10 +37,5 @@ public interface TypeParameterDeclarationTree extends TypeTree {
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.TYPE_PARAMETER_DECLARATION;
-	}
-	
-	@Override
-	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
 	}
 }

@@ -5,15 +5,10 @@ package com.mindlin.jsast.tree;
  * 
  * @author mailmindlin
  */
-public interface PropertyTree extends NamedDeclarationTree {
+public interface PropertyTree extends NamedDeclarationTree, UnvisitableTree {
 	
 	@Override
 	PropertyName getName();
 	
 	Modifiers getModifiers();
-	
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
-	}
 }

@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
-public interface SwitchCaseTree extends Tree {
+public interface SwitchCaseTree extends UnvisitableTree {
 	ExpressionTree getExpression();
 	
 	default boolean isDefault() {

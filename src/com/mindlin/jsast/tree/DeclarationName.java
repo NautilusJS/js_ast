@@ -1,4 +1,4 @@
 package com.mindlin.jsast.tree;
 
-public interface DeclarationName extends ExpressionTree {
+public interface DeclarationName extends Tree {
 }

@@ -12,7 +12,7 @@ import com.mindlin.jsast.tree.type.TypeTree;
  * 
  * @author mailmindlin
  */
-public interface ParameterTree extends DecoratableTree, Tree {
+public interface ParameterTree extends DecoratableTree, Tree, UnvisitableTree {
 	
 	/**
 	 * Get the access modifier for this parameter.
@@ -51,10 +51,5 @@ public interface ParameterTree extends DecoratableTree, Tree {
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.PARAMETER;
-	}
-	
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
 	}
 }

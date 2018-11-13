@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface CatchTree extends Tree {
+public interface CatchTree extends Tree, UnvisitableTree {
 	/**
 	 * Get declared parameter.
 	 * @return declared parameter (may be null)
@@ -14,11 +14,6 @@ public interface CatchTree extends Tree {
 		return Tree.Kind.CATCH;
 	}
 
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
-	}
-	
 	@Override
 	default boolean equivalentTo(Tree otherTree) {
 		//Hit the low hanging fruit first

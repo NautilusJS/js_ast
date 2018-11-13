@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public interface VariableDeclaratorTree extends NamedDeclarationTree {
+public interface VariableDeclaratorTree extends NamedDeclarationTree, UnvisitableTree {
 	
 	@Override
 	DeclarationName getName();
@@ -25,10 +25,5 @@ public interface VariableDeclaratorTree extends NamedDeclarationTree {
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.VARIABLE_DECLARATOR;
-	}
-	
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
 	}
 }
