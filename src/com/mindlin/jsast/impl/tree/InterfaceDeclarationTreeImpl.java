@@ -5,19 +5,19 @@ import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.InterfacePropertyTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.type.TypeElementTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class InterfaceDeclarationTreeImpl extends AbstractTree implements InterfaceDeclarationTree {
 	protected final IdentifierTree name;
-	protected final List<GenericParameterTree> generics;
+	protected final List<TypeParameterDeclarationTree> generics;
 	protected final List<TypeTree> supertypes;
-	protected final List<InterfacePropertyTree> properties;
+	protected final List<TypeElementTree> properties;
 	
-	public InterfaceDeclarationTreeImpl(SourcePosition start, SourcePosition end, IdentifierTree name, List<GenericParameterTree> generics,
-			List<TypeTree> supertypes, List<InterfacePropertyTree> properties) {
+	public InterfaceDeclarationTreeImpl(SourcePosition start, SourcePosition end, IdentifierTree name, List<TypeParameterDeclarationTree> generics,
+			List<TypeTree> supertypes, List<TypeElementTree> properties) {
 		super(start, end);
 		this.name = name;
 		this.generics = generics;
@@ -26,12 +26,12 @@ public class InterfaceDeclarationTreeImpl extends AbstractTree implements Interf
 	}
 	
 	@Override
-	public IdentifierTree getIdentifier() {
+	public IdentifierTree getName() {
 		return this.name;
 	}
 
 	@Override
-	public List<GenericParameterTree> getGenerics() {
+	public List<TypeParameterDeclarationTree> getTypeParameters() {
 		return this.generics;
 	}
 	
@@ -41,12 +41,12 @@ public class InterfaceDeclarationTreeImpl extends AbstractTree implements Interf
 	}
 	
 	@Override
-	public List<? extends InterfacePropertyTree> getProperties() {
+	public List<TypeElementTree> getDeclaredMembers() {
 		return this.properties;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getIdentifier(), getSupertypes(), getProperties());
+		return Objects.hash(getKind(), getName(), getSupertypes(), getDeclaredMembers());
 	}
 }

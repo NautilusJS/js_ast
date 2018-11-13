@@ -10,9 +10,8 @@ import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
-	protected final Modifiers access;
+	protected final Modifiers modifiers;
 	protected final boolean rest;
-	protected final boolean optional;
 	protected final TypeTree type;
 	protected final ExpressionTree initializer;
 	protected final PatternTree identifier;
@@ -32,7 +31,7 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	 * @param identifier
 	 */
 	public ParameterTreeImpl(SourcePosition start, SourcePosition end, PatternTree identifier) {
-		this(start, end, identifier, false, false, null, null);
+		this(start, end, identifier, null, null);
 	}
 	
 	/**
@@ -45,33 +44,27 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	 * @param type
 	 * @param initializer
 	 */
-	public ParameterTreeImpl(SourcePosition start, SourcePosition end, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
-		this(start, end, Modifiers.NONE, identifier, rest, optional, type, initializer);
+	public ParameterTreeImpl(SourcePosition start, SourcePosition end, PatternTree identifier, TypeTree type, ExpressionTree initializer) {
+		this(start, end, Modifiers.NONE, identifier, false, type, initializer);
 	}
 	
-	public ParameterTreeImpl(SourcePosition start, SourcePosition end, Modifiers access, PatternTree identifier, boolean rest, boolean optional, TypeTree type, ExpressionTree initializer) {
+	public ParameterTreeImpl(SourcePosition start, SourcePosition end, Modifiers modifiers, PatternTree identifier, boolean rest, TypeTree type, ExpressionTree initializer) {
 		super(start, end);
-		this.access = access;
-		this.rest = rest;
-		this.optional = optional;
+		this.modifiers = modifiers;
 		this.identifier = identifier;
+		this.rest = rest;
 		this.type = type;
 		this.initializer = initializer;
 	}
 	
 	@Override
 	public Modifiers getModifiers() {
-		return this.access;
+		return this.modifiers;
 	}
 	
 	@Override
 	public boolean isRest() {
 		return rest;
-	}
-	
-	@Override
-	public boolean isOptional() {
-		return optional;
 	}
 	
 	@Override
