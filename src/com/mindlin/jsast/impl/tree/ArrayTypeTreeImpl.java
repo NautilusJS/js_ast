@@ -9,8 +9,8 @@ import com.mindlin.jsast.tree.type.TypeTree;
 public class ArrayTypeTreeImpl extends AbstractTypeTree implements ArrayTypeTree {
 	protected final TypeTree baseType;
 	
-	public ArrayTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, TypeTree baseType) {
-		super(start, end, implicit);
+	public ArrayTypeTreeImpl(SourcePosition start, SourcePosition end, TypeTree baseType) {
+		super(start, end);
 		this.baseType = baseType;
 	}
 

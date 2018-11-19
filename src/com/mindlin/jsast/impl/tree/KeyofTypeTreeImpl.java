@@ -9,8 +9,8 @@ import com.mindlin.jsast.tree.type.TypeTree;
 public class KeyofTypeTreeImpl extends AbstractTypeTree implements KeyofTypeTree {
 	protected final TypeTree baseType;
 	
-	public KeyofTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, TypeTree baseType) {
-		super(start, end, implicit);
+	public KeyofTypeTreeImpl(SourcePosition start, SourcePosition end, TypeTree baseType) {
+		super(start, end);
 		this.baseType = baseType;
 	}
 	

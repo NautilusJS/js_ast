@@ -33,15 +33,15 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 	protected final SpecialType type;
 	
 	public SpecialTypeTreeImpl(SpecialType type) {
-		this(-1, -1, type, true);
+		this(null, null, type);
 	}
 	
 	public SpecialTypeTreeImpl(Token t) {
-		this(t.getStart(), t.getEnd(), mapType(t), false);
+		this(t.getStart(), t.getEnd(), mapType(t));
 	}
 	
-	public SpecialTypeTreeImpl(SourcePosition start, SourcePosition end, SpecialType type, boolean implicit) {
-		super(start, end, implicit);
+	public SpecialTypeTreeImpl(SourcePosition start, SourcePosition end, SpecialType type) {
+		super(start, end);
 		this.type = type;
 	}
 	

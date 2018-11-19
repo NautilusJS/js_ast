@@ -1455,13 +1455,13 @@ public class JSParser {
 			//'this' type
 			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
 			//No generics on 'this'
-			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, Collections.emptyList());
+			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, Collections.emptyList());
 		} else if (startToken.isIdentifier()) {
 			switch (startToken.<String>getValue()) {
 				case "keyof": {
 					//Check for 'keyof X'
 					TypeTree baseType = parseType(src, context);
-					return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), false, baseType);
+					return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), baseType);
 				}
 				case "Array": {
 					//Array<X> => X[]
@@ -1476,7 +1476,7 @@ public class JSParser {
 						//Fall back on 'any[]'
 						arrayBaseType = new SpecialTypeTreeImpl(SpecialType.ANY);
 					
-					return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, arrayBaseType);
+					return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), arrayBaseType);
 				}
 				case "this":
 					throw new UnsupportedOperationException("'this' type not implemented yet");
@@ -1493,7 +1493,7 @@ public class JSParser {
 					
 					List<TypeTree> generics = this.parseGenericArguments(src, context);
 					
-					return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), false, identifier, generics);
+					return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, generics);
 				}
 			}
 		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
@@ -1505,8 +1505,8 @@ public class JSParser {
 		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
 			//Inline interface (or object type '{}')
 			//TODO: change to object type
-			List<InterfacePropertyTree> properties = this.parseObjectTypeMembers(src, context);
-			return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), false, properties);
+			List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
+			return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
 			//Tuple (or array type '[]')
 			if (src.nextTokenIs(TokenKind.BRACKET, ']')) {
@@ -1518,14 +1518,14 @@ public class JSParser {
 			
 			List<TypeTree> slots = new ArrayList<>();
 			do {
-				slots.add(parseType(src, context));
+				slots.add(this.parseType(src, context));
 			} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
 			
 			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
-			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), false, slots);
+			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), slots);
 		} else if (startToken.isLiteral()) {
 			if (startToken.getKind() == TokenKind.NULL_LITERAL)
-				return new SpecialTypeTreeImpl(startToken.getStart(), startToken.getEnd(), SpecialType.NULL, false);
+				return new SpecialTypeTreeImpl(startToken.getStart(), startToken.getEnd(), SpecialType.NULL);
 			return new LiteralTypeTreeImpl<>(this.parseLiteral(startToken, src, context), false);
 		} else {
 			throw new JSUnexpectedTokenException(startToken);
@@ -1548,13 +1548,13 @@ public class JSParser {
 		
 		//Support member types in form of 'A.B'
 		while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
-			type = new MemberTypeTreeImpl(type, parseImmediateType(src, context), false);
+			type = new MemberTypeTreeImpl(type, parseImmediateType(src, context));
 		}
 		
 		//Support array types in form of 'X[]'
 		while (src.nextTokenIs(TokenKind.BRACKET, '[')) {
 			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
-			type = new ArrayTypeTreeImpl(type.getStart(), endToken.getEnd(), false, type);
+			type = new ArrayTypeTreeImpl(type.getStart(), endToken.getEnd(), type);
 		}
 		
 		//See if it's a union/intersection type
@@ -1576,7 +1576,7 @@ public class JSParser {
 		else
 			constituents.add(right);
 		
-		return new CompositeTypeTreeImpl(left.getStart(), right.getEnd(), false, union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, constituents	);
+		return new CompositeTypeTreeImpl(left.getStart(), right.getEnd(), union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, constituents	);
 	}
 	
 	

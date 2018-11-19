@@ -7,18 +7,18 @@ import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTypeTree {
 	protected final List<ParameterTree> parameters;
-	protected final List<GenericParameterTree> generics;
+	protected final List<TypeParameterDeclarationTree> typeParameters;
 	protected final TypeTree returnType;
 	
-	public FunctionTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, List<ParameterTree> parameters, List<GenericParameterTree> generics, TypeTree returnType) {
-		super(start, end, implicit);
+	public FunctionTypeTreeImpl(SourcePosition start, SourcePosition end, List<ParameterTree> parameters, List<TypeParameterDeclarationTree> typeParameters, TypeTree returnType) {
+		super(start, end);
 		this.parameters = parameters;
-		this.generics = generics;
+		this.typeParameters = typeParameters;
 		this.returnType = returnType;
 	}
 	
@@ -33,8 +33,8 @@ public class FunctionTypeTreeImpl extends AbstractTypeTree implements FunctionTy
 	}
 	
 	@Override
-	public List<GenericParameterTree> getGenerics() {
-		return this.generics;
+	public List<TypeParameterDeclarationTree> getGenerics() {
+		return this.typeParameters;
 	}
 	
 	@Override

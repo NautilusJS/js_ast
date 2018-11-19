@@ -10,8 +10,8 @@ import com.mindlin.jsast.tree.type.TypeElementTree;
 public class ObjectTypeTreeImpl extends AbstractTypeTree implements ObjectTypeTree {
 	protected final List<TypeElementTree> properties;
 	
-	public ObjectTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, List<TypeElementTree> properties) {
-		super(start, end, implicit);
+	public ObjectTypeTreeImpl(SourcePosition start, SourcePosition end, List<TypeElementTree> properties) {
+		super(start, end);
 		this.properties = properties;
 	}
 	

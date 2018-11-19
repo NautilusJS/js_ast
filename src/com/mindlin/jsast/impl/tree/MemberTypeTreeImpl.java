@@ -10,14 +10,14 @@ public class MemberTypeTreeImpl extends AbstractTypeTree implements MemberTypeTr
 	protected final TypeTree base;
 	protected final TypeTree name;
 	
-	public MemberTypeTreeImpl(SourcePosition start, SourcePosition end, TypeTree base, TypeTree name, boolean implicit) {
-		super(start, end, implicit);
+	public MemberTypeTreeImpl(SourcePosition start, SourcePosition end, TypeTree base, TypeTree name) {
+		super(start, end);
 		this.base = base;
 		this.name = name;
 	}
 	
-	public MemberTypeTreeImpl(TypeTree base, TypeTree name, boolean implicit) {
-		this(base.getStart(), name.getEnd(), base, name, implicit);
+	public MemberTypeTreeImpl(TypeTree base, TypeTree name) {
+		this(base.getStart(), name.getEnd(), base, name);
 	}
 	
 	@Override

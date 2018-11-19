@@ -10,8 +10,8 @@ import com.mindlin.jsast.tree.type.TypeTree;
 public class TupleTypeTreeImpl extends AbstractTypeTree implements TupleTypeTree {
 	protected final List<TypeTree> slots;
 	
-	public TupleTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, List<TypeTree> slots) {
-		super(start, end, implicit);
+	public TupleTypeTreeImpl(SourcePosition start, SourcePosition end, List<TypeTree> slots) {
+		super(start, end);
 		this.slots = slots;
 	}
 	

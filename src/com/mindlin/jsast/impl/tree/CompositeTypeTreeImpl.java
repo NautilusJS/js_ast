@@ -18,12 +18,12 @@ public class CompositeTypeTreeImpl extends AbstractTypeTree implements Composite
 	protected final Kind kind;
 	protected final List<TypeTree> constituents;
 	
-	public CompositeTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, Tree.Kind kind, TypeTree... constituents) {
-		this(start, end, implicit, kind, Arrays.asList(constituents));
+	public CompositeTypeTreeImpl(SourcePosition start, SourcePosition end, Tree.Kind kind, TypeTree... constituents) {
+		this(start, end, kind, Arrays.asList(constituents));
 	}
 	
-	public CompositeTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, Tree.Kind kind, List<TypeTree> constituents) {
-		super(start, end, implicit);
+	public CompositeTypeTreeImpl(SourcePosition start, SourcePosition end, Tree.Kind kind, List<TypeTree> constituents) {
+		super(start, end);
 		this.kind = kind;
 		this.constituents = constituents;
 	}

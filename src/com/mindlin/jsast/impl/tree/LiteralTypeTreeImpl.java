@@ -9,13 +9,13 @@ import com.mindlin.jsast.tree.type.LiteralTypeTree;
 public class LiteralTypeTreeImpl<T> extends AbstractTypeTree implements LiteralTypeTree<T> {
 	protected final LiteralTree<T> value;
 	
-	public LiteralTypeTreeImpl(SourcePosition start, SourcePosition end, LiteralTree<T> value, boolean implicit) {
-		super(start, end, implicit);
+	public LiteralTypeTreeImpl(SourcePosition start, SourcePosition end, LiteralTree<T> value) {
+		super(start, end);
 		this.value = value;
 	}
 	
 	public LiteralTypeTreeImpl(LiteralTree<T> value, boolean implicit) {
-		this(value.getStart(), value.getEnd(), value, implicit);
+		this(value.getStart(), value.getEnd(), value);
 	}
 	
 	@Override

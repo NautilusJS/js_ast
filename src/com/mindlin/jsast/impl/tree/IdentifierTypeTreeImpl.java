@@ -12,8 +12,8 @@ public class IdentifierTypeTreeImpl extends AbstractTypeTree implements Identifi
 	protected final IdentifierTree name;
 	protected final List<TypeTree> generics;
 	
-	public IdentifierTypeTreeImpl(SourcePosition start, SourcePosition end, boolean implicit, IdentifierTree name, List<TypeTree> generics) {
-		super(start, end, implicit);
+	public IdentifierTypeTreeImpl(SourcePosition start, SourcePosition end, IdentifierTree name, List<TypeTree> generics) {
+		super(start, end);
 		this.name = name;
 		this.generics = generics;
 	}
