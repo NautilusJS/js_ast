@@ -17,15 +17,26 @@ public class SourceRange implements Serializable {
 	protected SourcePosition start;
 	protected SourcePosition end;
 	
+	/**
+	 * Create range spanning from {@code start} to {@code end}.
+	 * @param start Start position (inclusive)
+	 * @param end End position (inclusive)
+	 */
 	public SourceRange(SourcePosition start, SourcePosition end) {
 		this.start = start;
 		this.end = end;
 	}
 	
+	/**
+	 * @return Start position (inclusive). May be null.
+	 */
 	public SourcePosition getStart() {
 		return this.start;
 	}
 	
+	/**
+	 * @return End position (inclusive). May be null.
+	 */
 	public SourcePosition getEnd() {
 		return this.end;
 	}
