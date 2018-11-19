@@ -17,6 +17,7 @@ public class TokenPredicate {
 	public static final Predicate<Token> VARIABLE_START = t->(t.isKeyword() && (t.getValue() == JSKeyword.VAR || t.getValue() == JSKeyword.LET || t.getValue() == JSKeyword.CONST));
 	public static final Predicate<Token> IN_OR_OF = t->(t.isKeyword() && (t.getValue() == JSKeyword.IN || t.getValue() == JSKeyword.OF));
 	public static final Predicate<Token> PARAMETER_TYPE_START = t->(t.isOperator() && (t.getValue() == JSOperator.QUESTION_MARK || t.getValue() == JSOperator.COLON || t.getValue() == JSOperator.ASSIGNMENT));
+	public static final Predicate<Token> CALL_SIGNATURE_START = t -> (t.isOperator() && (t.getValue() == JSOperator.LEFT_PARENTHESIS || t.getValue() == JSOperator.LESS_THAN));
 	public static final Predicate<Token> START_OF_PARAMETER = t->{
 		if (t.isIdentifier())
 			return true;

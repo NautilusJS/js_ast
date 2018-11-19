@@ -1202,7 +1202,7 @@ public class JSParser {
 		Token next = src.peek();
 		
 		// Call/construct signature
-		if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) || next.matches(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
+		if (TokenPredicate.CALL_SIGNATURE_START.test(next))
 			return (CallSignatureTree) this.parseCallSignature(src, context);
 		else if (next.matches(TokenKind.KEYWORD, JSKeyword.NEW))
 			return (ConstructSignatureTree) this.parseCallSignature(src, context);
@@ -1222,7 +1222,7 @@ public class JSParser {
 		modifiers = modifiers.combine(this.parseModifiers(Modifiers.MASK_POSTFIX, false, src, context));
 		
 		next = src.peek();
-		if (next.matchesOperator(JSOperator.LESS_THAN) || next.matchesOperator(JSOperator.LEFT_PARENTHESIS))
+		if (TokenPredicate.CALL_SIGNATURE_START.test(next))
 			// Method signature
 			return this.parseMethodSignature(start, modifiers, propName, src, context);
 		
@@ -2993,7 +2993,7 @@ public class JSParser {
 		modifiers = modifiers.combine(this.parseModifiers(Modifiers.MASK_POSTFIX, false, src, context));
 		
 		Token lookahead = src.peek();
-		if (modifiers.isGenerator() || lookahead.matchesOperator(JSOperator.LESS_THAN) || lookahead.matchesOperator(JSOperator.LEFT_PARENTHESIS)) {
+		if (modifiers.isGenerator() || TokenPredicate.CALL_SIGNATURE_START.test(lookahead)) {
 			// Method declaration
 			return this.parseMethodDeclaration(start, decorators, modifiers, name, src, context);
 		} else if (name.getKind() == Kind.IDENTIFIER
