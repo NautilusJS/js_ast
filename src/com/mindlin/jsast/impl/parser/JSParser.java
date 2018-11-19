@@ -748,7 +748,6 @@ public class JSParser {
 			}
 		}
 		
-		
 		return result;
 	}
 	
@@ -841,7 +840,7 @@ public class JSParser {
 		throw new JSUnexpectedTokenException(lookahead);
 	}
 	
-	protected List<TypeTree> parseGenericArguments(JSLexer src, Context context) {
+	protected List<TypeTree> parseTypeArguments(JSLexer src, Context context) {
 		Token openChevron = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LESS_THAN);
 		if (openChevron == null)
 			return Collections.emptyList();
@@ -853,40 +852,36 @@ public class JSParser {
 		return arguments;
 	}
 	
+	protected TypeParameterDeclarationTree parseTypeParameter(JSLexer src, Context context) {
+		// <name> [extends <type>] [= <type>]
+		IdentifierTree identifier = this.parseIdentifier(src, context);
+		
+		TypeTree supertype = null;
+		if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
+			supertype = this.parseType(src, context);
+		
+		TypeTree defaultValue = null;
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
+			defaultValue = this.parseType(src, context);
+		
+		return new TypeParameterDeclarationTreeImpl(identifier.getStart(), src.getPosition(), identifier, supertype, defaultValue);
+	}
+	
 	/**
 	 * Parse a list of generic type parameters
 	 * @param src
 	 * @param context
 	 * @return
 	 */
-	protected List<TypeParameterDeclarationTree> parseGenericParametersMaybe(JSLexer src, Context context) {
+	protected List<TypeParameterDeclarationTree> parseTypeParametersMaybe(JSLexer src, Context context) {
 		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LESS_THAN))
 			//There are no generics (empty '<>')
 			return Collections.emptyList();
 		
-		ArrayList<TypeParameterDeclarationTree> generics = new ArrayList<>();
-		
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
-			return generics;
-		
-		do {
-			IdentifierTree identifier = this.parseIdentifier(src, context);
-			
-			TypeTree supertype = null;
-			if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
-				supertype = this.parseType(src, context);
-			
-			TypeTree defaultValue = null;
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
-				defaultValue = this.parseType(src, context);
-			
-			generics.add(new TypeParameterDeclarationTreeImpl(identifier.getStart(), src.getPosition(), identifier, supertype, defaultValue));
-		} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
+		List<TypeParameterDeclarationTree> params = this.parseDelimitedList(this::parseTypeParameter, this::parseCommaSeparator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.GREATER_THAN), src, context);
 		
 		expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
-		
-		generics.trimToSize();
-		return generics;
+		return params;
 	}
 	
 	protected List<ExpressionTree> parseArguments(Token startParenToken, JSLexer src, Context context) {
@@ -993,7 +988,7 @@ public class JSParser {
 		
 		IdentifierTree identifier = this.parseIdentifier(src, context);
 		
-		List<TypeParameterDeclarationTree> genericParams = this.parseGenericParametersMaybe(src, context);
+		List<TypeParameterDeclarationTree> genericParams = this.parseTypeParametersMaybe(src, context);
 		
 		expect(TokenKind.OPERATOR, JSOperator.ASSIGNMENT, src, context);
 		
@@ -1133,7 +1128,7 @@ public class JSParser {
 		
 		boolean constructSignature = src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.NEW);
 		
-		List<TypeParameterDeclarationTree> typeParams = this.parseGenericParametersMaybe(src, context);
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
 		
 		List<ParameterTree> params = this.parseParameters(null, false, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
