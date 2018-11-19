@@ -402,4 +402,26 @@ public class JSLexerTest {
 		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
 		
 	}
+	
+	@Test
+	public void testLookaheadMultiple() {
+		JSLexer lexer = new JSLexer("1 2 3 4");
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.peek());
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.peek(0));
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek(1));
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek(2));
+		assertToken(TokenKind.NUMERIC_LITERAL, 4, lexer.peek(3));
+		
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.nextToken());
+		
+		lexer.mark();
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek(1));
+		assertToken(TokenKind.NUMERIC_LITERAL, 4, lexer.peek(2));
+		
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.nextToken());
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek());
+		lexer.reset();
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
+	}
 }

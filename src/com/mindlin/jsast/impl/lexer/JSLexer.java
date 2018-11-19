@@ -3,6 +3,8 @@ package com.mindlin.jsast.impl.lexer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -25,8 +27,8 @@ import com.mindlin.jsast.impl.util.Characters;
 public class JSLexer implements Supplier<Token> {
 	
 	protected final CharacterStream chars;
-	protected Token current = null;
 	protected Token lookahead = null;
+	protected LinkedList<Token> lookaheads = new LinkedList<>();
 	//TODO: supply source file
 	protected LineMapBuilder lines = new LineMapBuilder(null);
 	protected final BooleanStack templateStack = new BooleanStack();
@@ -65,6 +67,23 @@ public class JSLexer implements Supplier<Token> {
 	
 	public CharacterStream getCharacters() {
 		return this.chars;
+	}
+	
+	protected void invalidateLookaheads(long clobberIdx) {
+		if (this.lookahead == null) {
+			// No-op
+		} else if (clobberIdx <= this.lookahead.getEnd().getOffset()) {
+			this.lookahead = null;
+			this.lookaheads.clear();
+		} else if (!this.lookaheads.isEmpty()) {
+			// Clobber some
+			for (Iterator<Token> iter = this.lookaheads.descendingIterator(); iter.hasNext(); ) {
+				Token current = iter.next();
+				if (clobberIdx > current.getEnd().getOffset())
+					break;
+				iter.remove();
+			}
+		}
 	}
 	
 	public String nextStringLiteral() {
@@ -753,6 +772,9 @@ public class JSLexer implements Supplier<Token> {
 		Objects.requireNonNull(start);
 		if (start.getValue() != JSOperator.DIVISION && start.getValue() != JSOperator.DIVISION_ASSIGNMENT)
 			throw new JSSyntaxException("Regular expression must start with a slash", start.getRange());
+		
+		this.invalidateLookaheads(start.getEnd().getOffset());
+		
 		long intermediateStart = this.getPositionOffset();
 		String body = scanRegExpBody(start.text);
 		String flags = scanRegExpFlags();
@@ -789,28 +811,12 @@ public class JSLexer implements Supplier<Token> {
 		return sb.toString();
 	}
 	
-	public Token nextToken() {
-		//Return lookahead if available
-		if (this.lookahead != null) {
-			Token result = this.lookahead;
-			//EOF token is sticky
-			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
-				skip(result);
-			return result;
-		}
-		
-		
+	protected Token readToken() {
 		//Skip whitespace until token
 		while (chars.hasNext() && Characters.isJsWhitespace(chars.peek())) {
 			if (chars.next() == '\n')
 				this.lines.putNewline(chars.position());
-		}/*
-		chars.skipWhitespace(false);
-		while (!isEOF() && chars.isWhitespace()) {//TODO: can isEOL() == false, but isWhitespace() == true happen at this point?
-			
-			chars.skipWhitespace(false);
-		}*/
-//		System.out.println("Taking token");
+		}
 		
 		//Special EOF token
 		if (isEOF()) {
@@ -894,6 +900,18 @@ public class JSLexer implements Supplier<Token> {
 		return new Token(range, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
+	public Token nextToken() {
+		//Return lookahead if available
+		if (this.lookahead != null) {
+			Token result = this.lookahead;
+			//EOF token is sticky
+			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+				skip(result);
+			return result;
+		}
+		return this.readToken();
+	}
+	
 	/**
 	 * Take & return next token if it matches the provided kind and value.
 	 * @param kind
@@ -942,9 +960,29 @@ public class JSLexer implements Supplier<Token> {
 		if (this.lookahead != null)
 			return this.lookahead;
 		chars.mark();
-		this.lookahead = nextToken();
+		this.lookahead = this.readToken();
 		chars.resetToMark();
 		return this.lookahead;
+	}
+	
+	public Token peek(int ahead) {
+		if (ahead == 0)
+			return peek();
+		if (ahead < 0)
+			throw new IllegalArgumentException();
+		if (this.lookaheads.size() < ahead) {
+			// Get last-consumed offset
+			Token last = this.lookaheads.isEmpty() ? this.lookahead : this.lookaheads.getLast();
+			if (last.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))// EOF is sticky
+				return last;
+			
+			chars.mark();
+			chars.position(last.getEnd().getOffset());
+			while (this.lookaheads.size() < ahead)
+				this.lookaheads.add(this.readToken());
+			chars.resetToMark();
+		}
+		return this.lookaheads.get(ahead - 1);
 	}
 	
 	public Token skip(Token token) {
@@ -952,8 +990,10 @@ public class JSLexer implements Supplier<Token> {
 			throw new IllegalArgumentException("Skipped token " + token + " is not lookahead");
 		if (token.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
 			throw new IllegalStateException("Cannot skip EOF token " + token);
-		this.lookahead = null;
-		chars.position(token.getEnd().getOffset() - 1);
+		
+		this.lookahead = this.lookaheads.isEmpty() ? null : this.lookaheads.removeFirst();
+		
+		chars.position(token.getEnd().getOffset());
 		return token;
 	}
 	
@@ -962,8 +1002,8 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public void reset() {
-		this.lookahead = null;
 		chars.resetToMark();
+		this.invalidateLookaheads(chars.position());
 	}
 	
 	public void unmark() {
