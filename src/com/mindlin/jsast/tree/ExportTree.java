@@ -1,6 +1,14 @@
 package com.mindlin.jsast.tree;
 
 public interface ExportTree extends StatementTree {
+	/**
+	 * @return Whether is default export
+	 */
+	boolean isDefault();
+	
+	/**
+	 * @return Exported expression
+	 */
 	ExpressionTree getExpression();
 	
 	@Override

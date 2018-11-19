@@ -10,9 +10,7 @@ import com.mindlin.jsast.tree.SequenceExpressionTree;
 public class SequenceExpressionTreeImpl extends AbstractTree implements SequenceExpressionTree {
 	protected final List<ExpressionTree> elements;
 	
-	@Deprecated
 	public SequenceExpressionTreeImpl(List<ExpressionTree> expressions) {
-		//TODO: fix for case of empty list
 		this(expressions.get(0).getStart(), expressions.get(expressions.size() - 1).getEnd(), expressions);
 	}
 	
