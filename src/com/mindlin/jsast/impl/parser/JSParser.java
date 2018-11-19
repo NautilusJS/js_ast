@@ -1463,78 +1463,97 @@ public class JSParser {
 	
 	protected TypeTree parseImmediateType(JSLexer src, Context context) {
 		Token startToken = src.nextToken();
-		if (startToken.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
-			//'this' type
-			IdentifierTree identifier = new IdentifierTreeImpl(startToken);
-			//No generics on 'this'
-			return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, Collections.emptyList());
-		} else if (startToken.isIdentifier()) {
-			switch (startToken.<String>getValue()) {
-				case "keyof": {
-					//Check for 'keyof X'
-					TypeTree baseType = parseType(src, context);
-					return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), baseType);
+		switch (startToken.getKind()) {
+			case KEYWORD:
+				switch (startToken.<JSKeyword>getValue()) {
+					case THIS: {
+						//'this' type
+						//No generics on 'this'
+						return new IdentifierTypeTreeImpl(startToken.getStart(), startToken.getEnd(), new IdentifierTreeImpl(startToken), Collections.emptyList());
+					}
+					case VOID:
+						//void type
+						return new SpecialTypeTreeImpl(startToken);
+					case FUNCTION:
+					case FUNCTION_GENERATOR:
+						//Function
+						return this.parseFunctionType(src, context);
+					default:
+						//TODO: try to see if we can convert to identifier?
+						break;
 				}
-				case "Array": {
-					//Array<X> => X[]
-					List<TypeTree> arrayGenericArgs = this.parseTypeArguments(src, context);
-					if (arrayGenericArgs.size() > 1)
-						throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
-					
-					TypeTree arrayBaseType = null;
-					if (arrayGenericArgs.size() == 1)
-						arrayBaseType = arrayGenericArgs.get(0);
-					else
-						//Fall back on 'any[]'
-						arrayBaseType = new SpecialTypeTreeImpl(SpecialType.ANY);
-					
-					return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), arrayBaseType);
+				break;
+			case IDENTIFIER:
+				switch (startToken.<String>getValue()) {
+					case "keyof": {
+						//Check for 'keyof X'
+						TypeTree baseType = parseType(src, context);
+						return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), baseType);
+					}
+					case "Array": {
+						//Array<X> => X[]
+						List<TypeTree> arrayGenericArgs = this.parseTypeArguments(src, context);
+						if (arrayGenericArgs.size() > 1)
+							throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
+						
+						TypeTree arrayBaseType = null;
+						if (arrayGenericArgs.size() == 1)
+							arrayBaseType = arrayGenericArgs.get(0);
+						else
+							//Fall back on 'any[]'
+							arrayBaseType = new SpecialTypeTreeImpl(SpecialType.ANY);
+						
+						return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), arrayBaseType);
+					}
+					case "this":
+						throw new UnsupportedOperationException("'this' type not implemented yet");
+					case "any":
+					case "string":
+					case "number":
+					case "boolean":
+					case "null":
+					case "undefined":
+					case "never":
+						return new SpecialTypeTreeImpl(startToken);
+					default: {
+						IdentifierTree identifier = new IdentifierTreeImpl(startToken);
+						
+						List<TypeTree> generics = this.parseTypeArguments(src, context);
+						
+						return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, generics);
+					}
 				}
-				case "this":
-					throw new UnsupportedOperationException("'this' type not implemented yet");
-				case "any":
-				case "string":
-				case "number":
-				case "boolean":
-				case "null":
-				case "undefined":
-				case "never":
-					return new SpecialTypeTreeImpl(startToken);
-				default: {
-					IdentifierTree identifier = new IdentifierTreeImpl(startToken);
-					
-					List<TypeTree> generics = this.parseTypeArguments(src, context);
-					
-					return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, generics);
+			case BRACKET:
+				switch ((char) startToken.getValue()) {
+					case '{': {
+						//Inline interface (or object type '{}')
+						//TODO: change to object type
+						List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
+						return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), properties);
+					}
+					case '[': {
+						// Tuple type
+						List<TypeTree> slots = this.parseDelimitedList(this::parseType, this::parseCommaSeparator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.COMMA), src, context);
+						Token endToken = expect(TokenKind.BRACKET, ']', src, context);
+						return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), slots);
+					}
+					default:
+						break;
 				}
-			}
-		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.VOID)) {
-			//void type
-			return new SpecialTypeTreeImpl(startToken);
-		} else if (startToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION)) {
-			//Function
-			return parseFunctionType(src, context);
-		} else if (startToken.matches(TokenKind.BRACKET, '{')) {
-			//Inline interface (or object type '{}')
-			//TODO: change to object type
-			List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
-			return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), properties);
-		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
-			// Tuple type
-			List<TypeTree> slots = new ArrayList<>();
-			do {
-				slots.add(this.parseType(src, context));
-			} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
-			
-			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
-			return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), slots);
-		} else if (startToken.isLiteral()) {
-			if (startToken.getKind() == TokenKind.NULL_LITERAL)
+				break;
+			case NULL_LITERAL:
 				return new SpecialTypeTreeImpl(startToken.getStart(), startToken.getEnd(), SpecialType.NULL);
-			return new LiteralTypeTreeImpl<>(this.parseLiteral(startToken, src, context), false);
-		} else {
-			throw new JSUnexpectedTokenException(startToken);
+			case STRING_LITERAL:
+			case BOOLEAN_LITERAL:
+			case NUMERIC_LITERAL:
+			case REGEX_LITERAL://TODO: is this right?
+			case TEMPLATE_LITERAL://TODO: is this right?
+				return new LiteralTypeTreeImpl<>(this.parseLiteral(startToken, src, context), false);
+			default:
+				break;
 		}
+		
+		throw new JSUnexpectedTokenException(startToken);
 	}
 	
 	/**
@@ -2912,7 +2931,7 @@ public class JSParser {
 		switch (lookahead.getKind()) {
 			case NUMERIC_LITERAL:
 			case STRING_LITERAL:
-				return (PropertyName) this.parseLiteral(src.skip(lookahead), src, context);
+				return (PropertyName) this.parseLiteral(null, src, context);
 			case BOOLEAN_LITERAL:
 			case NULL_LITERAL:
 				return new IdentifierTreeImpl(src.skip(lookahead).reinterpretAsIdentifier());

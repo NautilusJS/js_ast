@@ -6,6 +6,6 @@ public interface ComputedPropertyKeyTree extends PropertyName, UnvisitableTree {
 	
 	@Override
 	default Kind getKind() {
-		return Kind.OBJECT_LITERAL_PROPERTY;
+		return Kind.COMPUTED_PROPERTY_KEY;
 	}
 }

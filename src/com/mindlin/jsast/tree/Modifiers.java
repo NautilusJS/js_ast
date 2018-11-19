@@ -236,9 +236,9 @@ public class Modifiers implements Comparable<Modifiers> {
 		if (this.isReadonly())
 			labels.add("readonly");
 		if (this.isGetter())
-			labels.add("getter");
+			labels.add("get");
 		if (this.isSetter())
-			labels.add("setter");
+			labels.add("set");
 		if (this.isGenerator())
 			labels.add("generator");
 		if (this.isAsync())
