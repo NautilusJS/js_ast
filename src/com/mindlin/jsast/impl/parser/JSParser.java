@@ -623,7 +623,8 @@ public class JSParser {
 				case SPREAD: {
 					dialect.require("js.parameter.rest", expr.getRange());
 					//Turn into rest parameter
-					PatternTree identifier = this.reinterpretExpressionAsPattern(((UnaryTree) expr).getExpression());
+					ExpressionTree inner = ((SpreadElementTree) expr).getExpression();
+					PatternTree identifier = this.reinterpretExpressionAsPattern(inner, false);
 					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), Modifiers.NONE, identifier, true, null, null);
 				}
 				case ARRAY_LITERAL:
