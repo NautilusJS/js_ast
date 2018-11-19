@@ -111,20 +111,8 @@ public interface LineMap {
 		@Override
 		public long getLineNumber(long position) {
 			// Binary search to get the line number
-			//TODO: use Arrays.binarySearch()
-			int lo = 0;
-			int hi = length - 1;
-			while (lo < hi) {
-				int idx = (hi - lo) / 2 + lo;
-				long val = newlinePositions[idx];
-				if (val > position)
-					hi = idx - 1;
-				else if (val < position)
-					lo = idx + 1;
-				else
-					return idx + 2;//TODO: test (maybe should be return idx + 1)
-			}
-			return lo + 2;// lo==hi
+			int idx = Arrays.binarySearch(newlinePositions, 0, length, position);
+			return idx < 0 ? (-1 - idx) : idx;
 		}
 		
 		@Override
