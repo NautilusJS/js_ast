@@ -7,16 +7,19 @@ import com.mindlin.jsast.tree.CastExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public class CastTreeImpl extends AbstractExpressiveExpressionTree implements CastExpressionTree {
+public class CastExpressionTreeImpl extends AbstractTree implements CastExpressionTree {
+	protected final ExpressionTree expression;
 	protected final TypeTree type;
 	
-	public CastTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, TypeTree type) {
-		super(start, end, expression);
+	public CastExpressionTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, TypeTree type) {
+		super(start, end);
+		this.expression = expression;
 		this.type = type;
 	}
-	
-	public CastTreeImpl(ExpressionTree expression, TypeTree type) {
-		this(Math.min(expression.getStart(), type.getStart()), Math.max(expression.getEnd(), type.getEnd()), expression, type);
+
+	@Override
+	public ExpressionTree getExpression() {
+		return this.expression;
 	}
 	
 	@Override

@@ -4,36 +4,37 @@ import java.util.List;
 import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.DecoratorTree;
 import com.mindlin.jsast.tree.FunctionDeclarationTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.FunctionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.jsast.tree.MethodDeclarationTree;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ParameterTree;
+import com.mindlin.jsast.tree.PropertyName;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public abstract class AbstractFunctionTree extends AbstractTree implements FunctionTree {
+	protected final Modifiers modifiers;
 	protected final StatementTree body;
-	protected final IdentifierTree name;
-	protected final List<TypeParameterDeclarationTree> generics;
+	protected final PropertyName name;
+	protected final List<TypeParameterDeclarationTree> typeParameters;
 	protected final List<ParameterTree> parameters;
 	protected final TypeTree returnType;
-	protected final boolean strict;
-	protected final boolean generator;
-	protected final boolean isAsync;
 
-	public AbstractFunctionTree(SourcePosition start, SourcePosition end, boolean isAsync, IdentifierTree name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType,
-			StatementTree body, boolean strict, boolean generator) {
+	public AbstractFunctionTree(SourcePosition start, SourcePosition end, Modifiers modifiers, PropertyName name,
+			List<TypeParameterDeclarationTree> typeParams, List<ParameterTree> parameters, TypeTree returnType,
+			StatementTree body) {
 		super(start, end);
-		this.isAsync = isAsync;
+		this.modifiers = modifiers;
 		this.name = name;
-		this.generics = generics;
+		this.typeParameters = typeParams;
 		this.parameters = parameters;
 		this.returnType = returnType;
 		this.body = body;
-		this.strict = strict;
-		this.generator = generator;
 	}
 
 	@Override
@@ -42,13 +43,13 @@ public abstract class AbstractFunctionTree extends AbstractTree implements Funct
 	}
 
 	@Override
-	public IdentifierTree getName() {
-		return name;
+	public PropertyName getName() {
+		return this.name;
 	}
 	
 	@Override
 	public List<TypeParameterDeclarationTree> getTypeParameters() {
-		return this.generics;
+		return this.typeParameters;
 	}
 
 	@Override
@@ -57,37 +58,28 @@ public abstract class AbstractFunctionTree extends AbstractTree implements Funct
 	}
 
 	@Override
-	public boolean isStrict() {
-		return strict;
-	}
-
-	@Override
-	public boolean isGenerator() {
-		return generator;
-	}
-
-	@Override
-	public boolean isAsync() {
-		return this.isAsync;
-	}
-
-	@Override
 	public TypeTree getReturnType() {
 		return this.returnType;
 	}
 	
 	@Override
+	public Modifiers getModifiers() {
+		return this.modifiers;
+	}
+	
+	@Override
 	protected int hash() {
 		//TODO hash isStrict()?
-		return Objects.hash(getKind(), isAsync(), getName(), getParameters(), getReturnType(), isArrow(), getBody(), isStrict(), isGenerator());
+		return Objects.hash(getKind(), getModifiers(), getName(), getParameters(), getReturnType(), isArrow(), getBody());
 	}
 	
 	public static class FunctionExpressionTreeImpl extends AbstractFunctionTree implements FunctionExpressionTree {
 		protected final boolean arrow;
 		
-		public FunctionExpressionTreeImpl(SourcePosition start, SourcePosition end, boolean isAsync, IdentifierTree name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow,
-				StatementTree body, boolean strict, boolean generator) {
-			super(start, end, isAsync, name, generics, parameters, returnType, body, strict, generator);
+		public FunctionExpressionTreeImpl(SourcePosition start, SourcePosition end, Modifiers modifiers,
+				PropertyName name, List<TypeParameterDeclarationTree> typeParams, List<ParameterTree> parameters,
+				TypeTree returnType, boolean arrow,	StatementTree body) {
+			super(start, end, modifiers, name, typeParams, parameters, returnType, body);
 			
 			this.arrow = arrow;
 		}
@@ -99,9 +91,43 @@ public abstract class AbstractFunctionTree extends AbstractTree implements Funct
 	}
 	
 	public static class FunctionDeclarationTreeImpl extends AbstractFunctionTree implements FunctionDeclarationTree {
-		public FunctionDeclarationTreeImpl(SourcePosition start, SourcePosition end, boolean isAsync, IdentifierTree name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType,
-				StatementTree body, boolean strict, boolean generator) {
-			super(start, end, isAsync, name, generics, parameters, returnType, body, strict, generator);
+		public FunctionDeclarationTreeImpl(SourcePosition start, SourcePosition end, Modifiers modifiers,
+				IdentifierTree name, List<TypeParameterDeclarationTree> typeParams, List<ParameterTree> parameters,
+				TypeTree returnType, StatementTree body) {
+			super(start, end, modifiers, name, typeParams, parameters, returnType, body);
 		}
+		
+		@Override
+		public IdentifierTree getName() {
+			return (IdentifierTree) super.getName();
+		}
+
+		@Override
+		public List<DecoratorTree> getDecorators() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	}
+	
+	public static class MethodDeclarationTreeImpl extends AbstractFunctionTree implements MethodDeclarationTree {
+
+		public MethodDeclarationTreeImpl(SourcePosition start, SourcePosition end, Modifiers modifiers,
+				PropertyName name, List<TypeParameterDeclarationTree> typeParams, List<ParameterTree> parameters,
+				TypeTree returnType, StatementTree body) {
+			super(start, end, modifiers, name, typeParams, parameters, returnType, body);
+		}
+
+		@Override
+		public List<DecoratorTree> getDecorators() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean isArrow() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
 	}
 }

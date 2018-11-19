@@ -74,7 +74,7 @@ public interface ClassTreeBase extends DecoratableTree, Tree {
 		}
 	}
 	
-	public static interface ClassDeclarationTree extends ClassTreeBase, NamedDeclarationTree, DeclarationStatementTree {
+	public static interface ClassDeclarationTree extends ClassTreeBase, DecoratableTree, NamedDeclarationTree, DeclarationStatementTree {
 		/**
 		 * May be null in some cases (e.g., {@code export default class ...}).
 		 */
