@@ -136,8 +136,8 @@ public class JSLexer implements Supplier<Token> {
 					CharBuffer buffer = easciiCharset.decode(ByteBuffer.wrap(new byte[]{(byte) Integer.parseInt(s, 16)}));
 					return buffer.toString();
 				} catch (NumberFormatException e) {
-					SourcePosition pos = this.resolvePosition(this.getPositionOffset() - 4);
-					throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", pos, e);
+					SourcePosition start = this.resolvePosition(this.getPositionOffset() - 4);
+					throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", new SourceRange(start, this.getPosition()), e);
 				}
 			default:
 				throw new JSSyntaxException("Invalid escape sequence: \\" + c, this.resolvePosition(this.getPositionOffset() - 2));
@@ -753,8 +753,8 @@ public class JSLexer implements Supplier<Token> {
 		if (start == null)
 			start = this.nextToken();
 		if (start.getValue() != JSOperator.DIVISION && start.getValue() != JSOperator.DIVISION_ASSIGNMENT)
-			throw new JSSyntaxException("Regular expression must start with a slash", start.getStart());
-		long intermediateStart = getPositionOffset();
+			throw new JSSyntaxException("Regular expression must start with a slash", start.getRange());
+		long intermediateStart = this.getPositionOffset();
 		String body = scanRegExpBody(start.text);
 		String flags = scanRegExpFlags();
 		RegExpTokenInfo info = new RegExpTokenInfo(body, flags);
@@ -861,7 +861,7 @@ public class JSLexer implements Supplier<Token> {
 			String identifierName = this.nextIdentifier();
 			if (identifierName == null) {
 				//Couldn't even parse an identifier
-				throw new JSSyntaxException("Illegal syntax", resolvePosition(start));
+				throw new JSSyntaxException("Illegal syntax", this.resolvePosition(start));
 			} else if (identifierName.equals("true") || identifierName.equals("false")) {
 				//Boolean literal
 				kind = TokenKind.BOOLEAN_LITERAL;

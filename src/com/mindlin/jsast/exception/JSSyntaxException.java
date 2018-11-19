@@ -6,17 +6,13 @@ import com.mindlin.jsast.fs.SourceRange;
 public class JSSyntaxException extends JSException {
 	private static final long serialVersionUID = 8236793790942441074L;
 
+	@Deprecated
 	public JSSyntaxException(String message) {
 		super(message);
 	}
-
-	@Deprecated
-	public JSSyntaxException(String message, long position) {
-		this(message + " at " + position);
-	}
 	
 	public JSSyntaxException(String message, SourcePosition position) {
-		this(message + " at " + position);
+		this(message + " at " + position, SourceRange.startingFrom(position));
 	}
 	
 	public JSSyntaxException(String message, SourcePosition start, SourcePosition end) {
@@ -24,19 +20,14 @@ public class JSSyntaxException extends JSException {
 	}
 	
 	public JSSyntaxException(String message, SourceRange pos) {
-		this(message + " at " + pos);
+		super(message + " at " + pos, pos);
 	}
 	
 	public JSSyntaxException(String message, JSException cause) {
-		super(message + " at " + cause.getPosition(), cause);
+		this(message, cause.getPosition(), cause);
 	}
 	
-	public JSSyntaxException(String message, SourcePosition position, Throwable cause) {
-		super(message + " at " + position, cause);
-	}
-	
-	@Deprecated
-	public JSSyntaxException(String message, long position, Throwable cause) {
-		super(message + " at " + position, cause);
+	public JSSyntaxException(String message, SourceRange position, Throwable cause) {
+		super(message + " at " + position, position, cause);
 	}
 }
