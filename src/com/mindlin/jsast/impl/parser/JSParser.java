@@ -270,49 +270,49 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseStatement(JSLexer src, Context context) {
-		Token lookahead = src.nextToken();
+		Token lookahead = src.peek();
 		switch (lookahead.getKind()) {
 			case KEYWORD: {
 				switch (lookahead.<JSKeyword>getValue()) {
 					case BREAK:
 					case CONTINUE:
-						return this.parseGotoStatement(src.skip(lookahead), src, context);
+						return this.parseGotoStatement(src, context);
 					case DEBUGGER:
-						return this.parseDebugger(src.skip(lookahead), src, context);
+						return this.parseDebugger(src, context);
 					case CLASS:
-						return this.parseClassDeclaration(src.skip(lookahead), src, context);
+						return this.parseClassDeclaration(src, context);
 					case CONST:
 					case LET:
 					case VAR:
-						return this.parseVariableDeclaration(src.skip(lookahead), src, context, false);
+						return this.parseVariableDeclaration(false, src, context);
 					case DO:
-						return this.parseDoWhileLoop(src.skip(lookahead), src, context);
+						return this.parseDoWhileLoop(src, context);
 					case ENUM:
-						return this.parseEnum(src.skip(lookahead), src, context);
+						return this.parseEnumDeclaration(src, context);
 					case EXPORT:
-						return this.parseExportStatement(src.skip(lookahead), src, context);
+						return this.parseExportStatement(src, context);
 					case FOR:
-						return this.parseForStatement(src.skip(lookahead), src, context);
+						return this.parseForStatement(src, context);
 					case FUNCTION:
 					case FUNCTION_GENERATOR:
-						return this.finishExpressionStatement(this.parseFunctionExpression(src.skip(lookahead), src, context), src, context);
+						return this.parseFunctionDeclaration(src, context);
 					case IF:
-						return this.parseIfStatement(src.skip(lookahead), src, context);
+						return this.parseIfStatement(src, context);
 					case IMPORT:
-						return this.parseImportStatement(src.skip(lookahead), src, context);
+						return this.parseImportStatement(src, context);
 					case INTERFACE:
-						return this.parseInterface(src.skip(lookahead), src, context);
+						return this.parseInterfaceDeclaration(src, context);
 					case RETURN:
 					case THROW:
-						return this.parseUnaryStatement(src.skip(lookahead), src, context);
+						return this.parseUnaryStatement(src, context);
 					case SWITCH:
-						return this.parseSwitchStatement(src.skip(lookahead), src, context);
+						return this.parseSwitchStatement(src, context);
 					case TRY:
-						return this.parseTryStatement(src.skip(lookahead), src, context);
+						return this.parseTryStatement(src, context);
 					case WHILE:
-						return this.parseWhileLoop(src.skip(lookahead), src, context);
+						return this.parseWhileLoop(src, context);
 					case WITH:
-						return this.parseWithStatement(src.skip(lookahead), src, context);
+						return this.parseWithStatement(src, context);
 					case VOID:
 					case DELETE:
 					case NEW:
@@ -334,31 +334,33 @@ public class JSParser {
 			}
 			case BRACKET:
 				if (lookahead.<Character>getValue() == '{')
-					return this.parseBlock(src.skip(lookahead), src, context);
+					return this.parseBlock(src, context);
 				else
-					return this.parseExpressionStatement(src.skip(lookahead), src, context);
+					return this.parseExpressionStatement(src, context);
 			case OPERATOR:
-				return this.parseExpressionStatement(src.skip(lookahead), src, context);
+				if (lookahead.<JSOperator>getValue() == JSOperator.AT_SYMBOL)
+					return this.parseDecoratedStatement(src, context);
+				return this.parseExpressionStatement(src, context);
 			case IDENTIFIER: {
 				// We need another lookahead to make this decision
-				src.skip(lookahead);
+				Token lookahead1 = src.peek(1);
 				switch (lookahead.<String>getValue()) {
 					case "type":
-						if (src.peek().getKind() != TokenKind.IDENTIFIER)
+						if (lookahead1.getKind() != TokenKind.IDENTIFIER)
 							break;
-						return this.parseTypeAlias(lookahead, src, context);
+						return this.parseTypeAlias(src, context);
 					case "async":
-						if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
-							return this.finishExpressionStatement(this.parseFunctionExpression(lookahead, src, context), src, context);
+						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION) || lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION_GENERATOR))
+							return this.parseFunctionDeclaration(src, context);
 					case "await":
 						if (!context.allowAwait())
 							break;
-						return this.parseAwait(lookahead, src, context);
+						return this.parseAwait(src, context);
 					default:
 						break;
 				}
-				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON))
-					return this.parseLabeledStatement(this.parseIdentifier(lookahead, src, context), src, context);
+				if (lookahead1.matchesOperator(JSOperator.COLON))
+					return this.parseLabeledStatement(src, context);
 			}
 			//Fallthrough intentional
 			case BOOLEAN_LITERAL:
@@ -367,7 +369,7 @@ public class JSParser {
 			case REGEX_LITERAL:
 			case TEMPLATE_LITERAL:
 			case NULL_LITERAL:
-				return this.parseExpressionStatement(src.skip(lookahead), src, context);
+				return this.parseExpressionStatement(src, context);
 			case SPECIAL:
 				switch (lookahead.<JSSpecialGroup>getValue()) {
 					case EOF:
@@ -394,7 +396,7 @@ public class JSParser {
 	protected StatementTree finishExpressionStatement(ExpressionTree expression, JSLexer src, Context context) {
 		SourcePosition end = expectEOL(src, context).getEnd();
 		if (context.isDirectiveTarget() && expression.getKind() == Kind.STRING_LITERAL) {
-			Object value = ((LiteralTree<?>)expression).getValue();
+			Object value = ((LiteralTree<?>) expression).getValue();
 			
 			if ("use strict".equals(value)) {
 				context.enterStrict();
@@ -836,18 +838,17 @@ public class JSParser {
 	
 	/**
 	 * Parse a list of generic type parameters
-	 * @param openChevron
 	 * @param src
 	 * @param context
 	 * @return
 	 */
 	protected List<TypeParameterDeclarationTree> parseGenericParametersMaybe(JSLexer src, Context context) {
 		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LESS_THAN))
+			//There are no generics (empty '<>')
 			return Collections.emptyList();
 		
 		ArrayList<TypeParameterDeclarationTree> generics = new ArrayList<>();
 		
-		//There are no generics (empty '<>')
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
 			return generics;
 		
@@ -895,8 +896,8 @@ public class JSParser {
 	
 	//Various statements
 	
-	protected ImportDeclarationTree parseImportStatement(Token importKeywordToken, JSLexer src, Context context) {
-		importKeywordToken = expect(importKeywordToken, TokenKind.KEYWORD, JSKeyword.IMPORT, src, context);
+	protected ImportDeclarationTree parseImportStatement(JSLexer src, Context context) {
+		Token importKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.IMPORT, src, context);
 		
 		ArrayList<ImportSpecifierTree> importSpecifiers = new ArrayList<>();
 		
@@ -949,27 +950,29 @@ public class JSParser {
 		return new ImportDeclarationTreeImpl(importKeywordToken.getStart(), src.getPosition(), importSpecifiers, source);
 	}
 	
-	protected ExportTree parseExportStatement(Token exportKeywordToken, JSLexer src, Context context) {
-		exportKeywordToken = expect(exportKeywordToken, TokenKind.KEYWORD, JSKeyword.EXPORT, src, context);
+	protected ExportTree parseExportStatement(JSLexer src, Context context) {
+		Token exportKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.EXPORT, src, context);
+		boolean isDefault = false;
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
 			expect(TokenKind.KEYWORD, JSKeyword.FROM, src, context);
 		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.DEFAULT)) {
 			// TODO finish
-			throw new UnsupportedOperationException();
+			isDefault = true;
+			throw new JSUnsupportedException("export default", src.getPosition());
 		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS)) {
 			// TODO finish
-			throw new UnsupportedOperationException();
+			throw new JSUnsupportedException("export as", src.getPosition());
 		}
 		ExpressionTree expr = parseNextExpression(src, context);
 		
 		//Optionally consume semicolon
 		src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
 		
-		return new ExportTreeImpl(expr.getStart(), src.getPosition(), expr);
+		return new ExportTreeImpl(expr.getStart(), src.getPosition(), isDefault, expr);
 	}
 	
-	protected TypeAliasTree parseTypeAlias(Token typeToken, JSLexer src, Context context) {
-		typeToken = expect(typeToken, TokenKind.IDENTIFIER, "type", src, context);
+	protected TypeAliasTree parseTypeAlias(JSLexer src, Context context) {
+		Token typeToken = expect(TokenKind.IDENTIFIER, "type", src, context);
 		
 		IdentifierTree identifier = this.parseIdentifier(src, context);
 		
