@@ -23,13 +23,13 @@ public class ObjectLiteralPropertyTreeImpl extends AbstractTree implements Objec
 	}
 	
 	@Override
-	public ExpressionTree getValue() {
+	public ExpressionTree getInitializer() {
 		return value;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getKey(), getValue());
+		return Objects.hash(getKind(), getKey(), getInitializer());
 	}
 	
 }

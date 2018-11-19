@@ -24,13 +24,13 @@ public class ObjectPatternPropertyTreeImpl extends AbstractTree implements Objec
 	}
 	
 	@Override
-	public PatternTree getValue() {
+	public PatternTree getInitializer() {
 		return value;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getKey(), getValue());
+		return Objects.hash(getKind(), getKey(), getInitializer());
 	}
 	
 }

@@ -20,7 +20,7 @@ public class ClassPropertyTreeImpl<T extends ExpressionTree> extends AbstractTyp
 	}
 	
 	@Override
-	public T getValue() {
+	public T getInitializer() {
 		return value;
 	}
 	
@@ -31,7 +31,7 @@ public class ClassPropertyTreeImpl<T extends ExpressionTree> extends AbstractTyp
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getModifiers(), getDeclarationType(), getKey(), getType(), getValue());
+		return Objects.hash(getKind(), getModifiers(), getDeclarationType(), getKey(), getType(), getInitializer());
 	}
 	
 }
