@@ -708,7 +708,7 @@ public class JSParser {
 				switch ((char)lookahead.getValue()) {
 					case '[': {
 						context.isolateCoverGrammar();
-						ExpressionTree result = this.parseArrayInitializer(null, src, context);
+						ExpressionTree result = this.parseArrayInitializer(src, context);
 						context.inheritCoverGrammar();
 						return result;
 					}
@@ -785,21 +785,15 @@ public class JSParser {
 		return params;
 	}
 	
-	protected List<ExpressionTree> parseArguments(Token startParenToken, JSLexer src, Context context) {
-		startParenToken = expect(startParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
-		 
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
-			return Collections.emptyList();
-		
-		ArrayList<ExpressionTree> result = new ArrayList<>();
-		do {
-			ExpressionTree expr;
-			if (src.peek().matches(TokenKind.OPERATOR, JSOperator.SPREAD))
-				expr = this.parseSpread(src, context);
-			else
-				expr = this.parseAssignment(src, context.coverGrammarIsolated());
-			result.add(expr);
-		} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
+	protected ExpressionTree parseArgument(JSLexer src, Context context) {
+		if (src.peek().matchesOperator(JSOperator.SPREAD))
+			return this.parseSpread(src, context);
+		else
+			return this.parseAssignment(src, context.coverGrammarIsolated());
+	}
+	
+	protected List<ExpressionTree> parseArguments(JSLexer src, Context context) { 
+		List<ExpressionTree> result = this.parseDelimitedList(this::parseArgument, this::parseCommaSeparator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS), src, context);
 		
 		expect(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src, context);
 		
@@ -2566,8 +2560,8 @@ public class JSParser {
 		ExpressionTree callee = this.parseLeftSideExpression(false, src, context.coverGrammarIsolated());
 		
 		final List<ExpressionTree> args;
-		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null)
-			args = parseArguments(t, src, context);
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS))
+			args = this.parseArguments(src, context);
 		else
 			args = Collections.emptyList();
 		
@@ -2633,13 +2627,11 @@ public class JSParser {
 	 * @param context
 	 * @returns AST for function call expression
 	 */
-	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, Token openParenToken,
-			JSLexer src, Context context) {
-		//Make sure that we have the token for the open paren of the function call
-		openParenToken = expect(openParenToken, TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
-		
+	protected FunctionCallTree parseFunctionCall(ExpressionTree functionSelectExpression, JSLexer src, Context context) {
+		// Make sure that we have the token for the open paren of the function call
+		expect(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS, src, context);
 		//Read function arguments (also consumes closing token)
-		List<? extends ExpressionTree> arguments = this.parseArguments(openParenToken, src, context);
+		List<? extends ExpressionTree> arguments = this.parseArguments(src, context);
 		
 		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), functionSelectExpression, arguments);
 	}
@@ -2904,11 +2896,8 @@ public class JSParser {
 	/**
 	 * Parse array literal.
 	 */
-	protected ArrayLiteralTree parseArrayInitializer(Token startToken, JSLexer src, Context context) {
-		startToken = expect(startToken, TokenKind.BRACKET, '[', src, context);
-		
-		if (src.nextTokenIs(TokenKind.BRACKET, ']'))
-			return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), Collections.emptyList());
+	protected ArrayLiteralTree parseArrayInitializer(JSLexer src, Context context) {
+		Token startToken = expect(TokenKind.BRACKET, '[', src, context);
 		
 		List<ExpressionTree> values = this.parseDelimitedList(this::parseArrayLiteralElement, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, ']'), src, context);
 		
