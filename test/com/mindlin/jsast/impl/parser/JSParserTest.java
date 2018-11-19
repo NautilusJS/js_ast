@@ -44,7 +44,7 @@ public class JSParserTest {
 		assertNumberEquals(actual, value);
 	}
 	
-	protected static final void assertIdentifier(String name, ExpressionTree expr) {
+	protected static final void assertIdentifier(String name, Tree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
 	}
