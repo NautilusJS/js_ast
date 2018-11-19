@@ -1333,54 +1333,7 @@ public class JSParser {
 	List<TypeElementTree> parseObjectTypeMembers(JSLexer src, Context context) {
 		List<TypeElementTree> properties = this.parseList(this::parseTypeMember, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
 		
-		Token next;
-		while (!(next = src.nextToken()).matches(TokenKind.BRACKET, '}')) {
-			SourcePosition start = next.getStart();
-			
-			Modifiers modifiers = this.parseModifiers(Modifiers.READONLY, true, src, context);
-			
-			IdentifierTree propname;
-			boolean optional;
-			TypeTree type;
-			
-			if (next.isIdentifier()) {
-				//Is simple identifier => property/method
-				propname = new IdentifierTreeImpl(next);
-				optional = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
-				type = this.parseTypeMaybe(src, context, true);
-			} else if (next.matches(TokenKind.BRACKET, '[')) {
-				//Parse index type
-				Token id = src.nextToken();
-				expect(id, TokenKind.IDENTIFIER, src);
-				propname = new IdentifierTreeImpl(id);
-				
-				optional = false;
-				expectOperator(JSOperator.COLON, src, context);
-				TypeTree idxType = this.parseType(src, context);
-				expect(TokenKind.BRACKET, ']', src, context);
-				expectOperator(JSOperator.COLON, src, context);
-				TypeTree returnType = this.parseType(src, context);
-				type = new IndexSignatureTreeImpl(next.getStart(), src.getPosition(), false, idxType, returnType);
-			} else if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
-				//Parse call signature (TODO: refactor)
-				List<ParameterTree> params = this.parseParameters(null, false, src, context);
-				expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-				TypeTree returnType = this.parseTypeMaybe(src, context, false);
-				
-				type = new FunctionTypeTreeImpl(next.getStart(), src.getPosition(), params, null, returnType);
-				optional = false;
-				propname = null;//Correct?
-			} else {
-				throw new JSUnexpectedTokenException(next);
-			}
-			
-			//Optionally consume semicolon at end
-			src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
-			
-			properties.add(new InterfacePropertyTreeImpl(start, src.getPosition(), modifiers, propname, optional, type));
-		}
-		
-		expect(next, TokenKind.BRACKET, '}', src);
+		expect(TokenKind.BRACKET, '}', src, context);
 		
 		if (properties.isEmpty())
 			return Collections.emptyList();
