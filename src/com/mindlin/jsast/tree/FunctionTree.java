@@ -7,6 +7,9 @@ import java.util.Objects;
  * @author mailmindlin
  */
 public interface FunctionTree extends SignatureDeclarationTree {
+	/**
+	 * @return modifiers (not null)
+	 */
 	Modifiers getModifiers();
 	/**
 	 * Get function identifier.

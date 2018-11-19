@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
 
 public interface ClassTreeBase extends Tree {
 	Modifiers getModifiers();

@@ -1,9 +1,13 @@
 package com.mindlin.jsast.tree;
 
+/**
+ * Declarations that have a name.
+ * 
+ * @author mailmindlin
+ */
 public interface NamedDeclarationTree extends DeclarationTree {
 	/**
-	 * Get declaration name
-	 * @return declaration name
+	 * @return Declaration name
 	 */
 	DeclarationName getName();
 }
