@@ -3,6 +3,7 @@ package com.mindlin.jsast.tree.type;
 import com.mindlin.jsast.tree.ClassElementTree;
 import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.tree.UnvisitableTree;
 
 /**
  * Index signature: properties in form of {@code [key: T]: R}.
@@ -10,7 +11,7 @@ import com.mindlin.jsast.tree.Tree;
  * @author mailmindlin
  *
  */
-public interface IndexSignatureTree extends ClassElementTree, TypeElementTree {
+public interface IndexSignatureTree extends ClassElementTree, TypeElementTree, UnvisitableTree {
 	
 	Modifiers getModifiers();
 	
