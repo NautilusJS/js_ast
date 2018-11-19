@@ -2845,7 +2845,7 @@ public class JSParser {
 		return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), values);
 	}
 	
-	protected DeclarationName parsePropertyName(JSLexer src, Context context) {
+	protected PropertyName parsePropertyName(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		SourcePosition start = lookahead.getStart();
 		IdentifierTree id = this.parseIdentifierMaybe(src, context);
@@ -2855,7 +2855,7 @@ public class JSParser {
 		switch (lookahead.getKind()) {
 			case NUMERIC_LITERAL:
 			case STRING_LITERAL:
-				return (DeclarationName) this.parseLiteral(src.skip(lookahead), src, context);
+				return (PropertyName) this.parseLiteral(src.skip(lookahead), src, context);
 			case BOOLEAN_LITERAL:
 			case NULL_LITERAL:
 				return new IdentifierTreeImpl(src.skip(lookahead).reinterpretAsIdentifier());
