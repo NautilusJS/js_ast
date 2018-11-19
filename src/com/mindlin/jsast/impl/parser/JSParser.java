@@ -872,7 +872,7 @@ public class JSParser {
 			importSpecifiers.add(new ImportSpecifierTreeImpl(defaultMemberIdentifier));
 			if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.FROM)) {
 				//import defaultMember from "module-name";
-				StringLiteralTree source = (StringLiteralTree)parseLiteral(null, src, context);
+				StringLiteralTree source = (StringLiteralTree)this.parseLiteral(null, src, context);
 				expectEOL(src, context);
 				return new ImportDeclarationTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
 			} else {
@@ -907,7 +907,7 @@ public class JSParser {
 		if (!importSpecifiers.isEmpty())
 			expect(TokenKind.KEYWORD, JSKeyword.FROM, src, context);
 		
-		StringLiteralTree source = (StringLiteralTree)parseLiteral(null, src, context);
+		StringLiteralTree source = (StringLiteralTree)this.parseLiteral(null, src, context);
 		
 		expectEOL(src, context);
 		
