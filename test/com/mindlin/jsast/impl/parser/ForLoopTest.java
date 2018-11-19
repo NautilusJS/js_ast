@@ -12,6 +12,7 @@ import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
+import com.mindlin.jsast.tree.VariableDeclarationTree.VariableDeclarationKind;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 
 public class ForLoopTest {
@@ -20,13 +21,12 @@ public class ForLoopTest {
 		ForEachLoopTree loop = parseStatement("for(var i in [1,2,3]);", Kind.FOR_IN_LOOP);
 		
 		VariableDeclarationTree declaration = (VariableDeclarationTree) loop.getVariable();
-		assertFalse(declaration.isConst());
-		assertFalse(declaration.isScoped());
+		assertEquals(VariableDeclarationKind.VAR, declaration.getDeclarationStyle());
 		assertEquals(1, declaration.getDeclarations().size());
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
 		assertNull(declarator.getInitializer());
-		assertIdentifier("i", declarator.getIdentifier());
+		assertIdentifier("i", declarator.getName());
 		
 		//TODO parse array
 	}
@@ -69,14 +69,13 @@ public class ForLoopTest {
 	public void testForOfLoop() {
 		ForEachLoopTree loop = parseStatement("for(var i of [1, 2, 3]);", Kind.FOR_OF_LOOP);
 		
-		VariableDeclarationTree declaration = (VariableDeclarationTree) loop.getVariable();
-		assertFalse(declaration.isConst());
-		assertFalse(declaration.isScoped());
+		VariableDeclarationTree declaration = assertKind(Kind.VARIABLE_DECLARATION, loop.getVariable());
+		assertEquals(VariableDeclarationKind.VAR, declaration.getDeclarationStyle());
 		assertEquals(1, declaration.getDeclarations().size());
 		
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
 		assertNull(declarator.getInitializer());
-		assertIdentifier("i", declarator.getIdentifier());
+		assertIdentifier("i", declarator.getName());
 	}
 	
 	@Test
