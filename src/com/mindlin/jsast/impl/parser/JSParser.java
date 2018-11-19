@@ -2253,10 +2253,12 @@ public class JSParser {
 	}
 	
 	protected ParameterTree parseParameter(JSLexer src, Context context) {
-		SourcePosition start = src.getPosition();
-		if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+		Token lookahead = src.peek();
+		SourcePosition start = lookahead.getStart();
+		
+		if (lookahead.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
 			// 'fake' this-parameter
-			this.dialect.require("ts.types", src.getPosition());
+			dialect.require("ts.types", lookahead.getRange());
 			IdentifierTree name = new IdentifierTreeImpl(src.nextToken());
 			TypeTree type = this.parseTypeMaybe(src, context, true);
 			// Initializers not allowed
@@ -2272,9 +2274,10 @@ public class JSParser {
 		boolean rest = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.SPREAD);
 		PatternTree name = this.parsePattern(src, context);
 		
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK))
-			modifiers = modifiers.combine(Modifiers.OPTIONAL);
+		// Parse postfix modifiers
+		modifiers = modifiers.combine(this.parseModifiers(Modifiers.union(Modifiers.OPTIONAL, Modifiers.DEFINITE), false, src, context));
 		
+		// Parse type declaration
 		TypeTree type = this.parseTypeMaybe(src, context, true);
 		
 		// Parse initializer
