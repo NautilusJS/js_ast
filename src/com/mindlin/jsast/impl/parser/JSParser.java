@@ -2466,15 +2466,15 @@ public class JSParser {
 		return new ParenthesizedTreeImpl(leftParenToken.getStart(), src.getPosition(), expr);
 	}
 	
-	protected UnaryTree parseSpread(JSLexer src, Context context) {
+	protected SpreadElementTree parseSpread(JSLexer src, Context context) {
 		Token spreadToken = expect(TokenKind.OPERATOR, JSOperator.SPREAD, src, context);
 		dialect.require("js.operator.spread", spreadToken.getRange());
 		
 		context.isolateCoverGrammar();
-		final ExpressionTree expr = this.parseAssignment(null, src, context);
+		final ExpressionTree expr = this.parseAssignment(src, context);
 		context.inheritCoverGrammar();
 		
-		return new UnaryTreeImpl(spreadToken.getStart(), expr.getEnd(), expr, Kind.SPREAD);
+		return new SpreadElementTreeImpl(spreadToken.getStart(), expr.getEnd(), expr);
 	}
 
 	protected ExpressionTree parseNew(JSLexer src, Context context) {
