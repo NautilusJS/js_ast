@@ -1130,7 +1130,39 @@ public class JSParser {
 	}
 	
 	
+	//SECTION: Annotations
+	
+	
+	protected List<DecoratorTree> parseDecorators(JSLexer src, Context context) {
+		//TODO: finish
+		return Collections.emptyList();
+	}
+	
 	//SECTION: Type structures
+	
+	protected boolean isIndexSignature(JSLexer src, Context context) {
+		src.mark();
+		if (!src.nextTokenIs(TokenKind.BRACKET, '[')) {
+			src.reset();
+			return false;
+		}
+		if (this.parseModifiers(Modifiers.READONLY, true, src, context).any()) {
+			if (src.nextToken().isIdentifier()) {
+				src.reset();
+				return true;
+			}
+		} else if (!src.nextToken().isIdentifier()) {
+			src.reset();
+			return false;
+		}
+		this.parseModifiers(Modifiers.union(Modifiers.OPTIONAL, Modifiers.DEFINITE), false, src, context);
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON)) {
+			src.reset();
+			return true;
+		}
+		src.reset();
+		return false;
+	}
 	
 	protected SignatureDeclarationTree parseCallSignature(JSLexer src, Context context) {
 		SourcePosition start = src.getPosition();
@@ -1153,7 +1185,17 @@ public class JSParser {
 			return new CallSignatureTreeImpl(start, src.getPosition(), null, typeParams, params, returnType);
 	}
 	
-	protected IndexSignatureTree parseIndexSignature(JSLexer src, Context context) {
+	protected MethodSignatureTree parseMethodSignature(SourcePosition start, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
+		//TODO: finish
+		throw new JSUnsupportedException("Method signatures", src.getPosition());
+	}
+	
+	protected PropertyDeclarationTree parsePropertyDeclaration(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
+		//TODO: finish
+		throw new JSUnsupportedException("Property signatures", src.getPosition());
+	}
+	
+	protected IndexSignatureTree parseIndexSignature(List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
 		//TODO: finish
 		throw new JSUnsupportedException("Index signatures", src.getPosition());
 	}
