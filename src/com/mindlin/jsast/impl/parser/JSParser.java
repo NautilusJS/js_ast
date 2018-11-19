@@ -746,7 +746,7 @@ public class JSParser {
 		if (openChevron == null)
 			return Collections.emptyList();
 		
-		List<TypeTree> arguments = this.parseList(this::parseType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.GREATER_THAN), src, context);
+		List<TypeTree> arguments = this.parseDelimitedList(this::parseType, this::parseCommaSeparator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.GREATER_THAN), src, context);
 		
 		expect(TokenKind.OPERATOR, JSOperator.GREATER_THAN, src, context);
 		
