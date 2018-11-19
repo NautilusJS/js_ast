@@ -66,15 +66,15 @@ public class SourceRange implements Serializable {
 		if (!Objects.equals(start.getSource(), end.getSource()))
 			return String.format("<%s - %s>", this.getStart(), this.getEnd());
 		
-		String name = start.source.getName();
+		String name = start.getSource() == null ? "unknown" : start.getSource().getName();
 		
 		//TODO: there are a few more edge cases 'round here that we can display better
 		if (start.getLine() != end.getLine()) {
 			if (start.getLine() == -1)
 				return String.format("<%s(%d - %d)>", name, start.getCol(), end.getCol());
-			return String.format("<%s(%d:%d - %d:%d)>", start.source.getName(), start.getLine(), start.getCol(), end.getLine(), end.getCol());
+			return String.format("<%s(%d:%d - %d:%d)>", name, start.getLine(), start.getCol(), end.getLine(), end.getCol());
 		}
 		
-		return String.format("<%s(%d:%d-%d)>", start.source.getName(), start.line, start.col, end.col);
+		return String.format("<%s(%d:%d-%d)>", name, start.line, start.col, end.col);
 	}
 }
