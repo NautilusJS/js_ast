@@ -1,9 +1,16 @@
 package com.mindlin.jsast.tree;
 
+import java.util.Objects;
+
+/**
+ * Contains shared methods on {@link FunctionDeclarationTree} and {@link FunctionExpressionTree}
+ * @author mailmindlin
+ */
 public interface FunctionTree extends SignatureDeclarationTree {
+	Modifiers getModifiers();
 	/**
 	 * Get function identifier.
-	 * Null if arrow function (see {@link #isArrow()})
+	 * Null if expression
 	 * @return name
 	 */
 	@Override
@@ -14,39 +21,12 @@ public interface FunctionTree extends SignatureDeclarationTree {
 	 * @return function body
 	 */
 	StatementTree getBody();
-
-	/**
-	 * Return if this function is marked as strict.
-	 * @return if strict
-	 */
-	boolean isStrict();
 	
 	/**
 	 * Return if this is an arrow function.
 	 * @return if arrow function
 	 */
 	boolean isArrow();
-	
-	/**
-	 * Get if this is a generator. Mutually exclusive with {@link #isArrow()}.
-	 * <p>
-	 * Note that if this method returns true, {@link #getReturnType()} will be
-	 * <strong>wrong</strong> (see {@link #getReturnType()}).
-	 * </p>
-	 * 
-	 * @return if generator
-	 */
-	boolean isGenerator();
-	
-	/**
-	 * Get if this is an async function.
-	 * <p>
-	 * Note that if this method returns true, {@link #getReturnType()} will be
-	 * <strong>wrong</strong> (see {@link #getReturnType()}).
-	 * </p>
-	 * @return if async
-	 */
-	boolean isAsync();
 	
 	@Override
 	default boolean equivalentTo(Tree other) {
@@ -58,9 +38,8 @@ public interface FunctionTree extends SignatureDeclarationTree {
 		
 		FunctionTree o = (FunctionTree) other;
 		
-		return this.isStrict() == o.isStrict()
-				&& this.isArrow() == o.isArrow()
-				&& this.isAsync() == o.isAsync()
+		return this.isArrow() == o.isArrow()
+				&& Objects.equals(this.getModifiers(), o.getModifiers())
 				&& Tree.equivalentTo(this.getName(), o.getName())
 				&& Tree.equivalentTo(this.getReturnType(), o.getReturnType())
 				&& Tree.equivalentTo(this.getParameters(), o.getParameters())

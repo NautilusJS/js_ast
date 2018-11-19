@@ -3,22 +3,40 @@ package com.mindlin.jsast.tree;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Modifiers {
-	public static final int FLAG_PUBLIC    = 1 << 0;
-	public static final int FLAG_PRIVATE   = 1 << 1;
-	public static final int FLAG_PROTECTED = 1 << 2;
-	public static final int FLAG_STATIC    = 1 << 3;
-	public static final int FLAG_READONLY  = 1 << 4;
+public class Modifiers implements Comparable<Modifiers> {
+	public static final long FLAG_PUBLIC    = 1L << 0;
+	public static final long FLAG_PRIVATE   = 1L << 1;
+	public static final long FLAG_PROTECTED = 1L << 2;
+	public static final long FLAG_STATIC    = 1L << 3;
+	public static final long FLAG_CONST     = 1L << 4;
 	//Skip a few so we can stay the same as java.lang.reflect.Modifier values
-	public static final int FLAG_ABSTRACT  = 1 << 10;
+	public static final long FLAG_ABSTRACT  = 1L << 10;
+	public static final long FLAG_STRICT    = 1L << 11;
+	// JS Function modifiers (these don't map to Java)
+	/**
+	 * Generator function
+	 */
+	public static final long FLAG_GENERATOR = 1L << 25;
+	/**
+	 * Async function
+	 */
+	public static final long FLAG_ASYNC     = 1L << 26;
+	public static final long FLAG_GETTER    = 1L << 27;
+	public static final long FLAG_SETTER    = 1L << 28;
+	// Typescript qualifiers
+	public static final long FLAG_READONLY  = 1L << 29;
 	/**
 	 * Flagged as optional ('?')
 	 */
-	public static final int FLAG_OPTIONAL  = 1 << 25;
+	public static final long FLAG_OPTIONAL  = 1L << 30;
 	/**
 	 * Flagged as 'definite assignment' ('!')
 	 */
-	public static final int FLAG_DEFINITE  = 1 << 26;
+	public static final long FLAG_DEFINITE  = 1L << 31;
+	/**
+	 * Declare statement
+	 */
+	public static final long FLAG_DECLARE   = 1L << 32;
 	
 	//TODO: better name?
 	public static final Modifiers NONE = Modifiers.wrap(0);
@@ -26,12 +44,27 @@ public class Modifiers {
 	public static final Modifiers PRIVATE = Modifiers.wrap(FLAG_PRIVATE);
 	public static final Modifiers PROTECTED = Modifiers.wrap(FLAG_PROTECTED);
 	public static final Modifiers STATIC = Modifiers.wrap(FLAG_STATIC);
-	public static final Modifiers READONLY = Modifiers.wrap(FLAG_READONLY);
+	public static final Modifiers CONST = Modifiers.wrap(FLAG_CONST);
 	public static final Modifiers ABSTRACT = Modifiers.wrap(FLAG_ABSTRACT);
+	public static final Modifiers STRICT = Modifiers.wrap(FLAG_STRICT);
+	public static final Modifiers GENERATOR = Modifiers.wrap(FLAG_GENERATOR);
+	public static final Modifiers ASYNC = Modifiers.wrap(FLAG_ASYNC);
+	public static final Modifiers GETTER = Modifiers.wrap(FLAG_GETTER);
+	public static final Modifiers SETTER = Modifiers.wrap(FLAG_SETTER);
+	public static final Modifiers READONLY = Modifiers.wrap(FLAG_READONLY);
 	public static final Modifiers OPTIONAL = Modifiers.wrap(FLAG_OPTIONAL);
 	public static final Modifiers DEFINITE = Modifiers.wrap(FLAG_DEFINITE);
+	public static final Modifiers DECLARE = Modifiers.wrap(FLAG_DECLARE);
 	
+	/**
+	 * Visibility modifiers
+	 */
 	public static final Modifiers MASK_VISIBILITY = Modifiers.wrap(FLAG_PUBLIC | FLAG_PRIVATE | FLAG_PROTECTED);
+	public static final Modifiers MASK_CLASS = Modifiers.wrap(MASK_VISIBILITY.getFlags() | FLAG_ABSTRACT);
+	/**
+	 * Syntatically-postfix modifiers
+	 */
+	public static final Modifiers MASK_POSTFIX = Modifiers.wrap(FLAG_OPTIONAL | FLAG_DEFINITE);
 	
 	public static Modifiers union(Modifiers...accessModifiers) {
 		int flags = 0;
@@ -49,7 +82,7 @@ public class Modifiers {
 		return Modifiers.wrap(flags);
 	}
 	
-	public static Modifiers wrap(int flags) {
+	public static Modifiers wrap(long flags) {
 		//TODO: cache?
 		return new Modifiers(flags);
 	}
@@ -77,9 +110,9 @@ public class Modifiers {
 		return Modifiers.wrap(flags);
 	}
 	
-	protected final int flags;
+	protected final long flags;
 	
-	protected Modifiers(int flags) {
+	protected Modifiers(long flags) {
 		this.flags = flags;
 	}
 	
@@ -99,8 +132,28 @@ public class Modifiers {
 		return (this.flags & Modifiers.FLAG_STATIC) != 0;
 	}
 	
+	public boolean isConst() {
+		return (this.flags & Modifiers.FLAG_CONST) != 0;
+	}
+	
 	public boolean isAbstract() {
 		return (this.flags & Modifiers.FLAG_ABSTRACT) != 0;
+	}
+	
+	public boolean isGenerator() {
+		return (this.flags & Modifiers.FLAG_GENERATOR) != 0;
+	}
+	
+	public boolean isAsync() {
+		return (this.flags & Modifiers.FLAG_ASYNC) != 0;
+	}
+	
+	public boolean isGetter() {
+		return (this.flags & Modifiers.FLAG_GETTER) != 0;
+	}
+	
+	public boolean isSetter() {
+		return (this.flags & Modifiers.FLAG_SETTER) != 0;
 	}
 	
 	public boolean isReadonly() {
@@ -115,6 +168,10 @@ public class Modifiers {
 		return (this.flags & Modifiers.FLAG_DEFINITE) != 0;
 	}
 	
+	public boolean isDeclare() {
+		return (this.flags & Modifiers.FLAG_DECLARE) != 0;
+	}
+	
 	public AccessModifier getAccess() {
 		if (this.isPublic())
 			return AccessModifier.PUBLIC;
@@ -126,7 +183,7 @@ public class Modifiers {
 		return null;
 	}
 	
-	public int getFlags() {
+	public long getFlags() {
 		return this.flags;
 	}
 	
@@ -146,9 +203,13 @@ public class Modifiers {
 		return Modifiers.wrap(this.flags & ~other.flags);
 	}
 	
+	public Modifiers filter(Modifiers other) {
+		return Modifiers.wrap(this.flags & other.flags);
+	}
+	
 	@Override
 	public int hashCode() {
-		return this.flags;
+		return (int) (this.flags ^ (this.flags >>> 32));
 	}
 	
 	@Override
@@ -170,8 +231,24 @@ public class Modifiers {
 			labels.add("static");
 		if (this.isAbstract())
 			labels.add("abstract");
+		if (this.isConst())
+			labels.add("const");
 		if (this.isReadonly())
 			labels.add("readonly");
+		if (this.isGetter())
+			labels.add("getter");
+		if (this.isSetter())
+			labels.add("setter");
+		if (this.isGenerator())
+			labels.add("generator");
+		if (this.isAsync())
+			labels.add("async");
+		if (this.isOptional())
+			labels.add("optional");
+		if (this.isDefinite())
+			labels.add("definite");
+		if (this.isDeclare())
+			labels.add("declare");
 		
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
@@ -184,6 +261,11 @@ public class Modifiers {
 		}
 		
 		return sb.toString();
+	}
+
+	@Override
+	public int compareTo(Modifiers other) {
+		return Long.compare(this.flags, other.flags);
 	}
 	
 	public static enum AccessModifier {

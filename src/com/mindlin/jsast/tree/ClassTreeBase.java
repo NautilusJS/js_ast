@@ -1,11 +1,13 @@
 package com.mindlin.jsast.tree;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public interface ClassTreeBase extends DecoratableTree, Tree {
+public interface ClassTreeBase extends Tree {
+	Modifiers getModifiers();
 	/**
 	 * Get class identifier name
 	 */
@@ -33,11 +35,6 @@ public interface ClassTreeBase extends DecoratableTree, Tree {
 	 */
 	List<ClassElementTree> getProperties();
 	
-	/**
-	 * Get if this class is abstract
-	 */
-	boolean isAbstract();
-	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.CLASS_DECLARATION;
@@ -54,7 +51,7 @@ public interface ClassTreeBase extends DecoratableTree, Tree {
 		
 		ClassTreeBase o = (ClassTreeBase) other;
 		
-		return this.isAbstract() == o.isAbstract()
+		return Objects.equals(this.getModifiers(), o.getModifiers())
 			&& Tree.equivalentTo(this.getName(), o.getName())
 			&& Tree.equivalentTo(this.getTypeParameters(), o.getTypeParameters())
 			&& Tree.equivalentTo(this.getSuperType(), o.getSuperType())
