@@ -1779,8 +1779,9 @@ public class JSParser {
 			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
 				boolean isOf = next.getValue() == JSKeyword.OF;
 				
+				//TODO: fix ranges
 				if (declarations.getDeclarations().size() != 1)
-					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Must have 1 binding", next.getStart());
+					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Must have exactly 1 binding", next.getStart());
 				if (declarations.getDeclarations().get(0).getInitializer() != null)
 					throw new JSSyntaxException("Invalid left-hand side in for-" + (isOf?"of":"in") + " loop: Variable may not have an initializer", declarations.getDeclarations().get(0).getInitializer().getStart());
 				
