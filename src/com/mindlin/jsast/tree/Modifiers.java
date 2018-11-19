@@ -77,7 +77,7 @@ public class Modifiers implements Comparable<Modifiers> {
 	public static Modifiers intersection(Modifiers...accessModifiers) {
 		int flags = 0;
 		for (int i = 0; i < accessModifiers.length; i++)
-			flags |= accessModifiers[i].getFlags();
+			flags &= accessModifiers[i].getFlags();
 		
 		return Modifiers.wrap(flags);
 	}
