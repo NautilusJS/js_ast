@@ -2332,7 +2332,6 @@ public class JSParser {
 			for (ExpressionTree expression : expressions)
 				parameters.add(reinterpretExpressionAsParameter(expression));
 		
-		
 		//Finish last parameter
 		if (lastParam.getKind() != Kind.IDENTIFIER)
 			//TODO support destructured parameters
@@ -2346,22 +2345,24 @@ public class JSParser {
 		TypeTree type = this.parseTypeMaybe(src, context, false);
 		
 		//Parse default value, if exists
-		ExpressionTree defaultValue = ((optionalToken == null && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(null, src, context) : null;
+		ExpressionTree defaultValue = ((optionalToken == null && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(src, context) : null;
 		
 		Modifiers modifiers = Modifiers.NONE;
 		if (optionalToken != null)
 			modifiers = modifiers.combine(Modifiers.OPTIONAL);
 		
 		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), modifiers, (IdentifierTree) lastParam, false, type, defaultValue));
-		((ArrayList<?>) parameters).trimToSize();
 		
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
-			parameters = this.parseParameters(parameters, false, src, context);
+			parameters = this.parseParameters(parameters, src, context);
 		
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		
+		TypeTree returnType = this.parseTypeMaybe(src, context, false);
+		
 		expectOperator(JSOperator.LAMBDA, src, context);
 		
-		return this.finishFunctionBody(startPos, false, null, null, parameters, null, true, false, src, context);
+		return this.finishFunctionBody(startPos, modifiers, null, null, parameters, returnType, true, src, context);
 	}
 	
 	/**
@@ -2386,7 +2387,7 @@ public class JSParser {
 			//Is lambda w/ no args ("()=>???")
 			dialect.require("js.function.lambda", leftParenToken.getRange());
 			expectOperator(JSOperator.LAMBDA, src, context);
-			return finishFunctionBody(leftParenToken.getStart(), false, null, null, Collections.emptyList(), null, true, false, src, context);
+			return this.finishFunctionBody(leftParenToken.getStart(), Modifiers.NONE, null, null, Collections.emptyList(), null, true, src, context);
 		} else if (src.peek().matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
 			//Lambda w/ 1 rest operator
 			dialect.require("js.function.lambda", leftParenToken.getRange());
@@ -2394,13 +2395,13 @@ public class JSParser {
 			List<ParameterTree> param = reinterpretExpressionAsParameterList(this.parseSpread(src, context));
 			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 			expectOperator(JSOperator.LAMBDA, src, context);
-			return this.finishFunctionBody(leftParenToken.getStart(), false, null, null, param, null, true, false, src, context);
+			return this.finishFunctionBody(leftParenToken.getStart(), Modifiers.NONE, null, null, param, null, true, src, context);
 		}
 		
 		context.isBindingElement(true);
 		context.isolateCoverGrammar();
 		context.isMaybeParam(true);
-		ExpressionTree expr = this.parseAssignment(null, src, context);
+		ExpressionTree expr = this.parseAssignment(src, context);
 		context.inheritCoverGrammar();
 		
 		
@@ -2429,11 +2430,11 @@ public class JSParser {
 					//The rest parameter must be the last one
 					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 					expectOperator(JSOperator.LAMBDA, src, context);
-					return this.finishFunctionBody(leftParenToken.getStart(), false, null, null, params, null, true, false, src, context);
+					return this.finishFunctionBody(leftParenToken.getStart(), Modifiers.NONE, null, null, params, null, true, src, context);
 				} else {
 					context.isolateCoverGrammar();
 					context.isMaybeParam(true);
-					final ExpressionTree expression = this.parseAssignment(null, src, context);
+					final ExpressionTree expression = this.parseAssignment(src, context);
 					context.inheritCoverGrammar();
 					
 					
@@ -2460,7 +2461,7 @@ public class JSParser {
 			//Upgrade to lambda
 			dialect.require("js.function.lambda", leftParenToken.getRange());
 			List<ParameterTree> params = this.reinterpretExpressionAsParameterList(expr);
-			return finishFunctionBody(leftParenToken.getStart(), false, null, null, params, null, true, false, src, context);
+			return this.finishFunctionBody(leftParenToken.getStart(), Modifiers.NONE, null, null, params, null, true, src, context);
 		}
 		//Not a lambda, just some parentheses around some expression.
 		return new ParenthesizedTreeImpl(leftParenToken.getStart(), src.getPosition(), expr);
@@ -2658,42 +2659,46 @@ public class JSParser {
 	}
 	
 	//Function stuff
-	protected FunctionExpressionTree finishFunctionBody(SourcePosition start, boolean async, IdentifierTree identifier, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, boolean generator, JSLexer src, Context ctx) {
-		Token startBodyToken = src.peek();
-		
+	
+	protected StatementTree parseFunctionBody(Modifiers modifiers, boolean arrow, JSLexer src, Context context) {
 		//Update context for function
-		if (generator)
-			ctx.pushGenerator();
+		if (modifiers.isGenerator())
+			context.pushGenerator();
 		else
-			ctx.pushFunction();
+			context.pushFunction();
 		
-		if (async) {
-			ctx.allowAwait(true);
-		}
+		if (modifiers.isAsync())
+			context.allowAwait(true);
 		
-		
-		//Read function body
 		StatementTree body;
-		//TODO require block if not lambda?
-		if (startBodyToken.matches(TokenKind.BRACKET, '{')) {
-			src.skip(startBodyToken);
-			body = this.parseBlock(startBodyToken, src, ctx);
+		if (src.peek().matches(TokenKind.BRACKET, '{')) {
+			body = this.parseBlock(src, context);
 		} else if (arrow) {
-			body = new ReturnTreeImpl(this.parseNextExpression(src, ctx.coverGrammarIsolated()));
+			body = new ReturnTreeImpl(this.parseNextExpression(src, context.coverGrammarIsolated()));
 		} else {
-			//TODO: function signature declaration
-			throw new JSSyntaxException("Functions must have a body", startBodyToken.getRange());
+			body = null;
+		}
+		context.pop();
+		return body;
+	}
+	
+	protected FunctionExpressionTree finishFunctionBody(SourcePosition start, Modifiers modifiers, IdentifierTree identifier, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType, boolean arrow, JSLexer src, Context context) {
+		//Read function body
+		StatementTree body = this.parseFunctionBody(modifiers, arrow, src, context);
+		if (body == null) {
+			//TODO: move to validation pass?
+			throw new JSSyntaxException("Functions must have a body", src.getPosition());
 		}
 		
 		// Get this before we pop the context
-		boolean strict = ctx.isStrict();
+		if (context.isStrict())
+			modifiers = modifiers.combine(Modifiers.STRICT);
 		
-		ctx.pop();
 		//You can't assign to a function
-		ctx.isAssignmentTarget(false);
-		ctx.isBindingElement(false);
+		context.isAssignmentTarget(false);
+		context.isBindingElement(false);
 		
-		return new FunctionExpressionTreeImpl(start, body.getEnd(), async, identifier, generics, parameters, returnType, arrow, body, strict, generator);
+		return new FunctionExpressionTreeImpl(start, src.getPosition(), modifiers, identifier, generics, parameters, returnType, arrow, body);
 	}
 	
 	protected FunctionExpressionTree parseFunctionExpression(JSLexer src, Context context) {
@@ -2701,11 +2706,12 @@ public class JSParser {
 		
 		SourcePosition startPos = functionKeywordToken.getStart();
 		
+		Modifiers modifiers = Modifiers.NONE;
+		
 		//The first token could be an async modifier
-		boolean async = false;
 		if (functionKeywordToken.matches(TokenKind.IDENTIFIER, "async")) {
-			async = true;
 			dialect.require("js.function.async", functionKeywordToken.getRange());
+			modifiers = modifiers.combine(Modifiers.ASYNC);
 			functionKeywordToken = src.nextToken();
 		}
 		
@@ -2714,9 +2720,12 @@ public class JSParser {
 		if (!functionKeywordToken.isKeyword())
 			throw new JSUnexpectedTokenException(functionKeywordToken);
 		
-		boolean generator = functionKeywordToken.getValue() == JSKeyword.FUNCTION_GENERATOR;
-		if (!generator && functionKeywordToken.getValue() != JSKeyword.FUNCTION)
+		if (functionKeywordToken.getValue() == JSKeyword.FUNCTION_GENERATOR) {
+			dialect.require("js.function.generator", functionKeywordToken.getRange());
+			modifiers = modifiers.combine(Modifiers.GENERATOR);
+		} else if (functionKeywordToken.getValue() != JSKeyword.FUNCTION) {
 			throw new JSUnexpectedTokenException(functionKeywordToken);
+		}
 		
 		
 		//Parse function identifier
@@ -2726,26 +2735,25 @@ public class JSParser {
 			identifier = new IdentifierTreeImpl(next);
 		
 		//Parse generics (if available)
-		List<TypeParameterDeclarationTree> generics = this.parseGenericParametersMaybe(src, context);
+		List<TypeParameterDeclarationTree> generics = this.parseTypeParametersMaybe(src, context);
 		if (generics.isEmpty())
 			generics = null;//Save space.
 		
 		//Parse parameters
 		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		List<ParameterTree> params = this.parseParameters(null, false, src, context);
+		List<ParameterTree> params = this.parseParameters(null, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-		
 		
 		//Get return type, if provided
 		TypeTree returnType = this.parseTypeMaybe(src, context, true);
 		
 		//Finish body
-		return this.finishFunctionBody(startPos, async, identifier, generics, params, returnType, false, generator, src, context);
+		return this.finishFunctionBody(startPos, modifiers, identifier, generics, params, returnType, false, src, context);
 	}
 	
 	protected FunctionDeclarationTree reinterpretFunctionAsDeclaration(FunctionExpressionTree expr, JSLexer src, Context context) {
 		//TODO: assert that this is good (e.g., not an arrow fn)
-		return new FunctionDeclarationTreeImpl(expr.getStart(), expr.getEnd(), expr.isAsync(), (IdentifierTree) expr.getName(), expr.getTypeParameters(), expr.getParameters(), expr.getReturnType(), expr.getBody(), expr.isStrict(), expr.isGenerator());
+		return new FunctionDeclarationTreeImpl(expr.getStart(), expr.getEnd(), expr.getModifiers(), (IdentifierTree) expr.getName(), expr.getTypeParameters(), expr.getParameters(), expr.getReturnType(), expr.getBody());
 	}
 	
 	protected FunctionDeclarationTree parseFunctionDeclaration(JSLexer src, Context context) {
