@@ -1,6 +1,6 @@
 package com.mindlin.jsast.tree;
 
-public interface ComputedPropertyKeyTree extends DeclarationName, UnvisitableTree {
+public interface ComputedPropertyKeyTree extends PropertyName, UnvisitableTree {
 	
 	ExpressionTree getExpression();
 	
