@@ -1129,7 +1129,8 @@ public class JSParser {
 		
 		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
 		
-		List<ParameterTree> params = this.parseParameters(null, false, src, context);
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		List<ParameterTree> params = this.parseParameters(null, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
 		TypeTree returnType = this.parseTypeMaybe(src, context, false);
