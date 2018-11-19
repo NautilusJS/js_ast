@@ -1513,14 +1513,7 @@ public class JSParser {
 			List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
 			return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), properties);
 		} else if (startToken.matches(TokenKind.BRACKET, '[')) {
-			//Tuple (or array type '[]')
-			if (src.nextTokenIs(TokenKind.BRACKET, ']')) {
-				//Array type
-				//TODO figure out what base type to use here
-				return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), false, null);
-			}
-			
-			
+			// Tuple type
 			List<TypeTree> slots = new ArrayList<>();
 			do {
 				slots.add(this.parseType(src, context));
