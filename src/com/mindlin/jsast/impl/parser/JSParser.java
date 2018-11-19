@@ -1693,8 +1693,8 @@ public class JSParser {
 		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
 	}
 	
-	protected WithTree parseWithStatement(Token withKeywordToken, JSLexer src, Context context) {
-		withKeywordToken = expect(withKeywordToken, TokenKind.KEYWORD, JSKeyword.WITH, src, context);
+	protected WithTree parseWithStatement(JSLexer src, Context context) {
+		Token withKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.WITH, src, context);
 		
 		if (context.isStrict())
 			throw new JSSyntaxException("'with' blocks may not be used in strict mode", withKeywordToken.getStart());
