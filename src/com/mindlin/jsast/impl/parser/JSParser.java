@@ -1363,8 +1363,8 @@ public class JSParser {
 	/**
 	 * Parse an interface declaration
 	 */
-	protected InterfaceDeclarationTree parseInterfaceDeclaration(Token interfaceKeywordToken, JSLexer src, Context context) {
-		interfaceKeywordToken = expect(interfaceKeywordToken, TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
+	protected InterfaceDeclarationTree parseInterfaceDeclaration(JSLexer src, Context context) {
+		Token interfaceKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.INTERFACE, src, context);
 		
 		dialect.require("ts.types.interface", interfaceKeywordToken.getRange());
 		
@@ -1372,24 +1372,19 @@ public class JSParser {
 		IdentifierTree name = this.parseIdentifier(src, context);
 		
 		// Type parameters
-		List<TypeParameterDeclarationTree> typeParams = this.parseGenericParametersMaybe(src, context);
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
 		
 		//...extends A, B, ..., C
-		List<TypeTree> superClasses;
-		if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS)) {
-			superClasses = new ArrayList<>();
-			do {
-				superClasses.add(parseType(src, context));
-			} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
-		} else {
-			superClasses = Collections.emptyList();
-		}
+		List<HeritageClauseTree> heritage = this.parseHeritage(src, context);
 		
 		expect(TokenKind.BRACKET, '{', src, context);
 		//Parse body
 		List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
 		
-		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, typeParams, superClasses, properties);
+		expect(TokenKind.BRACKET, '}', src, context);
+		
+		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, typeParams, heritage, properties);
+	}
 	}
 	
 	/**
