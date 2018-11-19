@@ -1,18 +1,16 @@
 package com.mindlin.jsast.impl.parser;
 
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.tree.CastTree;
-import com.mindlin.jsast.tree.InterfacePropertyTree;
+import com.mindlin.jsast.tree.CastExpressionTree;
+import com.mindlin.jsast.tree.DeclarationName;
 import com.mindlin.jsast.tree.MemberExpressionTree;
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
+import com.mindlin.jsast.tree.PropertyDeclarationTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
@@ -41,14 +39,14 @@ public class TypeTest {
 	
 	@Test
 	public void testBracketCast() {
-		CastTree expr = parseExpression("<Foo> x", Kind.CAST);
+		CastExpressionTree expr = parseExpression("<Foo> x", Kind.CAST);
 		assertIdentifierType("Foo", 0, expr.getType());
 		assertIdentifier("x", expr.getExpression());
 	}
 	
 	@Test
 	public void testAsCast() {
-		CastTree expr = parseExpression("x as Foo", Kind.CAST);
+		CastExpressionTree expr = parseExpression("x as Foo", Kind.CAST);
 		assertIdentifierType("Foo", 0, expr.getType());
 		assertIdentifier("x", expr.getExpression());
 	}
@@ -58,7 +56,7 @@ public class TypeTest {
 		//See stackoverflow.com/a/28316948/2759984
 		{
 			//`<SomeType> x.id` should parse as `<SomeType> (x.id)`
-			CastTree cast = parseExpression("<SomeType> x.id", Kind.CAST);
+			CastExpressionTree cast = parseExpression("<SomeType> x.id", Kind.CAST);
 			assertIdentifierType("SomeType", 0, cast.getType());
 			
 			MemberExpressionTree expr = assertKind(Kind.MEMBER_SELECT, cast.getExpression());
@@ -142,12 +140,10 @@ public class TypeTest {
 	@Test
 	public void testSimpleInlineInterfaceType() {
 		ObjectTypeTree type = parseType("{a:Foo}", Kind.OBJECT_TYPE);
-		assertEquals(1, type.getDeclaredProperties().size());
+		assertEquals(1, type.getDeclaredMembers().size());
 		
-		InterfacePropertyTree prop0 = type.getDeclaredProperties().get(0);
-		ObjectPropertyKeyTree key0 = prop0.getKey();
-		assertFalse(key0.isComputed());
-		assertIdentifier("a", key0);
+		PropertyDeclarationTree prop0 = assertKind(Kind.PROPERTY_DECLARATION, type.getDeclaredMembers().get(0));
+		assertIdentifier("a", prop0.getName());
 		assertIdentifierType("Foo", 0, prop0.getType());
 	}
 	

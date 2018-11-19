@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
@@ -37,8 +37,7 @@ public class ForLoopTest {
 		
 		//TODO check initializer
 		
-		assertEquals(Kind.LESS_THAN, loop.getCondition().getKind());
-		BinaryTree condition = (BinaryTree) loop.getCondition();
+		BinaryExpressionTree condition = assertKind(Kind.LESS_THAN, loop.getCondition());
 		assertIdentifier("i", condition.getLeftOperand());
 		assertLiteral(10, condition.getRightOperand());
 		
