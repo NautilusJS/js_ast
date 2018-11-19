@@ -7,4 +7,9 @@ public interface SpreadElementTree extends ExpressionTree, ObjectLiteralElement 
 	default Kind getKind() {
 		return Tree.Kind.SPREAD;
 	}
+	
+	@Override
+	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
+		return visitor.visitSpread(this, data);
+	}
 }
