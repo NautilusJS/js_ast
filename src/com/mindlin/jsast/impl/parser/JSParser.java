@@ -2162,7 +2162,7 @@ public class JSParser {
 		switch (property.getKind()) {
 			case SPREAD: {
 				//TODO: return rest
-				throw new JSUnsupportedException("spread -> rest", property.getStart());
+				throw new JSUnsupportedException("spread -> rest", property.getRange());
 			}
 			case METHOD_DECLARATION:
 			case GET_ACCESSOR_DECLARATION:
@@ -2171,7 +2171,7 @@ public class JSParser {
 			case ASSIGNMENT_PROPERTY:
 			case SHORTHAND_ASSIGNMENT_PROPERTY:
 				//TODO: finish
-				throw new JSUnsupportedException("spread -> rest", property.getStart());
+				throw new JSUnsupportedException("spread -> rest", property.getRange());
 			default:
 				throw new IllegalArgumentException("Cannot reinterpret object literal element of kind " + property.getKind());
 		}
@@ -2194,6 +2194,12 @@ public class JSParser {
 				elements.trimToSize();
 				return new ArrayPatternTreeImpl(expr.getStart(), expr.getEnd(), elements);
 			}
+			case SPREAD:
+				if (arrayElement) {
+					// Spread -> rest in array
+					throw new JSUnsupportedException("spread -> rest", expr.getRange());
+				}
+				break;
 			case ASSIGNMENT:
 				// return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), ((AssignmentTree)expr).getVariable(), ((AssignmentTree)expr).getValue());
 				break;
