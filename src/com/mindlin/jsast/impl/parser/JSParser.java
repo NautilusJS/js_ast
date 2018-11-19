@@ -2329,7 +2329,7 @@ public class JSParser {
 			TypeTree type = this.parseTypeMaybe(src, context, true);
 			// Initializers not allowed
 			lookahead = src.peek();
-			if (lookahead.matches(TokenKind.OPERATOR, JSOperator.EQUAL))
+			if (lookahead.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
 				throw new JSSyntaxException("This-parameters may not have default values", lookahead.getRange());
 			
 			return new ParameterTreeImpl(start, src.getPosition(), Modifiers.NONE, name, false, type, null);
@@ -2348,7 +2348,7 @@ public class JSParser {
 		
 		// Parse initializer
 		ExpressionTree initializer = null;
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.EQUAL))
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
 			initializer = this.parseAssignment(src, context);
 		
 		return new ParameterTreeImpl(start, src.getPosition(), modifiers, name, rest, type, initializer);
@@ -2998,12 +2998,12 @@ public class JSParser {
 			return this.parseMethodDeclaration(start, decorators, modifiers, name, src, context);
 		} else if (name.getKind() == Kind.IDENTIFIER
 				&& (lookahead.matchesOperator(JSOperator.COMMA)
-						|| lookahead.matchesOperator(JSOperator.EQUAL)
+						|| lookahead.matchesOperator(JSOperator.ASSIGNMENT)
 						|| lookahead.matches(TokenKind.BRACKET, '}'))) {
 			// Shorthand property assignment
 			// <name> [= <initializer>]
 			ExpressionTree initializer = null;
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.EQUAL))
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
 				initializer = this.parseAssignment(src, context);
 			
 			return new ShorthandAssignmentPropertyTreeImpl(start, src.getPosition(), modifiers, (IdentifierTree) name, initializer);
