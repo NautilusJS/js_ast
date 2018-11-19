@@ -3,6 +3,7 @@ package com.mindlin.jsast.impl.parser;
 public enum JSOperator {
 	// Reference:
 	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators
+	AT_SYMBOL(1, "@"),
 	EQUAL(2, "==", "A==B"),
 	NOT_EQUAL(2, "!=", "A!=B"),
 	STRICT_EQUAL(2, "===", "A===B"),
