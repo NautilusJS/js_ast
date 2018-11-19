@@ -2484,13 +2484,17 @@ public class JSParser {
 		//Support 'new.target'
 		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
 			Token r = src.nextToken();
-			if (context.inFunction() && r.matches(TokenKind.IDENTIFIER, "target"))
+			if (context.inFunction() && r.matches(TokenKind.IDENTIFIER, "target")) {
 				//See developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target
-				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new"), new IdentifierTreeImpl(r));
+				IdentifierTree idNew = new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new");
+				IdentifierTree idTarget = new IdentifierTreeImpl(r);
+				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, idNew, idTarget);
+			}
+			
 			throw new JSUnexpectedTokenException(t);
 		}
 		
-		final ExpressionTree callee = parseLeftSideExpression(src, context.coverGrammarIsolated(), false);
+		ExpressionTree callee = this.parseLeftSideExpression(false, src, context.coverGrammarIsolated());
 		
 		final List<ExpressionTree> args;
 		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) != null)
