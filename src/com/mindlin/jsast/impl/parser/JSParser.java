@@ -740,12 +740,10 @@ public class JSParser {
 		}
 		
 		if (expectPatternAfter && !modifiers.isEmpty()) {
-			//TODO: better signature for parseIdentifierMaybe that fits better here?
-			src.mark();
-			if (this.parseIdentifierMaybe(src, context) == null) {
-				
-			} else {
+			if (!TokenPredicate.CAN_FOLLOW_MODIFIER.test(src.peek())) {
+				// We need to backtrack
 				src.reset();
+				modifiers.remove(modifiers.size() - 1);
 			}
 		}
 		
