@@ -653,114 +653,6 @@ public class JSParser {
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getRange());
 	}
 	
-	protected Modifiers mapPrefixModifier(Token token, Context context) {
-		switch (token.getKind()) {
-			case IDENTIFIER:
-				switch (token.<String>getValue()) {
-					case "readonly":
-						return Modifiers.READONLY;
-					case "abstract":
-						return Modifiers.ABSTRACT;
-					case "declare":
-						return Modifiers.DECLARE;
-					case "get":
-						return Modifiers.GETTER;
-					case "set":
-						return Modifiers.SETTER;
-					default:
-						break;
-				}
-				break;
-			case KEYWORD:
-				switch (token.<JSKeyword>getValue()) {
-					case STATIC:
-						return Modifiers.STATIC;
-					case PUBLIC:
-						return Modifiers.PUBLIC;
-					case PRIVATE:
-						return Modifiers.PRIVATE;
-					case PROTECTED:
-						return Modifiers.PROTECTED;
-					case CONST:
-						return Modifiers.CONST;
-					default:
-						break;
-				}
-				break;
-			case OPERATOR:
-				switch (token.<JSOperator>getValue()) {
-					case QUESTION_MARK: // Postfix
-						return Modifiers.OPTIONAL;
-					case LOGICAL_NOT: // Postfix
-						return Modifiers.DEFINITE;
-					case MULTIPLICATION:
-						return Modifiers.GENERATOR;
-					default:
-						break;
-				}
-				break;
-			default:
-				break;
-		}
-		
-		return null;
-	}
-	
-	protected Modifiers parseModifiers(Modifiers filter, boolean expectPatternAfter, JSLexer src, Context context) {
-		return this.parseModifiers((next, token) -> !next.subtract(filter).any(), expectPatternAfter, src, context);
-	}
-	
-	protected Modifiers parseModifiers(BiPredicate<Modifiers, Token> filter, boolean expectPatternAfter, JSLexer src, Context context) {
-		Modifiers result = Modifiers.NONE;
-		List<Pair<Token, Modifiers>> modifiers = new ArrayList<>();
-		//TODO: better error messages
-		
-		if (expectPatternAfter)
-			src.mark();
-		
-		while (true) {
-			Token next = src.peek();
-			Modifiers modifier = this.mapPrefixModifier(next, context);
-			
-			if (modifier == null || !filter.test(modifier, next)) {
-				// We're done here
-				break;
-			}
-			
-			dialect.require("ts.parameter.accessModifier", next.getRange());
-			
-			// Overlap (should we move this to validation?)
-			if (Modifiers.intersection(result, modifier).any()) {
-				//TODO: Emit other token for duplicated modifier
-				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", next.getRange());
-			} else if (modifier.getAccess() != null && result.getAccess() != null) {
-				throw new JSSyntaxException("Duplicate visibility modifier", next.getRange());
-			}
-			
-			// Be able to backtrack if we have a variable with a modifier-like name
-			if (expectPatternAfter) {
-				//Move up mark
-				src.unmark();
-				src.mark();
-			}
-			src.skip(next);
-			
-			result = Modifiers.union(result, modifier);
-			modifiers.add(new Pair<>(next, modifier));
-		}
-		
-		if (expectPatternAfter && !modifiers.isEmpty()) {
-			if (!TokenPredicate.CAN_FOLLOW_MODIFIER.test(src.peek())) {
-				// We need to backtrack
-				src.reset();
-				modifiers.remove(modifiers.size() - 1);
-			}
-		}
-		
-		return result;
-	}
-	
-	
 	protected ExpressionTree parsePrimaryExpression(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		switch (lookahead.getKind()) {
@@ -1132,6 +1024,112 @@ public class JSParser {
 	
 	//SECTION: Annotations
 	
+	protected Modifiers mapPrefixModifier(Token token, Context context) {
+		switch (token.getKind()) {
+			case IDENTIFIER:
+				switch (token.<String>getValue()) {
+					case "readonly":
+						return Modifiers.READONLY;
+					case "abstract":
+						return Modifiers.ABSTRACT;
+					case "declare":
+						return Modifiers.DECLARE;
+					case "get":
+						return Modifiers.GETTER;
+					case "set":
+						return Modifiers.SETTER;
+					default:
+						break;
+				}
+				break;
+			case KEYWORD:
+				switch (token.<JSKeyword>getValue()) {
+					case STATIC:
+						return Modifiers.STATIC;
+					case PUBLIC:
+						return Modifiers.PUBLIC;
+					case PRIVATE:
+						return Modifiers.PRIVATE;
+					case PROTECTED:
+						return Modifiers.PROTECTED;
+					case CONST:
+						return Modifiers.CONST;
+					default:
+						break;
+				}
+				break;
+			case OPERATOR:
+				switch (token.<JSOperator>getValue()) {
+					case QUESTION_MARK: // Postfix
+						return Modifiers.OPTIONAL;
+					case LOGICAL_NOT: // Postfix
+						return Modifiers.DEFINITE;
+					case MULTIPLICATION:
+						return Modifiers.GENERATOR;
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+		
+		return null;
+	}
+	
+	protected Modifiers parseModifiers(Modifiers filter, boolean expectPatternAfter, JSLexer src, Context context) {
+		return this.parseModifiers((next, token) -> !next.subtract(filter).any(), expectPatternAfter, src, context);
+	}
+	
+	protected Modifiers parseModifiers(BiPredicate<Modifiers, Token> filter, boolean expectPatternAfter, JSLexer src, Context context) {
+		Modifiers result = Modifiers.NONE;
+		List<Pair<Token, Modifiers>> modifiers = new ArrayList<>();
+		//TODO: better error messages
+		
+		if (expectPatternAfter)
+			src.mark();
+		
+		while (true) {
+			Token next = src.peek();
+			Modifiers modifier = this.mapPrefixModifier(next, context);
+			
+			if (modifier == null || !filter.test(modifier, next)) {
+				// We're done here
+				break;
+			}
+			
+			dialect.require("ts.parameter.accessModifier", next.getRange());
+			
+			// Overlap (should we move this to validation?)
+			if (Modifiers.intersection(result, modifier).any()) {
+				//TODO: Emit other token for duplicated modifier
+				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", next.getRange());
+			} else if (modifier.getAccess() != null && result.getAccess() != null) {
+				throw new JSSyntaxException("Duplicate visibility modifier", next.getRange());
+			}
+			
+			// Be able to backtrack if we have a variable with a modifier-like name
+			if (expectPatternAfter) {
+				//Move up mark
+				src.unmark();
+				src.mark();
+			}
+			src.skip(next);
+			
+			result = Modifiers.union(result, modifier);
+			modifiers.add(new Pair<>(next, modifier));
+		}
+		
+		if (expectPatternAfter && !modifiers.isEmpty()) {
+			if (!TokenPredicate.CAN_FOLLOW_MODIFIER.test(src.peek())) {
+				// We need to backtrack
+				src.reset();
+				modifiers.remove(modifiers.size() - 1);
+			}
+		}
+		
+		return result;
+	}
 	
 	protected List<DecoratorTree> parseDecorators(JSLexer src, Context context) {
 		//TODO: finish
