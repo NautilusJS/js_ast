@@ -623,37 +623,61 @@ public class JSParser {
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart());
 	}
 	
-	protected Modifiers parseAccessModifier(Token token, Context context) {
-		if (token.isIdentifier()) {
-			String value = token.getValue();
-			switch (value) {
-				case "readonly":
-					return Modifiers.READONLY;
-				case "abstract":
-					return Modifiers.ABSTRACT;
-				default:
-					break;
-			}
-		} else if (token.isKeyword()) {
-			switch (token.<JSKeyword>getValue()) {
-				case STATIC:
-					return Modifiers.STATIC;
-				case PUBLIC:
-					return Modifiers.PUBLIC;
-				case PRIVATE:
-					return Modifiers.PRIVATE;
-				case PROTECTED:
-					return Modifiers.PROTECTED;
-				default:
-					break;
-			}
+	protected Modifiers mapPrefixModifier(Token token, Context context) {
+		switch (token.getKind()) {
+			case IDENTIFIER:
+				switch (token.<String>getValue()) {
+					case "readonly":
+						return Modifiers.READONLY;
+					case "abstract":
+						return Modifiers.ABSTRACT;
+					case "declare":
+						return Modifiers.DECLARE;
+					case "get":
+						return Modifiers.GETTER;
+					case "set":
+						return Modifiers.SETTER;
+					default:
+						break;
+				}
+				break;
+			case KEYWORD:
+				switch (token.<JSKeyword>getValue()) {
+					case STATIC:
+						return Modifiers.STATIC;
+					case PUBLIC:
+						return Modifiers.PUBLIC;
+					case PRIVATE:
+						return Modifiers.PRIVATE;
+					case PROTECTED:
+						return Modifiers.PROTECTED;
+					case CONST:
+						return Modifiers.CONST;
+					default:
+						break;
+				}
+				break;
+			case OPERATOR:
+				switch (token.<JSOperator>getValue()) {
+					case QUESTION_MARK: // Postfix
+						return Modifiers.OPTIONAL;
+					case LOGICAL_NOT: // Postfix
+						return Modifiers.DEFINITE;
+					case MULTIPLICATION:
+						return Modifiers.GENERATOR;
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
 		}
 		
 		return null;
 	}
 	
 	protected Modifiers parseModifiers(Modifiers filter, boolean expectPatternAfter, JSLexer src, Context context) {
-		return this.parseModifiers((next, token) -> next.subtract(filter).any(), true, src, context);
+		return this.parseModifiers((next, token) -> !next.subtract(filter).any(), expectPatternAfter, src, context);
 	}
 	
 	protected Modifiers parseModifiers(BiPredicate<Modifiers, Token> filter, boolean expectPatternAfter, JSLexer src, Context context) {
@@ -666,9 +690,9 @@ public class JSParser {
 		
 		while (true) {
 			Token next = src.peek();
-			Modifiers modifier = parseAccessModifier(next, context);
+			Modifiers modifier = this.mapPrefixModifier(next, context);
 			
-			if (modifier == null) {
+			if (modifier == null || !filter.test(modifier, next)) {
 				// We're done here
 				break;
 			}
