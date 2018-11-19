@@ -1284,6 +1284,7 @@ public class JSParser {
 	/**
 	 * Parse an enum declaration
 	 */
+	protected EnumDeclarationTree parseEnumDeclaration(JSLexer src, Context context) {
 		SourcePosition start = src.peek().getStart();
 		
 		Modifiers modifiers = this.parseModifiers(Modifiers.union(Modifiers.CONST, Modifiers.DECLARE), true, src, context);
