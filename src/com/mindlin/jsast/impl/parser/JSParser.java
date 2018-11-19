@@ -1684,10 +1684,10 @@ public class JSParser {
 
 		//Optional finally block (must come after any & all catch blocks)
 		BlockTree finallyBlock = null;
-		if (src.nextTokenIf(TokenKind.KEYWORD, JSKeyword.FINALLY) != null)
+		if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.FINALLY))
 			finallyBlock = this.parseBlock(src, context);
 		else if (catchBlocks.isEmpty())
-			//No catch or finally blocks
+			//No catch nor finally blocks
 			throw new JSSyntaxException("Incomplete try statement", src.getPosition());
 		catchBlocks.trimToSize();
 		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
