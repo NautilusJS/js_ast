@@ -1385,14 +1385,36 @@ public class JSParser {
 		
 		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, typeParams, heritage, properties);
 	}
+	
+	
+	//SECTION: Enums
+	
+	protected EnumMemberTree parseEnumMember(JSLexer src, Context context) {
+		//TODO: finish
+		throw new JSUnsupportedException("Enum members", src.getPosition());
 	}
 	
 	/**
 	 * Parse an enum declaration
 	 */
-	protected EnumDeclarationTree parseEnum(Token enumKeywordToken, JSLexer src, Context context) {
-		//TODO finish
-		throw new UnsupportedOperationException();
+		SourcePosition start = src.peek().getStart();
+		
+		Modifiers modifiers = this.parseModifiers(Modifiers.union(Modifiers.CONST, Modifiers.DECLARE), true, src, context);
+		
+		Token enumKeyword = expect(TokenKind.KEYWORD, JSKeyword.ENUM, src, context);
+		
+		IdentifierTree name = this.parseIdentifier(src, context);
+		
+		List<EnumMemberTree> members;
+		if (src.nextTokenIs(TokenKind.BRACKET, '{')) {
+			
+		} else {
+			// Empty
+			members = null;
+		}
+		
+		//TODO: finish
+		throw new JSUnsupportedException("Enum declarations", src.getPosition());
 	}
 	
 	/**
