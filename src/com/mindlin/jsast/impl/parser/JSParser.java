@@ -1797,7 +1797,7 @@ public class JSParser {
 			Token next;
 			if ((next = src.nextTokenIf(TokenPredicate.IN_OR_OF)) != null) {
 				boolean isOf = next.getValue() == JSKeyword.OF;
-				PatternTree left = this.reinterpretExpressionAsPattern(expr);
+				PatternTree left = this.reinterpretExpressionAsPattern(expr, false);
 				return this.parsePartialForEachLoopTree(forKeywordToken, left, isOf, src, context);
 			}
 			
@@ -1881,6 +1881,7 @@ public class JSParser {
 			return result;
 		
 		ArrayList<ExpressionTree> expressions = new ArrayList<>();
+		SourcePosition start = result.getStart();
 		expressions.add(result);
 		
 		do {
@@ -2176,7 +2177,7 @@ public class JSParser {
 		}
 	}
 	
-	PatternTree reinterpretExpressionAsPattern(ExpressionTree expr) {
+	PatternTree reinterpretExpressionAsPattern(ExpressionTree expr, boolean arrayElement) {
 		switch (expr.getKind()) {
 			case OBJECT_LITERAL: {
 				ObjectLiteralTree obj = (ObjectLiteralTree) expr;
@@ -2188,14 +2189,15 @@ public class JSParser {
 			}
 			case ARRAY_LITERAL: {
 				ArrayList<PatternTree> elements = new ArrayList<>();
-				for (ExpressionTree elem : ((ArrayLiteralTree)expr).getElements())
-					elements.add(elem == null ? null : reinterpretExpressionAsPattern(elem));
+				for (ExpressionTree elem : ((ArrayLiteralTree) expr).getElements())
+					elements.add(elem == null ? null : this.reinterpretExpressionAsPattern(elem, true));
 				elements.trimToSize();
 				return new ArrayPatternTreeImpl(expr.getStart(), expr.getEnd(), elements);
 			}
 			case ASSIGNMENT:
-				return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), ((AssignmentTree)expr).getVariable(), ((AssignmentTree)expr).getValue());
-			case ASSIGNMENT_PATTERN:
+				// return new AssignmentPatternTreeImpl(expr.getStart(), expr.getEnd(), ((AssignmentTree)expr).getVariable(), ((AssignmentTree)expr).getValue());
+				break;
+			case OBJECT_PATTERN:
 			case ARRAY_PATTERN:
 			case IDENTIFIER:
 			case ARRAY_ACCESS:
@@ -2205,6 +2207,12 @@ public class JSParser {
 				break;
 		}
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as a pattern.", expr.getRange());
+	}
+	
+	protected PatternTree parsePattern(JSLexer src, Context context) {
+		//TODO: can we assemble it correctly first pass?
+		ExpressionTree expr = this.parsePrimaryExpression(src, context);
+		return this.reinterpretExpressionAsPattern(expr, false);
 	}
 	
 	protected ExpressionTree parseAssignment(JSLexer src, Context context) {
@@ -2234,7 +2242,7 @@ public class JSParser {
 		
 		PatternTree variable;
 		if (assignmentOperator.matches(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-			variable = reinterpretExpressionAsPattern(expr);
+			variable = this.reinterpretExpressionAsPattern(expr, false);
 		} else {
 			//For update-assignment operators (e.g., +=, *=), the LHS can't be a full pattern.
 			//LHS can only be an IdentifierTree or MemberExpressionTree
@@ -2295,6 +2303,8 @@ public class JSParser {
 	 * 
 	 * Note: parameters are in the function <i>declaration</i>, while arguments
 	 * are used when invoking a function.
+	 * <br/>
+	 * This method is pretty permissive in what it will accept; more stringent validation is done in the VALIDATION pass.
 	 * 
 	 * @param previous
 	 *            Previous parameters parsed, if available. Null if no
