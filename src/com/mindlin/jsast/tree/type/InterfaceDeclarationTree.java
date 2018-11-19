@@ -3,6 +3,7 @@ package com.mindlin.jsast.tree.type;
 import java.util.List;
 
 import com.mindlin.jsast.tree.DeclarationStatementTree;
+import com.mindlin.jsast.tree.HeritageClauseTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.NamedDeclarationTree;
 import com.mindlin.jsast.tree.StatementTreeVisitor;
@@ -15,7 +16,7 @@ public interface InterfaceDeclarationTree extends NamedDeclarationTree, Declarat
 	
 	List<TypeParameterDeclarationTree> getTypeParameters();
 	
-	List<TypeTree> getSupertypes();
+	List<HeritageClauseTree> getHeritage();
 	
 	//TODO: why not just use an ObjectTypeTree here?
 	List<TypeElementTree> getDeclaredMembers();

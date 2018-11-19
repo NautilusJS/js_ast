@@ -237,6 +237,10 @@ public interface Tree {
 		CALL_SIGNATURE(CallSignatureTree.class),
 		CONSTRUCT_SIGNATURE(ConstructSignatureTree.class),
 		
+		// Inheritance
+		EXTENDS_CLAUSE(HeritageClauseTree.class),
+		IMPLEMENTS_CLAUSE(HeritageClauseTree.class),
+		
 		// Declarations
 		ASSIGNMENT_PROPERTY(AssignmentPropertyTree.class),
 		SHORTHAND_ASSIGNMENT_PROPERTY(ShorthandAssignmentPropertyTree.class),
@@ -280,7 +284,6 @@ public interface Tree {
 		
 		// Complex type expressions
 		INFER_TYPE(InferTypeTree.class),
-		CONDITIONAL_TYPE(ConditionalTypeTree.class),
 		PARENTHESIZED_TYPE(ParenthesizedTypeTree.class),
 		MAPPED_TYPE(MappedTypeTree.class),
 		;

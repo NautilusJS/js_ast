@@ -20,18 +20,12 @@ public interface ClassTreeBase extends Tree {
 	List<TypeParameterDeclarationTree> getTypeParameters();
 	
 	/**
-	 * Get the class that this class extends, if available.
-	 * @return super type, else null if not applicable
+	 * @return Declared extends/implements clauses.
 	 */
-	TypeTree getSuperType();
+	List<HeritageClauseTree> getHeritage();
 	
 	/**
-	 * Get the interfaces that this class implements
-	 */
-	List<TypeTree> getImplementing();
-	
-	/**
-	 * Get the properties for this class
+	 * Get the (declared) properties for this class
 	 */
 	List<ClassElementTree> getProperties();
 	
@@ -54,8 +48,7 @@ public interface ClassTreeBase extends Tree {
 		return Objects.equals(this.getModifiers(), o.getModifiers())
 			&& Tree.equivalentTo(this.getName(), o.getName())
 			&& Tree.equivalentTo(this.getTypeParameters(), o.getTypeParameters())
-			&& Tree.equivalentTo(this.getSuperType(), o.getSuperType())
-			&& Tree.equivalentTo(this.getImplementing(), o.getImplementing())
+			&& Tree.equivalentTo(this.getHeritage(), o.getHeritage())//TODO: fix for order
 			&& Tree.equivalentTo(this.getProperties(), o.getProperties());//TODO fix for order
 	}
 	
