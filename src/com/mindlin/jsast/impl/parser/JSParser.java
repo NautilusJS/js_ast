@@ -2883,6 +2883,24 @@ public class JSParser {
 		}
 	}
 	
+	protected ExpressionTree parseArrayLiteralElement(JSLexer src, Context context) {
+		Token lookahead = src.peek();
+		
+		if (lookahead.matchesOperator(JSOperator.COMMA))
+			return null;
+		
+		if (lookahead.matchesOperator(JSOperator.SPREAD)) {
+			ExpressionTree result = this.parseSpread(src, context);
+			if (!src.peek().matches(TokenKind.BRACKET, ']')) {
+				//TODO: why not set always?
+				context.isAssignmentTarget(false);
+				context.isBindingElement(false);
+			}
+			return result;
+		}
+		
+		return this.parseAssignment(src, context.coverGrammarIsolated());
+	}
 	/**
 	 * Parse array literal.
 	 */
@@ -2892,31 +2910,9 @@ public class JSParser {
 		if (src.nextTokenIs(TokenKind.BRACKET, ']'))
 			return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), Collections.emptyList());
 		
-		ArrayList<ExpressionTree> values = new ArrayList<>();
-		
-		for (Token lookahead = src.peek(); !lookahead.matches(TokenKind.BRACKET, ']') && !src.isEOF(); lookahead = src.peek()) {
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)) {
-				values.add(null);
-				continue;
-			} else if (lookahead.matches(TokenKind.OPERATOR, JSOperator.SPREAD)) {
-				values.add(this.parseSpread(src, context));
-				if (!src.peek().matches(TokenKind.BRACKET, ']')) {
-					context.isAssignmentTarget(false);
-					context.isBindingElement(false);
-				}
-			} else {
-				context.isolateCoverGrammar();
-				values.add(this.parseAssignment(src, context));
-				context.inheritCoverGrammar();
-			}
-			
-			if (!src.peek().matches(TokenKind.BRACKET, ']'))
-				expect(TokenKind.OPERATOR, JSOperator.COMMA, src, context);
-		}
+		List<ExpressionTree> values = this.parseDelimitedList(this::parseArrayLiteralElement, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, ']'), src, context);
 		
 		expect(TokenKind.BRACKET, ']', src, context);
-		
-		values.trimToSize();
 		
 		return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), values);
 	}
