@@ -47,6 +47,23 @@ public class SourceRange implements Serializable {
 	
 	@Override
 	public String toString() {
-		return String.format("<%s - %s>", this.getStart(), this.getEnd());
+		final SourcePosition start = this.getStart(), end = this.getEnd();
+		
+		if (start == null || end == null)
+			return String.format("<%s - %s>", start == null ? "?" : start, end == null ? "?" : end);
+		
+		if (!Objects.equals(start.getSource(), end.getSource()))
+			return String.format("<%s - %s>", this.getStart(), this.getEnd());
+		
+		String name = start.source.getName();
+		
+		//TODO: there are a few more edge cases 'round here that we can display better
+		if (start.getLine() != end.getLine()) {
+			if (start.getLine() == -1)
+				return String.format("<%s(%d - %d)>", name, start.getCol(), end.getCol());
+			return String.format("<%s(%d:%d - %d:%d)>", start.source.getName(), start.getLine(), start.getCol(), end.getLine(), end.getCol());
+		}
+		
+		return String.format("<%s(%d:%d-%d)>", start.source.getName(), start.line, start.col, end.col);
 	}
 }
