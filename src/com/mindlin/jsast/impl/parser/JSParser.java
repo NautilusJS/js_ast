@@ -990,61 +990,7 @@ public class JSParser {
 				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getRange());
 			}
 			
-			if (type == null && initializer != null) {
-				//Halfhearted attempt at calculating type
-				switch (initializer.getKind()) {
-					case STRING_LITERAL:
-					case TYPEOF:
-						type = new SpecialTypeTreeImpl(SpecialType.STRING);
-						break;
-					case SUBTRACTION:
-					case MULTIPLICATION:
-					case DIVISION:
-					case REMAINDER:
-					case EXPONENTIATION:
-					case BITWISE_XOR:
-					case BITWISE_XOR_ASSIGNMENT:
-					case BITWISE_OR:
-					case BITWISE_OR_ASSIGNMENT:
-					case BITWISE_NOT:
-					case UNARY_MINUS:
-					case UNARY_PLUS:
-					case LEFT_SHIFT:
-					case LEFT_SHIFT_ASSIGNMENT:	
-					case RIGHT_SHIFT:
-					case RIGHT_SHIFT_ASSIGNMENT:
-					case UNSIGNED_RIGHT_SHIFT:
-					case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-					case NUMERIC_LITERAL:
-					case PREFIX_INCREMENT:
-					case PREFIX_DECREMENT:
-					case POSTFIX_INCREMENT:
-					case POSTFIX_DECREMENT:
-						type = new SpecialTypeTreeImpl(SpecialType.NUMBER);
-						break;
-					case LOGICAL_NOT:
-					case EQUAL:
-					case NOT_EQUAL:
-					case STRICT_EQUAL:
-					case STRICT_NOT_EQUAL:
-					case GREATER_THAN:
-					case GREATER_THAN_EQUAL:
-					case LESS_THAN:
-					case LESS_THAN_EQUAL:
-					case BOOLEAN_LITERAL:
-					case DELETE:
-					case IN:
-					case INSTANCEOF:
-						type = new SpecialTypeTreeImpl(SpecialType.BOOLEAN);
-						break;
-					case NULL_LITERAL:
-						type = new SpecialTypeTreeImpl(SpecialType.NULL);
-						break;
-					default:
-						break;
-				}
-			}
-			declarations.add(new VariableDeclaratorTreeImpl(identifier.getStart(), src.getPosition(), identifier, type, initializer));
+			declarations.add(declarator);
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
 		
 		if (!inFor)
