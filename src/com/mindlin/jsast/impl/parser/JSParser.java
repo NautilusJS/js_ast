@@ -2206,12 +2206,11 @@ public class JSParser {
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as a pattern.", expr.getRange());
 	}
 	
-	protected ExpressionTree parseAssignment(Token startToken, JSLexer src, Context context) {
-		if (startToken == null)
-			startToken = src.nextToken();
+	protected ExpressionTree parseAssignment(JSLexer src, Context context) {
+		Token lookahead = src.peek();
 		
 		//Check if this could possibly start a parameter
-		if (context.isMaybeParam() && !TokenPredicate.START_OF_PARAMETER.test(startToken))
+		if (context.isMaybeParam() && !TokenPredicate.START_OF_PARAMETER.test(lookahead))
 			context.isMaybeParam(false);
 		
 		if (!context.allowYield() && lookahead.matches(TokenKind.KEYWORD, JSKeyword.YIELD))
@@ -2221,7 +2220,8 @@ public class JSParser {
 		
 		//Upgrade to lambda
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LAMBDA))
-			return this.finishFunctionBody(expr.getStart(), false, null, null, this.reinterpretExpressionAsParameterList(expr), null, true, false, src, context);
+			//TODO: declared return value?
+			return this.finishFunctionBody(expr.getStart(), Modifiers.NONE, null, null, this.reinterpretExpressionAsParameterList(expr), null, true, src, context);
 		
 		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
 			return expr;
