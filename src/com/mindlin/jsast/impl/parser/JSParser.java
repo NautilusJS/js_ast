@@ -631,7 +631,7 @@ public class JSParser {
 				case OBJECT_LITERAL:
 					dialect.require("js.parameter.destructured", expr.getRange());
 					//Turn into destructuring parameter
-					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), this.reinterpretExpressionAsPattern(expr));
+					return new ParameterTreeImpl(expr.getStart(), expr.getEnd(), this.reinterpretExpressionAsPattern(expr, false));
 				default:
 					break;
 			}
