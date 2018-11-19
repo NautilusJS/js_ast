@@ -750,8 +750,7 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public Token finishRegExpLiteral(Token start) {
-		if (start == null)
-			start = this.nextToken();
+		Objects.requireNonNull(start);
 		if (start.getValue() != JSOperator.DIVISION && start.getValue() != JSOperator.DIVISION_ASSIGNMENT)
 			throw new JSSyntaxException("Regular expression must start with a slash", start.getRange());
 		long intermediateStart = this.getPositionOffset();
