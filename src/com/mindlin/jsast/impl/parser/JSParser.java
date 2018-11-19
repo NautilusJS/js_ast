@@ -1228,172 +1228,7 @@ public class JSParser {
 			// Method signature
 			return this.parseMethodSignature(start, modifiers, propName, src, context);
 		
-	}
-	
-	/**
-	 * Parse a class declaration
-	 */
-	@JSKeywordParser(JSKeyword.CLASS)
-	protected ClassExpressionTree parseClass(Token classKeywordToken, JSLexer src, Context context) {
-		if (classKeywordToken == null)
-			classKeywordToken = src.nextToken();
-		
-		final SourcePosition classStartPos = classKeywordToken.getStart();
-		
-		//Support abstract classes
-		final boolean isClassAbstract;
-		if (classKeywordToken.matches(TokenKind.IDENTIFIER, "abstract")) {
-			dialect.require("ts.class.abstract", classKeywordToken.getStart());
-			classKeywordToken = src.nextToken();
-			isClassAbstract = true;
-		} else {
-			isClassAbstract = false;
-		}
-		
-		classKeywordToken = expect(classKeywordToken, TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
-		
-		dialect.require("js.class", classKeywordToken.getStart());
-		
-		//Read optional class identifier
-		IdentifierTree classIdentifier = this.parseIdentifierMaybe(src, context);
-		List<TypeParameterDeclarationTree> generics = Collections.emptyList();
-		if (classIdentifier != null)
-			generics = this.parseGenericParametersMaybe(src, context);
-		
-		Token next = src.nextToken();
-		
-		//Read 'extends' and 'implements' clauses
-		TypeTree superClass = null;
-		List<TypeTree> interfaces = new ArrayList<>();
-		//We don't care in which order the 'extends' and 'implements' clauses come in
-		for (int i = 0; i < 2 && next.isKeyword(); i++) {
-			if (next.matches(TokenKind.KEYWORD, JSKeyword.EXTENDS)) {
-				dialect.require("js.class.inheritance", next.getRange());
-				if (superClass != null)
-					throw new JSSyntaxException("Classes may not extend multiple classes", next.getRange());
-				superClass = this.parseType(src, context);
-				next = src.nextToken();
-			}
-			if (next.matches(TokenKind.KEYWORD, JSKeyword.IMPLEMENTS)) {
-				dialect.require("js.class.inheritance", next.getRange());
-				if (!interfaces.isEmpty())
-					throw new JSUnexpectedTokenException(next);
-				//We can add multiple interfaces here
-				do {
-					interfaces.add(parseType(src, context));
-				} while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA));
-				next = src.nextToken();
-			}
-		}
-		
-		//Read class body
-		expect(next, TokenKind.BRACKET, '{', src, context);
-		
-		next = null;
-		
-		ArrayList<ClassElementTree> properties = new ArrayList<>();
-		final Modifiers propModFilter = Modifiers.union(Modifiers.MASK_VISIBILITY, Modifiers.STATIC, Modifiers.READONLY, Modifiers.ABSTRACT);
-		
-		while (!src.peek().matches(TokenKind.BRACKET, '}')) {
-			//TODO: refactor into own method
-			//Start position of our next index
-			final SourcePosition propertyStartPos = src.peek().getStart();
-			
-			//Aspects of property
-			PropertyDeclarationType methodType = null;
-			Modifiers modifier = this.parseModifiers((nextMod, token) -> {
-				if (nextMod.isStatic())
-					dialect.require("js.class.static", token.getStart());
-				
-				if (nextMod.isAbstract() && !isClassAbstract)
-					throw new JSSyntaxException("Can't have an abstract field in a non-abstract class", token.getRange());
-				return !nextMod.subtract(propModFilter).any();
-			}, true, src, context);
-			
-			Token modifierToken = null;//Store token of modifier for later error stuff
-			
-			//Parse property key and optionally more modifiers
-			//TODO make sure that this works with the other modifiers (ex., is 'get readonly foo();' allowed?)
-			//I'm not sure if this is *correct* js/ts, but let's go with it.
-			DeclarationName key = null;
-			
-			//Now check if it's a generator/getter/setter
-			if ((next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) != null) {
-				//Generator function
-				dialect.require("js.method.generator", next.getStart());
-				methodType = PropertyDeclarationType.GENERATOR;
-				
-				modifierToken = next;
-			} else if (src.peek().isIdentifier()) {
-				//Handle getter/setter/async methods
-				Token id = src.nextToken();
-				String name = id.getValue();
-				if ((name.equals("async") || name.equals("get") || name.equals("set")) && this.isQualifiedPropertyName(src.peek(), context)) {
-					key = this.parsePropertyName(src, context);
-					switch (name) {
-						case "async":
-							dialect.require("js.method.async", id.getStart());
-							methodType = PropertyDeclarationType.ASYNC_METHOD;
-							break;
-						case "get":
-							dialect.require("js.accessor", id.getStart());
-							methodType = PropertyDeclarationType.GETTER;
-							break;
-						case "set":
-							dialect.require("js.accessor", id.getStart());
-							methodType = PropertyDeclarationType.SETTER;
-					}
-				} else {
-					key = new IdentifierTreeImpl(id);
-				}
-			}
-			
-			if (key == null)
-				key = this.parsePropertyName(src, context);
-			
-			//Now let's start on reading the property
-			ClassElementTree<?> property;
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
-				//Some type of method
-				
-				if (key.getKind() == Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor")) {
-					//Promote to constructor
-					if (methodType != null || modifier.isAbstract()) {
-						String modifierName = modifier.isAbstract() ? "abstract" : methodType.name();
-						throw new JSSyntaxException("Modifier '" + modifierName + "' not allowed in constructor declaration", modifierToken.getStart(), modifierToken.getEnd());
-					}
-					
-					dialect.require("js.class.constructor", key.getStart());
-					methodType = PropertyDeclarationType.CONSTRUCTOR;
-				} else if (methodType == null) {
-					//It's a not a getter/setter, but it's still a method
-					methodType = PropertyDeclarationType.METHOD;
-				}
-				
-				property = this.parseMethodDefinition(propertyStartPos, modifier, methodType, key, src, context);
-			} else if (methodType != null || modifier.isAbstract() || (key.getKind() == Tree.Kind.IDENTIFIER && ((IdentifierTree)key).getName().equals("constructor"))) {
-				//TODO also check for fields named 'new'?
-				throw new JSSyntaxException("Key " + key + " must be a method.", key.getStart(), key.getEnd());
-			} else {
-				methodType = PropertyDeclarationType.FIELD;
-				//Field with (optional) type
-				TypeTree fieldType = this.parseTypeMaybe(src, context, false);
-				//Optional value expression
-				ExpressionTree value = null;
-				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
-					value = this.parseAssignment(null, src, context);
-				//Fields end with a semicolon
-				expectEOL(src, context);
-				property = new ClassPropertyTreeImpl<ExpressionTree>(propertyStartPos, src.getPosition(), modifier, methodType, key, fieldType, value);
-			}
-			
-			properties.add(property);
-			
-			//TODO better expect EOS
-			src.nextTokenIf(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
-		}
-		expect(next, TokenKind.BRACKET, '}', src, context);
-		return new ClassDeclarationTreeImpl(classStartPos, src.getPosition(), isClassAbstract, classIdentifier, generics, superClass, interfaces, properties);
+		return this.parsePropertyDeclaration(start, null, modifiers, propName, src, context);
 	}
 	
 	/**
@@ -1469,6 +1304,9 @@ public class JSParser {
 		throw new JSUnsupportedException("Enum declarations", src.getPosition());
 	}
 	
+	
+	//SECTION: Class elements
+	
 	protected MethodDeclarationTree parseMethodDeclaration(SourcePosition startPos, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
 		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
 		
@@ -1484,6 +1322,124 @@ public class JSParser {
 		
 		return new MethodDeclarationTreeImpl(startPos, src.getPosition(), modifiers, name, typeParams, params, returnType, body);
 	}
+	
+	protected MethodDeclarationTree parseAccessorDeclaration(List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
+		//TODO: finish
+		throw new JSUnsupportedException("Accessors", src.getPosition());
+	}
+	
+	protected HeritageClauseTree parseHeritageClause(JSLexer src, Context context) {
+		Token keyword = src.nextTokenIf(TokenPredicate.HERITAGE_START);
+		if (keyword == null)
+			return null;
+		throw new JSUnsupportedException("Heritage", keyword.getRange());
+	}
+	
+	protected List<HeritageClauseTree> parseHeritage(JSLexer src, Context context) {
+		return this.parseDelimitedList(this::parseHeritageClause, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, '{'), src, context);
+	}
+	
+	protected ClassElementTree parseClassElement(JSLexer src, Context context) {
+		SourcePosition start = src.peek().getStart();
+		
+		if (src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON)) {
+			// Empty member
+			//TODO: finish
+			throw new JSUnsupportedException("Empty class members", src.getPosition());
+		}
+		
+		List<DecoratorTree> decorators = this.parseDecorators(src, context);
+		
+		// Parse prefix modifiers
+		final Modifiers classElementFilter = Modifiers.union(Modifiers.MASK_VISIBILITY, Modifiers.STATIC, Modifiers.READONLY, Modifiers.ABSTRACT, Modifiers.GETTER, Modifiers.SETTER, Modifiers.GENERATOR, Modifiers.ASYNC);
+		Modifiers modifiers = this.parseModifiers((nextMod, token) -> {
+			if (nextMod.isStatic())
+				dialect.require("js.class.static", token.getRange());
+			if (nextMod.isAsync())
+				dialect.require("js.async", token.getRange());
+			if (nextMod.isGenerator())
+				dialect.require("js.method.generator", token.getRange());
+			return !nextMod.subtract(classElementFilter).any();
+		}, true, src, context);
+		
+		if (modifiers.isGetter() || modifiers.isSetter())
+			return this.parseAccessorDeclaration(decorators, modifiers, src, context);
+		
+		if (src.peek().matches(TokenKind.IDENTIFIER, "constructor") && dialect.supports("js.class.constructor")) {
+			// Constructor declaration
+			throw new JSUnsupportedException("Class constructors", src.getPosition());
+		}
+		
+		// Possibly index signature
+		if (this.isIndexSignature(src, context))
+			return this.parseIndexSignature(decorators, modifiers, src, context);
+		
+		PropertyName name = this.parsePropertyName(src, context);
+		
+		// Parse postfix modifiers
+		modifiers = modifiers.combine(this.parseModifiers(Modifiers.union(Modifiers.OPTIONAL, Modifiers.DEFINITE), false, src, context));
+		
+		Token lookahead = src.peek();
+		if (modifiers.isGenerator()
+				|| lookahead.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)
+				|| lookahead.matches(TokenKind.OPERATOR, JSOperator.GREATER_THAN)) {
+			return this.parseMethodDeclaration(start, decorators, modifiers, name, src, context);
+		}
+		
+		return this.parsePropertyDeclaration(start, decorators, modifiers, name, src, context);
+	}
+	
+	protected ClassExpressionTree parseClassExpression(JSLexer src, Context context) {
+		final SourcePosition start = src.peek().getStart();
+		
+		//Support abstract classes
+		Modifiers classModifiers = this.parseModifiers(Modifiers.ABSTRACT, false, src, context);
+		
+		Token classKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
+		
+		dialect.require("js.class", classKeywordToken.getRange());
+		
+		//Read optional class identifier
+		IdentifierTree className = this.parseIdentifierMaybe(src, context);
+		List<TypeParameterDeclarationTree> typeParameters = this.parseTypeParametersMaybe(src, context);
+		
+		List<HeritageClauseTree> heritage = this.parseHeritage(src, context);
+		
+		//Read class body
+		expect(TokenKind.BRACKET, '{', src, context);
+		
+		List<ClassElementTree> members = this.parseDelimitedList(this::parseClassElement, null, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
+		
+		expect(TokenKind.BRACKET, '}', src, context);
+		
+		return new ClassExpressionTreeImpl(start, src.getPosition(), classModifiers, className, typeParameters, heritage, members);
+	}
+	
+	protected ClassDeclarationTree parseClassDeclaration(JSLexer src, Context context) {
+		final SourcePosition start = src.peek().getStart();
+		
+		//Support abstract classes
+		Modifiers classModifiers = this.parseModifiers(Modifiers.union(Modifiers.ABSTRACT, Modifiers.DECLARE), false, src, context);
+		
+		Token classKeywordToken = expect(TokenKind.KEYWORD, JSKeyword.CLASS, src, context);
+		
+		dialect.require("js.class", classKeywordToken.getRange());
+		
+		IdentifierTree className = this.parseIdentifier(src, context);
+		List<TypeParameterDeclarationTree> typeParameters = this.parseTypeParametersMaybe(src, context);
+		
+		List<HeritageClauseTree> heritage = this.parseHeritage(src, context);
+		
+		//Read class body
+		expect(TokenKind.BRACKET, '{', src, context);
+		
+		List<ClassElementTree> members = this.parseDelimitedList(this::parseClassElement, null, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
+		
+		expect(TokenKind.BRACKET, '}', src, context);
+		
+		return new ClassDeclarationTreeImpl(start, src.getPosition(), classModifiers, className, typeParameters, heritage, members);
+	}
+	
 	/**
 	 * Parse a type, if unknown whether a type declaration follows the current statement.
 	 * Uses the colon (<kbd>:</kbd>) to detect if there should be a type.
