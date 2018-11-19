@@ -2301,47 +2301,21 @@ public class JSParser {
 	 *            was called
 	 *            TODO clarify
 	 */
-	protected List<ParameterTree> parseParameters(List<ParameterTree> previous, boolean allowAccessModifiers, JSLexer src, Context context) {
+	protected List<ParameterTree> parseParameters(List<ParameterTree> previous, JSLexer src, Context context) {
 		if (src.peek().matches(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS))
 			return Collections.emptyList();
 		
 		ArrayList<ParameterTree> result = new ArrayList<>();
 		
-		//Flag to remember that all parameters after the first optional parameter must also be
-		// optional
-		boolean prevOptional = false;
-		
 		if (previous != null && !previous.isEmpty()) {
 			result.addAll(previous);
-			
-			for (ParameterTree param : result) {
-				//TODO: move this type-checking to a later pass
-				boolean optional = param.getModifiers().isOptional();
-				if (prevOptional && !optional)
-					throw new JSSyntaxException("A required parameter cannot follow an optional parameter", param.getStart(), param.getEnd());
-				prevOptional |= optional;
-				
-				if (param.isRest()) {
-					if (optional)
-						throw new JSSyntaxException("Rest parameters cannot be optional", param.getStart(), param.getEnd());
-					if (param.getInitializer() != null)
-						throw new JSSyntaxException("Rest parameters cannot have a default value", param.getStart(), param.getEnd());
-					if (param != result.get(result.size() - 1))
-						throw new JSSyntaxException("Rest parameter must be the last", param.getStart(), param.getEnd());
-					
-					expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src);
-					result.trimToSize();
-					return result;
-				}
-				//We could probably check satisficaiton of the accessModifier constraints, but it wouldn't be that useful.
-			}
 		}
 		
-		//TODO: validation?
-		result.addAll(this.parseList(this::parseParameter, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.COMMA), src, context));
+		result.addAll(this.parseDelimitedList(this::parseParameter, this::parseCommaSeparator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS), src, context));
 		
 		//Expect to end with a right paren
 		expect(src.peek(), TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS, src);
+		
 		//Compress ArrayList (not strictly needed, but why not?)
 		result.trimToSize();
 		return result;
