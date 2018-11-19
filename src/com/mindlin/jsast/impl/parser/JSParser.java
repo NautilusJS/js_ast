@@ -2894,26 +2894,20 @@ public class JSParser {
 		}
 	}
 	
-	protected MethodDefinitionTree parseMethodDefinition(SourcePosition startPos, Modifiers modifiers, PropertyDeclarationType methodType, ObjectPropertyKeyTree key, JSLexer src, Context context) {
-		List<ParameterTree> params = this.parseParameters(null, methodType == PropertyDeclarationType.CONSTRUCTOR, src, context);
+	protected MethodDeclarationTree parseMethodDeclaration(SourcePosition startPos, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
+		
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		List<ParameterTree> params = this.parseParameters(null, src, context);
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
-		TypeTree returnType = null;
-		//Return type may not be set on constructor
-		if (methodType != PropertyDeclarationType.CONSTRUCTOR)
-			returnType = this.parseTypeMaybe(src, context, false);
+		TypeTree returnType = this.parseTypeMaybe(src, context, false);
 		
-		FunctionTypeTree type = new FunctionTypeTreeImpl(startPos, src.getPosition(), params, Collections.emptyList(), returnType);
-		
-		FunctionExpressionTree fn;
-		if (modifiers.isAbstract()) {
+		StatementTree body = this.parseFunctionBody(modifiers, false, src, context);
+		if (body == null)
 			expectEOL(src, context);
-			fn = null;
-		} else {
-			fn = this.finishFunctionBody(startPos, false, key.getKind() == Kind.IDENTIFIER ? ((IdentifierTree)key) : null, null, params, returnType, false, methodType == PropertyDeclarationType.GENERATOR, src, context);
-		}
 		
-		return new MethodDefinitionTreeImpl(startPos, src.getPosition(), modifiers, methodType, key, type, fn);
+		return new MethodDeclarationTreeImpl(startPos, src.getPosition(), modifiers, name, typeParams, params, returnType, body);
 	}
 	
 	protected ObjectLiteralElement parseObjectProperty(JSLexer src, Context context) {
