@@ -973,46 +973,67 @@ public class JSParser {
 		throw new JSUnsupportedException("awaiting on await", awaitToken.getRange());
 	}
 	
+	protected VariableDeclaratorTree parseVariableDeclarator(JSLexer src, Context context) {
+		PatternTree name = this.parsePattern(src, context);
+		
+		//Check if a type is available
+		TypeTree type = this.parseTypeMaybe(src, context, false);
+		
+		//Check if an initializer is available
+		ExpressionTree initializer = null;
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
+			// If we're assigning a function expression, propagate the variable name
+			initializer = this.parseAssignment(src, context.coverGrammarIsolated());
+			if (name.getKind() == Kind.IDENTIFIER
+					&& initializer.getKind() == Kind.FUNCTION_EXPRESSION
+					&& ((FunctionExpressionTree) initializer).getName() == null) {
+				//Infer fn name from variable id
+				FunctionExpressionTree fn = (FunctionExpressionTree) initializer;
+				initializer = new FunctionExpressionTreeImpl(fn.getStart(), fn.getEnd(), fn.getModifiers(), (IdentifierTree) name, fn.getTypeParameters(), fn.getParameters(), fn.getReturnType(), fn.isArrow(), fn.getBody());
+			}
+		}
+		
+		return new VariableDeclaratorTreeImpl(name.getStart(), src.getPosition(), name, type, initializer);
+	}
+	
 	/**
 	 * @param inFor If this variable declaration is in a for loop
 	 */
 	@JSKeywordParser({ JSKeyword.CONST, JSKeyword.LET, JSKeyword.VAR })
 	protected VariableDeclarationTree parseVariableDeclaration(Token keywordToken, JSLexer src, Context context, boolean inFor) {
 		keywordToken = expect(keywordToken, TokenKind.KEYWORD, src, context);
-		boolean isConst = keywordToken.getValue() == JSKeyword.CONST;
-		boolean isScoped = isConst || keywordToken.getValue() == JSKeyword.LET;//Const's are also scoped
-		//Check that the token is 'var', 'let', or 'const'.
-		if (keywordToken.getValue() != JSKeyword.VAR && !isScoped)
-			throw new JSUnexpectedTokenException(keywordToken);
+		VariableDeclarationKind style;
+		switch (keywordToken.<JSKeyword>getValue()) {
+			case VAR:
+				style = VariableDeclarationKind.VAR;
+				break;
+			case LET:
+				style = VariableDeclarationKind.LET;
+				break;
+			case CONST:
+				style = VariableDeclarationKind.CONST;
+				break;
+			default:
+				throw new JSUnexpectedTokenException(keywordToken);
+		}
+		
 		//Check if allowed
-		if (isScoped) {
+		if (style != VariableDeclarationKind.VAR) {
 			dialect.require("js.variable.scoped", keywordToken.getRange());
-			if (isConst)
+			if (style == VariableDeclarationKind.CONST)
 				dialect.require("js.variable.const", keywordToken.getRange());
 		}
 		
 		//Build list of declarations
 		List<VariableDeclaratorTree> declarations = new ArrayList<>();
 		//Parse identifier(s)
+		//TODO: convert into parseDelimitedList form
 		do {
-			IdentifierTree identifier = this.parseIdentifier(src, context);
+			VariableDeclaratorTree declarator = this.parseVariableDeclarator(src, context);
 			
-			//Check if a type is available
-			TypeTree type = this.parseTypeMaybe(src, context, false);
-			
-			//Check if an initializer is available
-			ExpressionTree initializer = null;
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-				initializer = this.parseAssignment(null, src, context.coverGrammarIsolated());
-				if (initializer.getKind() == Kind.FUNCTION_EXPRESSION && ((FunctionExpressionTree) initializer).getName() == null) {
-					//Infer fn name from variable id
-					FunctionExpressionTree fn = (FunctionExpressionTree) initializer;
-					initializer = new FunctionExpressionTreeImpl(fn.getStart(), fn.getEnd(), fn.isAsync(), identifier, fn.getTypeParameters(), fn.getParameters(), fn.getReturnType(), fn.isArrow(), fn.getBody(), fn.isStrict(), fn.isGenerator());
-				}
-			} else if (isConst) {
-				//No initializer
-				throw new JSSyntaxException("Missing initializer in constant declaration", identifier.getRange());
-			}
+			// Const declarations require initializer
+			if (style == VariableDeclarationKind.CONST && declarator.getInitializer() == null)
+				throw new JSSyntaxException("Missing initializer in constant declaration", declarator.getRange());
 			
 			declarations.add(declarator);
 		} while (src.nextTokenIf(TokenKind.OPERATOR, JSOperator.COMMA) != null);
@@ -1020,7 +1041,7 @@ public class JSParser {
 		if (!inFor)
 			expectEOL(src, context);
 		
-		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), isScoped, isConst, declarations);
+		return new VariableDeclarationTreeImpl(keywordToken.getStart(), src.getPosition(), style, declarations);
 	}
 	
 	/**
