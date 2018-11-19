@@ -1925,6 +1925,36 @@ public class JSParser {
 	}
 	
 	/**
+	 * Parse as-cast in form of {@code <expr> as <type>}. This method has been
+	 * nerfed (it can take in the expression as a parameter) to make it work
+	 * better with {@link #parseBinaryExpression(JSLexer, Context)}.
+	 * 
+	 * @param src
+	 * @param context
+	 * @return
+	 */
+	protected ExpressionTree parseAsCastExpression(ExpressionTree expr, JSLexer src, Context context) {
+		while (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS)) {
+			TypeTree type = this.parseType(src, context);
+			expr = new CastExpressionTreeImpl(expr.getStart(), type.getEnd(), expr, type);
+		}
+		return expr;
+	}
+	
+	private ExpressionTree reduceBinary(Stack<ExpressionTree> exprs, Stack<Token> operators, ExpressionTree right) {
+		ExpressionTree left = exprs.pop();
+		Token operator = operators.pop();
+		Kind kind = this.mapTokenToBinaryKind(operator);
+		
+		if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
+			return new MemberExpressionTreeImpl(kind, left, right);
+		else if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
+			throw new JSSyntaxException("This shouldn't be happening", operator.getRange());
+		else
+			return new BinaryTreeImpl(kind, left, right);
+	}
+	
+	/**
 	 * Parse binary expression
 	 * @param startToken
 	 * @param src
@@ -1944,12 +1974,10 @@ public class JSParser {
 		 * In practice, there is no good reason for there to be more than one,
 		 * but there *could" be.
 		 */
-		while (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.AS))
-			expr = new CastTreeImpl(expr, parseType(src, context));
+		expr = this.parseAsCastExpression(expr, src, context);
 		
-		Token token = src.peek();
-		int precedence = binaryPrecedence(token, context);
-		if (precedence < 0)
+		Token token = src.peek();// Candidate for binary operator
+		if (this.binaryPrecedence(token, context) < 0)
 			return expr;
 		
 		src.skip(token);
@@ -1959,16 +1987,15 @@ public class JSParser {
 		//Accumulate-reduce binary trees on stack
 		final Stack<Token> operators = new Stack<>();
 		final Stack<ExpressionTree> stack = new Stack<>();
-		int lastPrecedence = precedence;
 		
 		
 		stack.add(expr);
 		operators.add(token);
 		
-		stack.add(this.parseExponentiation(null, src, context.coverGrammarIsolated()));
+		stack.add(this.parseExponentiation(src, context.coverGrammarIsolated()));
 		
 		
-		while ((precedence = binaryPrecedence(src.peek(), context)) >= 0) {
+		for (int precedence; (precedence = binaryPrecedence(src.peek(), context)) >= 0; ) {
 			/*
 			 * Reduce expressions with precedences less than the latest operator.
 			 * For example, when the expression 'a * b / c + d' is where:
@@ -1983,41 +2010,21 @@ public class JSParser {
 			 *     stack = [((a * b) / c)]
 			 *     operators = []
 			 */
-			while ((!operators.isEmpty()) && precedence <= lastPrecedence) {
-				final ExpressionTree right = stack.pop();
-				final Token operator = operators.pop();
-				final Kind kind = this.mapTokenToBinaryKind(operator);
-				final ExpressionTree left = stack.pop();
-				
-				ExpressionTree expression;
-				if (kind == Kind.MEMBER_SELECT || kind == Kind.ARRAY_ACCESS)
-					expression = new MemberExpressionTreeImpl(kind, left, right);
-				else if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
-					throw new JSSyntaxException("This shouldn't be happening", operator.getRange());
-				else
-					expression = new BinaryTreeImpl(kind, left, right);
-				
-				stack.add(expression);//Push expression onto stack
-				
-				lastPrecedence = operators.isEmpty() ? Integer.MAX_VALUE : binaryPrecedence(operators.peek(), context);
-			}
+			ExpressionTree right = stack.pop();
+			while ((!operators.isEmpty()) && precedence <= this.binaryPrecedence(operators.peek(), context))
+				right = this.reduceBinary(stack, operators, right);
+			stack.push(right);
 			
-			
-			//Shift top onto stack
-			token = src.nextToken();
-			
-			if (token.matches(TokenKind.KEYWORD, JSKeyword.AS)) {
-				//Handle 'as' specially, because it's RHS argument is a type
+			// Consume as-cast expressions
+			//TODO: why not just put this in the call-chain before parseExponentiation?
+			if (src.peek().matches(TokenKind.KEYWORD, JSKeyword.AS)) {
 				ExpressionTree left = stack.pop();
-				TypeTree right = this.parseType(src, context);
-				stack.push(new CastTreeImpl(left, right));
-			} else {
-				//Push the newest operator/RHS argument onto their respective stacks
-				operators.add(token);
-				stack.add(this.parseExponentiation(null, src, context.coverGrammarIsolated()));
+				stack.push(this.parseAsCastExpression(left, src, context));
 			}
 			
-			lastPrecedence = binaryPrecedence(token, context);
+			//Push the newest operator/RHS argument onto their respective stacks
+			operators.add(src.nextToken());
+			stack.add(this.parseExponentiation(src, context.coverGrammarIsolated()));
 		}
 		
 		
@@ -2032,25 +2039,10 @@ public class JSParser {
 		 *     operators = [+,   *   ] => [    +       ] => [             ]
 		 */
 		expr = stack.pop();
+		while (!stack.isEmpty())
+			//TODO: check that we don't need to construct trees here
+			expr = this.reduceBinary(stack, operators, expr);
 		
-		while (!stack.isEmpty()) {
-			final ExpressionTree left = stack.pop();
-			final Token operator = operators.pop();
-			final Kind kind = this.mapTokenToBinaryKind(operator);
-			//TODO: fix for member expressions
-			//TODO: can we make assignment statement
-			if (operator.isOperator() && operator.<JSOperator>getValue().isAssignment())
-				expr = new AssignmentTreeImpl(kind, this.reinterpretExpressionAsPattern(left), expr);
-			else
-				expr = new BinaryTreeImpl(kind, left, expr);
-		}
-		
-		//Reduction failed (this should never happen)
-		if (!stack.isEmpty()) {
-			System.err.println("Stack: " + stack);
-			System.err.println("Ops: " + operators);
-			throw new IllegalStateException("Stack not empty");
-		}
 		return expr;
 	}
 	
