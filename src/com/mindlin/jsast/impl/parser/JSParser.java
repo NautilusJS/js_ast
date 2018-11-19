@@ -636,10 +636,10 @@ public class JSParser {
 			}
 		} catch (JSSyntaxException e) {
 			//TODO: Betterize error messages
-			throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart(), e);
+			throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getRange(), e);
 		}
 		
-		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getStart());
+		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getRange());
 	}
 	
 	protected Modifiers mapPrefixModifier(Token token, Context context) {
