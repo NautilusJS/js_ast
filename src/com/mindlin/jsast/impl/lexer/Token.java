@@ -1,5 +1,7 @@
 package com.mindlin.jsast.impl.lexer;
 
+import java.util.Objects;
+
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.parser.JSOperator;
@@ -83,9 +85,11 @@ public class Token {
 	public boolean matches(TokenKind kind, Object value) {
 		if (getKind() != kind)
 			return false;
-		if (getValue() == value)
-			return true;
-		return getValue() != null && getValue().equals(value);
+		return Objects.equals(getValue(), value);
+	}
+	
+	public boolean matchesOperator(JSOperator value) {
+		return getKind() == TokenKind.OPERATOR && getValue() == value;
 	}
 
 	public Token reinterpretAsIdentifier() {
