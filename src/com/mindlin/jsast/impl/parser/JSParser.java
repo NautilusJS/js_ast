@@ -1417,6 +1417,21 @@ public class JSParser {
 		throw new JSUnsupportedException("Enum declarations", src.getPosition());
 	}
 	
+	protected MethodDeclarationTree parseMethodDeclaration(SourcePosition startPos, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
+		
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		List<ParameterTree> params = this.parseParameters(null, src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		
+		TypeTree returnType = this.parseTypeMaybe(src, context, false);
+		
+		StatementTree body = this.parseFunctionBody(modifiers, false, src, context);
+		if (body == null)
+			expectEOL(src, context);
+		
+		return new MethodDeclarationTreeImpl(startPos, src.getPosition(), modifiers, name, typeParams, params, returnType, body);
+	}
 	/**
 	 * Parse a type, if unknown whether a type declaration follows the current statement.
 	 * Uses the colon (<kbd>:</kbd>) to detect if there should be a type.
@@ -2935,22 +2950,6 @@ public class JSParser {
 			default:
 				return false;
 		}
-	}
-	
-	protected MethodDeclarationTree parseMethodDeclaration(SourcePosition startPos, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
-		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
-		
-		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
-		List<ParameterTree> params = this.parseParameters(null, src, context);
-		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-		
-		TypeTree returnType = this.parseTypeMaybe(src, context, false);
-		
-		StatementTree body = this.parseFunctionBody(modifiers, false, src, context);
-		if (body == null)
-			expectEOL(src, context);
-		
-		return new MethodDeclarationTreeImpl(startPos, src.getPosition(), modifiers, name, typeParams, params, returnType, body);
 	}
 	
 	protected ObjectLiteralElement parseObjectProperty(JSLexer src, Context context) {
