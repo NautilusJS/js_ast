@@ -443,6 +443,23 @@ public class JSParser {
 		expectEOL(src, context);
 	}
 	
+	protected <T extends Tree> List<T> parseDelimitedList(BiFunction<JSLexer, Context, T> elementParser, BiPredicate<JSLexer, Context> tokenParser, Predicate<Token> isTerminator, JSLexer src, Context context) {
+		List<T> result = new ArrayList<>();
+		
+		while (isTerminator == null || !isTerminator.test(src.peek())) {
+			if (src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+				throw new JSEOFException("Unexpected EOF while parsing list", src.getPosition());
+			
+			T value = elementParser.apply(src, context);
+			result.add(value);
+			
+			if (!tokenParser.test(src, context))
+				break;
+		}
+		
+		return result;
+	}
+	
 	protected <T extends Tree> List<T> parseList(BiFunction<JSLexer, Context, T> elementParser, Predicate<Token> isTerminator, JSLexer src, Context context) {
 		List<T> result = new ArrayList<>();
 		
