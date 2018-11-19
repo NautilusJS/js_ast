@@ -3018,18 +3018,10 @@ public class JSParser {
 	protected ObjectLiteralTree parseObjectInitializer(JSLexer src, Context context) {
 		Token startToken = expect(TokenKind.BRACKET, '{', src, context);
 		
-		ArrayList<ObjectLiteralElement> properties = new ArrayList<>();
+		List<ObjectLiteralElement> properties = this.parseDelimitedList(this::parseObjectProperty, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
 		
-		while (!src.peek().matches(TokenKind.BRACKET, '}') && !src.isEOF()) {
-			properties.add(this.parseObjectProperty(src, context));
-			
-			if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
-				break;
-		}
-		//TODO betterize
 		expect(TokenKind.BRACKET, '}', src, context);
 		
-		properties.trimToSize();
 		return new ObjectLiteralTreeImpl(startToken.getStart(), src.getPosition(), properties);
 	}
 	
