@@ -1438,7 +1438,7 @@ public class JSParser {
 				}
 				case "Array": {
 					//Array<X> => X[]
-					List<TypeTree> arrayGenericArgs = this.parseGenericArguments(src, context);
+					List<TypeTree> arrayGenericArgs = this.parseTypeArguments(src, context);
 					if (arrayGenericArgs.size() > 1)
 						throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
 					
@@ -1464,7 +1464,7 @@ public class JSParser {
 				default: {
 					IdentifierTree identifier = new IdentifierTreeImpl(startToken);
 					
-					List<TypeTree> generics = this.parseGenericArguments(src, context);
+					List<TypeTree> generics = this.parseTypeArguments(src, context);
 					
 					return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, generics);
 				}
