@@ -1152,30 +1152,31 @@ public class JSParser {
 	protected TypeElementTree parseTypeMember(JSLexer src, Context context) {
 		Token next = src.peek();
 		
+		// Call/construct signature
 		if (next.matches(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS) || next.matches(TokenKind.OPERATOR, JSOperator.GREATER_THAN))
-			return this.parseCallSignature(src, context);
+			return (CallSignatureTree) this.parseCallSignature(src, context);
+		else if (next.matches(TokenKind.KEYWORD, JSKeyword.NEW))
+			return (ConstructSignatureTree) this.parseCallSignature(src, context);
 		
-		if (next.matches(TokenKind.KEYWORD, JSKeyword.NEW))
-			//TODO: construct signature
-			throw new JSUnsupportedException("Construct signature", src.getPosition());
+		// Parse prefix modifiers
+		Modifiers typeElementFilter = Modifiers.READONLY;
+		Modifiers modifiers = this.parseModifiers(typeElementFilter, true, src, context);
 		
-		Modifiers modifiers = this.parseModifiers(Modifiers.READONLY, true, src, context);
-		if (next.matches(TokenKind.BRACKET, '['))
-			return this.parseIndexSignature(src, context);
+		if (this.isIndexSignature(src, context))
+			return this.parseIndexSignature(null, modifiers, src, context);
 		
 		// Method/property signature
 		SourcePosition start = next.getStart();
-		DeclarationName propName = this.parsePropertyName(src, context);
-		boolean optional = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
+		PropertyName propName = this.parsePropertyName(src, context);
+		
+		// Parse postfix modifiers
+		modifiers = modifiers.combine(this.parseModifiers(Modifiers.MASK_POSTFIX, false, src, context));
 		
 		next = src.peek();
-		if (next.matches(TokenKind.OPERATOR, JSOperator.LESS_THAN)) {
+		if (next.matchesOperator(JSOperator.LESS_THAN) || next.matchesOperator(JSOperator.LEFT_PARENTHESIS))
 			// Method signature
-			
-			return new InterfacePropertyTreeImpl(start, src.getPosition(), modifiers, propName, optional, null);
-		}
+			return this.parseMethodSignature(start, modifiers, propName, src, context);
 		
-		return this.parsePropertyOrMethodSignature(src, context);
 	}
 	
 	/**
