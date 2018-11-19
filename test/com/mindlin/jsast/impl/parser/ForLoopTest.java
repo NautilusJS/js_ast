@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
 import com.mindlin.jsast.tree.ForLoopTree;
@@ -28,7 +29,12 @@ public class ForLoopTest {
 		assertNull(declarator.getInitializer());
 		assertIdentifier("i", declarator.getName());
 		
-		//TODO parse array
+		// Check expression
+		ArrayLiteralTree value = assertKind(Kind.ARRAY_LITERAL, loop.getExpression());
+		assertEquals(3, value.getElements().size());
+		assertLiteral(1, value.getElements().get(0));
+		assertLiteral(2, value.getElements().get(1));
+		assertLiteral(3, value.getElements().get(2));
 	}
 	
 	@Test
@@ -76,6 +82,12 @@ public class ForLoopTest {
 		VariableDeclaratorTree declarator = declaration.getDeclarations().get(0);
 		assertNull(declarator.getInitializer());
 		assertIdentifier("i", declarator.getName());
+		
+		ArrayLiteralTree value = assertKind(Kind.ARRAY_LITERAL, loop.getExpression());
+		assertEquals(3, value.getElements().size());
+		assertLiteral(1, value.getElements().get(0));
+		assertLiteral(2, value.getElements().get(1));
+		assertLiteral(3, value.getElements().get(2));
 	}
 	
 	@Test
