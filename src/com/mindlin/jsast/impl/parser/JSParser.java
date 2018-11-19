@@ -673,20 +673,14 @@ public class JSParser {
 				break;
 			}
 			
-			dialect.require("ts.parameter.accessModifier", next.getStart());
+			dialect.require("ts.parameter.accessModifier", next.getRange());
 			
-			// Check if blacklisted
-			if (!filter.test(modifier, next)) {
-				throw new JSUnexpectedTokenException(next, "Unsupported modifier: '" + modifier + "'");
-			}
-			
-			// Overlap
+			// Overlap (should we move this to validation?)
 			if (Modifiers.intersection(result, modifier).any()) {
 				//TODO: Emit other token for duplicated modifier
-				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", next.getStart());
+				throw new JSSyntaxException("Duplicate modifier: '" + modifier + "'", next.getRange());
 			} else if (modifier.getAccess() != null && result.getAccess() != null) {
-				//TODO: finish
-				throw new JSSyntaxException("Duplicate visibility modifier", next.getStart());
+				throw new JSSyntaxException("Duplicate visibility modifier", next.getRange());
 			}
 			
 			// Be able to backtrack if we have a variable with a modifier-like name
