@@ -13,7 +13,6 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.comment.CommentNode;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
-import com.mindlin.jsast.tree.type.ConditionalTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
@@ -226,6 +225,7 @@ public interface Tree {
 
 		// Variable stuff
 		IDENTIFIER(IdentifierTree.class),
+		COMPUTED_PROPERTY_KEY(ComputedPropertyKeyTree.class),
 		
 		// ===== Properties =====
 		// These are used for object literals, classes, interfaces, etc.
@@ -240,6 +240,7 @@ public interface Tree {
 		// Inheritance
 		EXTENDS_CLAUSE(HeritageClauseTree.class),
 		IMPLEMENTS_CLAUSE(HeritageClauseTree.class),
+		HERITAGE_EXPRESSION(HeritageExpressionTree.class),
 		
 		// Declarations
 		ASSIGNMENT_PROPERTY(AssignmentPropertyTree.class),

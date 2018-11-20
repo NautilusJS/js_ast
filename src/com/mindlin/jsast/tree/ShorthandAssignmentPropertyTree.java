@@ -5,11 +5,6 @@ public interface ShorthandAssignmentPropertyTree extends AssignmentPropertyTree 
 	IdentifierTree getName();
 	
 	@Override
-	default IdentifierTree getValue() {
-		return getName();
-	}
-	
-	@Override
 	default Kind getKind() {
 		return Kind.SHORTHAND_ASSIGNMENT_PROPERTY;
 	}

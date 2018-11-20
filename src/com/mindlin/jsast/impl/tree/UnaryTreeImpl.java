@@ -30,4 +30,12 @@ public class UnaryTreeImpl extends AbstractTree implements UnaryTree {
 	protected int hash() {
 		return Objects.hash(getKind(), getExpression());
 	}
+	
+	public static class AwaitTreeImpl extends UnaryTreeImpl implements AwaitTree {
+
+		public AwaitTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression) {
+			super(start, end, expression, Kind.AWAIT);
+		}
+		
+	}
 }

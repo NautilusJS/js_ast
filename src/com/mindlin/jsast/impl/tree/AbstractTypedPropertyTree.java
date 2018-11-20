@@ -4,25 +4,20 @@ import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
-import com.mindlin.jsast.tree.PropertyDeclarationTree;
+import com.mindlin.jsast.tree.PropertyName;
+import com.mindlin.jsast.tree.PropertyTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public abstract class AbstractTypedPropertyTree extends AbstractTree implements PropertyDeclarationTree {
+public abstract class AbstractTypedPropertyTree extends AbstractTree implements PropertyTree {
 	protected final Modifiers modifiers;
-	protected final ObjectPropertyKeyTree key;
+	protected final PropertyName name;
 	protected final TypeTree type;
 	
-	public AbstractTypedPropertyTree(SourcePosition start, SourcePosition end, Modifiers modifiers, ObjectPropertyKeyTree key, TypeTree type) {
+	public AbstractTypedPropertyTree(SourcePosition start, SourcePosition end, Modifiers modifiers, PropertyName name, TypeTree type) {
 		super(start, end);
 		this.modifiers = modifiers;
-		this.key = key;
+		this.name = name;
 		this.type = type;
-	}
-	
-	@Override
-	public ObjectPropertyKeyTree getKey() {
-		return key;
 	}
 	
 	@Override
@@ -31,13 +26,17 @@ public abstract class AbstractTypedPropertyTree extends AbstractTree implements 
 	}
 	
 	@Override
-	public TypeTree getType() {
+	public PropertyName getName() {
+		return this.name;
+	}
+	
+	protected TypeTree getType() {
 		return type;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getModifiers(), getKey(), getType());
+		return Objects.hash(getKind(), getModifiers(), getName(), getType());
 	}
 	
 }

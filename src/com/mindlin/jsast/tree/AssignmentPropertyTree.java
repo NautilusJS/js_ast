@@ -7,7 +7,7 @@ package com.mindlin.jsast.tree;
  * @author mailmindlin
  */
 public interface AssignmentPropertyTree extends PropertyTree, ObjectLiteralElement {
-	ExpressionTree getValue();
+	ExpressionTree getInitializer();
 	
 	@Override
 	default Kind getKind() {
