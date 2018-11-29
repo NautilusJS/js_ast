@@ -2268,6 +2268,12 @@ public class JSParser {
 		return this.reinterpretExpressionAsPattern(expr, false);
 	}
 	
+	protected ExpressionTree parseInitializer(JSLexer src, Context context) {
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
+			return this.parseAssignment(src, context);
+		return null;
+	}
+	
 	protected ExpressionTree parseAssignment(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		
@@ -2343,9 +2349,7 @@ public class JSParser {
 		TypeTree type = this.parseTypeMaybe(src, context, true);
 		
 		// Parse initializer
-		ExpressionTree initializer = null;
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
-			initializer = this.parseAssignment(src, context);
+		ExpressionTree initializer = this.parseInitializer(src, context);
 		
 		return new ParameterTreeImpl(start, src.getPosition(), modifiers, name, rest, type, initializer);
 	}
@@ -2409,13 +2413,13 @@ public class JSParser {
 		TypeTree type = this.parseTypeMaybe(src, context, false);
 		
 		//Parse default value, if exists
-		ExpressionTree defaultValue = ((optionalToken == null && type == null) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) ? this.parseAssignment(src, context) : null;
+		ExpressionTree initializer = this.parseInitializer(src, context);
 		
 		Modifiers modifiers = Modifiers.NONE;
 		if (optionalToken != null)
 			modifiers = modifiers.combine(Modifiers.OPTIONAL);
 		
-		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), modifiers, (IdentifierTree) lastParam, false, type, defaultValue));
+		parameters.add(new ParameterTreeImpl(lastParam.getStart(), src.getPosition(), modifiers, (IdentifierTree) lastParam, false, type, initializer));
 		
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
 			parameters = this.parseParameters(parameters, src, context);
@@ -2989,9 +2993,7 @@ public class JSParser {
 						|| lookahead.matches(TokenKind.BRACKET, '}'))) {
 			// Shorthand property assignment
 			// <name> [= <initializer>]
-			ExpressionTree initializer = null;
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
-				initializer = this.parseAssignment(src, context);
+			ExpressionTree initializer = this.parseInitializer(src, context);
 			
 			return new ShorthandAssignmentPropertyTreeImpl(start, src.getPosition(), modifiers, (IdentifierTree) name, initializer);
 		} else {
