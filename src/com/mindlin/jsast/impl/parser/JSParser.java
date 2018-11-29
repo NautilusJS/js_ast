@@ -2565,7 +2565,7 @@ public class JSParser {
 		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS))
 			args = this.parseArguments(src, context);
 		else
-			args = Collections.emptyList();
+			args = null;
 		
 		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
 	}
