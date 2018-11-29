@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
+import com.mindlin.jsast.fs.SourceFile;
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.parser.JSKeyword;
@@ -30,23 +31,24 @@ public class JSLexer implements Supplier<Token> {
 	protected Token lookahead = null;
 	protected LinkedList<Token> lookaheads = new LinkedList<>();
 	//TODO: supply source file
-	protected LineMapBuilder lines = new LineMapBuilder(null);
+	protected final LineMapBuilder lines;
 	protected final BooleanStack templateStack = new BooleanStack();
+	
+	public JSLexer(String src) {
+		this(new CharacterArrayStream(src));
+	}
 	
 	public JSLexer(char[] chars) {
 		this(new CharacterArrayStream(chars));
 	}
 	
 	public JSLexer(CharacterStream chars) {
+		this(null, chars);
+	}
+	
+	public JSLexer(SourceFile source, CharacterStream chars) {
+		this.lines = new LineMapBuilder(source);
 		this.chars = chars;
-	}
-	
-	public JSLexer(JSLexer origin) {
-		this.chars = origin.chars;
-	}
-	
-	public JSLexer(String src) {
-		this(new CharacterArrayStream(src));
 	}
 	
 	public LineMap getLines() {
