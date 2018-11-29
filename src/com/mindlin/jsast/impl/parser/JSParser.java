@@ -1202,6 +1202,12 @@ public class JSParser {
 			return new CallSignatureTreeImpl(start, src.getPosition(), null, typeParams, params, returnType);
 	}
 	
+	/**
+	 * <pre>
+	 * MethodSignature:
+	 * 		MethodModifiers PropertyName TypeParameters[opt] ( ParameterList ) TypeAnnotation[opt] EOL[opt]
+	 * </pre>
+	 */
 	protected MethodSignatureTree parseMethodSignature(SourcePosition start, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
 		//TODO: finish
 		throw new JSUnsupportedException("Method signatures", src.getPosition());
@@ -1223,6 +1229,12 @@ public class JSParser {
 		return new PropertyDeclarationTreeImpl(start, src.getPosition(), modifiers, name, type, initializer);
 	}
 	
+	/**
+	 * <pre>
+	 * IndexSignature:
+	 * 		readonly[opt] [ Identifier TypeAnnotation ] TypeAnnotation EOL[opt]
+	 * </pre>
+	 */
 	protected IndexSignatureTree parseIndexSignature(List<DecoratorTree> decorators, SourcePosition start, Modifiers modifiers, JSLexer src, Context context) {
 		expect(TokenKind.BRACKET, '[', src, context);
 		
@@ -1261,6 +1273,12 @@ public class JSParser {
 		return src.nextTokenIs(TokenKind.BRACKET, '[') && src.nextToken().isIdentifier() && src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.IN);
 	}
 	
+	/**
+	 * <pre>
+	 * MappedType:
+	 * 		{ readonly[opt] [ Identifier in Type ] ?[opt] : Type ;[opt] }
+	 * </pre>
+	 */
 	protected TypeTree parseMappedType(JSLexer src, Context context) {
 		SourcePosition start = expect(TokenKind.BRACKET, '{', src, context).getStart();
 		Modifiers modifiers = this.parseModifiers(Modifiers.READONLY, false, src, context);
@@ -1283,6 +1301,16 @@ public class JSParser {
 		return 
 	}
 	
+	/**
+	 * <pre>
+	 * TypeMember:
+	 * 		CallSignature
+	 * 		ConstructSignature
+	 * 		IndexSignature
+	 * 		PropertySignature
+	 * 		MethodSignature
+	 * </pre>
+	 */
 	protected TypeElementTree parseTypeMember(JSLexer src, Context context) {
 		Token next = src.peek();
 		
@@ -1355,6 +1383,12 @@ public class JSParser {
 	
 	//SECTION: Enums
 	
+	/**
+	 * <pre>
+	 * EnumMember:
+	 * 		Identifier Initializer[opt]
+	 * </pre>
+	 */
 	protected EnumMemberTree parseEnumMember(JSLexer src, Context context) {
 		//TODO: finish
 		throw new JSUnsupportedException("Enum members", src.getPosition());
@@ -1362,6 +1396,11 @@ public class JSParser {
 	
 	/**
 	 * Parse an enum declaration
+	 * <pre>
+	 * EnumDeclaration[declare, export]:
+	 * 		const[opt] enum Identifier { EnumMember[] }
+	 * </pre>
+	 * @see #parseEnumMember(JSLexer, Context)
 	 */
 	protected EnumDeclarationTree parseEnumDeclaration(JSLexer src, Context context) {
 		SourcePosition start = src.peek().getStart();
@@ -1408,12 +1447,25 @@ public class JSParser {
 		throw new JSUnsupportedException("Accessors", src.getPosition());
 	}
 	
+	/**
+	 * <pre>
+	 * HeritageExpression:
+	 * 		LeftSideExpression TypeArguments[opt]
+	 * </pre>
+	 */
 	protected HeritageExpressionTree parseHeritageType(JSLexer src, Context context) {
 		ExpressionTree expr = this.parseLeftSideExpression(true, src, context);
 		List<TypeTree> typeArgs = this.parseTypeArguments(src, context);
 		return new HeritageExpressionTreeImpl(expr.getStart(), src.getPosition(), expr, typeArgs);
 	}
 	
+	/**
+	 * <pre>
+	 * HeritageClause:
+	 * 		extends HeritageExpression[]
+	 * 		implements HeritageExpression[]
+	 * </pre>
+	 */
 	protected HeritageClauseTree parseHeritageClause(JSLexer src, Context context) {
 		Token keyword = src.nextTokenIf(TokenPredicate.HERITAGE_START);
 		if (keyword == null)
@@ -1429,6 +1481,18 @@ public class JSParser {
 		return this.parseDelimitedList(this::parseHeritageClause, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, '{'), src, context);
 	}
 	
+	/**
+	 * <pre>
+	 * ClassElement:
+	 * 		EmptyClassElement
+	 * 		IndexSignature
+	 * 		ConstructorDeclaration
+	 * 		MethodDeclaration
+	 * 		PropertyDeclaration
+	 * EmptyClassElement:
+	 * 		;
+	 * </pre>
+	 */
 	protected ClassElementTree parseClassElement(JSLexer src, Context context) {
 		SourcePosition start = src.peek().getStart();
 		
