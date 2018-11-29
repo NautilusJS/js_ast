@@ -3019,66 +3019,60 @@ public class JSParser {
 	//Unary ops
 	
 	/**
-	 * Parse an unary expression (in form of {@code {OP} {EXPR}} or {@code {EXPR} {OP}}).
+	 * Syntax:
+	 * <pre>
+	 * UnaryExpression:
+	 * 		< type > UnaryExpression
+	 * </pre>
+	 * @param src
+	 * @param context
+	 * @return
 	 */
-	protected ExpressionTree parseUnaryExpression(JSLexer src, Context context) {
-		Token lookahead = src.peek();
+	protected ExpressionTree parseTypeAssertion(JSLexer src, Context context) {
+		//Angle bracket casting
+		Token lhsBracket = expectOperator(JSOperator.LESS_THAN, src, context);
+		TypeTree type = this.parseType(src, context);
+		expectOperator(JSOperator.GREATER_THAN, src, context);
+		ExpressionTree rhs = this.parseBinaryExpression(src, context);
 		
-		// Special cases
-		if (lookahead.matches(TokenKind.KEYWORD, JSKeyword.YIELD))
-			return this.parseYield(src, context);
-		if (lookahead.matchesOperator(JSOperator.SPREAD))
-			return this.parseSpread(src, context);
-		
-		Tree.Kind kind = null;
-		boolean updates = false;
-		switch (lookahead.getKind()) {
+		SourcePosition start = lhsBracket.getStart(), end = src.getPosition();
+		dialect.require("ts.types.cast", new SourceRange(start, end));
+		return new CastExpressionTreeImpl(start, end, rhs, type);
+	}
+	
+	/**
+	 * Map token kind/value to AST {@link Tree.Kind}.
+	 * @param token
+	 * @return AST kind, or {@code null} if no mapping present
+	 */
+	protected Tree.Kind mapTokenToUnaryKind(Token token) {
+		switch (token.getKind()) {
 			case KEYWORD:
-				switch (lookahead.<JSKeyword>getValue()) {
+				switch (token.<JSKeyword>getValue()) {
 					case VOID:
-						kind = Tree.Kind.VOID;
-						break;
+						return Tree.Kind.VOID;
 					case TYPEOF:
-						kind = Tree.Kind.TYPEOF;
-						break;
+						return Tree.Kind.TYPEOF;
 					case DELETE:
-						kind = Tree.Kind.DELETE;
-						break;
+						return Tree.Kind.DELETE;
 					default:
 						break;
 				}
 				break;
 			case OPERATOR:
-				switch (lookahead.<JSOperator>getValue()) {
+				switch (token.<JSOperator>getValue()) {
 					case PLUS:
-						kind = Tree.Kind.UNARY_PLUS;
-						break;
+						return Tree.Kind.UNARY_PLUS;
 					case MINUS:
-						kind = Tree.Kind.UNARY_MINUS;
-						break;
+						return Tree.Kind.UNARY_MINUS;
 					case BITWISE_NOT:
-						kind = Tree.Kind.BITWISE_NOT;
-						break;
+						return Tree.Kind.BITWISE_NOT;
 					case LOGICAL_NOT:
-						kind = Tree.Kind.LOGICAL_NOT;
-						break;
+						return Tree.Kind.LOGICAL_NOT;
 					case INCREMENT:
-						kind = Tree.Kind.PREFIX_INCREMENT;
-						updates = true;
-						break;
+						return Tree.Kind.PREFIX_INCREMENT;
 					case DECREMENT:
-						kind = Tree.Kind.PREFIX_DECREMENT;
-						updates = false;
-						break;
-					case LESS_THAN: {
-						//Angle bracket casting
-						dialect.require("ts.types.cast", lookahead.getRange());
-						SourcePosition start = src.skip(lookahead).getStart();
-						TypeTree type = this.parseType(src, context);
-						expectOperator(JSOperator.GREATER_THAN, src, context);
-						ExpressionTree rhs = this.parseBinaryExpression(src, context);
-						return new CastExpressionTreeImpl(start, src.getPosition(), rhs, type);
-					}
+						return Tree.Kind.PREFIX_DECREMENT;
 					default:
 						break;
 				}
@@ -3086,29 +3080,66 @@ public class JSParser {
 			default:
 				break;
 		}
+		// No valid mapping
+		return null;
+	}
+	
+	/**
+	 * Parse an unary expression (in form of {@code {OP} {EXPR}} or {@code {EXPR} {OP}}).
+	 */
+	protected ExpressionTree parseUnaryExpression(JSLexer src, Context context) {
+		Token lookahead = src.peek();
 		
+		// Special cases
+		if (context.allowYield() && lookahead.matches(TokenKind.KEYWORD, JSKeyword.YIELD))
+			return this.parseYield(src, context);
+		if (lookahead.matchesOperator(JSOperator.SPREAD))
+			return this.parseSpread(src, context);
+		if (context.allowAwait() && lookahead.matches(TokenKind.IDENTIFIER, "await"))
+			return this.parseAwait(src, context);
+		if (dialect.supports("ts.types.cast") && lookahead.matchesOperator(JSOperator.LESS_THAN))
+			return this.parseTypeAssertion(src, context);
+		
+		Tree.Kind kind = this.mapTokenToUnaryKind(lookahead);
 		if (kind == null)
 			return this.parseUnaryPostfix(src, context);
 		
-		SourcePosition start = src.skip(lookahead).getStart();
+		final SourcePosition start = src.skip(lookahead).getStart();
 		
 		ExpressionTree expression;
+		//TODO: better ASI check?
 		if (kind == Kind.VOID && src.peek().getKind() == TokenKind.SPECIAL)
 			expression = null;
 		else
 			expression = this.parseUnaryExpression(src, context.coverGrammarIsolated());
 		
-		if (updates) {
-			//Check if the target can be modified
-			if (!Validator.canBeAssigned(expression, dialect))
-				throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", start, src.getPosition());
-		} else if (context.isStrict() && kind == Tree.Kind.DELETE && expression.getKind() == Tree.Kind.IDENTIFIER) {
-			//TODO: move to validation pass?
-			String identName = ((IdentifierTree) expression).getName();
-			throw new JSSyntaxException("Cannot delete unqualified identifier " + identName + " in strict mode", start, src.getPosition());
+		final SourcePosition end = src.getPosition();
+		
+		// Some unary types require us to validate the expression
+		//TODO: move to validation pass?
+		switch (kind) {
+			case PREFIX_INCREMENT:
+			case PREFIX_DECREMENT:
+				// Update expressions: Require RHS to be assignable
+				// Check if the target can be modified
+				// TODO: move to validation? (we can't check if we're modifying a `readonly` property here anyways)
+				if (!Validator.canBeAssigned(expression, dialect))
+					throw new JSSyntaxException("Invalid right-hand side expression in " + kind + " expression", start, end);
+				break;
+			case DELETE:
+				// Delete expression: Target must be qualified
+				if (context.isStrict() && expression.getKind() == Tree.Kind.IDENTIFIER) {
+					//TODO: move to validation pass?
+					String identName = ((IdentifierTree) expression).getName();
+					throw new JSSyntaxException("Cannot delete unqualified identifier " + identName + " in strict mode", start, end);
+				}
+				break;
+			default:
+				// No other checks here
+				break;
 		}
 		
-		return new UnaryTreeImpl(start, src.getPosition(), expression, kind);
+		return new UnaryTreeImpl(start, end, expression, kind);
 	}
 	
 	protected ExpressionTree parseUnaryPostfix(JSLexer src, Context context) {
