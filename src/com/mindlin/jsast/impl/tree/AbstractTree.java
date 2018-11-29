@@ -119,7 +119,10 @@ public abstract class AbstractTree implements Tree {
 		sb.append("\"class\":\"").append(treeType).append("\",");
 		
 		Set<String> getterNames = new HashSet<>();
+		//Blacklist getClass(), getStart(), getEnd()
 		getterNames.add("getClass");
+		getterNames.add("getStart");
+		getterNames.add("getEnd");
 		Class<?> clazz = getClass();
 		do {
 			for (Method getter : clazz.getMethods()) {
