@@ -1411,13 +1411,9 @@ public class JSParser {
 		
 		IdentifierTree name = this.parseIdentifier(src, context);
 		
-		List<EnumMemberTree> members;
-		if (src.nextTokenIs(TokenKind.BRACKET, '{')) {
-			
-		} else {
-			// Empty
-			members = null;
-		}
+		expect(TokenKind.BRACKET, '{', src, context);
+		List<EnumMemberTree> members = this.parseDelimitedList(this::parseEnumMember, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
+		expect(TokenKind.BRACKET, '}', src, context);
 		
 		//TODO: finish
 		throw new JSUnsupportedException("Enum declarations", src.getPosition());
