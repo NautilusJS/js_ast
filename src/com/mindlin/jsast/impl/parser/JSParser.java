@@ -1242,13 +1242,11 @@ public class JSParser {
 	 * @param context
 	 * @return
 	 */
-	List<TypeElementTree> parseObjectTypeMembers(JSLexer src, Context context) {
+	protected List<TypeElementTree> parseObjectTypeMembers(JSLexer src, Context context) {
 		List<TypeElementTree> properties = this.parseList(this::parseTypeMember, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
 		
 		expect(TokenKind.BRACKET, '}', src, context);
 		
-		if (properties.isEmpty())
-			return Collections.emptyList();
 		return properties;
 	}
 	
@@ -1272,8 +1270,6 @@ public class JSParser {
 		expect(TokenKind.BRACKET, '{', src, context);
 		//Parse body
 		List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
-		
-		expect(TokenKind.BRACKET, '}', src, context);
 		
 		return new InterfaceDeclarationTreeImpl(interfaceKeywordToken.getStart(), src.getPosition(), name, typeParams, heritage, properties);
 	}

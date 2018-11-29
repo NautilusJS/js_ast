@@ -137,7 +137,7 @@ public class TypeTest {
 	}
 	
 	@Test
-	public void testSimpleInlineInterfaceType() {
+	public void testSimpleObjectType() {
 		ObjectTypeTree type = parseType("{a:Foo}", Kind.OBJECT_TYPE);
 		assertEquals(1, type.getDeclaredMembers().size());
 		
