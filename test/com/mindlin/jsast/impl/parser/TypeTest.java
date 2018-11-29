@@ -23,7 +23,8 @@ public class TypeTest {
 	
 	@SuppressWarnings("unchecked")
 	static <T extends TypeTree> T parseType(String expr, Kind expectedKind) {
-		JSLexer lexer = new JSLexer(expr);
+		StackTraceElement elem = Thread.currentThread().getStackTrace()[1];
+		JSLexer lexer = new JSLexer(new NominalSourceFile(elem.getMethodName(), expr));
 		T result = (T) new JSParser().parseType(lexer, new Context());
 		assertTrue("Did not read whole statement", lexer.isEOF());
 		assertEquals(expectedKind, result.getKind());
