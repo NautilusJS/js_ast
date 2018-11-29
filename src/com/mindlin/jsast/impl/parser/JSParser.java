@@ -252,6 +252,13 @@ public class JSParser {
 		throw new JSSyntaxException("Illegal token " + t + "; expected EOL", t.getRange());
 	}
 	
+	private static boolean lookahead(BiPredicate<JSLexer, Context> tester, JSLexer src, Context context) {
+		src.mark();
+		boolean result = tester.test(src, context);
+		src.reset();
+		return result;
+	}
+	
 	//Parser properties
 	protected JSDialect dialect;
 	
@@ -1155,28 +1162,21 @@ public class JSParser {
 	
 	//SECTION: Type structures
 	
+	/**
+	 * Check if is start of index signature.
+	 * Please use {@link #lookahead(BiPredicate, JSLexer, Context)} to call.
+	 */
 	protected boolean isIndexSignature(JSLexer src, Context context) {
-		src.mark();
-		if (!src.nextTokenIs(TokenKind.BRACKET, '[')) {
-			src.reset();
+		if (!src.nextTokenIs(TokenKind.BRACKET, '['))
 			return false;
-		}
 		if (this.parseModifiers(Modifiers.READONLY, true, src, context).any()) {
-			if (src.nextToken().isIdentifier()) {
-				src.reset();
+			if (src.nextToken().isIdentifier())
 				return true;
-			}
 		} else if (!src.nextToken().isIdentifier()) {
-			src.reset();
 			return false;
 		}
 		this.parseModifiers(Modifiers.union(Modifiers.OPTIONAL, Modifiers.DEFINITE), false, src, context);
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON)) {
-			src.reset();
-			return true;
-		}
-		src.reset();
-		return false;
+		return src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON);
 	}
 	
 	protected SignatureDeclarationTree parseCallSignature(JSLexer src, Context context) {
@@ -1239,8 +1239,8 @@ public class JSParser {
 		Modifiers typeElementFilter = Modifiers.READONLY;
 		Modifiers modifiers = this.parseModifiers(typeElementFilter, true, src, context);
 		
-		if (this.isIndexSignature(src, context))
-			return this.parseIndexSignature(null, modifiers, src, context);
+		if (lookahead(this::isIndexSignature, src, context))
+			return this.parseIndexSignature(null, next.getStart(), modifiers, src, context);
 		
 		// Method/property signature
 		SourcePosition start = next.getStart();
@@ -1404,8 +1404,8 @@ public class JSParser {
 		}
 		
 		// Possibly index signature
-		if (this.isIndexSignature(src, context))
-			return this.parseIndexSignature(decorators, modifiers, src, context);
+		if (lookahead(this::isIndexSignature, src, context))
+			return this.parseIndexSignature(decorators, start, modifiers, src, context);
 		
 		PropertyName name = this.parsePropertyName(src, context);
 		
