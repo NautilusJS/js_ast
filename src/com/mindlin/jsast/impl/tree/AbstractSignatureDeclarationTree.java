@@ -17,7 +17,7 @@ public abstract class AbstractSignatureDeclarationTree extends AbstractTree impl
 	protected final TypeTree returnType;
 	
 	public AbstractSignatureDeclarationTree(SourcePosition start, SourcePosition end, PropertyName name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType) {
-		super(position);
+		super(start, end);
 		this.name = name;
 		this.generics = generics;
 		this.parameters = parameters;

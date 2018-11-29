@@ -1,8 +1,10 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.util.List;
 import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.DecoratorTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ParameterTree;
@@ -56,6 +58,12 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 		this.type = type;
 		this.initializer = initializer;
 	}
+
+	@Override
+	public List<DecoratorTree> getDecorators() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	@Override
 	public Modifiers getModifiers() {
@@ -84,6 +92,6 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getModifiers(), getIdentifier(), isRest(), isOptional(), getType(), getInitializer());
+		return Objects.hash(getKind(), getDecorators(), getModifiers(), getIdentifier(), isRest(), getType(), getInitializer());
 	}
 }

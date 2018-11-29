@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
@@ -28,7 +27,7 @@ public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	}
 
 	@Override
-	public List<TypeParameterDeclarationTree> getGenericParameters() {
+	public List<TypeParameterDeclarationTree> getTypeParameters() {
 		return this.genericParams;
 	}
 
@@ -39,7 +38,7 @@ public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getAlias(), getGenericParameters(), getValue());
+		return Objects.hash(getKind(), getName(), getTypeParameters(), getValue());
 	}
 	
 }
