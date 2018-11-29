@@ -43,6 +43,7 @@ public class TokenPredicate {
 		}
 	};
 	public static final Predicate<Token> HERITAGE_START = t -> (t.isKeyword() && (t.getValue() == JSKeyword.EXTENDS || t.getValue() == JSKeyword.IMPLEMENTS));
+	public static final Predicate<Token> UPDATE_OPERATOR = t->(t.isOperator() && (t.getValue() == JSOperator.INCREMENT || t.getValue() == JSOperator.DECREMENT));
 	/**
 	 * TokenPredicate can't be instantiated
 	 */

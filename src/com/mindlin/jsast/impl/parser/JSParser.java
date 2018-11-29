@@ -3114,12 +3114,13 @@ public class JSParser {
 	protected ExpressionTree parseUnaryPostfix(JSLexer src, Context context) {
 		ExpressionTree expr = this.parseLeftSideExpression(true, src, context.pushed());
 		
-		Token operatorToken = src.nextTokenIf(t->(t.isOperator() && (t.getValue() == JSOperator.INCREMENT || t.getValue() == JSOperator.DECREMENT)));
+		Token operatorToken = src.nextTokenIf(TokenPredicate.UPDATE_OPERATOR);
 		if (operatorToken == null)
 			return expr;
 		
 		if (!Validator.canBeAssigned(expr, dialect))
 			throw new JSSyntaxException("Invalid left-hand side expression in " + operatorToken.getKind() + " expression", expr.getRange());
+		
 		Kind kind;
 		if (operatorToken.getValue() == JSOperator.INCREMENT)
 			kind = Kind.POSTFIX_INCREMENT;
