@@ -28,8 +28,10 @@ public class ObjectCache<E> {
 		this(DEFAULT_LF);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public ObjectCache(float loadFactor) {
 		this.loadFactor = loadFactor;
+		this.table = new Entry[MIN_CAPACITY];
 	}
 	
 	protected synchronized void resize(int newCap) {
