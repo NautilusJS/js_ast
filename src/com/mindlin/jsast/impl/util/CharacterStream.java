@@ -1,6 +1,12 @@
 package com.mindlin.jsast.impl.util;
 
 public interface CharacterStream {
+	/**
+	 * Get current character (the character at the current {@link #position()}
+	 * in the stream).
+	 * 
+	 * @return current character
+	 */
 	char current();
 
 	char next();
@@ -18,6 +24,10 @@ public interface CharacterStream {
 
 	CharacterStream skip(long offset);
 
+	/**
+	 * Get current position in the stream.
+	 * @return Current position, or -1 if the stream has not yet been read from.
+	 */
 	long position();
 
 	CharacterStream position(long pos);
@@ -25,6 +35,8 @@ public interface CharacterStream {
 	/**
 	 * Whether a call to {@link #next()} is valid (i.e., this CharacterStream
 	 * has at least 1 more character).
+	 * <br/>
+	 * This method should be equivalent to {@link #hasNext(long) hasNext(1)}.
 	 * 
 	 * @return Whether there is a next character
 	 */
