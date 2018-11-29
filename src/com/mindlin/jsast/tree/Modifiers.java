@@ -209,7 +209,11 @@ public class Modifiers implements Comparable<Modifiers> {
 	
 	@Override
 	public int hashCode() {
-		return (int) (this.flags ^ (this.flags >>> 32));
+		// We have fewer than 2**32 bits that we care about
+		int hash = (int) this.flags & 0b11111;//Bits 0-4 (PUBLIC/PRIVATE/PROTECTED/STATIC/CONST)
+		hash |= (int) (this.flags >> 10) & 0b11;//Bits 10-11 (ABSTRACT/STRICT)
+		hash |= (int) (this.flags >> 25) & 0b11111111;//Bits 25-32 (GENERATOR/ASYNC/GETTER/SETTER/READONLY/OPTIONAL/DEFINITE/DECLARE)
+		return hash;
 	}
 	
 	@Override
