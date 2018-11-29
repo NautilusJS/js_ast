@@ -485,7 +485,7 @@ public class JSParser {
 	}
 	
 	protected <T extends Tree> List<T> parseList(BiFunction<JSLexer, Context, T> elementParser, Predicate<Token> isTerminator, JSLexer src, Context context) {
-		List<T> result = new ArrayList<>();
+		ArrayList<T> result = new ArrayList<>();
 		
 		while (!isTerminator.test(src.peek())) {
 			if (src.peek().matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
@@ -495,6 +495,10 @@ public class JSParser {
 			result.add(value);
 		}
 		
+		if (result.isEmpty())
+			return Collections.emptyList();
+		
+		result.trimToSize();
 		return result;
 	}
 	/**
@@ -809,7 +813,6 @@ public class JSParser {
 		
 		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
 		
-		result.trimToSize();
 		return result;
 	}
 	
