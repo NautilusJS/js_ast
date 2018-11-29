@@ -1,51 +1,79 @@
 package com.mindlin.jsast.impl.tree;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import com.mindlin.jsast.fs.SourceFile;
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.util.LongStack;
 
+/**
+ * Provider for mapping raw offsets to {@link SourcePosition SourcePositions}. 
+ * @author mailmindlin
+ */
 public interface LineMap {
+	
+	SourceFile getSource();
 	
 	/**
 	 * Get line position
 	 * @param position
-	 * @return
+	 * @return Line number that {@code position} would fall on (starting at 0).
 	 */
 	long getLineNumber(long position);
 	
 	/**
-	 * Get offset of start of line
+	 * Get offset of the start of a line.
+	 * 
 	 * @param line
-	 * @return
+	 * @return Character offset
+	 * @throws IndexOutOfBoundsException If {@code line} is not mapped.
 	 */
 	long getLineOffset(long line);
 	
 	/**
 	 * Lookup position
 	 * @param position
-	 * @return
+	 * @return mapped position
 	 */
-	SourcePosition lookup(long position);
+	default SourcePosition lookup(long position) {
+		// Definately non-optimal impl. Please override.
+		long row = getLineNumber(position);
+		long col = position - getLineOffset(row);
+		return new SourcePosition(getSource(), position, row, col);
+	}
 	
 	public static LineMap compile(String s) {
 		LongStack offsets = new LongStack(64, false);
-		int lastOffset = -1;
+		
 		// Simple & happy. I love when programming languages
 		// let you do tasks like this so easily
+		int lastOffset = -1;
 		while ((lastOffset = s.indexOf('\n', lastOffset)) > -1)
 			offsets.push(lastOffset);
+		
 		return new CompiledLineMap(null, offsets.toArray());
 	}
 	
-	public static class CompiledLineMap implements LineMap {
+	public static class CompiledLineMap implements LineMap, Serializable {
+		private static final long serialVersionUID = -7936542102077343629L;
 		protected final SourceFile source; 
 		protected final long[] newlinePositions;
+		
+		// For serialization
+		@SuppressWarnings("unused")
+		private CompiledLineMap() {
+			this(null, null);
+		}
 		
 		public CompiledLineMap(SourceFile source, long[] positions) {
 			this.source = source;
 			this.newlinePositions = positions;
+		}
+		
+		@Override
+		public SourceFile getSource() {
+			return this.source;
 		}
 		
 		@Override
@@ -77,7 +105,7 @@ public interface LineMap {
 		@Override
 		public long getLineOffset(long line) {
 			if (line < 0 || this.newlinePositions.length <= line)
-				throw new ArrayIndexOutOfBoundsException(String.format("%d is out of range [0, %d]", line, this.newlinePositions.length));
+				throw new IndexOutOfBoundsException(String.format("%d is out of range [0, %d]", line, this.newlinePositions.length));
 			
 			return this.newlinePositions[(int) line];
 		}
@@ -90,6 +118,11 @@ public interface LineMap {
 		
 		public LineMapBuilder(SourceFile source) {
 			this.source = source;
+		}
+		
+		@Override
+		public SourceFile getSource() {
+			return this.source;
 		}
 		
 		public void putNewline(long position) {
@@ -133,6 +166,10 @@ public interface LineMap {
 		
 		public void shrink() {
 			this.newlinePositions = Arrays.copyOf(this.newlinePositions, this.length);
+		}
+		
+		public LineMap compiled() {
+			return new CompiledLineMap(this.getSource(), Arrays.copyOf(this.newlinePositions, this.length));
 		}
 	}
 }
