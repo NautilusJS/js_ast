@@ -1323,11 +1323,21 @@ public class JSParser {
 		throw new JSUnsupportedException("Accessors", src.getPosition());
 	}
 	
+	protected HeritageExpressionTree parseHeritageType(JSLexer src, Context context) {
+		ExpressionTree expr = this.parseLeftSideExpression(true, src, context);
+		List<TypeTree> typeArgs = this.parseTypeArguments(src, context);
+		return new HeritageExpressionTreeImpl(expr.getStart(), src.getPosition(), expr, typeArgs);
+	}
+	
 	protected HeritageClauseTree parseHeritageClause(JSLexer src, Context context) {
 		Token keyword = src.nextTokenIf(TokenPredicate.HERITAGE_START);
 		if (keyword == null)
 			return null;
-		throw new JSUnsupportedException("Heritage", keyword.getRange());
+		
+		Kind kind = keyword.<JSKeyword>getValue() == JSKeyword.EXTENDS ? Kind.EXTENDS_CLAUSE : Kind.IMPLEMENTS_CLAUSE;
+		List<HeritageExpressionTree> exprs = this.parseDelimitedList(this::parseHeritageType, this::parseCommaSeparator, null, src, context);
+		
+		return new HeritageClauseTreeImpl(keyword.getStart(), src.getPosition(), kind, exprs);
 	}
 	
 	protected List<HeritageClauseTree> parseHeritage(JSLexer src, Context context) {
@@ -1428,7 +1438,7 @@ public class JSParser {
 		//Read class body
 		expect(TokenKind.BRACKET, '{', src, context);
 		
-		List<ClassElementTree> members = this.parseDelimitedList(this::parseClassElement, null, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
+		List<ClassElementTree> members = this.parseList(this::parseClassElement, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
 		
 		expect(TokenKind.BRACKET, '}', src, context);
 		
