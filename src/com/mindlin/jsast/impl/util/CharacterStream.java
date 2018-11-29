@@ -28,7 +28,9 @@ public interface CharacterStream {
 	 * 
 	 * @return Whether there is a next character
 	 */
-	boolean hasNext();
+	default boolean hasNext() {
+		return hasNext(1);
+	}
 
 	/**
 	 * Whether this CharacterStream has at least {@code num} more
@@ -40,7 +42,14 @@ public interface CharacterStream {
 	 */
 	boolean hasNext(long num);
 	
-	boolean isEOL();
+	//TODO: remove?
+	default boolean isEOL() {
+		if (!hasNext() || position() < 0)
+			return false;
+		
+		final char c = current();
+		return c == '\r' || c == '\n';
+	}
 
 	default boolean isWhitespace() {
 		return position() >= 0 && hasNext() && Characters.isJsWhitespace(current());

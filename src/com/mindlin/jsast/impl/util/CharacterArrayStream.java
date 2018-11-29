@@ -58,15 +58,6 @@ public class CharacterArrayStream extends AbstractCharacterStream {
 	}
 	
 	@Override
-	public boolean isEOL() {
-		if (!hasNext() || position < 0)
-			return false;
-		
-		final char c = current();
-		return c == '\r' || c == '\n';
-	}
-	
-	@Override
 	public CharacterStream skipWhitespace() {
 		while (position + 1 < data.length && Characters.isJsWhitespace(data[position + 1]))
 			position++;
