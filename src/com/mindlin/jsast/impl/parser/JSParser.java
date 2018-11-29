@@ -1441,7 +1441,7 @@ public class JSParser {
 		//Read class body
 		expect(TokenKind.BRACKET, '{', src, context);
 		
-		List<ClassElementTree> members = this.parseDelimitedList(this::parseClassElement, null, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
+		List<ClassElementTree> members = this.parseList(this::parseClassElement, TokenPredicate.match(TokenKind.BRACKET, '}'), src, context);
 		
 		expect(TokenKind.BRACKET, '}', src, context);
 		
