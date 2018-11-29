@@ -3660,6 +3660,10 @@ public class JSParser {
 			return this;
 		}
 		
+		public boolean isAmbient() {
+			return data.isAmbient;
+		}
+		
 		public boolean isStrict() {
 			return data.isStrict;
 		}
@@ -3753,6 +3757,11 @@ public class JSParser {
 			data.inGenerator = true;
 			return this;
 		}
+		
+		public Context enterDeclare() {
+			data.isAmbient = true;
+			return this;
+		}
 
 		/**
 		 * Marks this level of the context as being in a loop. Allows
@@ -3802,6 +3811,7 @@ public class JSParser {
 		}
 		
 		static class ContextData {
+			boolean isAmbient = false;
 			boolean isStrict = false;
 			boolean isDirectiveTarget = false;
 			/**
