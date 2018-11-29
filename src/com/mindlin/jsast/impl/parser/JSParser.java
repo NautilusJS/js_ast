@@ -69,6 +69,7 @@ import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.LineMap;
 import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.MappedTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
@@ -367,7 +368,7 @@ public class JSParser {
 					return this.parseExpressionStatement(src, context);
 			case OPERATOR:
 				if (lookahead.<JSOperator>getValue() == JSOperator.AT_SYMBOL)
-					return this.parseDecoratedStatement(src, context);
+					return this.parseDeclaration(src, context);
 				return this.parseExpressionStatement(src, context);
 			case IDENTIFIER: {
 				// We need another lookahead to make this decision
@@ -1162,6 +1163,58 @@ public class JSParser {
 		return Collections.emptyList();
 	}
 	
+	protected StatementTree parseDeclaration(JSLexer src, Context context) {
+		List<DecoratorTree> decorators = this.parseDecorators(src, context);
+		Modifiers contextualModifiers = Modifiers.union(Modifiers.ABSTRACT, Modifiers.ASYNC, Modifiers.CONST, Modifiers.DECLARE, Modifiers.MASK_VISIBILITY);
+		Modifiers modifiers = this.parseModifiers(contextualModifiers, true, src, context);
+		
+		if (modifiers.isDeclare() && !context.isAmbient())
+			context.push().enterDeclare();
+		StatementTree result = parseDeclarationInner(src, context);
+		if (modifiers.isDeclare() && !context.isAmbient())
+			context.pop();
+		
+		return result;
+	}
+	
+	protected StatementTree parseDeclarationInner(JSLexer src, Context context) {
+		Token lookahead = src.peek();
+		switch (lookahead.getKind()) {
+			case IDENTIFIER:
+				switch (lookahead.<String>getValue()) {
+					case "type":
+						return this.parseTypeAlias(src, context);
+				}
+				break;
+			case KEYWORD:
+				switch (lookahead.<JSKeyword>getValue()) {
+					case VAR:
+					case LET:
+					case CONST:
+						return this.parseVariableDeclaration(false, src, context);
+					case CLASS:
+						return this.parseClassDeclaration(src, context);
+					case FUNCTION:
+					case FUNCTION_GENERATOR:
+						return this.parseFunctionDeclaration(src, context);
+					case INTERFACE:
+						return this.parseInterfaceDeclaration(src, context);
+					case ENUM:
+						return this.parseEnumDeclaration(src, context);
+					case EXPORT:
+						return this.parseExportStatement(src, context);
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+		//This shouldn't ever happen
+		throw new JSUnexpectedTokenException(src.peek());
+	}
+	
+	
 	//SECTION: Type structures
 	
 	/**
@@ -1181,6 +1234,14 @@ public class JSParser {
 		return src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON);
 	}
 	
+	/**
+	 * <pre>
+	 * CallSignature:
+	 * 		TypeParameterList[opt] ( ParameterList ) => Type
+	 * ConstructSignature:
+	 * 		new ( ParameterList ) => Type
+	 * </pre>
+	 */
 	protected SignatureDeclarationTree parseCallSignature(JSLexer src, Context context) {
 		SourcePosition start = src.getPosition();
 		
@@ -1298,7 +1359,7 @@ public class JSParser {
 		this.parseEOL(src, context);
 		expect(TokenKind.BRACKET, '}', src, context);
 		
-		return 
+		return new MappedTypeTreeImpl(start, src.getPosition(), modifiers, param, type);
 	}
 	
 	/**
@@ -1390,6 +1451,8 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected EnumMemberTree parseEnumMember(JSLexer src, Context context) {
+		IdentifierTree name = this.parseIdentifier(src, context);
+		ExpressionTree initialier = this.parseInitializer(src, context.pushed().allowIn(true));
 		//TODO: finish
 		throw new JSUnsupportedException("Enum members", src.getPosition());
 	}
@@ -1527,7 +1590,7 @@ public class JSParser {
 		PropertyName name = this.parsePropertyName(src, context);
 		
 		// Parse postfix modifiers
-		modifiers = modifiers.combine(this.parseModifiers(Modifiers.union(Modifiers.OPTIONAL, Modifiers.DEFINITE), false, src, context));
+		modifiers = modifiers.combine(this.parseModifiers(Modifiers.MASK_POSTFIX, false, src, context));
 		
 		Token lookahead = src.peek();
 		if (modifiers.isGenerator()
