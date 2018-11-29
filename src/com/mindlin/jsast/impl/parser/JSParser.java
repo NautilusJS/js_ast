@@ -1555,6 +1555,13 @@ public class JSParser {
 			case REGEX_LITERAL://TODO: is this right?
 			case TEMPLATE_LITERAL://TODO: is this right?
 				return new LiteralTypeTreeImpl<>(this.parseLiteral(startToken, src, context), false);
+			case OPERATOR:
+				if (startToken.matchesOperator(JSOperator.LEFT_PARENTHESIS)) {
+					TypeTree inner = this.parseImmediateType(src, context);
+					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+					return inner;
+				}
+				break;
 			default:
 				break;
 		}
@@ -1566,15 +1573,7 @@ public class JSParser {
 	 * Parse a type declaration
 	 */
 	protected TypeTree parseType(JSLexer src, Context context) {
-		//Support parentheses
-		TypeTree type;
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS)) {
-			//Recurse
-			type = parseType(src, context);
-			expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-		} else {
-			type = this.parseImmediateType(src, context);
-		}
+		TypeTree type = this.parseImmediateType(src, context);
 		
 		//Support member types in form of 'A.B'
 		while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
