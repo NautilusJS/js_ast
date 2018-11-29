@@ -927,17 +927,15 @@ public class JSParser {
 		TypeTree type = this.parseTypeMaybe(src, context, false);
 		
 		//Check if an initializer is available
-		ExpressionTree initializer = null;
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT)) {
-			// If we're assigning a function expression, propagate the variable name
-			initializer = this.parseAssignment(src, context.coverGrammarIsolated());
-			if (name.getKind() == Kind.IDENTIFIER
-					&& initializer.getKind() == Kind.FUNCTION_EXPRESSION
-					&& ((FunctionExpressionTree) initializer).getName() == null) {
-				//Infer fn name from variable id
-				FunctionExpressionTree fn = (FunctionExpressionTree) initializer;
-				initializer = new FunctionExpressionTreeImpl(fn.getStart(), fn.getEnd(), fn.getModifiers(), (IdentifierTree) name, fn.getTypeParameters(), fn.getParameters(), fn.getReturnType(), fn.isArrow(), fn.getBody());
-			}
+		ExpressionTree initializer = this.parseInitializer(src, context);
+		// If we're assigning a function expression, propagate the variable name
+		if (initializer != null
+				&& initializer.getKind() == Kind.FUNCTION_EXPRESSION
+				&& name.getKind() == Kind.IDENTIFIER
+				&& ((FunctionExpressionTree) initializer).getName() == null) {
+			//Infer fn name from variable id
+			FunctionExpressionTree fn = (FunctionExpressionTree) initializer;
+			initializer = new FunctionExpressionTreeImpl(fn.getStart(), fn.getEnd(), fn.getModifiers(), (IdentifierTree) name, fn.getTypeParameters(), fn.getParameters(), fn.getReturnType(), fn.isArrow(), fn.getBody());
 		}
 		
 		return new VariableDeclaratorTreeImpl(name.getStart(), src.getPosition(), name, type, initializer);
