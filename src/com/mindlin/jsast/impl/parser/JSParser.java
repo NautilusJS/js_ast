@@ -1186,7 +1186,18 @@ public class JSParser {
 	
 	protected PropertyDeclarationTree parsePropertyDeclaration(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
 		//TODO: finish
-		throw new JSUnsupportedException("Property signatures", src.getPosition());
+		TypeTree type = this.parseTypeMaybe(src, context, true);
+		
+		context.push();
+		context.allowIn(true);
+		if (!modifiers.isStatic())
+			context.allowAwait(false);
+		ExpressionTree initializer = this.parseInitializer(src, context);
+		context.pop();
+		
+		expectTypeMemberSemicolon(src, context);
+		
+		return new PropertyDeclarationTreeImpl(start, src.getPosition(), modifiers, name, type, initializer);
 	}
 	
 	protected IndexSignatureTree parseIndexSignature(List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
