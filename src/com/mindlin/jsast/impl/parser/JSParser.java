@@ -1221,9 +1221,28 @@ public class JSParser {
 		return new PropertyDeclarationTreeImpl(start, src.getPosition(), modifiers, name, type, initializer);
 	}
 	
-	protected IndexSignatureTree parseIndexSignature(List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
-		//TODO: finish
-		throw new JSUnsupportedException("Index signatures", src.getPosition());
+	protected IndexSignatureTree parseIndexSignature(List<DecoratorTree> decorators, SourcePosition start, Modifiers modifiers, JSLexer src, Context context) {
+		expect(TokenKind.BRACKET, '[', src, context);
+		
+		//TODO: TSC has IndexSignature inherit from Signature, and parses parameters in the brackets: why?
+		IdentifierTree idxVar = this.parseIdentifier(src, context);
+		expectOperator(JSOperator.COLON, src, context);
+		TypeTree idxType = this.parseType(src, context);
+		TypeParameterDeclarationTree idx = new TypeParameterDeclarationTreeImpl(idxVar.getStart(), idxType.getEnd(), idxVar, idxType, null);
+		//List<ParameterTree> params = this.parseDelimitedList(this::parseParameter, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, ']'), src, context);
+		
+		expect(TokenKind.BRACKET, ']', src, context);
+		
+		//Parse postfix modifiers ('?'/'!')
+		modifiers = modifiers.combine(this.parseModifiers(Modifiers.MASK_POSTFIX, false, src, context));
+		
+		expectOperator(JSOperator.COLON, src, context);
+		TypeTree type = this.parseType(src, context);
+		
+		this.expectTypeMemberSemicolon(src, context);
+		
+		return new IndexSignatureTreeImpl(start, src.getPosition(), modifiers, null, type);
+	}
 	}
 	
 	protected TypeElementTree parseTypeMember(JSLexer src, Context context) {
