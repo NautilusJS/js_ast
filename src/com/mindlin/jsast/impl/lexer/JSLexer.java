@@ -46,6 +46,10 @@ public class JSLexer implements Supplier<Token> {
 		this(null, chars);
 	}
 	
+	public JSLexer(SourceFile source) {
+		this(source, source.getSourceStream());
+	}
+	
 	public JSLexer(SourceFile source, CharacterStream chars) {
 		this.lines = new LineMapBuilder(source);
 		this.chars = chars;
