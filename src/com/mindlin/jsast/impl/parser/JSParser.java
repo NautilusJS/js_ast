@@ -877,7 +877,7 @@ public class JSParser {
 		//Optionally consume semicolon
 		src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON);
 		
-		return new ExportTreeImpl(expr.getStart(), src.getPosition(), isDefault, expr);
+		return new ExportTreeImpl(exportKeywordToken.getStart(), src.getPosition(), isDefault, expr);
 	}
 	
 	protected TypeAliasTree parseTypeAlias(JSLexer src, Context context) {
