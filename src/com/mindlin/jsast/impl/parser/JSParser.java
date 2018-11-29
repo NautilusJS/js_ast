@@ -64,8 +64,8 @@ import com.mindlin.jsast.impl.tree.IdentifierTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.ImportDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.ImportSpecifierTreeImpl;
+import com.mindlin.jsast.impl.tree.IndexSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.InterfaceDeclarationTreeImpl;
-import com.mindlin.jsast.impl.tree.KeyofTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.LineMap;
 import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
@@ -166,11 +166,13 @@ import com.mindlin.jsast.tree.VariableDeclarationTree.VariableDeclarationKind;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.EnumMemberTree;
+import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.type.LiteralTypeTree;
+import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeElementTree;
@@ -1243,6 +1245,42 @@ public class JSParser {
 		
 		return new IndexSignatureTreeImpl(start, src.getPosition(), modifiers, null, type);
 	}
+	
+	/**
+	 * Check that this is the start of a mapped type.
+	 * Please call using {@link #lookahead(BiPredicate, JSLexer, Context)}.
+	 */
+	protected boolean isMappedTypeStart(JSLexer src, Context context) {
+		if (!src.nextTokenIs(TokenKind.BRACKET, '{'))
+			return false;
+		
+		//TODO: support +/- readonly
+		
+		src.nextTokenIf(TokenKind.IDENTIFIER, "readonly");//Consume readonly if present
+		
+		return src.nextTokenIs(TokenKind.BRACKET, '[') && src.nextToken().isIdentifier() && src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.IN);
+	}
+	
+	protected TypeTree parseMappedType(JSLexer src, Context context) {
+		SourcePosition start = expect(TokenKind.BRACKET, '{', src, context).getStart();
+		Modifiers modifiers = this.parseModifiers(Modifiers.READONLY, false, src, context);
+		
+		expect(TokenKind.BRACKET, '[', src, context);
+		IdentifierTree name = this.parseIdentifier(src, context);
+		expectKeyword(JSKeyword.IN, src, context);
+		TypeTree constraint = this.parseType(src, context);
+		expect(TokenKind.BRACKET, ']', src, context);
+		TypeParameterDeclarationTree param = new TypeParameterDeclarationTreeImpl(name.getStart(), constraint.getEnd(), name, constraint, null);
+		
+		modifiers = modifiers.combine(this.parseModifiers(Modifiers.MASK_POSTFIX, false, src, context));
+		
+		expectOperator(JSOperator.COLON, src, context);
+		
+		TypeTree type = this.parseType(src, context);
+		this.parseEOL(src, context);
+		expect(TokenKind.BRACKET, '}', src, context);
+		
+		return 
 	}
 	
 	protected TypeElementTree parseTypeMember(JSLexer src, Context context) {
@@ -1518,19 +1556,151 @@ public class JSParser {
 		throw new JSUnsupportedException("Function/construct signature types", src.getPosition());
 	}
 	
+	/**
+	 * <pre>
+	 * TupleElement:
+	 * 		RestTupleElement
+	 * 		NullModifiedType
+	 * 		Type
+	 * RestTupleElement:
+	 * 		`...` Type
+	 * </pre>
+	 */
+	protected TypeTree parseTupleElement(JSLexer src, Context context) {
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.SPREAD)) {
+			// RestTupleElement
+			TypeTree base = this.parseType(src, context);
+			//TODO: finish
+			throw new JSUnsupportedException("Tuple rest elements", src.getPosition());
+		}
+		//TODO: enable parsing optional/definite
+		return this.parseType(src, context);
+	}
+	
+	/**
+	 * <pre>
+	 * TupleType:
+	 * 		[ TupleBody ]
+	 * TupleBody:
+	 * 		TupleElement
+	 * 		TupleBody, TupleElement
+	 * </pre>
+	 * @see #parseTupleElement(JSLexer, Context)
+	 */
+	protected TypeTree parseTupleType(JSLexer src, Context context) {
+		SourcePosition start = expect(TokenKind.BRACKET, '[', src, context).getStart();
+		
+		List<TypeTree> slots = this.parseDelimitedList(this::parseTupleElement, this::parseCommaSeparator, TokenPredicate.match(TokenKind.BRACKET, ']'), src, context);
+		
+		SourcePosition end = expect(TokenKind.BRACKET, ']', src, context).getEnd();
+		return new TupleTypeTreeImpl(start, end, slots);
+	}
+	
+	/**
+	 * <pre>
+	 * ObjectType:
+	 * 		{ InterfaceBody }
+	 * </pre>
+	 * @see #parseObjectTypeMembers(JSLexer, Context)
+	 */
+	protected ObjectTypeTree parseObjectType(JSLexer src, Context context) {
+		SourcePosition start = expect(TokenKind.BRACKET, '{', src, context).getStart();
+		List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
+		// '}' consumed by parseObjectTypeMembers
+		return new ObjectTypeTreeImpl(start, src.getPosition(), properties);
+	}
+	
+	/**
+	 * <pre>
+	 * ParenthesizedType:
+	 * 		( Type )
+	 * </pre>
+	 */
+	protected TypeTree parseParenthesizedType(JSLexer src, Context context) {
+		SourcePosition start = expectOperator(JSOperator.LEFT_PARENTHESIS, src, context).getStart();
+		TypeTree inner = this.parseType(src, context);
+		SourcePosition end = expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context).getEnd();
+		//TODO: custom node kind?
+		return inner;
+	}
+	
+	/**
+	 * <pre>
+	 * LiteralType:
+	 * 		StringLiteral
+	 * 		NumericLiteral
+	 * 		BooleanLiteral
+	 * </pre>
+	 */
+	protected LiteralTypeTree<?> parseLiteralType(JSLexer src, Context context) {
+		LiteralTree<?> value = this.parseLiteral(null, src, context);
+		return new LiteralTypeTreeImpl<>(value);
+	}
+	
+	/**
+	 * <pre>
+	 * PrimitiveType:
+	 * 		any
+	 * 		boolean
+	 * 		never
+	 * 		null
+	 * 		number
+	 * 		object
+	 * 		string
+	 * 		symbol
+	 * 		unknown
+	 * 		void
+	 * </pre>
+	 */
+	protected TypeTree parsePrimitiveType(JSLexer src, Context context) {
+		//TODO: finish for VOID, NULL_LITERAL
+		return new SpecialTypeTreeImpl(src.nextToken());
+	}
+	
+	/**
+	 * <pre>
+	 * TypeReference:
+	 * 		Identifier TypeArguments?
+	 * </pre>
+	 */
+	protected IdentifierTypeTree parseTypeReference(JSLexer src, Context context) {
+		//TODO: actually should be qualified name
+		IdentifierTree identifier = this.parseIdentifier(src, context);
+		if (src.peek().matchesOperator(JSOperator.PERIOD))
+			throw new JSUnsupportedException("Type reference qualified names", src.peek().getRange());
+		
+		List<TypeTree> typeArgs = this.parseTypeArguments(src, context);
+		
+		return new IdentifierTypeTreeImpl(identifier.getStart(), src.getPosition(), identifier, typeArgs);
+	}
+	
+	/**
+	 * Immediate types:
+	 * <pre>
+	 * ImmediateType:
+	 * 		PrimitiveType
+	 * 		LiteralType
+	 * 		TupleType
+	 * 		ParenthesizedType
+	 * 		ImportType
+	 * 		TypeQuery
+	 * 		ObjectType
+	 * 		TypeReference
+	 * </pre>
+	 */
 	protected TypeTree parseImmediateType(JSLexer src, Context context) {
-		Token startToken = src.nextToken();
-		switch (startToken.getKind()) {
+		Token lookahead = src.peek();
+		switch (lookahead.getKind()) {
 			case KEYWORD:
-				switch (startToken.<JSKeyword>getValue()) {
+				switch (lookahead.<JSKeyword>getValue()) {
 					case THIS: {
 						//'this' type
 						//No generics on 'this'
-						return new IdentifierTypeTreeImpl(startToken.getStart(), startToken.getEnd(), new IdentifierTreeImpl(startToken), Collections.emptyList());
+						IdentifierTree ident = this.parseIdentifier(src, context);//TODO: does this work because lookahead is a keyword?
+						return new IdentifierTypeTreeImpl(ident.getStart(), ident.getEnd(), ident, Collections.emptyList());
 					}
 					case VOID:
-						//void type
-						return new SpecialTypeTreeImpl(startToken);
+						return this.parseLiteralType(src, context);
 					case FUNCTION:
 					case FUNCTION_GENERATOR:
 						//Function
@@ -1541,15 +1711,13 @@ public class JSParser {
 				}
 				break;
 			case IDENTIFIER:
-				switch (startToken.<String>getValue()) {
-					case "keyof": {
-						//Check for 'keyof X'
-						TypeTree baseType = parseType(src, context);
-						return new KeyofTypeTreeImpl(startToken.getStart(), baseType.getEnd(), baseType);
-					}
+				switch (lookahead.<String>getValue()) {
 					case "Array": {
+						//TODO: should this special case be handled at all?
 						//Array<X> => X[]
+						src.skip(lookahead);
 						List<TypeTree> arrayGenericArgs = this.parseTypeArguments(src, context);
+						//TODO: should this be pushed back to validation?
 						if (arrayGenericArgs.size() > 1)
 							throw new JSSyntaxException("Cannot have more than one type for Array", arrayGenericArgs.get(2).getStart());
 						
@@ -1560,108 +1728,224 @@ public class JSParser {
 							//Fall back on 'any[]'
 							arrayBaseType = new SpecialTypeTreeImpl(SpecialType.ANY);
 						
-						return new ArrayTypeTreeImpl(startToken.getStart(), src.getPosition(), arrayBaseType);
+						return new ArrayTypeTreeImpl(lookahead.getStart(), src.getPosition(), arrayBaseType);
 					}
-					case "this":
-						throw new UnsupportedOperationException("'this' type not implemented yet");
 					case "any":
+					case "unknown":
 					case "string":
 					case "number":
+					case "symbol":
 					case "boolean":
-					case "null":
-					case "undefined":
+					case "null"://TODO: keyword?
+					case "undefined"://TODO: keyword?
 					case "never":
-						return new SpecialTypeTreeImpl(startToken);
-					default: {
-						IdentifierTree identifier = new IdentifierTreeImpl(startToken);
-						
-						List<TypeTree> generics = this.parseTypeArguments(src, context);
-						
-						return new IdentifierTypeTreeImpl(identifier.getStart(), startToken.getEnd(), identifier, generics);
-					}
+						if (!src.peek(1).matchesOperator(JSOperator.PERIOD))
+							return this.parsePrimitiveType(src, context);
+						// Fallthrough intentional
+					default:
+						return this.parseTypeReference(src, context);
 				}
 			case BRACKET:
-				switch ((char) startToken.getValue()) {
-					case '{': {
-						//Inline interface (or object type '{}')
-						//TODO: change to object type
-						List<TypeElementTree> properties = this.parseObjectTypeMembers(src, context);
-						return new ObjectTypeTreeImpl(startToken.getStart(), src.getPosition(), properties);
-					}
-					case '[': {
-						// Tuple type
-						List<TypeTree> slots = this.parseDelimitedList(this::parseType, this::parseCommaSeparator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.COMMA), src, context);
-						Token endToken = expect(TokenKind.BRACKET, ']', src, context);
-						return new TupleTypeTreeImpl(startToken.getStart(), endToken.getEnd(), slots);
-					}
+				switch ((char) lookahead.getValue()) {
+					case '{':
+						if (lookahead(this::isMappedTypeStart, src, context))
+							return this.parseMappedType();
+						return this.parseObjectType(src, context);
+					case '[':
+						return this.parseTupleType(src, context);
 					default:
 						break;
 				}
 				break;
 			case NULL_LITERAL:
-				return new SpecialTypeTreeImpl(startToken.getStart(), startToken.getEnd(), SpecialType.NULL);
+				return this.parseLiteralType(src, context);
 			case STRING_LITERAL:
 			case BOOLEAN_LITERAL:
 			case NUMERIC_LITERAL:
 			case REGEX_LITERAL://TODO: is this right?
 			case TEMPLATE_LITERAL://TODO: is this right?
-				return new LiteralTypeTreeImpl<>(this.parseLiteral(startToken, src, context), false);
+				return this.parseLiteralType(src, context);
 			case OPERATOR:
-				if (startToken.matchesOperator(JSOperator.LEFT_PARENTHESIS)) {
-					TypeTree inner = this.parseImmediateType(src, context);
-					expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
-					return inner;
+				switch (lookahead.<JSOperator>getValue()) {
+					case LEFT_PARENTHESIS:
+						return this.parseParenthesizedType(src, context);
+					case LOGICAL_NOT:
+						//TODO: JSDoc non-nullable
+					case QUESTION_MARK:
+						//TODO: JSDoc unknown/nullable
+					case MULTIPLICATION:
+					case MULTIPLICATION_ASSIGNMENT:
+						//TODO: JSDoc any
+						throw new JSUnsupportedException("JSDoc types", src.getPosition());
+					default:
+						break;
 				}
 				break;
 			default:
 				break;
 		}
+		throw new JSUnexpectedTokenException(lookahead);
+	}
+	
+	/**
+	 * Unary-postfixed types:
+	 * <pre>
+	 * PostfixType:
+	 * 		ImmediateType
+	 * 		PostfixType !
+	 * 		PostfixType ?
+	 * 		ArrayType
+	 * 		IndexedType
+	 * ArrayType:
+	 * 		PostfixType [ ]
+	 * IndexedType:
+	 * 		PostfixType [ Type ]
+	 * </pre>
+	 */
+	protected TypeTree parsePostfixType(JSLexer src, Context context) {
+		TypeTree type = this.parseImmediateType(src, context);
+		Token lookahead = src.peek();
+		while (!src.isEOF()) {
+			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LOGICAL_NOT)) {
+				// JSDoc non-nullable
+				throw new JSUnsupportedException("JSDoc non-nullable", src.getPosition());
+			} else if (lookahead.matchesOperator(JSOperator.QUESTION_MARK)) {
+				// JSDoc nullable
+				throw new JSUnsupportedException("JSDoc nullable", src.getPosition());
+			} else if (src.nextTokenIs(TokenKind.BRACKET, '[')) {
+				if (src.nextTokenIs(TokenKind.BRACKET, ']')) {
+					// Array type `T[]`
+					type = new ArrayTypeTreeImpl(type.getStart(), src.getPosition(), type);
+				} else {
+					// Index type `T[k]`
+					TypeTree index = this.parseType(src, context);
+					type = new MemberTypeTreeImpl(type, parseImmediateType(src, context));
+				}
+			} else {
+				break;
+			}
+		}
 		
-		throw new JSUnexpectedTokenException(startToken);
+		return type;
+	}
+	
+	/**
+	 * <pre>
+	 * InferType:
+	 * 		infer Type
+	 * </pre>
+	 */
+	protected TypeTree parseInferType(JSLexer src, Context context) {
+		throw new JSUnsupportedException("Infer types", src.getPosition());
+	}
+	
+	/**
+	 * Unary-prefixed types:
+	 * <pre>
+	 * PrefixType:
+	 * 		keyof PrefixType
+	 * 		unique PrefixType
+	 * 		infer IdentifierType
+	 * 		PostfixType
+	 * </pre>
+	 */
+	protected TypeTree parsePrefixType(JSLexer src, Context context) {
+		Token lookahead = src.peek();
+		if (lookahead.isIdentifier()) {
+			switch (lookahead.<String>getValue()) {
+				case "keyof":
+					throw new JSUnsupportedException("Keyof types", src.getPosition());
+				case "unique":
+					throw new JSUnsupportedException("Unique types", src.getPosition());
+				case "infer":
+					return this.parseInferType(src, context);
+				default:
+					break;
+			}
+		}
+		return this.parsePostfixType(src, context);
+	}
+	
+	protected TypeTree parseCompositeType(Tree.Kind kind, BiFunction<JSLexer, Context, TypeTree> consumer, Predicate<Token> separatorMatcher, JSLexer src, Context context) {
+		TypeTree first = consumer.apply(src, context);
+		if (!separatorMatcher.test(src.peek()))
+			return first;
+		
+		List<TypeTree> constituents = new ArrayList<>();
+		constituents.add(first);
+		while (src.nextTokenIf(separatorMatcher) != null)
+			constituents.add(consumer.apply(src, context));
+		
+		return new CompositeTypeTreeImpl(first.getStart(), src.getPosition(), kind, constituents);
+	}
+	
+	/**
+	 * <pre>
+	 * IntersectionType:
+	 * 		PrefixType
+	 * 		IntersectionType | PrefixType
+	 * </pre>
+	 */
+	protected TypeTree parseIntersectionType(JSLexer src, Context context) {
+		return this.parseCompositeType(Tree.Kind.TYPE_INTERSECTION, this::parsePrefixType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.BITWISE_AND), src, context);
+	}
+	
+	/**
+	 * <pre>
+	 * UnionType:
+	 * 		IntersectionType
+	 * 		UnionType | IntersectionType
+	 * </pre>
+	 */
+	protected TypeTree parseUnionType(JSLexer src, Context context) {
+		return this.parseCompositeType(Tree.Kind.TYPE_UNION, this::parseIntersectionType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.BITWISE_OR), src, context);
+	}
+	
+	/**
+	 * <pre>
+	 * ConditionalType:
+	 * 		UnionType
+	 * 		UnionType extends Type[~conditional] ? Type[+conditional] : Type[+conditional]
+	 * </pre>
+	 */
+	protected TypeTree parseConditionalType(JSLexer src, Context context) {
+		TypeTree base = this.parseUnionType(src, context);
+		if (!src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
+			return base;
+		
+		TypeTree check = this.parseType(false, src, context);
+		expectOperator(JSOperator.QUESTION_MARK, src, context);
+		TypeTree concequent = this.parseType(true, src, context);
+		expectOperator(JSOperator.COLON, src, context);
+		TypeTree alternate = this.parseType(true, src, context);
+		
+		throw new JSUnsupportedException("Conditional types", src.getPosition());
 	}
 	
 	/**
 	 * Parse a type declaration
+	 * <pre>
+	 * Type[conditional]:
+	 * 		FunctionSignatureType
+	 * 		ConstructSignatureType
+	 * 		[+conditional]ConditionalType
+	 * 		[~conditional]UnionType
+	 * </pre>
 	 */
-	protected TypeTree parseType(JSLexer src, Context context) {
+	protected TypeTree parseType(boolean allowConditional, JSLexer src, Context context) {
 		// Handle function/construct signature types
-		if (TokenPredicate.CALL_SIGNATURE_START.test(src.peek()) || src.peek().matches(TokenKind.KEYWORD, JSKeyword.NEW)) {
+		Token lookahead = src.peek();
+		if (lookahead.matchesOperator(JSOperator.LESS_THAN) || lookahead.matches(TokenKind.KEYWORD, JSKeyword.NEW))
 			return this.parseFunctionType(src, context);
-		}
 		
-		TypeTree type = this.parseImmediateType(src, context);
-		
-		//Support member types in form of 'A.B'
-		while (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
-			type = new MemberTypeTreeImpl(type, parseImmediateType(src, context));
-		}
-		
-		//Support array types in form of 'X[]'
-		while (src.nextTokenIs(TokenKind.BRACKET, '[')) {
-			Token endToken = expect(TokenKind.BRACKET, ']', src, context);
-			type = new ArrayTypeTreeImpl(type.getStart(), endToken.getEnd(), type);
-		}
-		
-		//See if it's a union/intersection type
-		Token next = src.nextTokenIf(TokenPredicate.TYPE_CONTINUATION);
-		if (next == null)
-			return type;
-		
-		
-		TypeTree left = type;
-		boolean union = next.getValue() == JSOperator.BITWISE_OR;
-		
-		List<TypeTree> constituents = new ArrayList<>();
-		constituents.add(left);
-		
-		//TODO: make less recursive
-		TypeTree right = parseType(src, context);
-		if (right.getKind() == (union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION))//Merge nested unions/intersections
-			constituents.addAll(((CompositeTypeTree)right).getConstituents());
+		if (allowConditional)
+			return this.parseConditionalType(src, context);
 		else
-			constituents.add(right);
-		
-		return new CompositeTypeTreeImpl(left.getStart(), right.getEnd(), union ? Kind.TYPE_UNION : Kind.TYPE_INTERSECTION, constituents	);
+			return this.parseUnionType(src, context);
+	}
+	
+	protected TypeTree parseType(JSLexer src, Context context) {
+		return this.parseType(true, src, context);
 	}
 	
 	
