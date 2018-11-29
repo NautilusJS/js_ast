@@ -14,7 +14,7 @@ public class LiteralTypeTreeImpl<T> extends AbstractTypeTree implements LiteralT
 		this.value = value;
 	}
 	
-	public LiteralTypeTreeImpl(LiteralTree<T> value, boolean implicit) {
+	public LiteralTypeTreeImpl(LiteralTree<T> value) {
 		this(value.getStart(), value.getEnd(), value);
 	}
 	
