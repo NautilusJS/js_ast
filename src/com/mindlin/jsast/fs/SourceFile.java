@@ -55,4 +55,44 @@ public interface SourceFile {
 		int col = (int) (offset - offsets[line]);
 		return new SourcePosition(this, offset, line, col);
 	}
+	
+	public static class NominalSourceFile implements SourceFile {
+		protected final String name;
+		protected final String text;
+		
+		public NominalSourceFile(String name, String text) {
+			this.name = name;
+			this.text = text;
+		}
+
+		@Override
+		public Path getPath() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public CharacterStream getSourceStream() {
+			return new CharacterArrayStream(this.text);
+		}
+
+		@Override
+		public String getName() {
+			return this.name;
+		}
+
+		@Override
+		public long[] lineOffsets() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Path getOriginalPath() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean isExtern() {
+			return false;
+		}
+	}
 }
