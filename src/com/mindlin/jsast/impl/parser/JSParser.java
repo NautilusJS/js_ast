@@ -1813,7 +1813,7 @@ public class JSParser {
 				switch ((char) lookahead.getValue()) {
 					case '{':
 						if (lookahead(this::isMappedTypeStart, src, context))
-							return this.parseMappedType();
+							return this.parseMappedType(src, context);
 						return this.parseObjectType(src, context);
 					case '[':
 						return this.parseTupleType(src, context);
