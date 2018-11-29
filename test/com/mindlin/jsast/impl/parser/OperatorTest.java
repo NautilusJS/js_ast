@@ -42,7 +42,7 @@ public class OperatorTest {
 	public void testNewWithoutParens() {
 		NewTree newExpr = parseExpression("new X", Kind.NEW);
 		assertIdentifier("X", newExpr.getCallee());
-		assertEquals(0, newExpr.getArguments().size());
+		assertNull(newExpr.getArguments());
 	}
 	
 	@Test
