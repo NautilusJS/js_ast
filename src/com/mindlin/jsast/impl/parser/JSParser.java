@@ -914,10 +914,10 @@ public class JSParser {
 		return new TypeAliasTreeImpl(typeToken.getStart(), src.getPosition(), identifier, genericParams, value);
 	}
 	
-	protected StatementTree parseAwait(JSLexer src, Context context) {
+	protected ExpressionTree parseAwait(JSLexer src, Context context) {
 		Token awaitToken = expect(TokenKind.IDENTIFIER, "await", src, context);
-		//TODO finish
-		throw new JSUnsupportedException("awaiting on await", awaitToken.getRange());
+		ExpressionTree expr = this.parseUnaryExpression(src, context);
+		return new AwaitTreeImpl(awaitToken.getStart(), src.getPosition(), expr);
 	}
 	
 	protected VariableDeclaratorTree parseVariableDeclarator(JSLexer src, Context context) {
