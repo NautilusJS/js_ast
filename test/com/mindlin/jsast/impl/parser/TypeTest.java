@@ -8,7 +8,6 @@ import org.junit.Test;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.CastExpressionTree;
-import com.mindlin.jsast.tree.DeclarationName;
 import com.mindlin.jsast.tree.MemberExpressionTree;
 import com.mindlin.jsast.tree.PropertyDeclarationTree;
 import com.mindlin.jsast.tree.Tree.Kind;

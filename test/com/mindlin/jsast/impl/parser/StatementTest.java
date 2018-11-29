@@ -52,7 +52,7 @@ public class StatementTest {
 	
 	@Test
 	public void testSwitchInvalid() {
-		assertExceptionalStatement("switch(foo){notCaseOrDefault:}", "Parsed invalid switch statement");
+		assertExceptionalStatement("switch(foo){notCaseNorDefault:}", "Parsed invalid switch statement");
 		assertExceptionalStatement("switch(foo){var:}", "Parsed invalid switch statement");
 	}
 	
