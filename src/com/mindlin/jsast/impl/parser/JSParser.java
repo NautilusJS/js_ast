@@ -366,6 +366,11 @@ public class JSParser {
 					case "async":
 						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION) || lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION_GENERATOR))
 							return this.parseFunctionDeclaration(src, context);
+						break;
+					case "abstract":
+						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.CLASS))
+							return this.parseClassDeclaration(src, context);
+						break;
 					default:
 						break;
 				}
