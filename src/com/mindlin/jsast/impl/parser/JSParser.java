@@ -599,12 +599,10 @@ public class JSParser {
 		
 		//Convert a sequence tree to a list of parameters
 		if (expr.getKind() == Kind.SEQUENCE) {
-			List<ExpressionTree> exprs= ((SequenceExpressionTree)expr).getElements();
-			ArrayList<ParameterTree> params = new ArrayList<>(exprs.size());
-			for (ExpressionTree child : exprs)
-				params.add(reinterpretExpressionAsParameter(child));
-			params.trimToSize();
-			return params;
+			return ((SequenceExpressionTree) expr).getElements()
+					.stream()
+					.map(this::reinterpretExpressionAsParameter)
+					.collect(Collectors.toList());
 		}
 		
 		//Return parameter list of size one
