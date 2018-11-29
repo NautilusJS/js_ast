@@ -3,6 +3,8 @@ package com.mindlin.jsast.impl.parser;
 import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -57,6 +59,16 @@ public class JSParserTest {
 	protected static final void assertIdentifier(String name, IdentifierTree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	/**
+	 * Helper for the (pretty common) special case where we have a list that should contain a single element
+	 * of some kind.
+	 */
+	protected static final <T extends Tree> T assertSingleElementKind(Tree.Kind kind, List<? extends Tree> nodes) {
+		assertNotNull(nodes);
+		assertEquals(1, nodes.size());
+		return assertKind(kind, nodes.get(0));
 	}
 	
 	@SuppressWarnings("unchecked")
