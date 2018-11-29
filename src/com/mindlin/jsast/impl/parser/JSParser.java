@@ -446,11 +446,25 @@ public class JSParser {
 		return src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA);
 	}
 	
-	protected void parseTypeMemberSemicolon(JSLexer src, Context context) {
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA))
-			return;
-		
-		expectEOL(src, context);
+	protected boolean parseEOL(JSLexer src, Context context) {
+		if (src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.SEMICOLON))
+			return true;
+		// ASI cases
+		if (src.peek().matches(TokenKind.BRACKET, '}') || src.nextTokenIs(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+			return true;
+		//TODO: newline ASI
+		return false;
+	}
+	
+	protected boolean parseTypeMemberSemicolon(JSLexer src, Context context) {
+		return src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA) || this.parseEOL(src, context);
+	}
+	
+	protected void expectTypeMemberSemicolon(JSLexer src, Context context) {
+		if (!this.parseTypeMemberSemicolon(src, context)) {
+			Token lookahead = src.peek();
+			throw new JSUnexpectedTokenException("Illegal token " + lookahead + "; expected EOL", lookahead.getRange());
+		}
 	}
 	
 	protected <T extends Tree> List<T> parseDelimitedList(BiFunction<JSLexer, Context, T> elementParser, BiPredicate<JSLexer, Context> tokenParser, Predicate<Token> isTerminator, JSLexer src, Context context) {
