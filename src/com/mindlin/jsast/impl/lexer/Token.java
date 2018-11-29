@@ -132,8 +132,7 @@ public class Token {
 				.append(this.getClass().getSimpleName())
 				.append("{kind=").append(getKind())
 				.append(",value=").append(value)
-				.append(",start=").append(getStart())
-				.append(",end=").append(getEnd());
+				.append(",range=").append(getRange());
 		//@formatter:on
 
 		if (getText() == null)
