@@ -1486,8 +1486,12 @@ public class JSParser {
 	}
 	
 	protected TypeTree parseFunctionType(JSLexer src, Context context) {
+		boolean isConstructor = src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.NEW);
+		
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
+		
 		//TODO finish
-		throw new UnsupportedOperationException();
+		throw new JSUnsupportedException("Function/construct signature types", src.getPosition());
 	}
 	
 	protected TypeTree parseImmediateType(JSLexer src, Context context) {
@@ -1596,6 +1600,11 @@ public class JSParser {
 	 * Parse a type declaration
 	 */
 	protected TypeTree parseType(JSLexer src, Context context) {
+		// Handle function/construct signature types
+		if (TokenPredicate.CALL_SIGNATURE_START.test(src.peek()) || src.peek().matches(TokenKind.KEYWORD, JSKeyword.NEW)) {
+			return this.parseFunctionType(src, context);
+		}
+		
 		TypeTree type = this.parseImmediateType(src, context);
 		
 		//Support member types in form of 'A.B'
