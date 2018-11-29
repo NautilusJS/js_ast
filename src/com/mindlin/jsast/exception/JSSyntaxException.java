@@ -12,7 +12,7 @@ public class JSSyntaxException extends JSException {
 	}
 	
 	public JSSyntaxException(String message, SourcePosition position) {
-		this(message + " at " + position, SourceRange.startingFrom(position));
+		this(message, SourceRange.startingFrom(position));
 	}
 	
 	public JSSyntaxException(String message, SourcePosition start, SourcePosition end) {
