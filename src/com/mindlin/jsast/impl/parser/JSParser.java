@@ -3082,7 +3082,7 @@ public class JSParser {
 				//Function call
 				context.isBindingElement(false);
 				context.isAssignmentTarget(false);
-				expr = this.parseFunctionCall(expr, null, src, context);
+				expr = this.parseFunctionCall(expr, src, context);
 			} else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.PERIOD)) {
 				//Static member access
 				context.isBindingElement(false);
