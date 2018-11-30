@@ -690,6 +690,24 @@ public class JSParser {
 		throw new JSSyntaxException("Cannot reinterpret " + expr + " as parameter", expr.getRange());
 	}
 	
+	/**
+	 * <pre>
+	 * PrimaryExpression[Yield, Await]:
+	 * 		this
+	 * 		IdentifierReference[?Yield, ?Await]
+	 * 		Literal
+	 * 		ArrayLiteral[?Yield, ?Await]
+	 * 		ObjectLiteral[?Yield, ?Await]
+	 * 		FunctionExpression
+	 * 		ClassExpression[?Yield, ?Await]
+	 * 		GeneratorExpression
+	 * 		AsyncFunctionExpression
+	 * 		AsyncGeneratorExpression
+	 * 		RegularExpressionLiteral
+	 * 		TemplateLiteral[?Yield, ?Await, ~Tagged]
+	 * 		CoverParenthesizedExpressionAndArrowParameterList[?Yield, ?Await]
+	 * </pre>
+	 */
 	protected ExpressionTree parsePrimaryExpression(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		switch (lookahead.getKind()) {
@@ -2096,6 +2114,14 @@ public class JSParser {
 	
 	/**
 	 * Parse a {@code break} or {@code continue} statement, with optional label.
+	 * <pre>
+	 * ContinueStatement[Yield, Await]:
+	 * 		continue ;
+	 * 		continue [no line terminator] LabelIdentifier[?Yield, ?Await] ;
+	 * BreakStatement[Yield, Await]:
+	 * 		break ;
+	 * 		break [no line terminator] LabelIdentifier[?Yield, ?Await] ;
+	 * </pre>
 	 */
 	protected GotoTree parseGotoStatement(JSLexer src, Context context) {
 		Token keywordToken = expect(TokenKind.KEYWORD, src, context);
@@ -2115,6 +2141,13 @@ public class JSParser {
 		throw new JSUnexpectedTokenException(keywordToken);
 	}
 	
+	/**
+	 * <pre>
+	 * IfStatement[Yield, Await]:
+	 * 		if ( Expression[?await, ?yield] ) Statement[?await, ?yield]
+	 * 		if ( Expression[?await, ?yield] ) Statement[?await, ?yield] else Statement[?await, ?yield]
+	 * </pre>
+	 */
 	protected IfTree parseIfStatement(JSLexer src, Context context) {
 		Token ifKeywordToken = expectKeyword(JSKeyword.IF, src, context);
 		
@@ -2138,6 +2171,17 @@ public class JSParser {
 		return new IfTreeImpl(ifKeywordToken.getStart(), src.getPosition(), expression, thenStatement, elseStatement);
 	}
 	
+	/**
+	 * <pre>
+	 * SwitchStatement[Yield, Await]:
+	 * 		switch ( Expression[?await, ?yield] ) { CaseList[?await, ?yield] }
+	 * CaseList[Yield, Await]:
+	 * 		CaseList[?await, ?yield] Case[?await, ?yield]
+	 * Case[Yield, Await]:
+	 * 		case Expression[?await, ?yield] : Statement[?await, ?yield]
+	 * 		default: Statement[?await, ?yield]
+	 * </pre>
+	 */
 	protected SwitchTree parseSwitchStatement(JSLexer src, Context context) {
 		Token switchKeywordToken = expectKeyword(JSKeyword.SWITCH, src, context);
 		src.expect(JSOperator.LEFT_PARENTHESIS);
@@ -2177,6 +2221,16 @@ public class JSParser {
 	
 	/**
 	 * Parse a try/catch, try/finally, or try/catch/finally statement
+	 * <pre>
+	 * TryStatement[Yield, Await]:
+	 * 		try { Statement[?await, ?yield] } CatchClause[?await, ?yield]
+	 * 		try { Statement[?await, ?yield] } FinallyClause[?await, ?yield]
+	 * 		try { Statement[?await, ?yield] } CatchClause[?await, ?yield] FinallyClause[?await, ?yield]
+	 * CatchClause[Yield, Await]:
+	 * 		catch ( VariableDeclarator ) { StatementList[?await, ?yield] }
+	 * FinallyClause[Yield, Await]:
+	 * 		finally { StatementList[?await, ?yield] }
+	 * </pre>
 	 */
 	protected TryTree parseTryStatement(JSLexer src, Context context) {
 		Token tryKeywordToken = expectKeyword(JSKeyword.TRY, src, context);
@@ -2209,6 +2263,12 @@ public class JSParser {
 		return new TryTreeImpl(tryKeywordToken.getStart(), src.getPosition(), tryBlock, catchBlocks, finallyBlock);
 	}
 	
+	/**
+	 * <pre>
+	 * WithStatement[Yield, Await, Return]:
+	 * 		with ( Expression[+In, ?Yield, ?Await] ) Statement[?Yield, ?Await, ?Return]
+	 * </pre>
+	 */
 	protected WithTree parseWithStatement(JSLexer src, Context context) {
 		Token withKeywordToken = expectKeyword(JSKeyword.WITH, src, context);
 		
@@ -2231,6 +2291,12 @@ public class JSParser {
 	
 	// Loops
 	
+	/**
+	 * <pre>
+	 * WhileLoopStatement[Yield, Await, Return]:
+	 * 		while ( Expression[+In, ?Yield, ?Await] ) Statement[?Yield, ?Await, ?Return]
+	 * </pre>
+	 */
 	@JSKeywordParser({JSKeyword.WHILE})
 	protected WhileLoopTree parseWhileLoop(JSLexer src, Context context) {
 		Token whileKeywordToken = expectKeyword(JSKeyword.WHILE, src, context);
@@ -2247,6 +2313,12 @@ public class JSParser {
 		return new WhileLoopTreeImpl(whileKeywordToken.getStart(), src.getPosition(), condition, statement);
 	}
 	
+	/**
+	 * <pre>
+	 * DoWhileLoopStatement[Yield, Await, Return]:
+	 * 		do Statement[?Yield, ?Await, ?Return] while ( Expression[+In, ?Yield, ?Await] ) ;
+	 * </pre>
+	 */
 	@JSKeywordParser({JSKeyword.DO})
 	protected DoWhileLoopTree parseDoWhileLoop(JSLexer src, Context context) {
 		Token doKeywordToken = expectKeyword(JSKeyword.DO, src, context);
@@ -2386,10 +2458,12 @@ public class JSParser {
 	 * <li><kbd>}</kbd> (end of block)</li>
 	 * <li><kbd>:</kbd> (end of conditional)</li>
 	 * </ul>
-	 * @param t
-	 * @param src
-	 * @param isStrict
-	 * @return
+	 * Syntax:
+	 * <pre>
+	 * Expression[In, Yield, Await]:
+	 * 		AssignmentExpression[?In, ?Yield, ?Await]
+	 * 		Expression[?In, ?Yield, ?Await] , AssignmentExpression[?In, ?Yield, ?Await]
+	 * </pre>
 	 */
 	protected ExpressionTree parseNextExpression(JSLexer src, Context context) {
 		ExpressionTree result = this.parseAssignment(src, context.coverGrammarIsolated());
@@ -2414,10 +2488,13 @@ public class JSParser {
 	 * <li>{@code a**b**c} is interperted as {@code a**(b**c)}</li>
 	 * <li>A lot of extra code has to be written to handle it</li>
 	 * </ol>
-	 * @param t
-	 * @param src
-	 * @param context
-	 * @return
+	 * Syntax:
+	 * <pre>
+	 * ExponentiationExpression[Yield, Await]:
+	 * 		UnaryExpression[?Yield, ?Await]
+	 * 		UnaryExpression[?Yield, ?Await] ** ExponentiationExpression[?Yield, ?Await]
+	 * </pre>
+	 * @see #parseUnaryExpression(JSLexer, Context)
 	 */
 	protected ExpressionTree parseExponentiation(JSLexer src, Context context) {
 		final ExpressionTree expr = this.parseUnaryExpression(src, context.coverGrammarIsolated());
@@ -2525,6 +2602,11 @@ public class JSParser {
 	 * nerfed (it can take in the expression as a parameter) to make it work
 	 * better with {@link #parseBinaryExpression(JSLexer, Context)}.
 	 * 
+	 * <pre>
+	 * AsCastExpression[Yield, Await]:
+	 * 		Expression[?Yield, ?Await] as Type
+	 * </pre>
+	 * 
 	 * @param src
 	 * @param context
 	 * @return
@@ -2552,10 +2634,6 @@ public class JSParser {
 	
 	/**
 	 * Parse binary expression
-	 * @param startToken
-	 * @param src
-	 * @param context
-	 * @return
 	 */
 	protected ExpressionTree parseBinaryExpression(JSLexer src, Context context) {
 		context.isolateCoverGrammar();
@@ -2790,6 +2868,21 @@ public class JSParser {
 		return new AssignmentTreeImpl(lookahead.getStart(), right.getEnd(), this.mapTokenToBinaryKind(assignmentOperator), variable, right);
 	}
 	
+	/**
+	 * <pre>
+	 * Parameter:
+	 * 		this
+	 * 		ParamPrefixModifiers ...[opt] Pattern ParamPostfixModifiers TypeAnnotation[opt] Initializer[opt]
+	 * ParamPrefixModifiers:
+	 * 		public
+	 * 		private
+	 * 		protected
+	 * 		readonly
+	 * </pre>
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	protected ParameterTree parseParameter(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		SourcePosition start = lookahead.getStart();
@@ -2907,13 +3000,10 @@ public class JSParser {
 	 * Parse an expression starting with <kbd>(</kbd>, generating either a
 	 * ParenthesizedTree or a FunctionExpressionTree (if a lambda expression)
 	 * 
-	 * @param leftParenToken
-	 *            Token for the opening parenthesis of this expression (if null,
-	 *            takes the next token from <var>src</var>)
-	 * @param src
-	 *            JS source code lexer
-	 * @param context
-	 *            Context that this is parsing in
+	 * <pre>
+	 * GroupExpression[Yield, Await]:
+	 * 	
+	 * </pre>
 	 * @return Either a ParenthesizedTree or a FunctionExpressionTree
 	 */
 	@SuppressWarnings("unchecked")
@@ -3044,6 +3134,17 @@ public class JSParser {
 		return new NewTreeImpl(newKeywordToken.getStart(), src.getPosition(), callee, args);
 	}
 	
+	/**
+	 * <pre>
+	 * LeftHandSideExpression[Yield, Await]:
+	 * 		NewExpression[?Yield, ?Await]
+	 * 		CallExpression[?Yield, ?Await]
+	 * </pre>
+	 * @param allowCall
+	 * @param src
+	 * @param context
+	 * @return
+	 */
 	protected ExpressionTree parseLeftSideExpression(boolean allowCall, JSLexer src, Context context) {
 		boolean prevAllowIn = context.allowIn();
 		context.allowIn(true);
@@ -3349,6 +3450,13 @@ public class JSParser {
 		}
 	}
 	
+	/**
+	 * <pre>
+	 * ArrayLiteralElement[Yield, Await]:
+	 * 		SpreadExpression[+In, ?Yield, ?Await]
+	 * 		AssignmentExpression[+In, ?Yield, ?Await]
+	 * </pre>
+	 */
 	protected ExpressionTree parseArrayLiteralElement(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		
@@ -3369,6 +3477,13 @@ public class JSParser {
 	}
 	/**
 	 * Parse array literal.
+	 * <pre>
+	 * ArrayLiteral[Yield, Await]:
+	 * 		[ Elision? ]
+	 * 		[ ElementList[?Yield, ?Await] ]
+	 * 		[ ElementList[?Yield, ?Await] , Elision? ]
+	 * </pre>
+	 * @see #parseArrayLiteralElement(JSLexer, Context)
 	 */
 	protected ArrayLiteralTree parseArrayInitializer(JSLexer src, Context context) {
 		Token startToken = expectOperator(JSOperator.LEFT_BRACKET, src, context);
@@ -3380,6 +3495,19 @@ public class JSParser {
 		return new ArrayLiteralTreeImpl(startToken.getStart(), src.getPosition(), values);
 	}
 	
+	/**
+	 * <pre>
+	 * PropertyName[Yield, Await]:
+	 * 		LiteralPropertyName
+	 * 		ComputedPropertyName[?Yield, ?Await]
+	 * LiteralPropertyName:
+	 * 		IdentifierName
+	 * 		StringLiteral
+	 * 		NumericLiteral
+	 * ComputedPropertyName[Yield, Await]:
+	 * 		[ AssignmentExpression[+In, ?Yield, ?Await] ]
+	 * </pre>
+	 */
 	protected PropertyName parsePropertyName(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		SourcePosition start = lookahead.getStart();
@@ -3401,7 +3529,7 @@ public class JSParser {
 				//Computed property
 				if (lookahead.<JSOperator>getValue() == JSOperator.LEFT_BRACKET) {
 					src.skip(lookahead);
-					ExpressionTree expr = this.parseNextExpression(src, context);
+					ExpressionTree expr = this.parseAssignment(src, context);//TODO: push +In
 					expectOperator(JSOperator.RIGHT_BRACKET, src, context);
 					return new ComputedPropertyKeyTreeImpl(start, src.getPosition(), expr);
 				}
@@ -3429,6 +3557,16 @@ public class JSParser {
 		}
 	}
 	
+	/**
+	 * <pre>
+	 * PropertyDefinition[Yield, Await]:
+	 * 		IdentifierReference[?Yield, ?Await]
+	 * 		CoverInitializedName[?Yield, ?Await]
+	 * 		PropertyName[?Yield, ?Await] : AssignmentExpression[+In, ?Yield, ?Await]
+	 * 		MethodDefinition[?Yield, ?Await]
+	 * 		SpreadExpression[+In, ?Yield, ?Await]
+	 * </pre>
+	 */
 	protected ObjectLiteralElement parseObjectProperty(JSLexer src, Context context) {
 		final SourcePosition start = src.getPosition();
 		
@@ -3475,6 +3613,12 @@ public class JSParser {
 	
 	/**
 	 * Parse object literal.
+	 * <pre>
+	 * ObjectLiteral[Yield, Await]:
+	 * 		{ }
+	 * 		{ PropertyDefinitionList }
+	 * </pre>
+	 * @see #parseObjectProperty(JSLexer, Context)
 	 */
 	protected ObjectLiteralTree parseObjectInitializer(JSLexer src, Context context) {
 		Token startToken = expectOperator(JSOperator.LEFT_BRACE, src, context);
