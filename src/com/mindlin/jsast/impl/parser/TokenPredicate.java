@@ -25,14 +25,14 @@ public class TokenPredicate {
 			return t.getValue().equals('{') || t.getValue().equals('[');
 		return t.matches(TokenKind.OPERATOR, JSOperator.SPREAD);
 	};
-	public static final Predicate<Token> TYPE_CONTINUATION = t->(t.isOperator() && (t.getValue() == JSOperator.BITWISE_OR || t.getValue() == JSOperator.BITWISE_AND));
+	public static final Predicate<Token> TYPE_CONTINUATION = t->(t.isOperator() && (t.getValue() == JSOperator.VBAR || t.getValue() == JSOperator.AMPERSAND));
 	public static final Predicate<Token> CAN_FOLLOW_MODIFIER = t -> {
 		Object value = t.getValue();
 		switch (t.getKind()) {
 			case BRACKET:
 				return (char) value == '[' || (char) value == '{';
 			case OPERATOR:
-				return value == JSOperator.MULTIPLICATION || value == JSOperator.SPREAD;
+				return value == JSOperator.ASTERISK || value == JSOperator.SPREAD;
 			case STRING_LITERAL:
 			case NUMERIC_LITERAL:
 			case IDENTIFIER:

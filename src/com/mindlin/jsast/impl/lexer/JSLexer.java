@@ -546,14 +546,16 @@ public class JSLexer implements Supplier<Token> {
 					return JSOperator.LESS_THAN_EQUAL;
 				case '>':
 					return JSOperator.GREATER_THAN_EQUAL;
-				case '!':
-					if (e == '=')
+				case '!'://!=
+					if (e == '=')//!==
 						return JSOperator.STRICT_NOT_EQUAL;
 					return JSOperator.NOT_EQUAL;
-				case '=':
-					if (e == '=')
+				case '='://==
+					if (e == '=')//===
 						return JSOperator.STRICT_EQUAL;
 					return JSOperator.EQUAL;
+				default:
+					break;
 			}
 		}
 		switch (c) {
@@ -571,7 +573,7 @@ public class JSLexer implements Supplier<Token> {
 						return JSOperator.EXPONENTIATION_ASSIGNMENT;
 					return JSOperator.EXPONENTIATION;
 				}
-				return JSOperator.MULTIPLICATION;
+				return JSOperator.ASTERISK;
 			case '/':
 				return JSOperator.DIVISION;
 			case '%':
@@ -603,13 +605,13 @@ public class JSLexer implements Supplier<Token> {
 			case '&':
 				if (d == '&')
 					return JSOperator.LOGICAL_AND;
-				return JSOperator.BITWISE_AND;
+				return JSOperator.AMPERSAND;
 			case '^':
 				return JSOperator.BITWISE_XOR;
 			case '|':
 				if (d == '|')
 					return JSOperator.LOGICAL_OR;
-				return JSOperator.BITWISE_OR;
+				return JSOperator.VBAR;
 			case '!':
 				return JSOperator.LOGICAL_NOT;
 			case '~':
@@ -618,6 +620,14 @@ public class JSLexer implements Supplier<Token> {
 				return JSOperator.LEFT_PARENTHESIS;
 			case ')':
 				return JSOperator.RIGHT_PARENTHESIS;
+			case '[':
+				return JSOperator.LEFT_BRACKET;
+			case ']':
+				return JSOperator.RIGHT_BRACKET;
+			case '{':
+				return JSOperator.LEFT_BRACE;
+			case '}':
+				return JSOperator.RIGHT_BRACE;
 			case ',':
 				return JSOperator.COMMA;
 			case '?':
@@ -787,7 +797,7 @@ public class JSLexer implements Supplier<Token> {
 		RegExpTokenInfo info = new RegExpTokenInfo(body, flags);
 		
 		SourceRange range = new SourceRange(start.getStart(), this.getPosition());
-		return new Token(range, TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), info);
+		return new Token(start.flags, range, TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), info);
 	}
 	
 	public String nextComment(final boolean singleLine) {
@@ -819,15 +829,19 @@ public class JSLexer implements Supplier<Token> {
 	
 	protected Token readToken() {
 		//Skip whitespace until token
+		int flags = 0;
 		while (chars.hasNext() && Characters.isJsWhitespace(chars.peek())) {
-			if (chars.next() == '\n')
+			if (chars.next() == '\n') {
+				flags |= Token.FLAG_PRECEDEING_NEWLINE;
+				//TODO: does this cause problems if we're backtracking?
 				this.lines.putNewline(chars.position());
+			}
 		}
 		
 		//Special EOF token
 		if (isEOF()) {
 			SourceRange range = new SourceRange(this.getPosition(), this.getPosition());
-			return this.lookahead = new Token(range, TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+			return this.lookahead = new Token(flags, range, TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
 		}
 		
 		final long start = Math.max(chars.position(), -1);
@@ -903,7 +917,7 @@ public class JSLexer implements Supplier<Token> {
 		}
 		
 		SourceRange range = new SourceRange(this.resolvePosition(start + 1), this.getPosition());
-		return new Token(range, kind, chars.copy(start + 1, chars.position() - start), value);
+		return new Token(flags, range, kind, chars.copy(start + 1, chars.position() - start), value);
 	}
 	
 	public Token nextToken() {

@@ -534,13 +534,13 @@ public class JSParser {
 					return Tree.Kind.ADDITION_ASSIGNMENT;
 				case ASSIGNMENT:
 					return Tree.Kind.ASSIGNMENT;
-				case BITWISE_AND:
+				case AMPERSAND:
 					return Tree.Kind.BITWISE_AND;
 				case BITWISE_AND_ASSIGNMENT:
 					return Tree.Kind.BITWISE_AND_ASSIGNMENT;
 				case BITWISE_NOT:
 					return Tree.Kind.BITWISE_NOT;
-				case BITWISE_OR:
+				case VBAR:
 					return Tree.Kind.BITWISE_OR;
 				case BITWISE_OR_ASSIGNMENT:
 					return Tree.Kind.BITWISE_OR_ASSIGNMENT;
@@ -578,7 +578,7 @@ public class JSParser {
 					return Tree.Kind.LOGICAL_OR;
 				case MINUS:
 					return Tree.Kind.SUBTRACTION;
-				case MULTIPLICATION:
+				case ASTERISK:
 					return Tree.Kind.MULTIPLICATION;
 				case MULTIPLICATION_ASSIGNMENT:
 					return Tree.Kind.MULTIPLICATION_ASSIGNMENT;
@@ -858,7 +858,7 @@ public class JSParser {
 		}
 		
 		Token t;
-		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) != null) {
+		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASTERISK)) != null) {
 			//import (defaultMember,)? * as name ...
 			IdentifierTree identifier = new IdentifierTreeImpl(t.getStart(), t.getEnd(), "*");
 			t = expectKeyword(JSKeyword.AS, src, context);
@@ -895,7 +895,7 @@ public class JSParser {
 	protected ExportTree parseExportStatement(JSLexer src, Context context) {
 		Token exportKeywordToken = expectKeyword(JSKeyword.EXPORT, src, context);
 		boolean isDefault = false;
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION)) {
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASTERISK)) {
 			expectKeyword(JSKeyword.FROM, src, context);
 		} else if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.DEFAULT)) {
 			// TODO finish
@@ -1091,7 +1091,7 @@ public class JSParser {
 						return Modifiers.OPTIONAL;
 					case LOGICAL_NOT: // Postfix
 						return Modifiers.DEFINITE;
-					case MULTIPLICATION:
+					case ASTERISK:
 						return Modifiers.GENERATOR;
 					default:
 						break;
@@ -1906,7 +1906,7 @@ public class JSParser {
 						//TODO: JSDoc non-nullable
 					case QUESTION_MARK:
 						//TODO: JSDoc unknown/nullable
-					case MULTIPLICATION:
+					case ASTERISK:
 					case MULTIPLICATION_ASSIGNMENT:
 						//TODO: JSDoc any
 						throw new JSUnsupportedException("JSDoc types", src.getPosition());
@@ -2020,7 +2020,7 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected TypeTree parseIntersectionType(JSLexer src, Context context) {
-		return this.parseCompositeType(Tree.Kind.TYPE_INTERSECTION, this::parsePrefixType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.BITWISE_AND), src, context);
+		return this.parseCompositeType(Tree.Kind.TYPE_INTERSECTION, this::parsePrefixType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.AMPERSAND), src, context);
 	}
 	
 	/**
@@ -2031,7 +2031,7 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected TypeTree parseUnionType(JSLexer src, Context context) {
-		return this.parseCompositeType(Tree.Kind.TYPE_UNION, this::parseIntersectionType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.BITWISE_OR), src, context);
+		return this.parseCompositeType(Tree.Kind.TYPE_UNION, this::parseIntersectionType, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.VBAR), src, context);
 	}
 	
 	/**
@@ -2482,11 +2482,11 @@ public class JSParser {
 					return 5;
 				case LOGICAL_AND:
 					return 6;
-				case BITWISE_OR:
+				case VBAR:
 					return 7;
 				case BITWISE_XOR:
 					return 8;
-				case BITWISE_AND:
+				case AMPERSAND:
 					return 9;
 				case STRICT_EQUAL:
 				case STRICT_NOT_EQUAL:
@@ -2505,7 +2505,7 @@ public class JSParser {
 				case PLUS:
 				case MINUS:
 					return 13;
-				case MULTIPLICATION:
+				case ASTERISK:
 				case DIVISION:
 				case REMAINDER:
 				case EXPONENTIATION:
@@ -3457,7 +3457,7 @@ public class JSParser {
 		if (modifiers.isGetter() || modifiers.isSetter())
 			return this.parseAccessorDeclaration(decorators, modifiers, src, context);
 		
-		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION))
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASTERISK))
 			modifiers = modifiers.combine(Modifiers.GENERATOR);
 		
 		PropertyName name = this.parsePropertyName(src, context);
@@ -3656,7 +3656,7 @@ public class JSParser {
 		dialect.require("js.yield", yieldKeywordToken.getRange());
 		
 		//Check if it's a 'yield*'
-		boolean delegates = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.MULTIPLICATION);
+		boolean delegates = src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASTERISK);
 		
 		//Parse RHS of expression
 		Token lookahead = src.peek();

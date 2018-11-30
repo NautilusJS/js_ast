@@ -8,16 +8,29 @@ import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 
 public class Token {
+	public static final int FLAG_PRECEDEING_NEWLINE = 1 << 0;
+	public static final int FLAG_PRECEDING_JSDOC = 1 << 1;
+	//TODO: use EnumSet-type wrapper in the future?
+	protected final int flags;
 	protected final TokenKind kind;
 	protected final SourceRange range;
 	protected final String text;
 	protected final Object value;
 
-	public Token(SourceRange range, TokenKind kind, String text, Object value) {
+	public Token(int flags, SourceRange range, TokenKind kind, String text, Object value) {
+		this.flags = flags;
 		this.range = range;
 		this.kind = kind;
 		this.text = text;
 		this.value = value;
+	}
+	
+	public boolean hasPrecedingNewline() {
+		return (this.flags & FLAG_PRECEDEING_NEWLINE) != 0;
+	}
+	
+	public boolean hasPrecedingJSDoc() {
+		return (this.flags & FLAG_PRECEDING_JSDOC) != 0;
 	}
 	
 	public SourceRange getRange() {
@@ -122,7 +135,7 @@ public class Token {
 				throw new UnsupportedOperationException(this + " cannot be reinterpreted as an identifier");
 		}
 		
-		return new Token(this.range, TokenKind.IDENTIFIER, getText(), value);
+		return new Token(this.flags, this.range, TokenKind.IDENTIFIER, getText(), value);
 	}
 
 	@Override
