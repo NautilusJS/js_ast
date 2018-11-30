@@ -1158,6 +1158,11 @@ public class JSParser {
 		return result;
 	}
 	
+	protected Tree parseJSDoc(JSLexer src, Context context) {
+		//TODO: finish
+		return null;
+	}
+	
 	protected List<DecoratorTree> parseDecorators(JSLexer src, Context context) {
 		//TODO: finish
 		return Collections.emptyList();
@@ -1210,8 +1215,7 @@ public class JSParser {
 			default:
 				break;
 		}
-		//This shouldn't ever happen
-		throw new JSUnexpectedTokenException(src.peek());
+		throw new JSUnexpectedTokenException(src.peek(), "expected a declaration");
 	}
 	
 	
@@ -1485,6 +1489,12 @@ public class JSParser {
 	
 	//SECTION: Class elements
 	
+	/**
+	 * <pre>
+	 * MethodDeclaration[declare, abstract]:
+	 * 		
+	 * </pre>
+	 */
 	protected MethodDeclarationTree parseMethodDeclaration(SourcePosition startPos, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
 		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
 		
