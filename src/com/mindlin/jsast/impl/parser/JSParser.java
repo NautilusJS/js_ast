@@ -323,7 +323,6 @@ public class JSParser {
 					case FOR:
 						return this.parseForStatement(src, context);
 					case FUNCTION:
-					case FUNCTION_GENERATOR:
 						return this.parseFunctionDeclaration(src, context);
 					case IF:
 						return this.parseIfStatement(src, context);
@@ -379,7 +378,7 @@ public class JSParser {
 							break;
 						return this.parseTypeAlias(src, context);
 					case "async":
-						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION) || lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION_GENERATOR))
+						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 							return this.parseFunctionDeclaration(src, context);
 						break;
 					case "abstract":
@@ -1200,7 +1199,6 @@ public class JSParser {
 					case CLASS:
 						return this.parseClassDeclaration(src, context);
 					case FUNCTION:
-					case FUNCTION_GENERATOR:
 						return this.parseFunctionDeclaration(src, context);
 					case INTERFACE:
 						return this.parseInterfaceDeclaration(src, context);
@@ -1835,7 +1833,6 @@ public class JSParser {
 					case VOID:
 						return this.parseLiteralType(src, context);
 					case FUNCTION:
-					case FUNCTION_GENERATOR:
 						//Function
 						return this.parseFunctionType(src, context);
 					default:
@@ -3250,9 +3247,8 @@ public class JSParser {
 	}
 	
 	protected FunctionExpressionTree parseFunctionExpression(JSLexer src, Context context) {
+		SourcePosition startPos = src.peek().getStart();
 		Token functionKeywordToken = src.nextToken();
-		
-		SourcePosition startPos = functionKeywordToken.getStart();
 		
 		Modifiers modifiers = Modifiers.NONE;
 		
@@ -3264,15 +3260,14 @@ public class JSParser {
 		}
 		
 		
-		//functionKeywordToken should be function or function*.
-		if (!functionKeywordToken.isKeyword())
+		//functionKeywordToken should be `function`
+		if (!functionKeywordToken.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
 			throw new JSUnexpectedTokenException(functionKeywordToken);
 		
-		if (functionKeywordToken.getValue() == JSKeyword.FUNCTION_GENERATOR) {
-			dialect.require("js.function.generator", functionKeywordToken.getRange());
+		Token asteriskToken = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.ASTERISK);
+		if (asteriskToken != null) {
+			dialect.require("js.function.generator", asteriskToken.getRange());
 			modifiers = modifiers.combine(Modifiers.GENERATOR);
-		} else if (functionKeywordToken.getValue() != JSKeyword.FUNCTION) {
-			throw new JSUnexpectedTokenException(functionKeywordToken);
 		}
 		
 		

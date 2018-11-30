@@ -19,7 +19,6 @@ public enum JSKeyword {
 	FOR,
 	FROM(true),
 	FUNCTION,
-	FUNCTION_GENERATOR(false, "function*"),
 	IF,
 	IMPLEMENTS(true),
 	IMPORT,
