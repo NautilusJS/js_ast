@@ -10,10 +10,6 @@ public enum TokenKind {
 	 */
 	OPERATOR,
 	/**
-	 * [,],{,}
-	 */
-	BRACKET,
-	/**
 	 * A JS keyword
 	 */
 	KEYWORD,

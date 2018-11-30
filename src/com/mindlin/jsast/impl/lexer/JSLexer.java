@@ -861,15 +861,7 @@ public class JSLexer implements Supplier<Token> {
 		} else if (Characters.isDecimalDigit(c) || (c == '.' && chars.hasNext(2) && Characters.isDecimalDigit(chars.peek(2)))) {
 			value = nextNumericLiteral();
 			kind = TokenKind.NUMERIC_LITERAL;
-		//Check if it's a bracket
-		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
-			if (c == '{')
-				templateStack.push(false);
-			else if (c == '}' && templateStack.getSize() > 0)
-				templateStack.pop();
-			value = c;
-			kind = TokenKind.BRACKET;
-			chars.next();
+
 		} else if (c == ';') {
 			kind = TokenKind.SPECIAL;
 			value = JSSpecialGroup.SEMICOLON;
@@ -881,6 +873,11 @@ public class JSLexer implements Supplier<Token> {
 			return nextToken();
 		} else if ((value = nextOperator()) != null) {
 			kind = TokenKind.OPERATOR;
+			//TODO: how resistant is templateStack to mark-reset stuff?
+			if (value == JSOperator.LEFT_BRACE)
+				templateStack.push(false);
+			else if (value == JSOperator.RIGHT_BRACE && templateStack.getSize() > 0)
+				templateStack.pop();
 		} else {
 			//It's probably an identifier
 			String identifierName = this.nextIdentifier();

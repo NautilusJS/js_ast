@@ -21,18 +21,20 @@ public class TokenPredicate {
 	public static final Predicate<Token> START_OF_PARAMETER = t->{
 		if (t.isIdentifier())
 			return true;
-		if (t.isBracket())
-			return t.getValue().equals('{') || t.getValue().equals('[');
-		return t.matches(TokenKind.OPERATOR, JSOperator.SPREAD);
+		if (!t.isOperator())
+			return false;
+		JSOperator value = t.<JSOperator>getValue();
+		return value == JSOperator.LEFT_BRACE || value == JSOperator.LEFT_BRACKET || value == JSOperator.SPREAD;
 	};
 	public static final Predicate<Token> TYPE_CONTINUATION = t->(t.isOperator() && (t.getValue() == JSOperator.VBAR || t.getValue() == JSOperator.AMPERSAND));
 	public static final Predicate<Token> CAN_FOLLOW_MODIFIER = t -> {
 		Object value = t.getValue();
 		switch (t.getKind()) {
-			case BRACKET:
-				return (char) value == '[' || (char) value == '{';
 			case OPERATOR:
-				return value == JSOperator.ASTERISK || value == JSOperator.SPREAD;
+				return value == JSOperator.ASTERISK
+						|| value == JSOperator.SPREAD
+						|| value == JSOperator.LEFT_BRACKET
+						|| value == JSOperator.LEFT_BRACE;
 			case STRING_LITERAL:
 			case NUMERIC_LITERAL:
 			case IDENTIFIER:
@@ -44,6 +46,7 @@ public class TokenPredicate {
 	};
 	public static final Predicate<Token> HERITAGE_START = t -> (t.isKeyword() && (t.getValue() == JSKeyword.EXTENDS || t.getValue() == JSKeyword.IMPLEMENTS));
 	public static final Predicate<Token> UPDATE_OPERATOR = t->(t.isOperator() && (t.getValue() == JSOperator.INCREMENT || t.getValue() == JSOperator.DECREMENT));
+	public static final Predicate<Token> RIGHT_BRACE = t -> t.matchesOperator(JSOperator.RIGHT_BRACE);
 	/**
 	 * TokenPredicate can't be instantiated
 	 */

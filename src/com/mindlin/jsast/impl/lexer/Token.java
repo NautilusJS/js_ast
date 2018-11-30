@@ -70,10 +70,6 @@ public class Token {
 		return getKind() == TokenKind.KEYWORD;
 	}
 
-	public boolean isBracket() {
-		return getKind() == TokenKind.BRACKET;
-	}
-
 	public boolean isIdentifier() {
 		return getKind() == TokenKind.IDENTIFIER;
 	}
@@ -129,7 +125,6 @@ public class Token {
 			case REGEX_LITERAL:
 			case STRING_LITERAL:
 			case TEMPLATE_LITERAL:
-			case BRACKET:
 			case COMMENT:
 			default:
 				throw new UnsupportedOperationException(this + " cannot be reinterpreted as an identifier");
