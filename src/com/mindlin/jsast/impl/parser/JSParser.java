@@ -2104,7 +2104,9 @@ public class JSParser {
 	protected TypeTree parseType(boolean allowConditional, JSLexer src, Context context) {
 		// Handle function/construct signature types
 		Token lookahead = src.peek();
-		if (lookahead.matchesOperator(JSOperator.LESS_THAN) || lookahead.matches(TokenKind.KEYWORD, JSKeyword.NEW))
+		if (lookahead.matchesOperator(JSOperator.LESS_THAN)
+				|| lookahead.matches(TokenKind.KEYWORD, JSKeyword.NEW)
+				|| (lookahead.matchesOperator(JSOperator.LEFT_PARENTHESIS) && lookahead(this::isStartOfFunctionType, src, context)))
 			return this.parseFunctionType(src, context);
 		
 		if (allowConditional)
