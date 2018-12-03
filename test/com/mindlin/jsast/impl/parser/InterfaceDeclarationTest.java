@@ -19,37 +19,48 @@ public class InterfaceDeclarationTest {
 	
 	@Test
 	public void testSingleMember() {
-		InterfaceDeclarationTree iface = parseStatement("interface Foo {name: string;}", Kind.INTERFACE_DECLARATION);
-		assertIdentifier("Foo", iface.getName());
+		InterfaceDeclarationTree iface = parseStatement("interface HasName {name: string;}", Kind.INTERFACE_DECLARATION);
+		assertIdentifier("HasName", iface.getName());
 		
-		PropertyDeclarationTree prop0 = assertSingleElementKind(Kind.PROPERTY_SIGNATURE, iface.getDeclaredMembers());
+		PropertyDeclarationTree prop0 = assertSingleElementKind(Kind.PROPERTY_DECLARATION, iface.getDeclaredMembers());
 		
+		fail("Not finished");
 	}
 	
 	@Test
 	public void testMultipleMembers() {
-		InterfaceDeclarationTree iface = parseStatement("interface Foo {fName: string; lName: string;}", Kind.INTERFACE_DECLARATION);
-		assertIdentifier("Foo", iface.getName());
+		InterfaceDeclarationTree iface = parseStatement("interface TwoPartName {fName: string; lName: string;}", Kind.INTERFACE_DECLARATION);
+		assertIdentifier("TwoPartName", iface.getName());
+		
+		fail("Not finished");
 	}
 	
 	@Test
 	public void testSimpleMethodSignature() {
+		InterfaceDeclarationTree iface = parseStatement("interface HasFoo { foo(); }", Kind.INTERFACE_DECLARATION);
 		
+		fail("Not finished");
 	}
 	
 	@Test
 	public void testConstructorSignature() {
+		InterfaceDeclarationTree iface = parseStatement("interface HasCtor { new (); }", Kind.INTERFACE_DECLARATION);
 		
+		fail("Not finished");
 	}
 	
 	@Test
-	public void testReadonly() {
+	public void testReadonlyProperty() {
+		InterfaceDeclarationTree iface = parseStatement("interface Foo { readonly bar: string; }", Kind.INTERFACE_DECLARATION);
 		
+		fail("Not finished");
 	}
 	
 	@Test
 	public void testAccessorDeclaration() {
+		InterfaceDeclarationTree iface = parseStatement("interface Foo { get bar(): string; set bar(value: string); }", Kind.INTERFACE_DECLARATION);
 		
+		fail("Not finished");
 	}
 	
 	// Some extra punctuation checks
