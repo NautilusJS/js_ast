@@ -4,13 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum JSKeyword {
+	ABSTRACT(true),
 	AS(true),
+	ASYNC(true),
+	AWAIT(true),
 	BREAK,
 	CASE,
 	CLASS,
 	CONST,
 	CONTINUE,
 	DEBUGGER,
+	DECLARE(true),
 	DEFAULT,
 	DELETE,
 	DO,
@@ -35,6 +39,7 @@ public enum JSKeyword {
 	PRIVATE(true),
 	PROTECTED(true),
 	PUBLIC(true),
+	READONLY(true),
 	RETURN,
 	STATIC(true),
 	SUPER,
@@ -42,6 +47,7 @@ public enum JSKeyword {
 	THIS,
 	THROW,
 	TRY,
+	TYPE(true),
 	TYPEOF,
 	VAR,
 	VOID,

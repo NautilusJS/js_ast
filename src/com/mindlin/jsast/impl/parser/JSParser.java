@@ -711,25 +711,8 @@ public class JSParser {
 	protected ExpressionTree parsePrimaryExpression(JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		switch (lookahead.getKind()) {
-			case IDENTIFIER: {
-				switch (lookahead.<String>getValue()) {
-					case "async":
-						if (!dialect.supports("js.function.async"))
-							break;
-						if (src.peek(1).matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
-							//Async function
-							return this.parseFunctionExpression(src, context);
-						break;
-					case "abstract":
-						if (src.peek(1).matches(TokenKind.KEYWORD, JSKeyword.CLASS))
-							// Abstract class
-							return this.parseClassExpression(src, context);
-						break;
-					default:
-						break;
-				}
+			case IDENTIFIER:
 				return this.parseIdentifier(src, context);
-			}
 			case NUMERIC_LITERAL:
 				if (context.isStrict()) {
 					//TODO throw error on implicit octal
@@ -750,6 +733,7 @@ public class JSParser {
 					}
 					case DIVISION:
 					case DIVISION_ASSIGNMENT: {
+						// Regular expression
 						context.isAssignmentTarget(false);
 						context.isBindingElement(false);
 						Token regex = src.finishRegExpLiteral(src.skip(lookahead));
@@ -775,6 +759,11 @@ public class JSParser {
 			case KEYWORD:
 				context.isAssignmentTarget(false).isBindingElement(false);
 				switch (lookahead.<JSKeyword>getValue()) {
+					case ASYNC:
+						if (dialect.supports("js.function.async") && src.peek(1).matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
+							//Async function
+							return this.parseFunctionExpression(src, context);
+						break;
 					case FUNCTION:
 						return this.parseFunctionExpression(src, context);
 					case THIS:
@@ -944,7 +933,7 @@ public class JSParser {
 	}
 	
 	protected ExpressionTree parseAwait(JSLexer src, Context context) {
-		Token awaitToken = expect(TokenKind.IDENTIFIER, "await", src, context);
+		Token awaitToken = expectKeyword(JSKeyword.AWAIT, src, context);
 		ExpressionTree expr = this.parseUnaryExpression(src, context);
 		return new AwaitTreeImpl(awaitToken.getStart(), src.getPosition(), expr);
 	}
@@ -1078,12 +1067,6 @@ public class JSParser {
 		switch (token.getKind()) {
 			case IDENTIFIER:
 				switch (token.<String>getValue()) {
-					case "readonly":
-						return Modifiers.READONLY;
-					case "abstract":
-						return Modifiers.ABSTRACT;
-					case "declare":
-						return Modifiers.DECLARE;
 					case "get":
 						return Modifiers.GETTER;
 					case "set":
@@ -1094,6 +1077,12 @@ public class JSParser {
 				break;
 			case KEYWORD:
 				switch (token.<JSKeyword>getValue()) {
+					case ABSTRACT:
+						return Modifiers.ABSTRACT;
+					case DECLARE:
+						return Modifiers.DECLARE;
+					case READONLY:
+						return Modifiers.READONLY;
 					case STATIC:
 						return Modifiers.STATIC;
 					case PUBLIC:
