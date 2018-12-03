@@ -2896,6 +2896,7 @@ public class JSParser {
 	 */
 	protected ExpressionTree parseAssignment(JSLexer src, Context context) {
 		Token lookahead = src.peek();
+		SourcePosition start = src.getPosition();
 		
 		//Check if this could possibly start a parameter
 		if (context.isMaybeParam() && !TokenPredicate.START_OF_PARAMETER.test(lookahead))
@@ -2937,7 +2938,7 @@ public class JSParser {
 		
 		
 		final ExpressionTree right = this.parseAssignment(src, context.coverGrammarIsolated());
-		return new AssignmentTreeImpl(lookahead.getStart(), right.getEnd(), this.mapTokenToBinaryKind(assignmentOperator), variable, right);
+		return new AssignmentTreeImpl(start, right.getEnd(), this.mapTokenToBinaryKind(assignmentOperator), variable, right);
 	}
 	
 	/**
