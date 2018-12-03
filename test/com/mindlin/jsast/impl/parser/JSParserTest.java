@@ -1,6 +1,7 @@
 package com.mindlin.jsast.impl.parser;
 
 import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
+import static com.mindlin.jsast.impl.parser.JSParserTest.getTestName;
 import static org.junit.Assert.*;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.fs.SourceFile.NominalSourceFile;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -127,7 +129,7 @@ public class JSParserTest {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends ExpressionTree> T parseExpression(String expr) {
-		JSLexer lexer = new JSLexer(expr);
+		JSLexer lexer = new JSLexer(new NominalSourceFile(getTestName(), expr));
 		T result = (T) new JSParser().parseNextExpression(lexer, new Context());
 		assertTrue("Not all of expression was consumed. Read until " + lexer.getPosition(), lexer.isEOF());
 		return result;
@@ -143,5 +145,13 @@ public class JSParserTest {
 	@SuppressWarnings("unchecked")
 	public static <T extends TypeTree> T parseType(String type) {
 		return (T) new JSParser().parseType(new JSLexer(type), new Context());
+	}
+	
+	public static String getTestName() {
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		for (int i = 3; i < stack.length; i++)
+			if (stack[i].getMethodName().startsWith("test"))
+				return stack[i].getMethodName();
+		return "test???";
 	}
 }
