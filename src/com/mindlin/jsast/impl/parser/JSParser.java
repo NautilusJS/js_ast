@@ -3500,10 +3500,7 @@ public class JSParser {
 		
 		
 		//Parse function identifier
-		IdentifierTree identifier = null;
-		Token next = src.nextTokenIf(TokenKind.IDENTIFIER);
-		if (next != null)
-			identifier = new IdentifierTreeImpl(next);
+		IdentifierTree identifier = this.parseIdentifierMaybe(src, context);
 		
 		//Parse generics (if available)
 		List<TypeParameterDeclarationTree> generics = this.parseTypeParametersMaybe(src, context);
