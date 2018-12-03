@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 
 import com.mindlin.jsast.impl.tree.LineMap;
+import com.mindlin.jsast.impl.util.CharacterArrayStream;
 import com.mindlin.jsast.impl.util.CharacterStream;
 
 /**
