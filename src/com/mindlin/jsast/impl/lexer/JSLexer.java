@@ -841,7 +841,10 @@ public class JSLexer implements Supplier<Token> {
 		//Special EOF token
 		if (isEOF()) {
 			SourceRange range = new SourceRange(this.getPosition(), this.getPosition());
-			return this.lookahead = new Token(flags, range, TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+			Token result = new Token(flags, range, TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+			if (this.lookahead == null)
+				this.lookahead = result;
+			return result;
 		}
 		
 		final long start = Math.max(chars.position(), -1);
