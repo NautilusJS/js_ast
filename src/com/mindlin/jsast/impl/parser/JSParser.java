@@ -1702,6 +1702,7 @@ public class JSParser {
 		if (lookahead(this::isIndexSignature, src, context))
 			return this.parseIndexSignature(decorators, start, modifiers, src, context);
 		
+		// At this point, it's either a method or property
 		PropertyName name = this.parsePropertyName(src, context);
 		
 		// Parse postfix modifiers
@@ -3094,7 +3095,7 @@ public class JSParser {
 		if (lookahead.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
 			// 'fake' this-parameter
 			dialect.require("ts.types", lookahead.getRange());
-			IdentifierTree name = new IdentifierTreeImpl(src.nextToken());
+			IdentifierTree name = this.asIdentifier(src.skip(lookahead));
 			TypeTree type = this.parseTypeMaybe(src, context, true);
 			// Initializers not allowed
 			lookahead = src.peek();
