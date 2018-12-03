@@ -1722,10 +1722,63 @@ public class JSParser {
 		return this.parseType(src, context);
 	}
 	
+	protected boolean skipParameterStart(JSLexer src, Context context) {
+		this.parseModifiers(Modifiers.union(Modifiers.MASK_VISIBILITY, Modifiers.READONLY), true, src, context);
+		Token lookahead = src.peek();
+		if (this.isIdentifier(lookahead, context) || lookahead.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
+			src.skip(lookahead);
+			return true;
+		}
+		if (lookahead.matchesOperator(JSOperator.LEFT_BRACKET) || lookahead.matchesOperator(JSOperator.LEFT_BRACE)) {
+			try {
+				this.parsePattern(src, context);
+				return true;
+			} catch (JSSyntaxException e) {
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Please call with {@link #lookahead(BiPredicate, JSLexer, Context)}.
+	 */
+	protected boolean isStartOfFunctionType(JSLexer src, Context context) {
+		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_PARENTHESIS))
+			return false;
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS) || src.nextTokenIs(TokenKind.OPERATOR, JSOperator.SPREAD))
+			return true;
+		if (!this.skipParameterStart(src, context))
+			return false;
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COLON)
+				|| src.nextTokenIs(TokenKind.OPERATOR, JSOperator.COMMA)
+				|| src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK)
+				|| src.nextTokenIs(TokenKind.OPERATOR, JSOperator.ASSIGNMENT))
+			return true;
+		if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.RIGHT_PARENTHESIS) && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LAMBDA))
+			return true;
+		return false;
+	}
+	
+	/**
+	 * <pre>
+	 * FunctionSignatureType:
+	 * 		TypeParameters? ( Parameters[~AccessModifiers] ) => Type[+Conditional]
+	 * ConstructSignatureType:
+	 * 		new ( Parameters[~AccessModifiers] ) => Type[+Conditional]
+	 * </pre>
+	 */
 	protected TypeTree parseFunctionType(JSLexer src, Context context) {
 		boolean isConstructor = src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.NEW);
 		
 		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
+		
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		List<ParameterTree> params = this.parseParameters(null, src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		
+		expectOperator(JSOperator.LAMBDA, src, context);
+		
+		TypeTree returnType = this.parseType(src, context);
 		
 		//TODO finish
 		throw new JSUnsupportedException("Function/construct signature types", src.getPosition());
