@@ -932,15 +932,15 @@ public class JSParser {
 		
 		IdentifierTree identifier = this.parseIdentifier(src, context);
 		
-		List<TypeParameterDeclarationTree> genericParams = this.parseTypeParametersMaybe(src, context);
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
 		
 		expectOperator(JSOperator.ASSIGNMENT, src, context);
 		
-		TypeTree value = parseType(src, context);
+		TypeTree value = this.parseType(src, context);
 		
 		expectEOL(src, context);
 		
-		return new TypeAliasTreeImpl(typeToken.getStart(), src.getPosition(), identifier, genericParams, value);
+		return new TypeAliasTreeImpl(start, src.getPosition(), identifier, typeParams, value);
 	}
 	
 	protected ExpressionTree parseAwait(JSLexer src, Context context) {
