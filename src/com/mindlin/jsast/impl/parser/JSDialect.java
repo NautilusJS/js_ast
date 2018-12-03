@@ -98,6 +98,7 @@ public interface JSDialect {
 					case "ts.visibility.public":
 					case "ts.visibility.private":
 					case "ts.types":
+					case "ts.types.enum":
 						return true;
 				}
 				if (JSStandardDialect.ES5.supports(feature))
