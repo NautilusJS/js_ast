@@ -1649,7 +1649,7 @@ public class JSParser {
 		Token lookahead = src.peek();
 		if (modifiers.isGenerator()
 				|| lookahead.matchesOperator(JSOperator.LEFT_PARENTHESIS)
-				|| lookahead.matchesOperator(JSOperator.GREATER_THAN)) {
+				|| lookahead.matchesOperator(JSOperator.LESS_THAN)) {
 			return this.parseMethodDeclaration(start, decorators, modifiers, name, src, context);
 		}
 		
