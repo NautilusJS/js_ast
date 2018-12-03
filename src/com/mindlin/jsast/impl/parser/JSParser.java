@@ -1208,6 +1208,13 @@ public class JSParser {
 		return null;
 	}
 	
+	protected DecoratorTree parseDecorator(JSLexer src, Context context) {
+		SourcePosition start = src.getNextStart();
+		expectOperator(JSOperator.AT_SYMBOL, src, context);
+		//TODO: finish
+		throw new JSUnsupportedException("Decorators", src.getPosition());
+	}
+	
 	/**
 	 * <pre>
 	 * DecoratorList[Yield, Await]:
@@ -1224,8 +1231,7 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected List<DecoratorTree> parseDecorators(JSLexer src, Context context) {
-		//TODO: finish
-		return Collections.emptyList();
+		return this.parseList(this::parseDecorator, TokenPredicate.match(TokenKind.OPERATOR, JSOperator.AT_SYMBOL).negate(), src, context);
 	}
 	
 	protected boolean isDeclaration(JSLexer src, Context context) {
