@@ -20,7 +20,6 @@ import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.InferTypeTree;
 import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
-import com.mindlin.jsast.tree.type.KeyofTypeTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
 import com.mindlin.jsast.tree.type.MappedTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
@@ -31,6 +30,7 @@ import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.jsast.tree.type.UnaryTypeTree;
 
 //see http://download.java.net/java/jdk9/docs/jdk/api/nashorn/jdk/nashorn/api/tree/package-summary.html
 //http://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/index.html
@@ -275,8 +275,8 @@ public interface Tree {
 		
 		// Unary type expressions
 		ARRAY_TYPE(ArrayTypeTree.class),
-		KEYOF_TYPE(KeyofTypeTree.class),
-		UNIQUE_TYPE,
+		KEYOF_TYPE(UnaryTypeTree.class),
+		UNIQUE_TYPE(UnaryTypeTree.class),
 		OPTIONAL_TYPE,
 		DEFINITE_TYPE,
 		PARENTHESIZED_TYPE(ParenthesizedTypeTree.class),

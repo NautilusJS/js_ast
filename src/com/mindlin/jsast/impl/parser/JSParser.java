@@ -2181,10 +2181,16 @@ public class JSParser {
 		Token lookahead = src.peek();
 		if (lookahead.isIdentifier()) {
 			switch (lookahead.<String>getValue()) {
-				case "keyof":
-					throw new JSUnsupportedException("Keyof types", src.getPosition());
-				case "unique":
-					throw new JSUnsupportedException("Unique types", src.getPosition());
+				case "keyof": {
+					src.skip(lookahead);
+					TypeTree base = this.parseType(src, context);
+					return new UnaryTypeTreeImpl(lookahead.getStart(), src.getPosition(), Kind.KEYOF_TYPE, base);
+				}
+				case "unique": {
+					src.skip(lookahead);
+					TypeTree base = this.parseType(src, context);
+					return new UnaryTypeTreeImpl(lookahead.getStart(), src.getPosition(), Kind.UNIQUE_TYPE, base);
+				}
 				case "infer":
 					return this.parseInferType(src, context);
 				default:

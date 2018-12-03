@@ -1,12 +1,10 @@
 package com.mindlin.jsast.tree.type;
 
-import com.mindlin.jsast.tree.Tree;
-
 /**
- * Type representing a type expression in the form of {@code keyof X}
+ * Type representing a type expression in the form of {@code keyof X} or {@code unique X}
  * @author mailmindlin
  */
-public interface KeyofTypeTree extends TypeTree {
+public interface UnaryTypeTree extends TypeTree {
 
 	/**
 	 * Get the type that this is a key of ({@code X} in {@code keyof X}).
@@ -15,12 +13,7 @@ public interface KeyofTypeTree extends TypeTree {
 	TypeTree getBaseType();
 	
 	@Override
-	default Tree.Kind getKind() {
-		return Tree.Kind.KEYOF_TYPE;
-	}
-	
-	@Override
 	default <R, D> R accept(TypeTreeVisitor<R, D> visitor, D data) {
-		return visitor.visitKeyofType(this, data);
+		return visitor.visitUnaryType(this, data);
 	}
 }
