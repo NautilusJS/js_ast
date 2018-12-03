@@ -12,6 +12,7 @@ public enum JSKeyword {
 	CASE,
 	CLASS,
 	CONST,
+	CONSTRUCTOR(true),
 	CONTINUE,
 	DEBUGGER,
 	DECLARE(true),

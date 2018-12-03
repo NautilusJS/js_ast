@@ -358,7 +358,17 @@ public class JSParser {
 					case INSTANCEOF:
 					default:
 						throw new JSSyntaxException("Unexpected keyword " + lookahead.getValue(), lookahead.getRange());
+					case AS:
+					case AWAIT:
+					case CONSTRUCTOR:
+					case FROM:
+					case IMPLEMENTS:
+					case OF:
+					case PACKAGE:
+					default:
+						break;
 				}
+				return this.parseLabeledOrExpressionStement(src, context);
 			}
 			case OPERATOR:
 				switch (lookahead.<JSOperator>getValue()) {
@@ -369,28 +379,8 @@ public class JSParser {
 					default:
 						return this.parseExpressionStatement(src, context);
 				}
-			case IDENTIFIER: {
-				// We need another lookahead to make this decision
-				Token lookahead1 = src.peek(1);
-				switch (lookahead.<String>getValue()) {
-					case "type":
-						if (lookahead1.getKind() != TokenKind.IDENTIFIER)
-							break;
-						return this.parseTypeAlias(src, context);
-					case "async":
-						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.FUNCTION))
-							return this.parseFunctionDeclaration(src, context);
-						break;
-					case "abstract":
-						if (lookahead1.matches(TokenKind.KEYWORD, JSKeyword.CLASS))
-							return this.parseClassDeclaration(src, context);
-						break;
-					default:
-						break;
-				}
-				if (lookahead1.matchesOperator(JSOperator.COLON))
-					return this.parseLabeledStatement(src, context);
-			}
+			case IDENTIFIER:
+				return this.parseLabeledOrExpressionStement(src, context);
 			//Fallthrough intentional
 			case BOOLEAN_LITERAL:
 			case NUMERIC_LITERAL:
@@ -416,6 +406,13 @@ public class JSParser {
 			
 		}
 		return null;
+	}
+	
+	protected StatementTree parseLabeledOrExpressionStement(JSLexer src, Context context) {
+		Token la2 = src.peek(1);
+		if (this.isIdentifier(src.peek(), context) && src.peek(1).matchesOperator(JSOperator.COLON))
+			return this.parseLabeledStatement(src, context);
+		return this.parseExpressionStatement(src, context);
 	}
 	
 	protected StatementTree parseExpressionStatement(JSLexer src, Context context) {
@@ -917,7 +914,7 @@ public class JSParser {
 	}
 	
 	protected TypeAliasTree parseTypeAlias(JSLexer src, Context context) {
-		Token typeToken = expect(TokenKind.IDENTIFIER, "type", src, context);
+		expectKeyword(JSKeyword.TYPE, src, context);
 		
 		IdentifierTree identifier = this.parseIdentifier(src, context);
 		
@@ -1213,18 +1210,14 @@ public class JSParser {
 	protected StatementTree parseDeclarationInner(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		switch (lookahead.getKind()) {
-			case IDENTIFIER:
-				switch (lookahead.<String>getValue()) {
-					case "type":
-						return this.parseTypeAlias(src, context);
-				}
-				break;
 			case KEYWORD:
 				switch (lookahead.<JSKeyword>getValue()) {
 					case VAR:
 					case LET:
 					case CONST:
 						return this.parseVariableDeclaration(false, src, context);
+					case TYPE:
+						return this.parseTypeAlias(start, decorators, modifiers, src, context);
 					case CLASS:
 						return this.parseClassDeclaration(src, context);
 					case FUNCTION:
@@ -3862,7 +3855,7 @@ public class JSParser {
 			return this.parseYield(src, context);
 		if (lookahead.matchesOperator(JSOperator.SPREAD))
 			return this.parseSpread(src, context);
-		if (context.allowAwait() && lookahead.matches(TokenKind.IDENTIFIER, "await"))
+		if (context.allowAwait() && lookahead.matches(TokenKind.KEYWORD, JSKeyword.AWAIT))
 			return this.parseAwait(src, context);
 		if (dialect.supports("ts.types.cast") && lookahead.matchesOperator(JSOperator.LESS_THAN))
 			return this.parseTypeAssertion(src, context);
