@@ -1412,7 +1412,7 @@ public class JSParser {
 		TypeTree type = this.parseTypeMaybe(src, context, true);
 		
 		context.push();
-		context.allowIn(true);
+		context.allowIn();
 		if (!modifiers.isStatic())
 			context.allowAwait(false);
 		ExpressionTree initializer = this.parseInitializer(src, context);
@@ -1585,7 +1585,7 @@ public class JSParser {
 	 */
 	protected EnumMemberTree parseEnumMember(JSLexer src, Context context) {
 		IdentifierTree name = this.parseIdentifier(src, context);
-		ExpressionTree initialier = this.parseInitializer(src, context.pushed().allowIn(true));
+		ExpressionTree initialier = this.parseInitializer(src, context.withIn());
 		//TODO: finish
 		throw new JSUnsupportedException("Enum members", src.getPosition());
 	}
@@ -2484,7 +2484,7 @@ public class JSParser {
 		src.expect(JSOperator.LEFT_PARENTHESIS);
 		
 		context.push();
-		context.allowIn(true);
+		context.withIn();
 		ExpressionTree expression = this.parseNextExpression(src, context);
 		context.pop();
 		
@@ -2565,7 +2565,7 @@ public class JSParser {
 		StatementTree initializer = null;
 		if (TokenPredicate.VARIABLE_START.test(lookahead)) {
 			context.push();
-			context.allowIn(false);
+			context.disallowIn();
 			VariableDeclarationTree declarations = this.parseVariableDeclaration(true, src, context);
 			context.pop();
 			
@@ -2585,7 +2585,7 @@ public class JSParser {
 			expectEOL(src, context);
 		} else {
 			context.push();
-			context.allowIn(false);
+			context.disallowIn();
 			ExpressionTree expr = this.parseNextExpression(src, context);
 			context.pop();
 			
@@ -2789,7 +2789,7 @@ public class JSParser {
 		} else if (t.isKeyword()) {
 			switch (t.<JSKeyword>getValue()) {
 				case IN:
-					if (!context.allowIn())
+					if (!context.inAllowed())
 						return -1;
 					//Fallthrough intentional
 				case INSTANCEOF:
@@ -2954,7 +2954,7 @@ public class JSParser {
 		
 		
 		context.push();
-		context.allowIn(true);
+		context.allowIn();
 		ExpressionTree concequent = this.parseAssignment(src, context.coverGrammarIsolated());
 		context.pop();
 		
@@ -3410,8 +3410,7 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected ExpressionTree parseLeftSideExpression(boolean allowCall, JSLexer src, Context context) {
-		boolean prevAllowIn = context.allowIn();
-		context.allowIn(true);
+		context.push(); // +In
 		
 		ExpressionTree expr;
 		if (context.inFunction() && src.peek().matches(TokenKind.KEYWORD, JSKeyword.SUPER))
@@ -3453,7 +3452,7 @@ public class JSParser {
 			}
 		}
 		
-		context.allowIn(prevAllowIn);
+		context.pop(~Context.FLAG_IN);
 		return expr;
 	}
 	
@@ -3726,7 +3725,7 @@ public class JSParser {
 			return null;
 		
 		if (lookahead.matchesOperator(JSOperator.SPREAD)) {
-			ExpressionTree result = this.parseSpread(src, context.pushed().allowIn(true));
+			ExpressionTree result = this.parseSpread(src, context.withIn());
 			if (!src.peek().matchesOperator(JSOperator.RIGHT_BRACKET)) {
 				//TODO: why not set always?
 				context.isAssignmentTarget(false);
@@ -3735,7 +3734,7 @@ public class JSParser {
 			return result;
 		}
 		
-		return this.parseAssignment(src, context.coverGrammarIsolated().allowIn(true));
+		return this.parseAssignment(src, context.coverGrammarIsolated().allowIn());
 	}
 	/**
 	 * Parse array literal.
@@ -3868,7 +3867,7 @@ public class JSParser {
 			// Normal property assignment
 			// Form <name>: <value>
 			expectOperator(JSOperator.COLON, src, context);
-			ExpressionTree value = this.parseAssignment(src, context.pushed().allowIn(true));
+			ExpressionTree value = this.parseAssignment(src, context.pushed().allowIn());
 			return new AssignmentPropertyTreeImpl(start, src.getPosition(), modifiers, name, value);
 		}
 	}
@@ -4086,6 +4085,27 @@ public class JSParser {
 	}
 	
 	public static class Context {
+		// Context flags (propagate down only)
+		static final int FLAG_IN                = (1 <<  0);
+		static final int FLAG_YIELD             = (1 <<  1);
+		static final int FLAG_AWAIT             = (1 <<  2);
+		static final int FLAG_RETURN            = (1 <<  3);
+		static final int FLAG_BREAK             = (1 <<  4);
+		static final int FLAG_CONTINUE          = (1 <<  5);
+		// SS flags (propagate across)
+		static final int FLAG_ASSIGNMENT_TARGET = (1 <<  6);
+		static final int FLAG_NAMED_BLOCK       = (1 <<  7);
+		static final int FLAG_BINDING_ELEMENT   = (1 <<  8);
+		static final int FLAG_STRICT            = (1 <<  9);
+		static final int FLAG_DIRECTIVE_TARGET  = (1 << 10);
+		static final int FLAG_MAYBE_PARAMETER   = (1 << 11);
+		static final int FLAG_AMBIENT           = (1 << 12);
+		// Scope flags
+		static final int FLAG_FUNCTION          = (1 << 13);
+		static final int FLAG_GENERATOR         = (1 << 14);
+		static final int FLAG_SWITCH            = (1 << 15);
+		static final int FLAG_LOOP              = (1 << 16);
+		
 		ContextData data;
 		// Fields that are global
 		String scriptName;
@@ -4134,10 +4154,10 @@ public class JSParser {
 		 * @return
 		 */
 		public Context inheritCoverGrammar() {
-			ContextData toInherit = this.data;
+			int mask = Context.FLAG_BINDING_ELEMENT | Context.FLAG_ASSIGNMENT_TARGET;
+			int masked = this.data.flags & mask;
 			this.pop();
-			this.data.isBindingElement &= toInherit.isBindingElement;
-			this.data.isAssignmentTarget &= toInherit.isAssignmentTarget;
+			this.data.flags &= masked | ~mask;
 			return this;
 		}
 		
@@ -4146,66 +4166,85 @@ public class JSParser {
 			return this;
 		}
 		
+		public Context pop(int inheritFlags) {
+			int iFlags = data.flags & inheritFlags;
+			this.pop();
+			data.flags = (data.flags & ~inheritFlags) | iFlags;
+			return this;
+		}
+		
 		public boolean isAmbient() {
-			return data.isAmbient;
+			return data.hasFlags(Context.FLAG_AMBIENT);
 		}
 		
 		public boolean isStrict() {
-			return data.isStrict;
+			return data.hasFlags(Context.FLAG_STRICT);
 		}
 		
 		public boolean isDirectiveTarget() {
-			return data.isDirectiveTarget;
+			return data.hasFlags(Context.FLAG_DIRECTIVE_TARGET);
 		}
 		
 		public boolean allowReturn() {
-			return data.inFunction || data.inGenerator;
+			return data.hasFlags(Context.FLAG_RETURN);
 		}
 		
-		public boolean allowIn() {
-			return data.allowIn;
+		public boolean inAllowed() {
+			return data.hasFlags(Context.FLAG_IN);
 		}
 
 		public boolean allowBreak() {
-			return data.inLoop || data.inSwitch || data.inNamedBlock;
+			return data.hasFlags(Context.FLAG_BREAK);
 		}
 		
 		public boolean allowContinue() {
-			return data.inLoop;
+			return data.hasFlags(Context.FLAG_CONTINUE);
 		}
 		
 		public boolean allowYield() {
-			return data.inGenerator;
+			return data.hasFlags(Context.FLAG_YIELD);
 		}
 		
 		public boolean inBinding() {
-			return data.isBindingElement;
+			return data.hasFlags(Context.FLAG_BINDING_ELEMENT);
 		}
 
 		public boolean inFunction() {
-			return data.inFunction;
+			return data.hasFlags(Context.FLAG_FUNCTION);
+		}
+		
+		public Context disallowIn() {
+			data.clearFlags(Context.FLAG_IN);
+			return this;
+		}
+		
+		public Context withIn() {
+			return this.pushed().allowIn();
 		}
 
-		public Context allowIn(boolean value) {
-			data.allowIn = value;
+		public Context allowIn() {
+			data.setFlags(Context.FLAG_IN);
 			return this;
 		}
 		
 		public Context allowAwait(boolean value) {
-			data.allowAwait = value;
+			if (value)
+				data.setFlags(Context.FLAG_AWAIT);
+			else
+				data.clearFlags(Context.FLAG_AWAIT);
 			return this;
 		}
 		
 		public boolean allowAwait() {
-			return data.allowAwait;
+			return data.hasFlags(Context.FLAG_AWAIT);
 		}
 
 		public boolean isAssignmentTarget() {
-			return data.isAssignmentTarget;
+			return data.hasFlags(Context.FLAG_ASSIGNMENT_TARGET);
 		}
 		
 		public boolean isMaybeParam() {
-			return data.isMaybeParam;
+			return data.hasFlags(Context.FLAG_MAYBE_PARAMETER);
 		}
 
 		/**
@@ -4216,7 +4255,7 @@ public class JSParser {
 		 */
 		public Context pushFunction() {
 			this.data = new ContextData(this.data, false);
-			this.data.inFunction = true;
+			this.data.setFlags(Context.FLAG_RETURN | Context.FLAG_FUNCTION);
 			return this;
 		}
 
@@ -4227,7 +4266,7 @@ public class JSParser {
 		 * @return self
 		 */
 		public Context enterSwitch() {
-			data.inSwitch = true;
+			data.setFlags(Context.FLAG_BREAK | Context.FLAG_SWITCH);
 			return this;
 		}
 
@@ -4240,12 +4279,12 @@ public class JSParser {
 		 */
 		public Context pushGenerator() {
 			this.data = new ContextData(this.data, false);
-			data.inGenerator = true;
+			data.setFlags(Context.FLAG_RETURN | Context.FLAG_YIELD | Context.FLAG_GENERATOR);
 			return this;
 		}
 		
 		public Context enterDeclare() {
-			data.isAmbient = true;
+			data.setFlags(Context.FLAG_AMBIENT);
 			return this;
 		}
 
@@ -4256,32 +4295,44 @@ public class JSParser {
 		 * @return self
 		 */
 		public Context enterLoop() {
-			data.inLoop = true;
+			data.setFlags(Context.FLAG_CONTINUE | Context.FLAG_BREAK);
 			return this;
 		}
 
 		public Context enterStrict() {
-			data.isStrict = true;
+			data.setFlags(Context.FLAG_STRICT);
 			return this;
 		}
 		
 		public Context setDirectiveTarget(boolean value) {
-			data.isDirectiveTarget = value;
+			if (value)
+				data.setFlags(Context.FLAG_DIRECTIVE_TARGET);
+			else
+				data.clearFlags(Context.FLAG_DIRECTIVE_TARGET);
 			return this;
 		}
 
 		public Context isBindingElement(boolean value) {
-			data.isBindingElement = value;
+			if (value)
+				data.setFlags(Context.FLAG_BINDING_ELEMENT);
+			else
+				data.clearFlags(Context.FLAG_BINDING_ELEMENT);
 			return this;
 		}
 
 		public Context isAssignmentTarget(boolean value) {
-			data.isAssignmentTarget = value;
+			if (value)
+				data.setFlags(Context.FLAG_ASSIGNMENT_TARGET);
+			else
+				data.clearFlags(Context.FLAG_ASSIGNMENT_TARGET);
 			return this;
 		}
 		
 		public Context isMaybeParam(boolean value) {
-			data.isMaybeParam = value;
+			if (value)
+				data.setFlags(Context.FLAG_MAYBE_PARAMETER);
+			else
+				data.clearFlags(Context.FLAG_MAYBE_PARAMETER);
 			return this;
 		}
 		
@@ -4297,38 +4348,7 @@ public class JSParser {
 		}
 		
 		static class ContextData {
-			boolean isAmbient = false;
-			boolean isStrict = false;
-			boolean isDirectiveTarget = false;
-			/**
-			 * Whether the parser is currently inside a function statement.
-			 * Allows the {@code return} keyword.
-			 */
-			boolean inFunction = false;
-			/**
-			 * Whether the parser is currently inside a switch statement. Allows
-			 * the {@code break} keyword.
-			 */
-			boolean inSwitch = false;
-			/**
-			 * True if the parser is in a generator.
-			 * Allows the {@code yield} and {@code yield*} keywords.
-			 */
-			boolean inGenerator = false;
-			/**
-			 * Whether the parser is currently inside a loop statement. Allows
-			 * the {@code break} and {@code continue} statements.
-			 */
-			boolean inLoop = false;
-			boolean isAssignmentTarget = false;
-			boolean inNamedBlock = false;
-			boolean isBindingElement = false;
-			boolean allowIn = true;
-			/**
-			 * If we're in an async function
-			 */
-			boolean allowAwait = false;
-			boolean isMaybeParam = false;
+			int flags = 0;
 			final ContextData parent;
 			/**
 			 * Set of statement labels
@@ -4349,17 +4369,20 @@ public class JSParser {
 					this.inheritFrom(parent);
 			}
 			
+			protected void setFlags(int flags) {
+				this.flags |= flags;
+			}
+			
+			protected void clearFlags(int flags) {
+				this.flags &= ~flags;
+			}
+			
+			protected boolean hasFlags(int flags) {
+				return (this.flags & flags) == flags;
+			}
+			
 			private void inheritFrom(ContextData source) {
-				this.isStrict = parent.isStrict;
-				this.inFunction = parent.inFunction;
-				this.inSwitch = parent.inSwitch;
-				this.inGenerator = parent.inGenerator;
-				this.inLoop = parent.inLoop;
-				this.isAssignmentTarget = parent.isAssignmentTarget;
-				this.isBindingElement = parent.isBindingElement;
-				this.allowIn = parent.allowIn;
-				this.allowAwait = parent.allowAwait;
-				this.isMaybeParam = parent.isMaybeParam;
+				this.flags = source.flags;
 			}
 		}
 	}
