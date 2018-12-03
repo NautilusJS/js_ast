@@ -2954,6 +2954,11 @@ public class JSParser {
 		Token lookahead = src.peek();
 		SourcePosition start = lookahead.getStart();
 		
+		List<DecoratorTree> decorators = this.parseDecorators(src, context);
+		if (!decorators.isEmpty())
+			//TODO: parameter decorators
+			throw new JSUnsupportedException("Parameter decorators", src.getPosition());
+		
 		if (lookahead.matches(TokenKind.KEYWORD, JSKeyword.THIS)) {
 			// 'fake' this-parameter
 			dialect.require("ts.types", lookahead.getRange());
