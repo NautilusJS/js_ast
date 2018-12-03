@@ -13,6 +13,7 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.comment.CommentNode;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
@@ -41,20 +42,16 @@ public interface Tree {
 		COMPILATION_BUNDLE,
 		COMPILATION_UNIT(CompilationUnitTree.class),
 		
-		// Decorators
-		DECORATOR(DecoratorTree.class),
-		
 		// Comments
 		COMMENT(CommentNode.class),
 		JSDOC_DIRECTIVE,
 		JSDOC_ANNOTATION,
 		
-		// Function
-		PARAMETER(ParameterTree.class),
-		
 		// Misc.
+		DECORATOR(DecoratorTree.class),
+		PARAMETER(ParameterTree.class),
 		ERROR(ErroneousTree.class),
-		OTHER,
+		OTHER,//TODO: remove?
 
 		// ===== Statements =====
 		EXPRESSION_STATEMENT(ExpressionStatementTree.class),
@@ -72,8 +69,8 @@ public interface Tree {
 		CONTINUE(ContinueTree.class),
 		RETURN(ReturnTree.class),
 		AWAIT(AwaitTree.class),
-		YIELD(UnaryTree.class),
-		YIELD_GENERATOR(UnaryTree.class),
+		YIELD(UnaryTree.class),//TODO: custom inheritance?
+		YIELD_GENERATOR(UnaryTree.class),//TODO: merge with yield?
 		
 		// Choice
 		IF(IfTree.class),
@@ -96,17 +93,15 @@ public interface Tree {
 		FUNCTION_DECLARATION(FunctionDeclarationTree.class),
 		VARIABLE_DECLARATION(VariableDeclarationTree.class),
 		VARIABLE_DECLARATOR(VariableDeclaratorTree.class),
+		CLASS_DECLARATION(ClassDeclarationTree.class),
 		
 		// TS declarations
 		ENUM_DECLARATION(EnumDeclarationTree.class),
 		MODULE_DECLARATION,
-		
-		// 'Fake' declarations
+		NAMESPACE_DECLARATION,
 		TYPE_ALIAS(TypeAliasTree.class),
 		INTERFACE_DECLARATION(InterfaceDeclarationTree.class),
-		CLASS_DECLARATION(ClassDeclarationTree.class),
 		
-
 		// ===== Expressions =====
 		
 		// Prototype-based
@@ -137,6 +132,7 @@ public interface Tree {
 		// Unary operators
 		UNARY_PLUS(UnaryTree.class),
 		UNARY_MINUS(UnaryTree.class),
+		UNARY_NONNULL(UnaryTree.class),
 		TYPEOF(UnaryTree.class),
 		VOID(UnaryTree.class),
 		DELETE(UnaryTree.class),
@@ -217,7 +213,7 @@ public interface Tree {
 		EXPORT(ExportTree.class),
 
 		// Array stuff
-		SPREAD(UnaryTree.class),//TODO: make custom inheritance
+		SPREAD(SpreadElementTree.class),//TODO: make custom inheritance
 
 		// Method invocation
 		NEW(NewTree.class),
@@ -272,21 +268,30 @@ public interface Tree {
 		IDENTIFIER_TYPE(IdentifierTypeTree.class),
 		
 		// Type literals
-		TUPLE_TYPE(TupleTypeTree.class),
 		FUNCTION_TYPE(FunctionTypeTree.class),
+		CONSTRUCTOR_TYPE(ConstructorTypeTree.class),
+		TUPLE_TYPE(TupleTypeTree.class),
 		OBJECT_TYPE(ObjectTypeTree.class),
+		
+		// Unary type expressions
+		ARRAY_TYPE(ArrayTypeTree.class),
+		KEYOF_TYPE(KeyofTypeTree.class),
+		UNIQUE_TYPE,
+		OPTIONAL_TYPE,
+		DEFINITE_TYPE,
+		PARENTHESIZED_TYPE(ParenthesizedTypeTree.class),
+		INFER_TYPE(InferTypeTree.class),
+		REST_TYPE,
 		
 		// Type expressions
 		MEMBER_TYPE(MemberTypeTree.class),
-		ARRAY_TYPE(ArrayTypeTree.class),
-		KEYOF_TYPE(KeyofTypeTree.class),
 		TYPE_UNION(CompositeTypeTree.class),
 		TYPE_INTERSECTION(CompositeTypeTree.class),
+		TYPE_PREDICATE,
 		
 		// Complex type expressions
-		INFER_TYPE(InferTypeTree.class),
-		PARENTHESIZED_TYPE(ParenthesizedTypeTree.class),
 		MAPPED_TYPE(MappedTypeTree.class),
+		TYPE_QUERY,
 		;
 		
 		private final Class<? extends Tree> iface;
