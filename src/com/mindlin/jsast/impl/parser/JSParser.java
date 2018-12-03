@@ -309,15 +309,9 @@ public class JSParser {
 					case DEBUGGER:
 						return this.parseDebugger(src, context);
 					case CLASS:
-						return this.parseClassDeclaration(src, context);
-					case CONST:
-					case LET:
-					case VAR:
-						return this.parseVariableDeclaration(false, src, context);
+						return this.parseClassDeclaration(src.getNextStart(), Collections.emptyList(), Modifiers.NONE, src, context);
 					case DO:
 						return this.parseDoWhileLoop(src, context);
-					case ENUM:
-						return this.parseEnumDeclaration(src, context);
 					case EXPORT:
 						return this.parseExportStatement(src, context);
 					case FOR:
@@ -328,8 +322,6 @@ public class JSParser {
 						return this.parseIfStatement(src, context);
 					case IMPORT:
 						return this.parseImportStatement(src, context);
-					case INTERFACE:
-						return this.parseInterfaceDeclaration(src, context);
 					case RETURN:
 					case THROW:
 						return this.parseUnaryStatement(src, context);
@@ -349,6 +341,40 @@ public class JSParser {
 					case SUPER:
 					case THIS:
 						return this.parseExpressionStatement(src, context);
+					case INTERFACE:
+						if (this.isIdentifier(src.peek(1), context))
+							return this.parseInterfaceDeclaration(src, context);
+						break;
+					case TYPE:
+						if (this.isIdentifier(src.peek(1), context))//TODO: allow await/yield?
+							return this.parseDeclaration(src, context);
+						break;
+					case LET:
+						// Let is a strict-mode keyword, so it might be used as an identifier
+						if (this.isIdentifier(src.peek(1), context) || src.peek(1).matchesOperator(JSOperator.LEFT_BRACKET) || src.peek(1).matchesOperator(JSOperator.LEFT_BRACE))
+							return this.parseDeclaration(src, context);
+						break;
+					case VAR:
+					case CONST:
+						return this.parseVariableDeclaration(false, src, context);
+					case ENUM:
+						// Always indicate start of declaration
+						return this.parseDeclaration(src, context);
+					case ABSTRACT:
+					case ASYNC:
+					case DECLARE:
+					case PUBLIC:
+					case PROTECTED:
+					case PRIVATE:
+					case READONLY:
+					case STATIC:
+						// Strict-mode keywords, otherwise muddle through with ASI
+						if (context.isStrict() || !src.peek(1).hasPrecedingNewline())
+							return this.parseDeclaration(src, context);
+						break;
+						
+					// case INTERFACE:
+					// case TYPE:
 					case CASE:
 					case FINALLY:
 					case DEFAULT:
@@ -913,8 +939,15 @@ public class JSParser {
 		return new ExportTreeImpl(exportKeywordToken.getStart(), src.getPosition(), isDefault, expr);
 	}
 	
-	protected TypeAliasTree parseTypeAlias(JSLexer src, Context context) {
+	protected TypeAliasTree parseTypeAlias(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
 		expectKeyword(JSKeyword.TYPE, src, context);
+		
+		// No modifiers permitted on type alias declaration
+		if (modifiers.any())
+			throw new JSSyntaxException("Illegal modifiers on type alias declaration: " + modifiers, new SourceRange(start, src.getPosition()));
+		// No decorators permitted (yet?) on type alias declaration
+		if (!decorators.isEmpty())
+			throw new JSSyntaxException("Illegal decorators on type alias declaration: " + decorators, new SourceRange(start, src.getPosition()));
 		
 		IdentifierTree identifier = this.parseIdentifier(src, context);
 		
@@ -1032,6 +1065,7 @@ public class JSParser {
 			expr = this.parseNextExpression(src, context);
 		
 		expectEOL(src, context);
+		//TODO: fix end to happen after EOL (also handle for expr == null)
 		
 		if (keywordToken.getValue() == JSKeyword.RETURN)
 			return new ReturnTreeImpl(keywordToken.getStart(), expr.getEnd(), expr);
@@ -1194,6 +1228,42 @@ public class JSParser {
 		return Collections.emptyList();
 	}
 	
+	protected boolean isDeclaration(JSLexer src, Context context) {
+		Token current;
+		while (!(current = src.nextToken()).matches(TokenKind.SPECIAL, JSSpecialGroup.EOF)) {
+			if (!current.isKeyword())
+				return false;
+			switch (current.<JSKeyword>getValue()) {
+				case VAR:
+				case LET:
+				case CONST:
+				case FUNCTION:
+				case CLASS:
+				case ENUM:
+					return true;
+				case INTERFACE:
+				case TYPE:
+					//TODO: must be followed by identifier
+					return this.isIdentifier(src.peek(), context);
+				case ABSTRACT:
+				case ASYNC:
+				case DECLARE:
+				case PUBLIC:
+				case PRIVATE:
+				case PROTECTED:
+				case READONLY:
+					//Strict or ASI
+					if (context.isStrict() || src.peek().hasPrecedingNewline())
+						return false;
+				case STATIC:
+					continue;
+				default:
+					return false;
+			}
+		}
+		return false;
+	}
+	
 	protected StatementTree parseDeclaration(JSLexer src, Context context) {
 		SourcePosition start = src.getNextStart();
 		List<DecoratorTree> decorators = this.parseDecorators(src, context);
@@ -1221,7 +1291,7 @@ public class JSParser {
 					case TYPE:
 						return this.parseTypeAlias(start, decorators, modifiers, src, context);
 					case CLASS:
-						return this.parseClassDeclaration(src, context);
+						return this.parseClassDeclaration(start, decorators, modifiers, src, context);
 					case FUNCTION:
 						return this.parseFunctionDeclaration(src, context);
 					case INTERFACE:
@@ -1669,11 +1739,20 @@ public class JSParser {
 		return new ClassExpressionTreeImpl(start, src.getPosition(), classModifiers, className, typeParameters, heritage, members);
 	}
 	
-	protected ClassDeclarationTree parseClassDeclaration(JSLexer src, Context context) {
-		final SourcePosition start = src.peek().getStart();
-		
-		//Support abstract classes
-		Modifiers classModifiers = this.parseModifiers(Modifiers.union(Modifiers.ABSTRACT, Modifiers.DECLARE), false, src, context);
+	/**
+	 * <pre>
+	 * ClassDeclaration[Yield, Await, Default]:
+	 * 		DecoratorList[?Yield, ?Await] ClassModifiers BindingIdentifier[?Yield, ?Await] HeritageClauses[?Yield, ?Await] ClassTail[?Yield, ?Await] 
+	 * ClassModifier:
+	 * 		abstract
+	 * 		declare
+	 * </pre>
+	 */
+	protected ClassDeclarationTree parseClassDeclaration(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
+		// Filter valid modifiers
+		final Modifiers modifierWL = Modifiers.union(Modifiers.ABSTRACT, Modifiers.DECLARE);
+		if (modifiers.subtract(modifierWL).any())
+			throw new JSSyntaxException("Illegal modifiers: " + modifiers.subtract(modifierWL), new SourceRange(start, src.getPosition()));
 		
 		Token classKeywordToken = expectKeyword(JSKeyword.CLASS, src, context);
 		
@@ -1686,7 +1765,7 @@ public class JSParser {
 		
 		List<ClassElementTree> members = this.parseClassBody(src, context);
 		
-		return new ClassDeclarationTreeImpl(start, src.getPosition(), classModifiers, className, typeParameters, heritage, members);
+		return new ClassDeclarationTreeImpl(start, src.getPosition(), modifiers, className, typeParameters, heritage, members);
 	}
 	
 	/**
