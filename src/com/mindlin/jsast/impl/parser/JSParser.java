@@ -1526,6 +1526,11 @@ public class JSParser {
 	
 	//SECTION: Class elements
 	
+	protected ClassElementTree parseConstructorDeclaration(SourcePosition startPos, List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
+		expectKeyword(JSKeyword.CONSTRUCTOR, src, context);
+		throw new JSUnsupportedException("Constructor declarations", src.getPosition());
+	}
+	
 	/**
 	 * <pre>
 	 * MethodDeclaration[declare, abstract]:
@@ -1628,10 +1633,9 @@ public class JSParser {
 		if (modifiers.isGetter() || modifiers.isSetter())
 			return this.parseAccessorDeclaration(decorators, modifiers, src, context);
 		
-		if (src.peek().matches(TokenKind.IDENTIFIER, "constructor") && dialect.supports("js.class.constructor")) {
+		if (src.peek().matches(TokenKind.IDENTIFIER, "constructor") && dialect.supports("js.class.constructor"))
 			// Constructor declaration
-			throw new JSUnsupportedException("Class constructors", src.getPosition());
-		}
+			return this.parseConstructorDeclaration(start, decorators, modifiers, src, context);
 		
 		// Possibly index signature
 		if (lookahead(this::isIndexSignature, src, context))
