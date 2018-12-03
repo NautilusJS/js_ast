@@ -3312,73 +3312,73 @@ public class JSParser {
 		return new FunctionCallTreeImpl(functionSelectExpression.getStart(), src.getPosition(), functionSelectExpression, arguments);
 	}
 	
-	/**
-	 * Coerces {@code identifierToken} to an identifier, if possible in the current context.
-	 * @param identifierToken
-	 * @param src
-	 * @param context
-	 * @return
-	 * @throws JSSyntaxException If {@code identifierToken} is an invalid 
-	 */
-	protected String asIdentifier(Token identifierToken, JSLexer src, Context context) throws JSSyntaxException {
+	protected boolean isIdentifier(Token identifierToken, Context context) {
+		if (identifierToken.isIdentifier()) {
+			String name = identifierToken.<String>getValue();
+			return !(context.isStrict() && ("eval".equals(name) || "arguments".equals(name)));
+		} else if (identifierToken.isKeyword()) {
+			switch (identifierToken.<JSKeyword>getValue()) {
+				case AWAIT:
+					if (context.allowAwait())
+						return false;
+					return true;
+				case YIELD:
+					if (context.allowYield())
+						return false;
+					//Fallthrough intentional
+				case AS:
+					// Contextual keywords
+					return true;
+				case LET:
+				case PUBLIC:
+				case PRIVATE:
+				case PROTECTED:
+				case STATIC:
+				case IMPLEMENTS:
+				case INTERFACE:
+				case PACKAGE:
+					// Strict-mode disallowed keywords
+					return !context.isStrict();
+				default:
+					return false;
+			}
+		}
+		return false;
+	}
+	
+	protected String asIdentifierName(Token identifierToken) throws JSSyntaxException {
 		//'yield' can be an identifier if yield expressions aren't allowed in the current context
-		if (identifierToken.matches(TokenKind.KEYWORD, JSKeyword.YIELD)) {
-			if (context.allowYield())
-				throw new JSSyntaxException("'yield' not allowed as identifier", identifierToken.getRange());
-			else
-				identifierToken = identifierToken.reinterpretAsIdentifier();
-		}
+		if (!identifierToken.isIdentifier())
+			identifierToken = identifierToken.reinterpretAsIdentifier();
 		
-		expect(identifierToken, TokenKind.IDENTIFIER, src);
-		
-		//Check that our identifier has a valid name
-		String name = identifierToken.getValue();
-		
-		//'await' not allowed when in a context that it could be a keyword.
-		if (context.allowAwait() && name.equals("await")) {
-			throw new JSSyntaxException("'await' not allowed as indentifier in context", identifierToken.getRange());
-		}
-		
-		//'arguments' and 'eval' not allowed as identifiers in strict mode
-		//TODO support 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static' as illegal strict mode identifiers
-		//TODO: aren't we checking for 'yield' twice?
-		if (context.isStrict() && (name.equals("arguments") || name.equals("eval") || name.equals("yield"))) {
-			throw new JSSyntaxException("'" + name + "' not allowed as identifier in strict mode", identifierToken.getRange());
-		}
-		
-		return name;
+		return identifierToken.getValue();
+	}
+	
+	/**
+	 * Precondition: identifierToken is a valid identifier in context
+	 * @param identifierToken
+	 * @return
+	 */
+	protected IdentifierTree asIdentifier(Token identifierToken) {
+		String name = this.asIdentifierName(identifierToken);
+		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), name);
 	}
 	
 	protected IdentifierTree parseIdentifierMaybe(JSLexer src, Context context) {
 		//Keep reference to lookahead (if applicable) to skip over it at the end
 		Token lookahead = src.peek();
 		
-		String name;
-		try {
-			name = this.asIdentifier(lookahead, src, context);
-		} catch (JSSyntaxException e) {
+		if (!this.isIdentifier(lookahead, context))
 			return null;
-		}
 		
-		//Skip lookahead
-		src.skip(lookahead);
-		
-		return new IdentifierTreeImpl(lookahead.getStart(), lookahead.getEnd(), name);
+		return this.parseIdentifier(src, context);
 	}
 	
 	protected IdentifierTree parseIdentifier(JSLexer src, Context context) {
-		return this.parseIdentifier(src.nextToken(), src, context);
-	}
-	
-	//TODO: drop support for signature
-	@Deprecated
-	protected IdentifierTree parseIdentifier(Token identifierToken, JSLexer src, Context context) {
-		if (identifierToken == null)
-			identifierToken = src.nextToken();
-		
-		String name = this.asIdentifier(identifierToken, src, context);
-		
-		return new IdentifierTreeImpl(identifierToken.getStart(), identifierToken.getEnd(), name);
+		Token id = src.nextToken();
+		if (!this.isIdentifier(id, context))
+			throw new JSSyntaxException(id + " not allowed as identifier", id.getRange());
+		return this.asIdentifier(id);
 	}
 	
 	
