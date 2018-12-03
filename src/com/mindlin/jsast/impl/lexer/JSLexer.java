@@ -845,6 +845,7 @@ public class JSLexer implements Supplier<Token> {
 		}
 		
 		final long start = Math.max(chars.position(), -1);
+		chars.mark();
 		char c = chars.peek();
 		Object value = null;
 		TokenKind kind = null;
@@ -907,7 +908,7 @@ public class JSLexer implements Supplier<Token> {
 		}
 		
 		SourceRange range = new SourceRange(this.resolvePosition(start + 1), this.getPosition());
-		return new Token(flags, range, kind, chars.copy(start + 1, chars.position() - start), value);
+		return new Token(flags, range, kind, chars.copyFromMark(), value);
 	}
 	
 	public Token nextToken() {
