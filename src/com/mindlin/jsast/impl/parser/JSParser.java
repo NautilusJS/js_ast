@@ -3202,16 +3202,16 @@ public class JSParser {
 	 */
 	protected ExpressionTree parseNew(JSLexer src, Context context) {
 		Token newKeywordToken = expectKeyword(JSKeyword.NEW, src, context);
-		Token t;
 		
-		//Support 'new.target'
+		// Support 'new.target' metaproperty
+		Token t;
 		if ((t = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.PERIOD)) != null) {
 			Token r = src.nextToken();
 			if (context.inFunction() && r.matches(TokenKind.IDENTIFIER, "target")) {
 				//See developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target
-				IdentifierTree idNew = new IdentifierTreeImpl(newKeywordToken.getStart(), newKeywordToken.getEnd(), "new");
+				IdentifierTree idNew = new IdentifierTreeImpl(newKeywordToken.reinterpretAsIdentifier());
 				IdentifierTree idTarget = new IdentifierTreeImpl(r);
-				return new BinaryTreeImpl(Tree.Kind.MEMBER_SELECT, idNew, idTarget);
+				return new MemberExpressionTreeImpl(Tree.Kind.MEMBER_SELECT, idNew, idTarget);
 			}
 			
 			throw new JSUnexpectedTokenException(t);
