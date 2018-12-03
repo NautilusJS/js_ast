@@ -2902,7 +2902,7 @@ public class JSParser {
 		if (context.isMaybeParam() && !TokenPredicate.START_OF_PARAMETER.test(lookahead))
 			context.isMaybeParam(false);
 		
-		if (!context.allowYield() && lookahead.matches(TokenKind.KEYWORD, JSKeyword.YIELD))
+		if (context.allowYield() && lookahead.matches(TokenKind.KEYWORD, JSKeyword.YIELD))
 			return this.parseYield(src, context);
 		
 		ExpressionTree expr = this.parseConditional(src, context);
