@@ -2912,7 +2912,8 @@ public class JSParser {
 			//TODO: declared return value?
 			return this.finishFunctionBody(expr.getStart(), Modifiers.NONE, null, null, this.reinterpretExpressionAsParameterList(expr), null, true, src, context);
 		
-		if (!(src.peek().isOperator() && src.peek().<JSOperator>getValue().isAssignment()))
+		lookahead = src.peek();
+		if (!lookahead.isOperator() || !lookahead.<JSOperator>getValue().isAssignment())
 			return expr;
 		
 		if (!context.isAssignmentTarget())
