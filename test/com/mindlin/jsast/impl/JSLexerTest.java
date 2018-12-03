@@ -360,7 +360,7 @@ public class JSLexerTest {
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.OPERATOR, next.getKind());
-		assertEquals(JSOperator.MULTIPLICATION, next.getValue());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 		
 		
 		next = lexer.nextToken();
@@ -369,7 +369,7 @@ public class JSLexerTest {
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.OPERATOR, next.getKind());
-		assertEquals(JSOperator.MULTIPLICATION, next.getValue());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 	}
 	
 	@Test
@@ -380,11 +380,19 @@ public class JSLexerTest {
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
-		assertEquals(JSKeyword.FUNCTION_GENERATOR, next.getValue());
+		assertEquals(JSKeyword.FUNCTION, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.OPERATOR, next.getKind());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
 		assertEquals(JSKeyword.FUNCTION, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.OPERATOR, next.getKind());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 	}
 	
 	@Test
