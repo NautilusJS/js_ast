@@ -2,8 +2,12 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+import com.mindlin.jsast.tree.type.TypeTree;
+
 public interface NewTree extends ExpressionTree {
 	ExpressionTree getCallee();
+	
+	List<TypeTree> getTypeArguments();
 
 	List<ExpressionTree> getArguments();
 

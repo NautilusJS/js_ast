@@ -6,15 +6,28 @@ import java.util.Objects;
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.FunctionCallTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 public class FunctionCallTreeImpl extends AbstractTree implements FunctionCallTree {
 	protected final ExpressionTree functionSelect;
+	protected final List<TypeTree> typeArguments;
 	protected final List<? extends ExpressionTree> arguments;
 	
-	public FunctionCallTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree functionSelect, List<? extends ExpressionTree> args) {
+	public FunctionCallTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree functionSelect, List<TypeTree> typeArguments, List<? extends ExpressionTree> args) {
 		super(start, end);
 		this.functionSelect = functionSelect;
+		this.typeArguments = typeArguments;
 		this.arguments = args;
+	}
+	
+	@Override
+	public ExpressionTree getCallee() {
+		return this.functionSelect;
+	}
+
+	@Override
+	public List<TypeTree> getTypeArguments() {
+		return this.typeArguments;
 	}
 	
 	@Override
@@ -23,13 +36,8 @@ public class FunctionCallTreeImpl extends AbstractTree implements FunctionCallTr
 	}
 	
 	@Override
-	public ExpressionTree getCallee() {
-		return this.functionSelect;
-	}
-	
-	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getCallee(), getArguments());
+		return Objects.hash(getKind(), getCallee(), getTypeArguments(), getArguments());
 	}
 	
 }
