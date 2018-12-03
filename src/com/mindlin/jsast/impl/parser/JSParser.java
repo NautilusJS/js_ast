@@ -2893,10 +2893,14 @@ public class JSParser {
 		context.inheritCoverGrammar();
 		
 		src.mark();
-		Token next = src.nextTokenIf(TokenKind.OPERATOR, JSOperator.QUESTION_MARK);
+		if (!src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK)) {
+			src.unmark();
+			return expr;
+		}
+		
 		//Shortcut to optional property w/type
 		//The only time when the sequences '?:', '?,', or '?)' will occur are in a function definition
-		if (next != null && context.isMaybeParam()) {
+		if (context.isMaybeParam()) {
 			Token lookahead = src.peek();
 			if (lookahead.matchesOperator(JSOperator.COLON) || lookahead.matchesOperator(JSOperator.COMMA) || lookahead.matchesOperator(JSOperator.RIGHT_PARENTHESIS)) {
 				src.reset();
@@ -2904,9 +2908,6 @@ public class JSParser {
 			}
 		}
 		src.unmark();
-		
-		if (next == null)
-			return expr;
 		
 		
 		context.push();
