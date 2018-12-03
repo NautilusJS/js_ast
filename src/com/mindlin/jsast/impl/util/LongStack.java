@@ -34,11 +34,24 @@ public class LongStack implements RandomAccess, Cloneable, Serializable {
 			throw new IllegalArgumentException("Illegal capacity: " + initialCapacity);
 		this.elements = new long[initialCapacity];
 		this.autoShrink = autoShrink;
-		this.shrinkSize = initialCapacity >> 16;
+		this.updateShrinkSize();
 	}
 	
 	public int getSize() {
 		return size;
+	}
+	
+	public long get(int idx) {
+		if (0 > idx || idx > getSize())
+			throw new IndexOutOfBoundsException(String.format("Stack size: %d/%d", idx, getSize()));
+		return elements[idx];
+	}
+	
+	protected void updateShrinkSize() {
+		// Trigger shrink at 1/4 of the current capacity
+		// However, shrinks won't be triggered when under 32 elements (Mb<Mc)
+		int capacity = elements.length;
+		shrinkSize = (autoShrink && capacity >> 5 != 0) ? capacity >> 2 : -1;
 	}
 	
 	public void ensureSpace(int space) {
@@ -66,9 +79,7 @@ public class LongStack implements RandomAccess, Cloneable, Serializable {
 		if (newCapacity - MAX_ARRAY_SIZE < 0)
 			newCapacity = MAX_ARRAY_SIZE;
 		elements = Arrays.copyOf(elements, newCapacity);
-		// Trigger shrink at 1/2 of the current capacity
-		// However, shrinks won't be triggered when under 32 elements (Mb<Mc)
-		shrinkSize = (autoShrink && newCapacity >> 5 != 0) ? newCapacity >> 1 : -1;
+		this.updateShrinkSize();
 	}
 	
 	public void shrinkABit() {
@@ -85,9 +96,7 @@ public class LongStack implements RandomAccess, Cloneable, Serializable {
 			// Something clearly has gone very wrong
 			return;
 		elements = Arrays.copyOf(elements, newCapacity);
-		// Trigger shrink at 1/2 of the current capacity
-		// However, shrinks won't be triggered when under 32 elements (Mb<Mc)
-		shrinkSize = (autoShrink && newCapacity >> 5 != 0) ? newCapacity >> 1 : -1;
+		this.updateShrinkSize();
 	}
 	
 	/**
