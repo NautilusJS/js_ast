@@ -5,18 +5,28 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.fs.SourceFile.NominalSourceFile;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.CastExpressionTree;
 import com.mindlin.jsast.tree.MemberExpressionTree;
+import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.PropertyDeclarationTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.ConstructorTypeTree;
+import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
+import com.mindlin.jsast.tree.type.KeyofTypeTree;
+import com.mindlin.jsast.tree.type.MappedTypeTree;
+import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class TypeTest {
@@ -143,6 +153,107 @@ public class TypeTest {
 	}
 	
 	@Test
+	public void testQualifiedReference() {
+		IdentifierTypeTree type = parseType("A.B.C<T>", Kind.IDENTIFIER_TYPE);
+		
+		fail("Check not implemented");
+	}
+	
+	@Test
+	public void testMemberType() {
+		MemberTypeTree type = parseType("T[k]", Kind.MEMBER_TYPE);
+		assertIdentifierType("T", 0, type.getBaseType());
+		assertIdentifierType("k", 0, type.getName());
+	}
+	
+	@Test
+	public void testConditionalType() {
+		TypeTree type = parseType("T extends any[] ? T[number] : any", Kind.TYPE_PREDICATE);
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testNestedConditionalType() {
+		TypeTree type = parseType("T extends any[] ? T[number] extends any[] ? T[number][number] : T[number] : any", Kind.TYPE_PREDICATE);
+		
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testInvalidNestedConditionalType() {
+		assertExceptionalType("T extends R extends S ? A : B ? C : D", "Conditional type not allowed as check type in conditional type");
+	}
+	
+	@Test
+	public void testInferType() {
+		TypeTree type = parseType("T extends (infer E)[] ? E : any", Kind.TYPE_PREDICATE);
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testKeyofType() {
+		KeyofTypeTree type = parseType("keyof T", Kind.KEYOF_TYPE);
+		assertIdentifierType("T", 0, type.getBaseType());
+	}
+	
+	@Test
+	public void testTypeQuery() {
+		TypeTree type = parseType("typeof X", Kind.TYPE_QUERY);
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testUnique() {
+		TypeTree type = parseType("unique symbol", Kind.UNIQUE_TYPE);
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testEmptyTuple() {
+		TupleTypeTree type = parseType("[]", Kind.TUPLE_TYPE);
+		assertEquals(0, type.getSlotTypes().size());
+	}
+	
+	@Test
+	public void test1Tuple() {
+		TupleTypeTree type = parseType("[Foo]", Kind.TUPLE_TYPE);
+		assertEquals(1, type.getSlotTypes().size());
+		assertIdentifierType("Foo", 0, type.getSlotTypes().get(0));
+	}
+	
+	@Test
+	//TODO: redundant?
+	public void testPrimitiveTupleType() {
+		TupleTypeTree type = parseType("[string, number]", Kind.TUPLE_TYPE);
+		assertEquals(2, type.getSlotTypes().size());
+		
+		assertSpecialType(SpecialType.STRING, type.getSlotTypes().get(0));
+		assertSpecialType(SpecialType.NUMBER, type.getSlotTypes().get(1));
+	}
+	
+	@Test
+	public void testTuple() {
+		TupleTypeTree type = parseType("[Foo, Bar]", Kind.TUPLE_TYPE);
+		assertEquals(2, type.getSlotTypes().size());
+		assertIdentifierType("Foo", 0, type.getSlotTypes().get(0));
+		assertIdentifierType("Bar", 0, type.getSlotTypes().get(1));
+	}
+	
+	@Test
+	public void testTupleOptionalElement() {
+		TupleTypeTree type = parseType("[Foo, Bar?]", Kind.TUPLE_TYPE);
+		assertIdentifierType("Foo", 0, type.getSlotTypes().get(0));
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testTupleRestElement() {
+		TupleTypeTree type = parseType("[Foo, ...Bar]", Kind.TUPLE_TYPE);
+		assertIdentifierType("Foo", 0, type.getSlotTypes().get(0));
+		fail("Not implemented");
+	}
+	
+	@Test
 	public void testSimpleObjectType() {
 		ObjectTypeTree type = parseType("{a:Foo}", Kind.OBJECT_TYPE);
 		assertEquals(1, type.getDeclaredMembers().size());
@@ -153,11 +264,115 @@ public class TypeTest {
 	}
 	
 	@Test
-	public void testTupleType() {
-		TupleTypeTree type = parseType("[string, number]", Kind.TUPLE_TYPE);
-		assertEquals(2, type.getSlotTypes().size());
-		assertSpecialType(SpecialType.STRING, type.getSlotTypes().get(0));
-		assertSpecialType(SpecialType.NUMBER, type.getSlotTypes().get(1));
+	public void testIndexType() {
+		ObjectTypeTree type = parseType("{[K: keyof T]: T[K]!}", Kind.OBJECT_TYPE);
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testMappedType() {
+		MappedTypeTree type = parseType("{[K in keyof T]: T[K]}", Kind.MAPPED_TYPE);
+		TypeParameterDeclarationTree param = type.getParameter();
+		
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testEmptyCallSignatureType() {
+		FunctionTypeTree type = parseType("() => R", Kind.FUNCTION_TYPE);
+		assertEquals(0, type.getTypeParameters().size());
+		assertEquals(0, type.getParameters().size());
+		
+		assertIdentifierType("R", 0, type.getReturnType());
+	}
+	
+	@Test
+	public void testCallSignatureType() {
+		FunctionTypeTree type = parseType("(a: number, b: number) => number", Kind.FUNCTION_TYPE);
+		assertEquals(0, type.getTypeParameters().size());
+		assertEquals(2, type.getParameters().size());
+		
+		ParameterTree param0 = type.getParameters().get(0);
+		assertIdentifier("a", param0.getIdentifier());
+		assertSpecialType(SpecialType.NUMBER, param0.getType());
+		
+		ParameterTree param1 = type.getParameters().get(1);
+		assertIdentifier("b", param1.getIdentifier());
+		assertSpecialType(SpecialType.NUMBER, param1.getType());
+		
+		assertSpecialType(SpecialType.NUMBER, type.getReturnType());
+	}
+	
+	@Test
+	public void testTypeParamCallSignatureType() {
+		FunctionTypeTree type = parseType("<T>(a: T, b: T) => T", Kind.FUNCTION_TYPE);
+		assertEquals(1, type.getTypeParameters().size());
+		assertEquals(2, type.getParameters().size());
+		
+		TypeParameterDeclarationTree tParam0 = type.getTypeParameters().get(0);
+		assertIdentifier("T", tParam0.getName());
+		
+		ParameterTree param0 = type.getParameters().get(0);
+		assertIdentifier("a", param0.getIdentifier());
+		assertIdentifierType("T", 0, param0.getType());
+		
+		ParameterTree param1 = type.getParameters().get(1);
+		assertIdentifier("b", param1.getIdentifier());
+		assertIdentifierType("T", 0, param1.getType());
+		
+		assertIdentifierType("T", 0, type.getReturnType());
+	}
+	
+	@Test
+	public void testEvilTypeParamCallSignatureType() {
+		FunctionTypeTree type = parseType("<B extends object = {}, K extends keyof B = keyof B>(b: B, keys: K[]) => {[key: K]: B[key]}", Kind.FUNCTION_TYPE);
+		assertEquals(2, type.getTypeParameters().size());
+		assertEquals(2, type.getParameters().size());
+		
+		TypeParameterDeclarationTree tParam0 = type.getTypeParameters().get(0);
+		assertIdentifier("B", tParam0);
+		assertIdentifierType("object", 0, tParam0.getSupertype());//TODO: is object special?
+		ObjectTypeTree tp0Default = assertKind(Kind.OBJECT_TYPE, tParam0.getDefault());
+		assertEquals(0, tp0Default.getDeclaredMembers().size());
+		
+		TypeParameterDeclarationTree tParam1 = type.getTypeParameters().get(1);
+		assertIdentifier("B", tParam0);
+		fail("Not implemented");
+	}
+	
+	@Test
+	public void testNullConstructSignatureType() {
+		ConstructorTypeTree type = parseType("new () => R", Kind.CONSTRUCTOR_TYPE);
+		assertEquals(0, type.getTypeParameters().size());
+		assertEquals(0, type.getParameters().size());
+		
+		assertIdentifierType("R", 0, type.getReturnType());
+	}
+	
+	@Test
+	public void testConstructSignatureType() {
+		ConstructorTypeTree type = parseType("new (p0: string, p1?: number, ...args: any[]) => R", Kind.CONSTRUCTOR_TYPE);
+		assertEquals(0, type.getTypeParameters().size());
+		assertEquals(3, type.getParameters().size());
+		
+		ParameterTree param0 = type.getParameters().get(0);
+		assertIdentifier("p0", param0.getIdentifier());
+		assertEquals(Modifiers.NONE, param0.getModifiers());
+		assertSpecialType(SpecialType.STRING, param0.getType());
+		
+		ParameterTree param1 = type.getParameters().get(1);
+		assertIdentifier("p1", param0.getIdentifier());
+		assertEquals(Modifiers.OPTIONAL, param1.getModifiers());
+		assertSpecialType(SpecialType.NUMBER, param1.getType());
+		
+		ParameterTree param2 = type.getParameters().get(2);
+		assertIdentifier("args", param2.getIdentifier());
+		assertEquals(Modifiers.NONE, param2.getModifiers());
+		assertTrue(param2.isRest());
+		ArrayTypeTree p2Base = assertKind(Kind.ARRAY_TYPE, param2.getType());
+		assertSpecialType(SpecialType.ANY, p2Base.getBaseType());
+		
+		assertIdentifierType("R", 0, type.getReturnType());
 	}
 	
 	@Test
