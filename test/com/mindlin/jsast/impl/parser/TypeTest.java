@@ -98,6 +98,21 @@ public class TypeTest {
 	}
 	
 	@Test
+	public void testIdentifierTypeWithGenerics() {
+		IdentifierTypeTree type = parseType("Map<K,V>", Kind.IDENTIFIER_TYPE);
+		assertIdentifierType("Map", 2, type);
+		assertIdentifierType("K", 0, type.getGenerics().get(0));
+		assertIdentifierType("V", 0, type.getGenerics().get(1));
+	}
+	
+	@Test
+	public void testQualifiedReference() {
+		IdentifierTypeTree type = parseType("A.B.C<T>", Kind.IDENTIFIER_TYPE);
+		
+		fail("Check not implemented");
+	}
+	
+	@Test
 	public void testArrayType() {
 		ArrayTypeTree type = parseType("T[]", Kind.ARRAY_TYPE);
 		assertIdentifierType("T", 0, type.getBaseType());
@@ -114,14 +129,6 @@ public class TypeTest {
 	public void testGenericArrayType() {
 		ArrayTypeTree type = parseType("Array<T>", Kind.ARRAY_TYPE);
 		assertIdentifierType("T", 0, type.getBaseType());
-	}
-	
-	@Test
-	public void testIdentifierTypeWithGenerics() {
-		IdentifierTypeTree type = parseType("Map<K,V>", Kind.IDENTIFIER_TYPE);
-		assertIdentifierType("Map", 2, type);
-		assertIdentifierType("K", 0, type.getGenerics().get(0));
-		assertIdentifierType("V", 0, type.getGenerics().get(1));
 	}
 	
 	@Test
@@ -153,10 +160,14 @@ public class TypeTest {
 	}
 	
 	@Test
-	public void testQualifiedReference() {
-		IdentifierTypeTree type = parseType("A.B.C<T>", Kind.IDENTIFIER_TYPE);
+	public void testParentheticalType() {
+		CompositeTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
+		assertIdentifierType("A", 0, intersection.getConstituents().get(0));
 		
-		fail("Check not implemented");
+		assertEquals(Kind.TYPE_UNION, intersection.getConstituents().get(1).getKind());
+		CompositeTypeTree union = (CompositeTypeTree) intersection.getConstituents().get(1);
+		assertIdentifierType("B", 0, union.getConstituents().get(0));
+		assertIdentifierType("C", 0, union.getConstituents().get(1));
 	}
 	
 	@Test
@@ -255,7 +266,7 @@ public class TypeTest {
 	
 	@Test
 	public void testSimpleObjectType() {
-		ObjectTypeTree type = parseType("{a:Foo}", Kind.OBJECT_TYPE);
+		ObjectTypeTree type = parseType("{ a: Foo }", Kind.OBJECT_TYPE);
 		assertEquals(1, type.getDeclaredMembers().size());
 		
 		PropertyDeclarationTree prop0 = assertKind(Kind.PROPERTY_DECLARATION, type.getDeclaredMembers().get(0));
@@ -373,16 +384,5 @@ public class TypeTest {
 		assertSpecialType(SpecialType.ANY, p2Base.getBaseType());
 		
 		assertIdentifierType("R", 0, type.getReturnType());
-	}
-	
-	@Test
-	public void testParentheticalType() {
-		CompositeTypeTree intersection = parseType("A&(B|C)", Kind.TYPE_INTERSECTION);
-		assertIdentifierType("A", 0, intersection.getConstituents().get(0));
-		
-		assertEquals(Kind.TYPE_UNION, intersection.getConstituents().get(1).getKind());
-		CompositeTypeTree union = (CompositeTypeTree) intersection.getConstituents().get(1);
-		assertIdentifierType("B", 0, union.getConstituents().get(0));
-		assertIdentifierType("C", 0, union.getConstituents().get(1));
 	}
 }
