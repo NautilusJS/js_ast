@@ -1207,20 +1207,21 @@ public class JSParser {
 	}
 	
 	protected StatementTree parseDeclaration(JSLexer src, Context context) {
+		SourcePosition start = src.getNextStart();
 		List<DecoratorTree> decorators = this.parseDecorators(src, context);
 		Modifiers contextualModifiers = Modifiers.union(Modifiers.ABSTRACT, Modifiers.ASYNC, Modifiers.CONST, Modifiers.DECLARE, Modifiers.MASK_VISIBILITY);
 		Modifiers modifiers = this.parseModifiers(contextualModifiers, true, src, context);
 		
 		if (modifiers.isDeclare() && !context.isAmbient())
 			context.push().enterDeclare();
-		StatementTree result = parseDeclarationInner(src, context);
+		StatementTree result = this.parseDeclarationInner(start, decorators, modifiers, src, context);
 		if (modifiers.isDeclare() && !context.isAmbient())
 			context.pop();
 		
 		return result;
 	}
 	
-	protected StatementTree parseDeclarationInner(JSLexer src, Context context) {
+	protected StatementTree parseDeclarationInner(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, JSLexer src, Context context) {
 		Token lookahead = src.peek();
 		switch (lookahead.getKind()) {
 			case IDENTIFIER:
@@ -1326,7 +1327,7 @@ public class JSParser {
 		ExpressionTree initializer = this.parseInitializer(src, context);
 		context.pop();
 		
-		expectTypeMemberSemicolon(src, context);
+		this.expectTypeMemberSemicolon(src, context);
 		
 		return new PropertyDeclarationTreeImpl(start, src.getPosition(), modifiers, name, type, initializer);
 	}
@@ -1507,7 +1508,7 @@ public class JSParser {
 	 * @see #parseEnumMember(JSLexer, Context)
 	 */
 	protected EnumDeclarationTree parseEnumDeclaration(JSLexer src, Context context) {
-		SourcePosition start = src.peek().getStart();
+		SourcePosition start = src.getNextStart();
 		
 		Modifiers modifiers = this.parseModifiers(Modifiers.union(Modifiers.CONST, Modifiers.DECLARE), true, src, context);
 		
