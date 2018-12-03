@@ -16,6 +16,8 @@ import com.mindlin.jsast.tree.TreeVisitor;
 public interface TypeTreeVisitor<R, D> {
 	R visitArrayType(ArrayTypeTree node, D d);
 	
+	R visitConstructorType(ConstructorTypeTree node, D d);
+	
 	R visitFunctionType(FunctionTypeTree node, D d);
 	
 	R visitIdentifierType(IdentifierTypeTree node, D d);
@@ -25,6 +27,8 @@ public interface TypeTreeVisitor<R, D> {
 	R visitIntersectionType(CompositeTypeTree node, D d);
 	
 	R visitLiteralType(LiteralTypeTree<?> node, D d);
+	
+	R visitMappedType(MappedTypeTree node, D d);
 	
 	R visitMemberType(MemberTypeTree node, D d);
 	
