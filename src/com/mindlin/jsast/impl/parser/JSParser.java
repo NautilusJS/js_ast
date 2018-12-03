@@ -2908,7 +2908,7 @@ public class JSParser {
 			return expr;
 		
 		if (!context.isAssignmentTarget())
-			throw new JSSyntaxException("Not assignment target", src.getPosition());
+			throw new JSSyntaxException("Not assignment target", expr.getRange());
 		
 		Token assignmentOperator = src.nextToken();
 		
