@@ -1156,11 +1156,13 @@ public class JSParser {
 			modifiers.add(new Pair<>(next, modifier));
 		}
 		
-		if (expectPatternAfter && !modifiers.isEmpty()) {
-			if (!TokenPredicate.CAN_FOLLOW_MODIFIER.test(src.peek())) {
+		if (expectPatternAfter) {
+			if (!modifiers.isEmpty() && !TokenPredicate.CAN_FOLLOW_MODIFIER.test(src.peek())) {
 				// We need to backtrack
 				src.reset();
 				modifiers.remove(modifiers.size() - 1);
+			} else {
+				src.unmark();
 			}
 		}
 		
