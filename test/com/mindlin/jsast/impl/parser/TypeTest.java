@@ -23,12 +23,20 @@ public class TypeTest {
 	
 	@SuppressWarnings("unchecked")
 	static <T extends TypeTree> T parseType(String expr, Kind expectedKind) {
-		StackTraceElement elem = Thread.currentThread().getStackTrace()[1];
-		JSLexer lexer = new JSLexer(new NominalSourceFile(elem.getMethodName(), expr));
+		JSLexer lexer = new JSLexer(new NominalSourceFile(getTestName(), expr));
 		T result = (T) new JSParser().parseType(lexer, new Context());
 		assertTrue("Did not read whole statement", lexer.isEOF());
 		assertEquals(expectedKind, result.getKind());
 		return result;
+	}
+	
+	static void assertExceptionalType(String expr, String errMsg) {
+		try {
+			JSLexer lexer = new JSLexer(expr);
+			new JSParser().parseType(lexer, new Context());
+			fail(errMsg);
+		} catch (JSSyntaxException e) {
+		}
 	}
 	
 	static void assertIdentifierType(String name, int numGenerics, TypeTree type) {
@@ -88,10 +96,7 @@ public class TypeTest {
 	@Test
 	public void testNestedArrayType() {
 		ArrayTypeTree type = parseType("T[][]", Kind.ARRAY_TYPE);
-		
-		assertEquals(Kind.ARRAY_TYPE, type.getBaseType().getKind());
-		
-		ArrayTypeTree base1 = (ArrayTypeTree) type.getBaseType();
+		ArrayTypeTree base1 = assertKind(Kind.ARRAY_TYPE, type.getBaseType());
 		assertIdentifierType("T", 0, base1.getBaseType());
 	}
 	
