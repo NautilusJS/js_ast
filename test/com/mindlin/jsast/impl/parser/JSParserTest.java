@@ -143,6 +143,18 @@ public class JSParserTest {
 	}
 	
 	@SuppressWarnings("unchecked")
+	public static <T extends ExpressionTree> T parseExpressionWith(String expr, boolean in, boolean yield, boolean await, Kind kind) {
+		Context context = new Context();
+		if (yield)
+			context.pushGenerator();
+		context.allowIn(in);
+		context.allowAwait(await);
+		T result = (T) new JSParser().parseNextExpression(new JSLexer(expr), context);
+		assertEquals(kind, result.getKind());
+		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
 	public static <T extends TypeTree> T parseType(String type) {
 		return (T) new JSParser().parseType(new JSLexer(type), new Context());
 	}

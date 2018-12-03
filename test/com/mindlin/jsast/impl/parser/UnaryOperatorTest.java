@@ -62,13 +62,13 @@ public class UnaryOperatorTest {
 	
 	@Test
 	public void testYield() {
-		UnaryTree expr = parseExpression("yield a", Kind.YIELD);
+		UnaryTree expr = parseExpressionWith("yield a", true, true, false, Kind.YIELD);
 		assertIdentifier("a", expr.getExpression());
 	}
 	
 	@Test
 	public void testYieldToGenerator() {
-		UnaryTree expr = parseExpression("yield* a", Kind.YIELD_GENERATOR);
+		UnaryTree expr = parseExpressionWith("yield* a", true, true, false, Kind.YIELD_GENERATOR);
 		assertIdentifier("a", expr.getExpression());
 	}
 
