@@ -20,7 +20,7 @@ import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.KeyofTypeTree;
+import com.mindlin.jsast.tree.type.UnaryTypeTree;
 import com.mindlin.jsast.tree.type.MappedTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
@@ -52,7 +52,10 @@ public class TypeTest {
 	static void assertIdentifierType(String name, int numGenerics, TypeTree type) {
 		assertEquals(Kind.IDENTIFIER_TYPE, type.getKind());
 		assertIdentifier(name, ((IdentifierTypeTree)type).getIdentifier());
-		assertEquals(numGenerics, ((IdentifierTypeTree)type).getGenerics().size());
+		if (numGenerics == 0)
+			assertNull(((IdentifierTypeTree)type).getGenerics());
+		else
+			assertEquals(numGenerics, ((IdentifierTypeTree)type).getGenerics().size());
 	}
 	
 	@Test
@@ -203,7 +206,8 @@ public class TypeTest {
 	
 	@Test
 	public void testKeyofType() {
-		KeyofTypeTree type = parseType("keyof T", Kind.KEYOF_TYPE);
+		UnaryTypeTree type = parseType("keyof T", Kind.KEYOF_TYPE);
+		
 		assertIdentifierType("T", 0, type.getBaseType());
 	}
 	
@@ -215,8 +219,9 @@ public class TypeTest {
 	
 	@Test
 	public void testUnique() {
-		TypeTree type = parseType("unique symbol", Kind.UNIQUE_TYPE);
-		fail("Not implemented");
+		UnaryTypeTree type = parseType("unique symbol", Kind.UNIQUE_TYPE);
+		
+		assertSpecialType(SpecialType.SYMBOL, type.getBaseType());
 	}
 	
 	@Test
@@ -372,7 +377,7 @@ public class TypeTest {
 		assertSpecialType(SpecialType.STRING, param0.getType());
 		
 		ParameterTree param1 = type.getParameters().get(1);
-		assertIdentifier("p1", param0.getIdentifier());
+		assertIdentifier("p1", param1.getIdentifier());
 		assertEquals(Modifiers.OPTIONAL, param1.getModifiers());
 		assertSpecialType(SpecialType.NUMBER, param1.getType());
 		
