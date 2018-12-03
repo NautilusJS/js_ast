@@ -1652,6 +1652,13 @@ public class JSParser {
 		return this.parsePropertyDeclaration(start, decorators, modifiers, name, src, context);
 	}
 	
+	protected List<ClassElementTree> parseClassBody(JSLexer src, Context context) {
+		expectOperator(JSOperator.LEFT_BRACE, src, context);
+		List<ClassElementTree> members = this.parseList(this::parseClassElement, TokenPredicate.RIGHT_BRACE, src, context);
+		expectOperator(JSOperator.RIGHT_BRACE, src, context);
+		return members;
+	}
+	
 	protected ClassExpressionTree parseClassExpression(JSLexer src, Context context) {
 		final SourcePosition start = src.peek().getStart();
 		
@@ -1668,12 +1675,7 @@ public class JSParser {
 		
 		List<HeritageClauseTree> heritage = this.parseHeritage(src, context);
 		
-		//Read class body
-		expectOperator(JSOperator.LEFT_BRACE, src, context);
-		
-		List<ClassElementTree> members = this.parseList(this::parseClassElement, TokenPredicate.RIGHT_BRACE, src, context);
-		
-		expectOperator(JSOperator.RIGHT_BRACE, src, context);
+		List<ClassElementTree> members = this.parseClassBody(src, context);
 		
 		return new ClassExpressionTreeImpl(start, src.getPosition(), classModifiers, className, typeParameters, heritage, members);
 	}
@@ -1693,12 +1695,7 @@ public class JSParser {
 		
 		List<HeritageClauseTree> heritage = this.parseHeritage(src, context);
 		
-		//Read class body
-		expectOperator(JSOperator.LEFT_BRACE, src, context);
-		
-		List<ClassElementTree> members = this.parseList(this::parseClassElement, TokenPredicate.RIGHT_BRACE, src, context);
-		
-		expectOperator(JSOperator.RIGHT_BRACE, src, context);
+		List<ClassElementTree> members = this.parseClassBody(src, context);
 		
 		return new ClassDeclarationTreeImpl(start, src.getPosition(), classModifiers, className, typeParameters, heritage, members);
 	}
