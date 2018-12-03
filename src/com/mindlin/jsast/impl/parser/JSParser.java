@@ -2935,9 +2935,14 @@ public class JSParser {
 	
 	/**
 	 * <pre>
-	 * Parameter:
+	 * Parameter[Yield, Await]:
+	 * 		ThisParameter
+	 * 		RestParameter[Yield, Await]
+	 * 		ParamPrefixModifiers Pattern ParamPostfixModifiers TypeAnnotation? Initializer[+In, ?Yield, ?Await]
+	 * ThisParameter:
 	 * 		this TypeAnnotation?
-	 * 		ParamPrefixModifiers ...? Pattern ParamPostfixModifiers TypeAnnotation? Initializer?
+	 * RestParameter[Yield, Await]:
+	 * 		ParamPrefixModifiers BindingRestElement[?Yield, ?Await] TypeAnnotation? Initializer[+In, ?Yield, ?Await]
 	 * ParamPrefixModifiers:
 	 * 		public
 	 * 		private
