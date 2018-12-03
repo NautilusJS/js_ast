@@ -3676,7 +3676,7 @@ public class JSParser {
 			return null;
 		
 		if (lookahead.matchesOperator(JSOperator.SPREAD)) {
-			ExpressionTree result = this.parseSpread(src, context);
+			ExpressionTree result = this.parseSpread(src, context.pushed().allowIn(true));
 			if (!src.peek().matchesOperator(JSOperator.RIGHT_BRACKET)) {
 				//TODO: why not set always?
 				context.isAssignmentTarget(false);
@@ -3685,7 +3685,7 @@ public class JSParser {
 			return result;
 		}
 		
-		return this.parseAssignment(src, context.coverGrammarIsolated());
+		return this.parseAssignment(src, context.coverGrammarIsolated().allowIn(true));
 	}
 	/**
 	 * Parse array literal.
