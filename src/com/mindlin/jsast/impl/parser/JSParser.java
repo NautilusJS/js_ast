@@ -34,6 +34,8 @@ import com.mindlin.jsast.impl.tree.AbstractFunctionTree.MethodDeclarationTreeImp
 import com.mindlin.jsast.impl.tree.AbstractGotoTree;
 import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.CallSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.ConstructSignatureTreeImpl;
+import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.ConstructorTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.FunctionTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
@@ -1838,6 +1840,7 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected TypeTree parseFunctionType(JSLexer src, Context context) {
+		final SourcePosition start = src.getNextStart();
 		boolean isConstructor = src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.NEW);
 		
 		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
@@ -1850,8 +1853,12 @@ public class JSParser {
 		
 		TypeTree returnType = this.parseType(src, context);
 		
-		//TODO finish
-		throw new JSUnsupportedException("Function/construct signature types", src.getPosition());
+		SourcePosition end = src.getPosition();
+		
+		if (isConstructor)
+			return new ConstructorTypeTreeImpl(start, end, typeParams, params, returnType);
+		else
+			return new FunctionTypeTreeImpl(start, end, typeParams, params, returnType);
 	}
 	
 	/**
