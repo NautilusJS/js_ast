@@ -71,6 +71,15 @@ public class JSLexer implements Supplier<Token> {
 		return this.chars.position();
 	}
 	
+	/**
+	 * Get start of next token. Equivalent to {@code this.peek().getStart()}.
+	 * 
+	 * @return Start of next token.
+	 */
+	public SourcePosition getNextStart() {
+		return this.peek().getStart();
+	}
+	
 	public CharacterStream getCharacters() {
 		return this.chars;
 	}
