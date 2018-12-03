@@ -6,7 +6,7 @@ import com.mindlin.jsast.tree.Tree;
 public interface ConstructorTypeTree extends TypeTree, SignatureDeclarationTree {
 	@Override
 	default Tree.Kind getKind() {
-		return Tree.Kind.FUNCTION_TYPE;
+		return Tree.Kind.CONSTRUCTOR_TYPE;
 	}
 	
 	@Override

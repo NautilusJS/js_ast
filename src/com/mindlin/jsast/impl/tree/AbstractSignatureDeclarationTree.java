@@ -7,6 +7,8 @@ import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.PropertyName;
 import com.mindlin.jsast.tree.SignatureDeclarationTree;
 import com.mindlin.jsast.tree.TreeVisitor;
+import com.mindlin.jsast.tree.type.ConstructorTypeTree;
+import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
@@ -59,6 +61,18 @@ public abstract class AbstractSignatureDeclarationTree extends AbstractTree impl
 	public static class ConstructSignatureTreeImpl extends AbstractSignatureDeclarationTree implements ConstructSignatureTree {
 		public ConstructSignatureTreeImpl(SourcePosition start, SourcePosition end, PropertyName name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType) {
 			super(start, end, name, generics, parameters, returnType);
+		}
+	}
+	
+	public static class FunctionTypeTreeImpl extends AbstractSignatureDeclarationTree implements FunctionTypeTree {
+		public FunctionTypeTreeImpl(SourcePosition start, SourcePosition end, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType) {
+			super(start, end, null, generics, parameters, returnType);
+		}
+	}
+	
+	public static class ConstructorTypeTreeImpl extends AbstractSignatureDeclarationTree implements ConstructorTypeTree {
+		public ConstructorTypeTreeImpl(SourcePosition start, SourcePosition end, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType) {
+			super(start, end, null, generics, parameters, returnType);
 		}
 	}
 }
