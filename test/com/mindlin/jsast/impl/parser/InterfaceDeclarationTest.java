@@ -56,13 +56,6 @@ public class InterfaceDeclarationTest {
 		fail("Not finished");
 	}
 	
-	@Test
-	public void testAccessorDeclaration() {
-		InterfaceDeclarationTree iface = parseStatement("interface Foo { get bar(): string; set bar(value: string); }", Kind.INTERFACE_DECLARATION);
-		
-		fail("Not finished");
-	}
-	
 	// Some extra punctuation checks
 	@Test
 	public void testCommaSeparated() {
