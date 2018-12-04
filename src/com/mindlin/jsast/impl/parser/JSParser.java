@@ -410,7 +410,6 @@ public class JSParser {
 					case EXTENDS:
 					case IN:
 					case INSTANCEOF:
-					default:
 						throw new JSSyntaxException("Unexpected keyword " + lookahead.getValue(), lookahead.getRange());
 					case AS:
 					case AWAIT:
@@ -1339,6 +1338,8 @@ public class JSParser {
 						return this.parseEnumDeclaration(src, context);
 					case EXPORT:
 						return this.parseExportStatement(src, context);
+					case IMPORT:
+						//TODO: finish
 					default:
 						break;
 				}
@@ -2147,7 +2148,6 @@ public class JSParser {
 	 */
 	protected TypeTree parsePostfixType(JSLexer src, Context context) {
 		TypeTree type = this.parseImmediateType(src, context);
-		Token lookahead = src.peek();
 		while (!src.isEOF()) {
 			if (context.allowDefiniteTypes() && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LOGICAL_NOT)) {
 				//TODO: context flags for JSDoc types
@@ -3573,6 +3573,12 @@ public class JSParser {
 		return new ThisExpressionTreeImpl(expectKeyword(JSKeyword.THIS, src, ctx));
 	}
 	
+	/**
+	 * Parse super for use in LHS of:
+	 * <pre>
+	 * 
+	 * </pre>
+	 */
 	protected SuperExpressionTree parseSuper(JSLexer src, Context context) {
 		SuperExpressionTree result = new SuperExpressionTreeImpl(expectKeyword(JSKeyword.SUPER, src, context));
 		Token tmp = src.peek();
@@ -4404,6 +4410,8 @@ public class JSParser {
 		
 		static class ContextData {
 			int flags = Context.FLAG_IN;
+			int rsMask = 0;
+			int rcMask = 0;
 			final ContextData parent;
 			/**
 			 * Set of statement labels
@@ -4427,14 +4435,22 @@ public class JSParser {
 			public ContextData(ContextData parent, int rsMask, int rcMask) {
 				this.parent = parent;
 				this.inheritFrom(parent);
+				this.rsMask = rsMask & ~parent.flags;
+				this.rcMask = rcMask & parent.flags;
 			}
 			
 			protected void setFlags(int flags) {
 				this.flags |= flags;
+				int raised = flags & rsMask;
+				if (raised != 0)
+					this.parent.setFlags(raised);
 			}
 			
 			protected void clearFlags(int flags) {
 				this.flags &= ~flags;
+				int raised = flags & rcMask;
+				if (raised != 0)
+					this.parent.clearFlags(raised);
 			}
 			
 			protected boolean hasFlags(int flags) {
