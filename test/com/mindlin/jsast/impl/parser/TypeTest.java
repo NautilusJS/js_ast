@@ -17,6 +17,7 @@ import com.mindlin.jsast.tree.PropertyDeclarationTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.ConditionalTypeTree;
 import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
@@ -192,15 +193,50 @@ public class TypeTest {
 	
 	@Test
 	public void testConditionalType() {
-		TypeTree type = parseType("T extends any[] ? T[number] : any", Kind.TYPE_PREDICATE);
-		fail("Not implemented");
+		ConditionalTypeTree type = parseType("T extends any[] ? T[number] : any", Kind.CONDITIONAL_TYPE);
+		
+		assertIdentifierType("T", 0, type.getCheckType());
+		
+		ArrayTypeTree limitBase = assertKind(Kind.ARRAY_TYPE, type.getLimitType());
+		assertSpecialType(SpecialType.ANY, limitBase.getBaseType());
+		
+		MemberTypeTree concequent = assertKind(Kind.MEMBER_TYPE, type.getConecquent());
+		assertIdentifierType("T", 0, concequent.getBaseType());
+		assertSpecialType(SpecialType.NUMBER, concequent.getName());
+		
+		assertSpecialType(SpecialType.ANY, type.getAlternate());
 	}
 	
 	@Test
 	public void testNestedConditionalType() {
-		TypeTree type = parseType("T extends any[] ? T[number] extends any[] ? T[number][number] : T[number] : any", Kind.TYPE_PREDICATE);
+		ConditionalTypeTree type = parseType("T extends any[] ? T[number] extends any[] ? T[number][number] : T[number] : any", Kind.CONDITIONAL_TYPE);
 		
-		fail("Not implemented");
+		assertIdentifierType("T", 0, type.getCheckType());
+		
+		ArrayTypeTree limit0Base = assertKind(Kind.ARRAY_TYPE, type.getLimitType());
+		assertSpecialType(SpecialType.ANY, limit0Base.getBaseType());
+		
+		assertSpecialType(SpecialType.ANY, type.getAlternate());
+		
+		
+		ConditionalTypeTree inner = assertKind(Kind.CONDITIONAL_TYPE, type.getConecquent());
+		
+		MemberTypeTree innerCheck = assertKind(Kind.MEMBER_TYPE, inner.getCheckType());
+		assertIdentifierType("T", 0, innerCheck.getBaseType());
+		assertSpecialType(SpecialType.NUMBER, innerCheck.getName());
+		
+		ArrayTypeTree limit1Base = assertKind(Kind.ARRAY_TYPE, type.getLimitType());
+		assertSpecialType(SpecialType.ANY, limit1Base.getBaseType());
+		
+		MemberTypeTree innerCon = assertKind(Kind.MEMBER_TYPE, inner.getConecquent());
+		assertSpecialType(SpecialType.NUMBER, innerCon.getName());
+		MemberTypeTree innerCon1 = assertKind(Kind.MEMBER_TYPE, innerCon.getBaseType());
+		assertIdentifierType("T", 0, innerCon1.getBaseType());
+		assertSpecialType(SpecialType.NUMBER, innerCon1.getName());
+		
+		MemberTypeTree innerAlt = assertKind(Kind.MEMBER_TYPE, inner.getAlternate());
+		assertIdentifierType("T", 0, innerAlt.getBaseType());
+		assertSpecialType(SpecialType.NUMBER, innerAlt.getName());
 	}
 	
 	@Test
