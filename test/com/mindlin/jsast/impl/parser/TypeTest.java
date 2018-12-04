@@ -20,6 +20,7 @@ import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
+import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.UnaryTypeTree;
 import com.mindlin.jsast.tree.type.MappedTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
@@ -178,6 +179,15 @@ public class TypeTest {
 		MemberTypeTree type = parseType("T[k]", Kind.MEMBER_TYPE);
 		assertIdentifierType("T", 0, type.getBaseType());
 		assertIdentifierType("k", 0, type.getName());
+	}
+	
+	@Test
+	public void testNestedMemberType() {
+		MemberTypeTree type = parseType("T[k0][k1]", Kind.MEMBER_TYPE);
+		MemberTypeTree base = assertKind(Kind.MEMBER_TYPE, type.getBaseType());
+		assertIdentifierType("T", 0, base.getBaseType());
+		assertIdentifierType("k0", 0, base.getName());
+		assertIdentifierType("k1", 0, type.getName());
 	}
 	
 	@Test
