@@ -29,6 +29,7 @@ import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.jsast.tree.type.ConditionalTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.UnaryTypeTree;
 
@@ -277,8 +278,8 @@ public interface Tree {
 		ARRAY_TYPE(ArrayTypeTree.class),
 		KEYOF_TYPE(UnaryTypeTree.class),
 		UNIQUE_TYPE(UnaryTypeTree.class),
-		OPTIONAL_TYPE,
-		DEFINITE_TYPE,
+		OPTIONAL_TYPE(UnaryTypeTree.class),
+		DEFINITE_TYPE(UnaryTypeTree.class),
 		PARENTHESIZED_TYPE(ParenthesizedTypeTree.class),
 		INFER_TYPE(InferTypeTree.class),
 		REST_TYPE,
@@ -291,6 +292,7 @@ public interface Tree {
 		
 		// Complex type expressions
 		MAPPED_TYPE(MappedTypeTree.class),
+		CONDITIONAL_TYPE(ConditionalTypeTree.class),
 		TYPE_QUERY,
 		;
 		
