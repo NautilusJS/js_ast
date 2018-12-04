@@ -51,6 +51,7 @@ import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
 import com.mindlin.jsast.impl.tree.CompositeTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ComputedPropertyKeyTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
+import com.mindlin.jsast.impl.tree.ConditionalTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.DebuggerTreeImpl;
 import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
@@ -102,6 +103,7 @@ import com.mindlin.jsast.impl.tree.TypeAliasTreeImpl;
 import com.mindlin.jsast.impl.tree.TypeParameterDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl.AwaitTreeImpl;
+import com.mindlin.jsast.impl.tree.UnaryTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
 import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
@@ -1449,7 +1451,7 @@ public class JSParser {
 		
 		this.expectTypeMemberSemicolon(src, context);
 		
-		return new IndexSignatureTreeImpl(start, src.getPosition(), modifiers, null, type);
+		return new IndexSignatureTreeImpl(start, src.getPosition(), modifiers, idx, type);
 	}
 	
 	/**
@@ -1907,8 +1909,7 @@ public class JSParser {
 			//TODO: finish
 			throw new JSUnsupportedException("Tuple rest elements", src.getPosition());
 		}
-		//TODO: enable parsing optional/definite
-		return this.parseType(src, context);
+		return this.parseType(src, context.pushed().allowOptionalTypes(true).allowDefiniteTypes(true));
 	}
 	
 	/**
@@ -2008,6 +2009,15 @@ public class JSParser {
 		return new IdentifierTypeTreeImpl(identifier.getStart(), src.getPosition(), identifier, typeArgs);
 	}
 	
+	protected TypeTree parseTypeQuery(JSLexer src, Context context) {
+		SourcePosition start = src.getNextStart();
+		expectKeyword(JSKeyword.TYPEOF, src, context);
+		
+		ExpressionTree expr = this.parseIdentifier(src, context);//TODO: qualified name
+		
+		throw new JSUnsupportedException("Type queries", new SourceRange(start, src.getPosition()));
+	}
+	
 	/**
 	 * Immediate types:
 	 * <pre>
@@ -2038,6 +2048,12 @@ public class JSParser {
 					case FUNCTION:
 						//Function
 						return this.parseFunctionType(src, context);
+					case TYPEOF:
+						if (!src.peek(1).matches(TokenKind.KEYWORD, JSKeyword.IMPORT))
+							return this.parseTypeQuery(src, context);
+						//Fallthrough intentional
+					case IMPORT:
+						throw new JSUnsupportedException("Import types", src.getPosition());
 					default:
 						//TODO: try to see if we can convert to identifier?
 						break;
@@ -2133,12 +2149,13 @@ public class JSParser {
 		TypeTree type = this.parseImmediateType(src, context);
 		Token lookahead = src.peek();
 		while (!src.isEOF()) {
-			if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LOGICAL_NOT)) {
-				// JSDoc non-nullable
-				throw new JSUnsupportedException("JSDoc non-nullable", src.getPosition());
-			} else if (lookahead.matchesOperator(JSOperator.QUESTION_MARK)) {
-				// JSDoc nullable
-				throw new JSUnsupportedException("JSDoc nullable", src.getPosition());
+			if (context.allowDefiniteTypes() && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LOGICAL_NOT)) {
+				//TODO: context flags for JSDoc types
+				// JSDoc non-nullable `T!`
+				type = new UnaryTypeTreeImpl(type.getStart(), src.getPosition(), Kind.DEFINITE_TYPE, type);
+			} else if (context.allowOptionalTypes() && src.nextTokenIs(TokenKind.OPERATOR, JSOperator.QUESTION_MARK)) {
+				// JSDoc nullable `T?`
+				type = new UnaryTypeTreeImpl(type.getStart(), src.getPosition(), Kind.OPTIONAL_TYPE, type);
 			} else if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.LEFT_BRACKET)) {
 				if (src.nextTokenIs(TokenKind.OPERATOR, JSOperator.RIGHT_BRACKET)) {
 					// Array type `T[]`
@@ -2247,13 +2264,13 @@ public class JSParser {
 		if (!src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.EXTENDS))
 			return base;
 		
-		TypeTree check = this.parseType(false, src, context);
+		TypeTree limit = this.parseType(false, src, context.pushed().allowOptionalTypes(false));
 		expectOperator(JSOperator.QUESTION_MARK, src, context);
 		TypeTree concequent = this.parseType(true, src, context);
 		expectOperator(JSOperator.COLON, src, context);
 		TypeTree alternate = this.parseType(true, src, context);
 		
-		throw new JSUnsupportedException("Conditional types", src.getPosition());
+		return new ConditionalTypeTreeImpl(base.getStart(), src.getPosition(), base, limit, concequent, alternate);
 	}
 	
 	/**
@@ -3392,7 +3409,7 @@ public class JSParser {
 			throw new JSUnexpectedTokenException(t);
 		}
 		
-		ExpressionTree callee = this.parsePrimaryExpression(src, context.coverGrammarIsolated());
+		ExpressionTree callee = this.parseLeftSideExpression(false, src, context.coverGrammarIsolated());
 		
 		List<TypeTree> typeArgs = tryParse(this::parseTypeArgumentsMaybe, this::canFollowExpressionTypeArguments, src, context);
 		
@@ -3551,7 +3568,6 @@ public class JSParser {
 			throw new JSSyntaxException(id + " not allowed as identifier", id.getRange());
 		return this.asIdentifier(id);
 	}
-	
 	
 	protected ThisExpressionTree parseThis(JSLexer src, Context ctx) {
 		return new ThisExpressionTreeImpl(expectKeyword(JSKeyword.THIS, src, ctx));
@@ -4111,6 +4127,9 @@ public class JSParser {
 		static final int FLAG_GENERATOR         = (1 << 14);
 		static final int FLAG_SWITCH            = (1 << 15);
 		static final int FLAG_LOOP              = (1 << 16);
+		// Type context flags
+		static final int FLAG_DEFINITE_TYPE     = (1 << 17);
+		static final int FLAG_OPTIONAL_TYPE     = (1 << 18);
 		
 		ContextData data;
 		// Fields that are global
@@ -4167,6 +4186,12 @@ public class JSParser {
 			return this;
 		}
 		
+		public Context inheritingCoverGrammar() {
+			int rcMask = Context.FLAG_BINDING_ELEMENT | Context.FLAG_ASSIGNMENT_TARGET;
+			int rsMask = ~rcMask;
+			return new Context(new ContextData(this.data, rsMask, rcMask));
+		}
+		
 		public Context pop() {
 			data = data.parent;
 			return this;
@@ -4209,6 +4234,30 @@ public class JSParser {
 		
 		public boolean allowYield() {
 			return data.hasFlags(Context.FLAG_YIELD);
+		}
+		
+		public Context allowOptionalTypes(boolean value) {
+			if (value)
+				data.setFlags(Context.FLAG_OPTIONAL_TYPE);
+			else
+				data.clearFlags(Context.FLAG_OPTIONAL_TYPE);
+			return this;
+		}
+		
+		public boolean allowDefiniteTypes() {
+			return data.hasFlags(Context.FLAG_DEFINITE_TYPE);
+		}
+		
+		public Context allowDefiniteTypes(boolean value) {
+			if (value)
+				data.setFlags(Context.FLAG_DEFINITE_TYPE);
+			else
+				data.clearFlags(Context.FLAG_DEFINITE_TYPE);
+			return this;
+		}
+		
+		public boolean allowOptionalTypes() {
+			return data.hasFlags(Context.FLAG_OPTIONAL_TYPE);
 		}
 		
 		public boolean inBinding() {
@@ -4354,7 +4403,7 @@ public class JSParser {
 		}
 		
 		static class ContextData {
-			int flags = 0;
+			int flags = Context.FLAG_IN;
 			final ContextData parent;
 			/**
 			 * Set of statement labels
@@ -4373,6 +4422,11 @@ public class JSParser {
 				this.parent = parent;
 				if (inherit)
 					this.inheritFrom(parent);
+			}
+
+			public ContextData(ContextData parent, int rsMask, int rcMask) {
+				this.parent = parent;
+				this.inheritFrom(parent);
 			}
 			
 			protected void setFlags(int flags) {
