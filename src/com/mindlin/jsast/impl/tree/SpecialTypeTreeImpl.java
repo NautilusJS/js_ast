@@ -14,6 +14,8 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 			return SpecialType.VOID;
 		String name = t.<String> getValue();
 		switch (name) {
+			case "any":
+				return SpecialType.ANY;
 			case "null":
 				return SpecialType.NULL;
 			case "undefined":
@@ -22,6 +24,10 @@ public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialType
 				return SpecialType.NUMBER;
 			case "string":
 				return SpecialType.STRING;
+			case "symbol":
+				return SpecialType.SYMBOL;
+			case "unknown":
+				return SpecialType.UNKNOWN;
 			case "boolean":
 				return SpecialType.BOOLEAN;
 			case "never":

@@ -21,6 +21,7 @@ public interface SpecialTypeTree extends TypeTree {
 	
 	public static enum SpecialType {
 		ANY,
+		UNKNOWN,
 		NEVER,
 		VOID,
 		NULL,
@@ -28,6 +29,7 @@ public interface SpecialTypeTree extends TypeTree {
 		STRING,
 		BOOLEAN,
 		NUMBER,
+		SYMBOL,
 		;
 	}
 }
