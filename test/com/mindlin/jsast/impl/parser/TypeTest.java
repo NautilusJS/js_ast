@@ -246,8 +246,17 @@ public class TypeTest {
 	
 	@Test
 	public void testInferType() {
-		TypeTree type = parseType("T extends (infer E)[] ? E : any", Kind.TYPE_PREDICATE);
+		ConditionalTypeTree type = parseType("T extends (infer E)[] ? E : any", Kind.CONDITIONAL_TYPE);
+		
+		assertIdentifierType("T", 0, type.getCheckType());
+		
+		ArrayTypeTree limit = assertKind(Kind.ARRAY_TYPE, type.getLimitType());
+		TypeTree limit1 = assertKind(Kind.INFER_TYPE, limit.getBaseType());
 		fail("Not implemented");
+		
+		assertIdentifierType("E", 0, type.getConecquent());
+		
+		assertSpecialType(SpecialType.ANY, type.getAlternate());
 	}
 	
 	@Test
@@ -304,13 +313,19 @@ public class TypeTest {
 	@Test
 	public void testTupleOptionalElement() {
 		TupleTypeTree type = parseType("[Foo, Bar?]", Kind.TUPLE_TYPE);
+		assertEquals(2, type.getSlotTypes().size());
+		
 		assertIdentifierType("Foo", 0, type.getSlotTypes().get(0));
-		fail("Not implemented");
+		
+		UnaryTypeTree slot1 = assertKind(Kind.OPTIONAL_TYPE, type.getSlotTypes().get(1));
+		assertIdentifierType("Bar", 0, slot1.getBaseType());
 	}
 	
 	@Test
 	public void testTupleRestElement() {
 		TupleTypeTree type = parseType("[Foo, ...Bar]", Kind.TUPLE_TYPE);
+		assertEquals(2, type.getSlotTypes().size());
+		
 		assertIdentifierType("Foo", 0, type.getSlotTypes().get(0));
 		fail("Not implemented");
 	}
@@ -328,15 +343,33 @@ public class TypeTest {
 	@Test
 	public void testIndexType() {
 		ObjectTypeTree type = parseType("{[K: keyof T]: T[K]!}", Kind.OBJECT_TYPE);
+		IndexSignatureTree idx = assertSingleElementKind(Kind.INDEX_SIGNATURE, type.getDeclaredMembers());
+		
+		TypeParameterDeclarationTree idxTp = idx.getIndexType();
+		assertIdentifier("K", idxTp.getName());
+		UnaryTypeTree idxSuper = assertKind(Kind.KEYOF_TYPE, idxTp.getSupertype());
+		assertIdentifierType("T", 0, idxSuper.getBaseType());
+		
+		UnaryTypeTree res = assertKind(Kind.DEFINITE_TYPE, idx.getReturnType());
+		MemberTypeTree res1 = assertKind(Kind.MEMBER_TYPE, res.getBaseType());
+		assertIdentifierType("T", 0, res1.getBaseType());
+		assertIdentifierType("K", 0, res1.getName());
 		fail("Not implemented");
 	}
 	
 	@Test
 	public void testMappedType() {
 		MappedTypeTree type = parseType("{[K in keyof T]: T[K]}", Kind.MAPPED_TYPE);
-		TypeParameterDeclarationTree param = type.getParameter();
+		assertEquals(Modifiers.NONE, type.getModifiers());
 		
-		fail("Not implemented");
+		TypeParameterDeclarationTree param = type.getParameter();
+		assertIdentifier("K", param.getName());
+		UnaryTypeTree query = assertKind(Kind.KEYOF_TYPE, param.getSupertype());
+		assertIdentifierType("T", 0, query.getBaseType());
+		
+		MemberTypeTree rhs = assertKind(Kind.MEMBER_TYPE, type.getType());
+		assertIdentifierType("T", 0, rhs.getBaseType());
+		assertIdentifierType("K", 0, rhs.getName());
 	}
 	
 	@Test
@@ -392,14 +425,39 @@ public class TypeTest {
 		assertEquals(2, type.getParameters().size());
 		
 		TypeParameterDeclarationTree tParam0 = type.getTypeParameters().get(0);
-		assertIdentifier("B", tParam0);
+		assertIdentifier("B", tParam0.getName());
 		assertIdentifierType("object", 0, tParam0.getSupertype());//TODO: is object special?
 		ObjectTypeTree tp0Default = assertKind(Kind.OBJECT_TYPE, tParam0.getDefault());
 		assertEquals(0, tp0Default.getDeclaredMembers().size());
 		
 		TypeParameterDeclarationTree tParam1 = type.getTypeParameters().get(1);
-		assertIdentifier("B", tParam0);
-		fail("Not implemented");
+		assertIdentifier("K", tParam1.getName());
+		UnaryTypeTree k0b1 = assertKind(Kind.KEYOF_TYPE, tParam1.getSupertype());
+		assertIdentifierType("B", 0, k0b1.getBaseType());
+		UnaryTypeTree k0b2 = assertKind(Kind.KEYOF_TYPE, tParam1.getDefault());
+		assertIdentifierType("B", 0, k0b2.getBaseType());
+		
+		ParameterTree param0 = type.getParameters().get(0);
+		assertIdentifier("b", param0.getIdentifier());
+		assertIdentifierType("B", 0, param0.getType());
+		
+		ParameterTree param1 = type.getParameters().get(1);
+		assertIdentifier("keys", param1.getIdentifier());
+		ArrayTypeTree param1Base = assertKind(Kind.ARRAY_TYPE, param1.getType());
+		assertIdentifierType("K", 0, param1Base.getBaseType());
+		
+		
+		ObjectTypeTree result = assertKind(Kind.OBJECT_TYPE, type.getReturnType());
+		IndexSignatureTree idx = assertSingleElementKind(Kind.INDEX_SIGNATURE, result.getDeclaredMembers());
+		
+		TypeParameterDeclarationTree idxTp = idx.getIndexType();
+		System.out.println(idxTp);
+		assertIdentifier("key", idxTp.getName());
+		assertIdentifierType("K", 0, idxTp.getSupertype());
+		
+		MemberTypeTree idxR = assertKind(Kind.MEMBER_TYPE, idx.getReturnType());
+		assertIdentifierType("B", 0, idxR.getBaseType());
+		assertIdentifierType("key", 0, idxR.getName());
 	}
 	
 	@Test
