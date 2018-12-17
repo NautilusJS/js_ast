@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.type.Type;
 import com.mindlin.jsast.type.TypeParameter;
 
@@ -25,7 +25,7 @@ public interface DynamicContext extends ReadonlyContext {
 	 * @param type type that alias resolves to (with generic variables resolved)
 	 */
 	void aliasType(String name, List<TypeParameter> parameters, Type type);
-	void defineGeneric(GenericParameterTree generic);
+	void defineGeneric(TypeParameterDeclarationTree generic);
 	void declare(String name, boolean isScoped, boolean isAssignable, Type type);
 	
 	//Variable stuff
