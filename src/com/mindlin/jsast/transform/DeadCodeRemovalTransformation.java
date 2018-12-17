@@ -3,10 +3,10 @@ package com.mindlin.jsast.transform;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import com.mindlin.jsast.impl.analysis.SideEffectValidator;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
-import com.mindlin.jsast.impl.validator.SideEffectValidator;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.StatementTree;

@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.validator;
+package com.mindlin.jsast.impl.analysis;
 
 import java.util.Optional;
 
 import com.mindlin.jsast.transform.ASTTransformerContext;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -137,9 +137,11 @@ public class SideEffectValidator {
 			case BITWISE_XOR:
 			case BITWISE_AND:
 			case IN:
-			case INSTANCEOF:
-				return hasSideEffectsMaybe(ctx, ((BinaryTree)tree).getLeftOperand())
-						|| hasSideEffectsMaybe(ctx, ((BinaryTree)tree).getRightOperand());
+			case INSTANCEOF: {
+				BinaryExpressionTree bTree = (BinaryExpressionTree) tree;
+				return hasSideEffectsMaybe(ctx, bTree.getLeftOperand())
+						|| hasSideEffectsMaybe(ctx, bTree.getRightOperand());
+			}
 			case ADDITION_ASSIGNMENT:
 			case SUBTRACTION_ASSIGNMENT:
 			case MULTIPLICATION_ASSIGNMENT:
