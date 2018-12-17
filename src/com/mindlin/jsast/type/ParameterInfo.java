@@ -5,24 +5,22 @@ import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
 
 public class ParameterInfo {
-	protected Modifiers access;
+	protected Modifiers modifiers;
 	protected PatternTree identifier;
 	protected boolean rest;
-	protected boolean optional;
 	protected Type declaredType;
 	protected ExpressionTree initializer;
 	
-	public ParameterInfo(Modifiers access, PatternTree identifier, boolean rest, boolean optional, Type declaredType, ExpressionTree initializer) {
-		this.access = access;
+	public ParameterInfo(Modifiers modifiers, PatternTree identifier, boolean rest, Type declaredType, ExpressionTree initializer) {
+		this.modifiers = modifiers;
 		this.identifier = identifier;
 		this.rest = rest;
-		this.optional = optional;
 		this.declaredType = declaredType;
 		this.initializer = initializer;
 	}
 	
 	public Modifiers getModifiers() {
-		return this.access;
+		return this.modifiers;
 	}
 	
 	public boolean isRest() {
@@ -30,7 +28,7 @@ public class ParameterInfo {
 	}
 	
 	public boolean isOptional() {
-		return this.optional;
+		return getModifiers().isOptional();
 	}
 	
 	public Type getDeclaredType() {
