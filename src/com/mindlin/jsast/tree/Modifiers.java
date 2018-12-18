@@ -3,7 +3,11 @@ package com.mindlin.jsast.tree;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mindlin.jsast.impl.util.ObjectCache;
+
 public class Modifiers implements Comparable<Modifiers> {
+	protected static final ObjectCache<Modifiers> CACHE = new ObjectCache<>();
+	
 	public static final long FLAG_PUBLIC    = 1L << 0;
 	public static final long FLAG_PRIVATE   = 1L << 1;
 	public static final long FLAG_PROTECTED = 1L << 2;
@@ -37,6 +41,7 @@ public class Modifiers implements Comparable<Modifiers> {
 	 * Declare statement
 	 */
 	public static final long FLAG_DECLARE   = 1L << 32;
+	//Note: Update hashCode() if any more flags are added
 	
 	//TODO: better name?
 	public static final Modifiers NONE = Modifiers.wrap(0);
@@ -83,8 +88,7 @@ public class Modifiers implements Comparable<Modifiers> {
 	}
 	
 	public static Modifiers wrap(long flags) {
-		//TODO: cache?
-		return new Modifiers(flags);
+		return CACHE.intern(new Modifiers(flags));
 	}
 	
 	public static Modifiers create(boolean isReadonly, AccessModifier visibility) {
