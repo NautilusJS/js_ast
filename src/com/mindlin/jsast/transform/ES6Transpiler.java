@@ -178,7 +178,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		//TODO check supertype
 		if (!modified)
 			return node;
-		return new ClassDeclarationTreeImpl(node.getStart(), node.getEnd(), node.isAbstract(), node.getIdentifier(),
+		return new AbstractClassTree(node.getStart(), node.getEnd(), node.isAbstract(), node.getIdentifier(),
 				Collections.emptyList(), node.getSuperType(), Collections.emptyList(), properties);
 	}
 

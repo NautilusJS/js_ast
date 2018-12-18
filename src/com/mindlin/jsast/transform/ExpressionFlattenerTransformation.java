@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.mindlin.jsast.impl.analysis.SideEffectValidator;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
-import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
-import com.mindlin.jsast.impl.validator.SideEffectValidator;
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.impl.tree.SequenceExpressionTreeImpl;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.SequenceExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
@@ -27,7 +27,7 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 		//Convert (c ? x : x) to (c, x)
 		//We can trust the reducer for sequences to check better for side effects
 		if (node.getTrueExpression().equivalentTo(node.getFalseExpression()))
-			return new SequenceTreeImpl(node.getStart(), node.getEnd(), Arrays.asList(condition, node.getTrueExpression()));
+			return new SequenceExpressionTreeImpl(node.getStart(), node.getEnd(), Arrays.asList(condition, node.getTrueExpression()));
 		
 		if (!SideEffectValidator.hasSideEffectsMaybe(ctx, condition)) {
 			Optional<Boolean> coerced = SideEffectValidator.coerceToBoolean(ctx, condition);
@@ -55,7 +55,7 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 	}
 
 	@Override
-	public ExpressionTree visitBinary(BinaryTree node, ASTTransformerContext ctx) {
+	public ExpressionTree visitBinary(BinaryExpressionTree node, ASTTransformerContext ctx) {
 		Tree.Kind kind = node.getKind();
 		switch (kind) {
 			case LOGICAL_OR:
@@ -195,7 +195,7 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 	}
 
 	@Override
-	public ExpressionTree visitSequence(SequenceTree node, ASTTransformerContext ctx) {
+	public ExpressionTree visitSequence(SequenceExpressionTree node, ASTTransformerContext ctx) {
 		boolean modified = false;
 		ArrayList<ExpressionTree> expressions = new ArrayList<>();
 		for (ExpressionTree expression : node.getExpressions().subList(0, node.getExpressions().size() - 1)) {
@@ -212,7 +212,7 @@ public class ExpressionFlattenerTransformation implements TreeTransformation<AST
 		if (expressions.size() == 1)
 			return expressions.get(0);
 		else if (modified)
-			return new SequenceTreeImpl(node.getStart(), node.getEnd(), expressions);
+			return new SequenceExpressionTreeImpl(node.getStart(), node.getEnd(), expressions);
 		else
 			return node;
 	}

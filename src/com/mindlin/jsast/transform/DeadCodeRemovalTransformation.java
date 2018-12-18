@@ -55,24 +55,27 @@ public class DeadCodeRemovalTransformation implements TreeTransformation<ASTTran
 			boolean modifiedDeclarations = false;
 			VariableDeclarationTree varTree = null, letTree = null, constTree = null;
 			for (VariableDeclarationTree declaration : declarations) {
-				if (!declaration.isScoped()) {
-					//is var
-					if (varTree == null) {
-						varTree = declaration;
-						continue;
-					}
-				} else if (declaration.isConst()) {
-					//is const
-					if (constTree == null) {
-						constTree = declaration;
-						continue;
-					}
-				} else {
-					//is let
-					if (letTree == null) {
-						letTree = declaration;
-						continue;
-					}
+				switch (declaration.getDeclarationStyle()) {
+					case CONST:
+						if (constTree == null) {
+							constTree = declaration;
+							continue;
+						}
+						break;
+					case LET:
+						if (letTree == null) {
+							letTree = declaration;
+							continue;
+						}
+						break;
+					case VAR:
+						if (varTree == null) {
+							varTree = declaration;
+							continue;
+						}
+						break;
+					default:
+						throw new IllegalArgumentException("Unknown style: " + declaration.getDeclarationStyle());
 				}
 			}
 			if (modifiedDeclarations) {
