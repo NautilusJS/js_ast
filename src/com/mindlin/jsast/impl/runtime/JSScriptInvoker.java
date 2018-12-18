@@ -11,7 +11,7 @@ import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ArrayPatternTree;
 import com.mindlin.jsast.tree.AssignmentPatternTree;
 import com.mindlin.jsast.tree.AssignmentTree;
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
 import com.mindlin.jsast.tree.BreakTree;
@@ -48,7 +48,7 @@ import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.ReturnTree;
-import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.SequenceExpressionTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
@@ -193,7 +193,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitBinary(BinaryTree node, RuntimeScope d) {
+	public Object visitBinary(BinaryExpressionTree node, RuntimeScope d) {
 		Object lhs = node.getLeftOperand().accept(this, d);
 		ExpressionTree rhs = node.getRightOperand();
 		Kind kind = node.getKind();
@@ -561,7 +561,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 	}
 
 	@Override
-	public Object visitSequence(SequenceTree node, RuntimeScope d) {
+	public Object visitSequence(SequenceExpressionTree node, RuntimeScope d) {
 		Object value = null;
 		for (ExpressionTree expr : node.getExpressions())
 			value = expr.accept(this, d);
