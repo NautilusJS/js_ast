@@ -7,25 +7,35 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.InterfacePropertyTree;
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
+import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
+import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.ExpressionTreeVisitor;
+import com.mindlin.jsast.tree.MethodSignatureTree;
 import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
+import com.mindlin.jsast.tree.PropertyDeclarationTree;
+import com.mindlin.jsast.tree.PropertyName;
+import com.mindlin.jsast.tree.SignatureDeclarationTree;
+import com.mindlin.jsast.tree.SignatureDeclarationTree.CallSignatureTree;
+import com.mindlin.jsast.tree.SignatureDeclarationTree.ConstructSignatureTree;
+import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.ConditionalTypeTree;
+import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
 import com.mindlin.jsast.tree.type.IndexSignatureTree;
 import com.mindlin.jsast.tree.type.LiteralTypeTree;
+import com.mindlin.jsast.tree.type.MappedTypeTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeElementTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.TypeTreeVisitor;
+import com.mindlin.jsast.tree.type.UnaryTypeTree;
 import com.mindlin.jsast.type.IndexInfo;
 import com.mindlin.jsast.type.IntrinsicType;
 import com.mindlin.jsast.type.LiteralType;
@@ -49,20 +59,11 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 		return result;
 	}
 	
-	/**
-	 * Map function type => Signature
-	 * @param fn
-	 * @param ctx
-	 * @return
-	 */
-	public Signature mapFunctionType(FunctionTypeTree fn, TypeContext ctx) {
-		
-		RecursiveTypeContext localCtx = RecursiveTypeContext.inheritStatic(ctx);
-		
+	public List<TypeParameter> mapTypeParameters(List<TypeParameterDeclarationTree> decls, RecursiveTypeContext localCtx) {
 		boolean requireSecondPass = false;//If second-pass resolution is needed
-		List<TypeParameter> generics = new ArrayList<>(fn.getGenerics().size());
+		List<TypeParameter> generics = new ArrayList<>(decls.size());
 		
-		for (GenericParameterTree generic : fn.getGenerics()) {
+		for (TypeParameterDeclarationTree generic : decls) {
 			String name = generic.getName().getName();
 			
 			TypeParameter unbound;
@@ -80,10 +81,10 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 		
 		//Finish 
 		if (requireSecondPass) {
-			Iterator<GenericParameterTree> astIter = fn.getGenerics().iterator();
+			Iterator<TypeParameterDeclarationTree> astIter = decls.iterator();
 			Iterator<TypeParameter> mappedIter = generics.iterator();
 			while (astIter.hasNext()) {
-				GenericParameterTree ast = astIter.next();
+				TypeParameterDeclarationTree ast = astIter.next();
 				TypeParameter unbound = mappedIter.next();
 				
 				Type constraint = ast.getSupertype() == null ? null : ast.getSupertype().accept(this, localCtx);
@@ -95,19 +96,22 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 			}
 		}
 		
-		List<ParameterInfo> parameters = new ArrayList<>(fn.getParameters().size());
-		for (ParameterTree param : fn.getParameters())
-			parameters.add(new ParameterInfo(param.getAccessModifier(), param.getIdentifier(), param.isRest(), param.isOptional(), param.getType().accept(this, localCtx), param.getInitializer()));
-		
-		//TODO: null return type => implicit void?
-		Type returnType = fn.getReturnType() == null ? null : fn.getReturnType().accept(this, localCtx);
-		
-		return new SignatureImpl(generics, parameters, returnType);
+		return generics;
 	}
 	
-	@Override
-	public Type visitAnyType(AnyTypeTree node, TypeContext d) {
-		return IntrinsicType.ANY;
+	public Signature mapSignature(SignatureDeclarationTree node, TypeContext ctx) {
+		RecursiveTypeContext localCtx = RecursiveTypeContext.inheritStatic(ctx);
+
+		List<TypeParameter> typeParams = this.mapTypeParameters(node.getTypeParameters(), localCtx);
+		
+		List<ParameterInfo> parameters = new ArrayList<>(node.getParameters().size());
+		for (ParameterTree param : node.getParameters())
+			parameters.add(new ParameterInfo(param.getModifiers(), param.getIdentifier(), param.isRest(), param.getType().accept(this, localCtx), param.getInitializer()));
+		
+		//TODO: null return type => implicit void?
+		Type returnType = node.getReturnType() == null ? null : node.getReturnType().accept(this, localCtx);
+		
+		return new SignatureImpl(typeParams, parameters, returnType);
 	}
 	
 	@Override
@@ -118,7 +122,7 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 	
 	@Override
 	public Type visitFunctionType(FunctionTypeTree node, TypeContext d) {
-		Signature signature = mapFunctionType(node, d);
+		Signature signature = mapSignature(node, d);
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}
@@ -140,12 +144,6 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 	}
 	
 	@Override
-	public Type visitIndexType(IndexSignatureTree node, TypeContext d) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
 	public Type visitInterfaceType(ObjectTypeTree node, TypeContext ctx) {
 		RebindableTypeParameter thisTP = TypeParameter.unbound();
 		Set<Signature> callSignatures = new HashSet<>();
@@ -155,31 +153,52 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 		
 		TypeContext localCtx = ctx;//TODO: push context
 		
-		for (InterfacePropertyTree prop : node.getDeclaredProperties()) {
-			if (prop.getType().getKind() == Tree.Kind.INDEX_TYPE) {
-				//Index signature
-				IndexSignatureTree decl = (IndexSignatureTree) prop.getType();
-				
-				Type keyType = decl.getIndexType().accept(this, localCtx);
-				Type valueType = decl.getReturnType().accept(this, localCtx);
-				
-				IndexInfo index = new IndexInfo(prop.isReadonly(), keyType, valueType);
-				indices.add(index);
-			} else if (prop.getKey() == null) {
-				//Call signature
-				Signature signature = this.mapFunctionType((FunctionTypeTree) prop.getType(), localCtx);
-				callSignatures.add(signature);
-			} else {
-				//Property
-				ObjectPropertyKeyTree _key = prop.getKey();
-				if (_key.getKind() != Tree.Kind.IDENTIFIER)//TODO: fix
-					throw new UnsupportedOperationException("Can't deal with non-string keys ATM");
-				String key = ((IdentifierTree) _key).getName();
-				
-				Type value = prop.getType() == null ? null : prop.getType().accept(this, localCtx);
-				
-				TypeMember member = new TypeMember(!prop.isOptional(), prop.isReadonly(), LiteralType.of(key), value);
-				properties.add(member);
+		for (TypeElementTree prop : node.getDeclaredMembers()) {
+			switch (prop.getKind()) {
+				case INDEX_SIGNATURE: {
+					IndexSignatureTree decl = (IndexSignatureTree) prop;
+					
+					Type keyType = decl.getIndexType().accept(this, localCtx);
+					Type valueType = decl.getReturnType().accept(this, localCtx);
+					
+					IndexInfo index = new IndexInfo(decl.getModifiers().isReadonly(), keyType, valueType);
+					indices.add(index);
+					break;
+				}
+				case CALL_SIGNATURE: {
+					CallSignatureTree decl = (CallSignatureTree) prop;
+					Signature signature = this.mapSignature(decl, localCtx);
+					callSignatures.add(signature);
+					break;
+				}
+				case CONSTRUCT_SIGNATURE: {
+					ConstructSignatureTree decl = (ConstructSignatureTree) prop;
+					Signature signature = this.mapSignature(decl, localCtx);
+					constructSignatures.add(signature);
+					break;
+				}
+				case METHOD_SIGNATURE: {
+					MethodSignatureTree decl = (MethodSignatureTree) prop;
+					
+					break;
+				}
+				case PROPERTY_SIGNATURE: {
+					PropertyDeclarationTree decl = (PropertyDeclarationTree) prop;
+					
+					PropertyName key = decl.getName();
+					ExpressionTree keyExpr = (key.getKind() == Kind.COMPUTED_PROPERTY_KEY) ? ((ComputedPropertyKeyTree) key).getExpression() : ((ExpressionTree) key);
+					
+					//TODO: can we get ReadonlyContext here?
+					Type keyType = keyExpr.accept(new ExpressionTypeCalculator(), (ReadonlyContext) localCtx);
+					
+					Type value = decl.getType() == null ? null : decl.getType().accept(this, localCtx);
+						
+					TypeMember member = new TypeMember(!decl.getModifiers().isOptional(), decl.getModifiers().isReadonly(), keyType, value);
+					properties.add(member);
+					break;
+				}
+				default:
+					throw new IllegalArgumentException();
 			}
 		}
 		
@@ -224,6 +243,8 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 	@Override
 	public Type visitSpecialType(SpecialTypeTree node, TypeContext d) {
 		switch (node.getType()) {
+			case ANY:
+				return IntrinsicType.ANY;
 			case BOOLEAN:
 				return IntrinsicType.BOOLEAN;
 			case NEVER:
@@ -251,6 +272,30 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 	@Override
 	public Type visitUnionType(CompositeTypeTree node, TypeContext d) {
 		return TypeCalculator.union(d, false, map(node.getConstituents(), d));
+	}
+
+	@Override
+	public Type visitConditionalType(ConditionalTypeTree node, TypeContext d) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Type visitConstructorType(ConstructorTypeTree node, TypeContext d) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Type visitUnaryType(UnaryTypeTree node, TypeContext d) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Type visitMappedType(MappedTypeTree node, TypeContext d) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 	}
 	
 }

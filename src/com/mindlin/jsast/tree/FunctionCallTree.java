@@ -2,10 +2,14 @@ package com.mindlin.jsast.tree;
 
 import java.util.List;
 
+import com.mindlin.jsast.tree.type.TypeTree;
+
 public interface FunctionCallTree extends ExpressionTree {
+	ExpressionTree getCallee();
+	
 	List<? extends ExpressionTree> getArguments();
 	
-	ExpressionTree getCallee();
+	List<TypeTree> getTypeArguments();
 	
 	@Override
 	default Tree.Kind getKind() {

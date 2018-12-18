@@ -249,7 +249,7 @@ public class TypeBinder {
 			
 			ParameterInfo newParam = oldParam;
 			if (newType != oldType) {
-				newParam = new ParameterInfo(oldParam.getAccessModifier(), oldParam.getIdentifier(), oldParam.isRest(), oldParam.isOptional(), newType, oldParam.getInitializer());
+				newParam = new ParameterInfo(oldParam.getModifiers(), oldParam.getIdentifier(), oldParam.isRest(), newType, oldParam.getInitializer());
 				modified = true;
 			}
 			

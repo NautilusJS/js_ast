@@ -16,14 +16,14 @@ public class FunctionOverloadTest {
 	
 	public Set<Signature> getSimpleOverrideList() {
 		//function f(x: number): number
-		ParameterInfo x = new ParameterInfo(null, new IdentifierTreeImpl(-1, -1, "x"), false, false, IntrinsicType.NUMBER, null);
+		ParameterInfo x = new ParameterInfo(null, new IdentifierTreeImpl(null, null, "x"), false, IntrinsicType.NUMBER, null);
 		Signature f1 = new SignatureImpl(Collections.emptyList(), Arrays.asList(x), IntrinsicType.NUMBER);
 		
 		//function f(y: string): string
-		ParameterInfo y = new ParameterInfo(null, new IdentifierTreeImpl(-1, -1, "y"), false, false, IntrinsicType.STRING, null);
+		ParameterInfo y = new ParameterInfo(null, new IdentifierTreeImpl(null, null, "y"), false, IntrinsicType.STRING, null);
 		Signature f2 = new SignatureImpl(Collections.emptyList(), Arrays.asList(y), IntrinsicType.STRING);
 		
-		ParameterInfo z = new ParameterInfo(null, new IdentifierTreeImpl(-1, -1, "z"), false, false, CompositeType.union(IntrinsicType.STRING, IntrinsicType.NUMBER), null);
+		ParameterInfo z = new ParameterInfo(null, new IdentifierTreeImpl(null, null, "z"), false, CompositeType.union(IntrinsicType.STRING, IntrinsicType.NUMBER), null);
 		Signature f3 = new SignatureImpl(Collections.emptyList(), Arrays.asList(z), IntrinsicType.BOOLEAN);
 		
 		Set<Signature> f = new HashSet<>();

@@ -10,11 +10,11 @@ import java.util.Map;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
-import com.mindlin.jsast.tree.CastTree;
-import com.mindlin.jsast.tree.ClassDeclarationTree;
-import com.mindlin.jsast.tree.ClassPropertyTree;
+import com.mindlin.jsast.tree.CastExpressionTree;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassExpressionTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTreeVisitor;
@@ -27,18 +27,18 @@ import com.mindlin.jsast.tree.NumericLiteralTree;
 import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
-import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.SequenceExpressionTree;
+import com.mindlin.jsast.tree.SpreadElementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
+import com.mindlin.jsast.tree.TaggedTemplateLiteralTree;
 import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
-import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.type.CompositeType;
 import com.mindlin.jsast.type.IntrinsicType;
 import com.mindlin.jsast.type.LiteralType;
 import com.mindlin.jsast.type.Signature;
@@ -54,9 +54,9 @@ import com.mindlin.jsast.type.TypeParameter.RebindableTypeParameter;
  */
 public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, ReadonlyContext> {
 	
-	protected List<Type> resolveGenericsList(List<GenericParameterTree> genericDecls, ReadonlyContext ctx) {
+	protected List<Type> resolveGenericsList(List<TypeParameterDeclarationTree> genericDecls, ReadonlyContext ctx) {
 		Map<String, TypeParameter> generics = new HashMap<>();
-		for (GenericParameterTree genericDecl : genericDecls) {
+		for (TypeParameterDeclarationTree genericDecl : genericDecls) {
 			String name = genericDecl.getName().getName();
 			TypeParameter param;
 			if (genericDecl.getDefault() == null && genericDecl.getSupertype() == null)
@@ -107,7 +107,7 @@ public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, Rea
 	}
 
 	@Override
-	public Type visitBinary(BinaryTree node, ReadonlyContext d) {
+	public Type visitBinary(BinaryExpressionTree node, ReadonlyContext d) {
 		ExpressionTree lhs = node.getLeftOperand();
 		ExpressionTree rhs = node.getRightOperand();
 		
@@ -181,7 +181,7 @@ public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, Rea
 	}
 
 	@Override
-	public Type visitCast(CastTree node, ReadonlyContext d) {
+	public Type visitCast(CastExpressionTree node, ReadonlyContext d) {
 		return node.getType().accept(new TypeExpressionResolver(), d);
 	}
 
@@ -245,10 +245,10 @@ public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, Rea
 	}
 
 	@Override
-	public Type visitSequence(SequenceTree node, ReadonlyContext d) {
-		if (node.getExpressions().isEmpty())
+	public Type visitSequence(SequenceExpressionTree node, ReadonlyContext d) {
+		if (node.getElements().isEmpty())
 			return null;
-		return node.getExpressions().get(node.getExpressions().size() - 1).accept(this, d);
+		return node.getElements().get(node.getElements().size() - 1).accept(this, d);
 	}
 
 	@Override
@@ -311,9 +311,9 @@ public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, Rea
 	public Type visitRegExpLiteral(RegExpLiteralTree node, ReadonlyContext d) {
 		return d.getType("RegExp");
 	}
-	
+
 	@Override
-	public Type visitClassDeclaration(ClassDeclarationTree node, ReadonlyContext d) {
+	public Type visitClassExpression(ClassExpressionTree node, ReadonlyContext d) {
 		RebindableTypeParameter thisTP = TypeParameter.unbound();
 		//TODO: resolve super type(s)
 		List<TypeMember> staticProps = new ArrayList<>();
@@ -321,27 +321,18 @@ public class ExpressionTypeCalculator implements ExpressionTreeVisitor<Type, Rea
 		List<TypeMember> props = new ArrayList<>();
 		List<Signature> callSignatures = new ArrayList<>();
 		
-		for (ClassPropertyTree<?> property : node.getProperties()) {
-			switch (property.getDeclarationType()) {
-				case ASYNC_METHOD:
-					break;
-				case CONSTRUCTOR:
-					break;
-				case FIELD:
-					break;
-				case GENERATOR:
-					break;
-				case GETTER:
-					break;
-				case METHOD:
-					break;
-				case SETTER:
-					break;
-				default:
-					break;
-				
-			}
-		}
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Type visitSpread(SpreadElementTree node, ReadonlyContext d) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Type visitTaggedTemplate(TaggedTemplateLiteralTree node, ReadonlyContext d) {
 		// TODO Auto-generated method stub
 		return null;
 	}

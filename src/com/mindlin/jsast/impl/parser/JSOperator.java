@@ -3,56 +3,61 @@ package com.mindlin.jsast.impl.parser;
 public enum JSOperator {
 	// Reference:
 	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators
-	EQUAL(2, "==", "A==B"),
-	NOT_EQUAL(2, "!=", "A!=B"),
-	STRICT_EQUAL(2, "===", "A===B"),
-	STRICT_NOT_EQUAL(2, "!==", "A!==B"),
-	GREATER_THAN(2, ">", "A>B"),
-	GREATER_THAN_EQUAL(2, ">=", "A>=B"),
-	LESS_THAN_EQUAL(2, "<=", "A<=B"),
-	LESS_THAN(2, "<", "A<B"),
+	AT_SYMBOL(1, "@"),
+	EQUAL(2, "=="),
+	NOT_EQUAL(2, "!="),
+	STRICT_EQUAL(2, "==="),
+	STRICT_NOT_EQUAL(2, "!=="),
+	GREATER_THAN(2, ">"),
+	GREATER_THAN_EQUAL(2, ">="),
+	LESS_THAN_EQUAL(2, "<="),
+	LESS_THAN(2, "<"),
 
-	INCREMENT(1, "++", "A++", "++A"),
-	DECREMENT(1, "--", "B++", "++B"),
+	INCREMENT(1, "++"),
+	DECREMENT(1, "--"),
 
-	PLUS(2, "+", "A+B"),
-	MINUS(2, "-", "-A", "A-B"),
-	MULTIPLICATION(2, "*", "A*B"),
-	DIVISION(2, "/", "A/B"),
-	REMAINDER(2, "%", "A%B"),
-	EXPONENTIATION(2, "**", "A**B"),
-	LEFT_SHIFT(2, "<<", "A<<B"),
-	RIGHT_SHIFT(2, ">>", "A>>B"),
-	UNSIGNED_RIGHT_SHIFT(2, ">>>", "A>>>B"),
+	PLUS(2, "+"),
+	MINUS(2, "-"),
+	ASTERISK(2, "*"),
+	DIVISION(2, "/"),
+	REMAINDER(2, "%"),
+	EXPONENTIATION(2, "**"),
+	LEFT_SHIFT(2, "<<"),
+	RIGHT_SHIFT(2, ">>"),
+	UNSIGNED_RIGHT_SHIFT(2, ">>>"),
 
-	BITWISE_AND(2, "&", "A&B"),
-	BITWISE_XOR(2, "^", "A^B"),
-	BITWISE_OR(2, "|", "A|B"),
-	BITWISE_NOT(1, "~", "~A"),
+	AMPERSAND(2, "&"),
+	BITWISE_XOR(2, "^"),
+	VBAR(2, "|"),
+	BITWISE_NOT(1, "~"),
 
-	LOGICAL_AND(2, "&&", "A&&B"),
-	LOGICAL_OR(2, "||", "A||B"),
-	LOGICAL_NOT(1, "!", "!A"),
+	LOGICAL_AND(2, "&&"),
+	LOGICAL_OR(2, "||"),
+	LOGICAL_NOT(1, "!"),
 
-	ASSIGNMENT(true, 2, "=", "A=B"),
-	ADDITION_ASSIGNMENT(true, 2, "+=", "A+=B"),
-	SUBTRACTION_ASSIGNMENT(true, 2, "-=", "A-=B"),
-	MULTIPLICATION_ASSIGNMENT(true, 2, "*=", "A*=B"),
-	DIVISION_ASSIGNMENT(true, 2, "/=", "A/=B"),
-	REMAINDER_ASSIGNMENT(true, 2, "%=", "A%=B"),
-	EXPONENTIATION_ASSIGNMENT(true, 2, "**=", "A**=B"),
-	LEFT_SHIFT_ASSIGNMENT(true, 2, "<<=", "A<<=B"),
-	RIGHT_SHIFT_ASSIGNMENT(true, 2, ">>=", "A>>=B"),
-	UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(true, 2, ">>>=", "A>>>=B"),
-	BITWISE_AND_ASSIGNMENT(true, 2, "&=", "A&=B"),
-	BITWISE_XOR_ASSIGNMENT(true, 2, "^=", "A^=B"),
-	BITWISE_OR_ASSIGNMENT(true, 2, "|=", "A|=B"),
+	ASSIGNMENT(true, 2, "="),
+	ADDITION_ASSIGNMENT(true, 2, "+="),
+	SUBTRACTION_ASSIGNMENT(true, 2, "-="),
+	MULTIPLICATION_ASSIGNMENT(true, 2, "*="),
+	DIVISION_ASSIGNMENT(true, 2, "/="),
+	REMAINDER_ASSIGNMENT(true, 2, "%="),
+	EXPONENTIATION_ASSIGNMENT(true, 2, "**="),
+	LEFT_SHIFT_ASSIGNMENT(true, 2, "<<="),
+	RIGHT_SHIFT_ASSIGNMENT(true, 2, ">>="),
+	UNSIGNED_RIGHT_SHIFT_ASSIGNMENT(true, 2, ">>>="),
+	BITWISE_AND_ASSIGNMENT(true, 2, "&="),
+	BITWISE_XOR_ASSIGNMENT(true, 2, "^="),
+	BITWISE_OR_ASSIGNMENT(true, 2, "|="),
 
-	QUESTION_MARK(3, "?", "A?B:C"),
-	COLON(3, ":", "A?B:C"),
+	QUESTION_MARK(3, "?"),
+	COLON(3, ":"),
 	LEFT_PARENTHESIS(0, "("),
 	RIGHT_PARENTHESIS(0, ")"),
-	COMMA(2, ",", "A,B"),
+	LEFT_BRACKET(0, "["),
+	RIGHT_BRACKET(0, "]"),
+	LEFT_BRACE(0, "{"),
+	RIGHT_BRACE(0, "}"),
+	COMMA(2, ","),
 	LAMBDA(2, "=>"),
 
 	PERIOD(2, "."),
@@ -63,23 +68,23 @@ public enum JSOperator {
 	final int arity;
 	final boolean assignment;
 
-	JSOperator(boolean assignment, int precedence, int arity, String operator, String... allotropes) {
+	JSOperator(boolean assignment, int precedence, int arity, String operator) {
 		this.assignment = assignment;
 		this.operator = operator;
 		this.arity = arity;
 		this.precedence = precedence;
 	}
 
-	JSOperator(boolean assignment, int arity, String operator, String... allotropes) {
-		this(assignment, -1, arity, operator, allotropes);
+	JSOperator(boolean assignment, int arity, String operator) {
+		this(assignment, -1, arity, operator);
 	}
 
-	JSOperator(int precedence, int arity, String operator, String... allotropes) {
-		this(false, precedence, arity, operator, allotropes);
+	JSOperator(int precedence, int arity, String operator) {
+		this(false, precedence, arity, operator);
 	}
 
-	JSOperator(int arity, String operator, String... allotropes) {
-		this(-1, arity, operator, allotropes);
+	JSOperator(int arity, String operator) {
+		this(-1, arity, operator);
 	}
 	
 	public String getText() {

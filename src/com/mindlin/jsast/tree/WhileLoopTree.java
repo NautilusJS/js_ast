@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 /**
  * While loop node.
- * @see DoWhileLoopTree for do...while loops
+ * @see DoWhileLoopTree for {@code do...while} loops
  * @author mailmindlin
  */
 public interface WhileLoopTree extends ConditionalLoopTree {

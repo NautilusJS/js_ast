@@ -10,10 +10,6 @@ public enum TokenKind {
 	 */
 	OPERATOR,
 	/**
-	 * [,],{,}
-	 */
-	BRACKET,
-	/**
 	 * A JS keyword
 	 */
 	KEYWORD,
@@ -25,7 +21,7 @@ public enum TokenKind {
 	STRING_LITERAL,
 	TEMPLATE_LITERAL,
 	/**
-	 * A js null literal. Literally <code>null</code>.
+	 * A js null literal. Literally {@code null}.
 	 */
 	NULL_LITERAL,
 	/**

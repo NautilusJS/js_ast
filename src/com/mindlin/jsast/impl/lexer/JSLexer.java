@@ -1,7 +1,10 @@
 package com.mindlin.jsast.impl.lexer;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -9,7 +12,9 @@ import java.util.function.Supplier;
 import com.mindlin.jsast.exception.JSEOFException;
 import com.mindlin.jsast.exception.JSSyntaxException;
 import com.mindlin.jsast.exception.JSUnexpectedTokenException;
-import com.mindlin.jsast.fs.FilePosition;
+import com.mindlin.jsast.fs.SourceFile;
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.parser.JSKeyword;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
@@ -24,43 +29,76 @@ public class JSLexer implements Supplier<Token> {
 	
 	protected final CharacterStream chars;
 	protected Token lookahead = null;
-	protected LineMapBuilder lines = new LineMapBuilder();
+	protected LinkedList<Token> lookaheads = new LinkedList<>();
+	//TODO: supply source file
+	protected final LineMapBuilder lines;
 	protected final BooleanStack templateStack = new BooleanStack();
+	
+	public JSLexer(String src) {
+		this(new CharacterArrayStream(src));
+	}
 	
 	public JSLexer(char[] chars) {
 		this(new CharacterArrayStream(chars));
 	}
 	
 	public JSLexer(CharacterStream chars) {
+		this(null, chars);
+	}
+	
+	public JSLexer(SourceFile source) {
+		this(source, source.getSourceStream());
+	}
+	
+	public JSLexer(SourceFile source, CharacterStream chars) {
+		this.lines = new LineMapBuilder(source);
 		this.chars = chars;
-	}
-	
-	public JSLexer(JSLexer origin) {
-		this.chars = origin.chars;
-	}
-	
-	public JSLexer(String src) {
-		this(new CharacterArrayStream(src));
 	}
 	
 	public LineMap getLines() {
 		return lines;
 	}
 	
-	public FilePosition getResolvedPosition() {
-		return this.lines.lookup(this.chars.position());
+	public SourcePosition getPosition() {
+		return this.resolvePosition(this.getPositionOffset());
 	}
 	
-	public FilePosition resolvePosition(long position) {
+	public SourcePosition resolvePosition(long position) {
 		return this.lines.lookup(position);
 	}
 	
-	public long getPosition() {
+	public long getPositionOffset() {
 		return this.chars.position();
+	}
+	
+	/**
+	 * Get start of next token. Equivalent to {@code this.peek().getStart()}.
+	 * 
+	 * @return Start of next token.
+	 */
+	public SourcePosition getNextStart() {
+		return this.peek().getStart();
 	}
 	
 	public CharacterStream getCharacters() {
 		return this.chars;
+	}
+	
+	protected void invalidateLookaheads(long clobberIdx) {
+		if (this.lookahead == null) {
+			// No-op
+		} else if (clobberIdx <= this.lookahead.getEnd().getOffset()) {
+			this.lookahead = null;
+			this.lookaheads.clear();
+		} else if (!this.lookaheads.isEmpty()) {
+			// Clobber some
+			for (Iterator<Token> iter = this.lookaheads.descendingIterator(); iter.hasNext(); ) {
+				Token current = iter.next();
+				if (clobberIdx > current.getEnd().getOffset())
+					break;
+				iter.remove();
+			}
+		}
 	}
 	
 	public String nextStringLiteral() {
@@ -125,15 +163,18 @@ public class JSLexer implements Supplier<Token> {
 			case 'x':
 				//EASCII hexdecimal character escape
 				if (!chars.hasNext(2))
-					throw new JSEOFException("Invalid Extended ASCII escape sequence (EOF)", getPosition() - 2);
+					throw new JSEOFException("Invalid Extended ASCII escape sequence (EOF)", this.resolvePosition(this.getPositionOffset() - 2));
 				try {
 					String s = chars.copyNext(2);
-					return Charset.forName("EASCII").decode(ByteBuffer.wrap(new byte[]{(byte) Integer.parseInt(s, 16)})).toString();
+					Charset easciiCharset = Charset.forName("EASCII");
+					CharBuffer buffer = easciiCharset.decode(ByteBuffer.wrap(new byte[]{(byte) Integer.parseInt(s, 16)}));
+					return buffer.toString();
 				} catch (NumberFormatException e) {
-					throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", getPosition() - 4, e);
+					SourcePosition start = this.resolvePosition(this.getPositionOffset() - 4);
+					throw new JSSyntaxException("Invalid Extended ASCII escape sequence (\\x" + chars.copy(chars.position() - 1, 2) + ")", new SourceRange(start, this.getPosition()), e);
 				}
 			default:
-				throw new JSSyntaxException("Invalid escape sequence: \\" + c, getPosition() - 2);
+				throw new JSSyntaxException("Invalid escape sequence: \\" + c, this.resolvePosition(this.getPositionOffset() - 2));
 		}
 	}
 	
@@ -155,10 +196,10 @@ public class JSLexer implements Supplier<Token> {
 			do {
 				int digit = Characters.asHexDigit(c);
 				if (c < 0)
-					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", chars.position());
+					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", this.getPosition());
 				//Overflow (value >= 0x10FFFF)
 				if ((value << 4) < value)
-					throw new JSSyntaxException("Invalid Unicode code point " + value, chars.position());
+					throw new JSSyntaxException("Invalid Unicode code point " + value, this.getPosition());
 				value = (value << 4) | digit;
 			} while ((c = chars.next()) != '}');
 		} else {
@@ -167,7 +208,7 @@ public class JSLexer implements Supplier<Token> {
 				char c = chars.next();
 				int digit = Characters.asHexDigit(c);
 				if (digit < 0)
-					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", chars.position());
+					throw new JSSyntaxException("Invalid character '" + c + "' in unicode code point escape sequence", this.getPosition());
 				value = (value << 4) | digit;
 			}
 		}
@@ -187,7 +228,7 @@ public class JSLexer implements Supplier<Token> {
 		loop:
 		while (true) {
 			if (!chars.hasNext())
-				throw new JSEOFException("Unexpected EOF while parsing a template literal", getPosition());
+				throw new JSEOFException("Unexpected EOF while parsing a template literal", this.getPosition());
 			char c = chars.next();
 			if (escaped) {
 				escaped = false;
@@ -232,7 +273,7 @@ public class JSLexer implements Supplier<Token> {
 		boolean isEscaped = false;
 		while (true) {
 			if (!chars.hasNext())
-				throw new JSEOFException("Unexpected EOF while parsing a string literal (" + sb + ")", getPosition());
+				throw new JSEOFException("Unexpected EOF while parsing a string literal (" + sb + ")", this.getPosition());
 			char c = chars.next();
 			if (isEscaped) {
 				isEscaped = false;
@@ -250,7 +291,7 @@ public class JSLexer implements Supplier<Token> {
 					sb.append('\n');
 					continue;
 				}
-				throw new JSSyntaxException("Illegal newline in the middle of a string literal", getPosition());
+				throw new JSSyntaxException("Illegal newline in the middle of a string literal", this.getPosition());
 			} else if (c == startChar)
 				break;
 			sb.append(c);
@@ -271,14 +312,14 @@ public class JSLexer implements Supplier<Token> {
 			char lookahead = chars.peek();
 			if (!Characters.isHexDigit(lookahead)) {
 				if (Characters.canStartIdentifier(lookahead) || isEmpty)
-					throw new JSSyntaxException("Unexpected token", chars.position());
+					throw new JSSyntaxException("Unexpected token", this.getPosition());
 				break;
 			}
 			isEmpty = false;
 			result = (result << 4) | Characters.asHexDigit(chars.next());
 		}
 		if (isEmpty)
-			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
+			throw new JSEOFException("Unexpected EOF in hex literal", this.getPosition());
 		return result;
 	}
 	
@@ -289,14 +330,14 @@ public class JSLexer implements Supplier<Token> {
 			char lookahead = chars.peek();
 			if (lookahead != '0' && lookahead != '1') {
 				if (Characters.canStartIdentifier(lookahead) || Characters.isDecimalDigit(lookahead) || isEmpty)
-					throw new JSSyntaxException("Unexpected token", chars.position());
+					throw new JSSyntaxException("Unexpected token", this.getPosition());
 				break;
 			}
 			isEmpty = false;
 			result = (result << 1) | (chars.next() - '0');
 		}
 		if (isEmpty)
-			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
+			throw new JSEOFException("Unexpected EOF in hex literal", this.getPosition());
 		return result;
 	}
 	
@@ -307,14 +348,14 @@ public class JSLexer implements Supplier<Token> {
 			char lookahead = chars.peek();
 			if (lookahead < '0' || '7' < lookahead) {
 				if (Characters.canStartIdentifier(lookahead) || Characters.isDecimalDigit(lookahead) || isEmpty)
-					throw new JSSyntaxException("Unexpected character: " + lookahead, chars.position());
+					throw new JSSyntaxException("Unexpected character: " + lookahead, this.getPosition());
 				break;
 			}
 			isEmpty = false;
 			result = (result << 3) | (chars.next() - '0');
 		}
 		if (isEmpty)
-			throw new JSEOFException("Unexpected EOF in hex literal", chars.position());
+			throw new JSEOFException("Unexpected EOF in hex literal", this.getPosition());
 		return result;
 	}
 	
@@ -327,7 +368,7 @@ public class JSLexer implements Supplier<Token> {
 		
 		boolean isPositive = true;
 		if (!chars.hasNext())
-			throw new JSEOFException(chars.position());
+			throw new JSEOFException("Unexpected EOF while parsing numeric literal", this.getPosition());
 		
 		char c;
 		//skip non-number stuff
@@ -395,7 +436,7 @@ public class JSLexer implements Supplier<Token> {
 					}
 				}
 				chars.unmark();
-				throw new JSSyntaxException("Unexpected number", chars.position());
+				throw new JSSyntaxException("Unexpected number", this.getPosition());
 			}
 			
 			if (c == ';' || !Character.isJavaIdentifierPart(c)) {
@@ -458,7 +499,7 @@ public class JSLexer implements Supplier<Token> {
 			}
 			if (!isValid) {
 				chars.unmark();
-				throw new JSSyntaxException("Unexpected identifier in numeric literal (" + type + "): " + Character.getName(c), chars.position());
+				throw new JSSyntaxException("Unexpected identifier in numeric literal (" + type + "): " + Character.getName(c), this.getPosition());
 			}
 		}
 		//Build the string for Java to parse (It might be slightly faster to calculate the value of the digit while parsing,
@@ -514,14 +555,16 @@ public class JSLexer implements Supplier<Token> {
 					return JSOperator.LESS_THAN_EQUAL;
 				case '>':
 					return JSOperator.GREATER_THAN_EQUAL;
-				case '!':
-					if (e == '=')
+				case '!'://!=
+					if (e == '=')//!==
 						return JSOperator.STRICT_NOT_EQUAL;
 					return JSOperator.NOT_EQUAL;
-				case '=':
-					if (e == '=')
+				case '='://==
+					if (e == '=')//===
 						return JSOperator.STRICT_EQUAL;
 					return JSOperator.EQUAL;
+				default:
+					break;
 			}
 		}
 		switch (c) {
@@ -539,7 +582,7 @@ public class JSLexer implements Supplier<Token> {
 						return JSOperator.EXPONENTIATION_ASSIGNMENT;
 					return JSOperator.EXPONENTIATION;
 				}
-				return JSOperator.MULTIPLICATION;
+				return JSOperator.ASTERISK;
 			case '/':
 				return JSOperator.DIVISION;
 			case '%':
@@ -571,13 +614,13 @@ public class JSLexer implements Supplier<Token> {
 			case '&':
 				if (d == '&')
 					return JSOperator.LOGICAL_AND;
-				return JSOperator.BITWISE_AND;
+				return JSOperator.AMPERSAND;
 			case '^':
 				return JSOperator.BITWISE_XOR;
 			case '|':
 				if (d == '|')
 					return JSOperator.LOGICAL_OR;
-				return JSOperator.BITWISE_OR;
+				return JSOperator.VBAR;
 			case '!':
 				return JSOperator.LOGICAL_NOT;
 			case '~':
@@ -586,6 +629,14 @@ public class JSLexer implements Supplier<Token> {
 				return JSOperator.LEFT_PARENTHESIS;
 			case ')':
 				return JSOperator.RIGHT_PARENTHESIS;
+			case '[':
+				return JSOperator.LEFT_BRACKET;
+			case ']':
+				return JSOperator.RIGHT_BRACKET;
+			case '{':
+				return JSOperator.LEFT_BRACE;
+			case '}':
+				return JSOperator.RIGHT_BRACE;
 			case ',':
 				return JSOperator.COMMA;
 			case '?':
@@ -616,7 +667,7 @@ public class JSLexer implements Supplier<Token> {
 	
 	public Token expect(TokenKind kind, Object value) {
 		Token t = this.nextToken();
-		if (!Objects.equals(t.getValue(),value))
+		if (!Objects.equals(t.getValue(), value))
 			throw new JSUnexpectedTokenException(t, value);
 		if (t.getKind() != kind)
 			throw new JSUnexpectedTokenException(t, kind);
@@ -669,7 +720,7 @@ public class JSLexer implements Supplier<Token> {
 		boolean isEscaped = false;
 		while (true) {
 			if (!chars.hasNext())
-				throw new JSSyntaxException("Unexpected EOF while parsing a regex literal", getPosition());
+				throw new JSSyntaxException("Unexpected EOF while parsing a regex literal", this.getPosition());
 			char c = chars.next();
 			
 			if (isEscaped)
@@ -716,18 +767,18 @@ public class JSLexer implements Supplier<Token> {
 					break;
 				case ']':
 					if (--classes < 0)
-						throw new JSSyntaxException("Illegal regular expression character class end", chars.position());
+						throw new JSSyntaxException("Illegal regular expression character class end", this.getPosition());
 					break;
 				case ')':
 					if (--groups < 0)
-						throw new JSSyntaxException("Illegal regular expression group end", chars.position());
+						throw new JSSyntaxException("Illegal regular expression group end", this.getPosition());
 					break;
 				default:
 					break;
 			}
 		}
 		if (chars.current() != '/')
-			throw new JSEOFException("Unexpected EOF in regex literal", chars.position());
+			throw new JSEOFException("Unexpected EOF in regex literal", this.getPosition());
 		return sb.toString();
 	}
 	
@@ -743,15 +794,19 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public Token finishRegExpLiteral(Token start) {
-		if (start == null)
-			start = this.nextToken();
+		Objects.requireNonNull(start);
 		if (start.getValue() != JSOperator.DIVISION && start.getValue() != JSOperator.DIVISION_ASSIGNMENT)
-			throw new JSSyntaxException("Regular expression must start with a slash", start.getStart());
-		long intermediateStart = getPosition();
+			throw new JSSyntaxException("Regular expression must start with a slash", start.getRange());
+		
+		this.invalidateLookaheads(start.getEnd().getOffset());
+		
+		long intermediateStart = this.getPositionOffset();
 		String body = scanRegExpBody(start.text);
 		String flags = scanRegExpFlags();
 		RegExpTokenInfo info = new RegExpTokenInfo(body, flags);
-		return new Token(start.getStart(), TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), info);
+		
+		SourceRange range = new SourceRange(start.getStart(), this.getPosition());
+		return new Token(start.flags, range, TokenKind.REGEX_LITERAL, start.text + chars.copy(intermediateStart, chars.position() - intermediateStart), info);
 	}
 	
 	public String nextComment(final boolean singleLine) {
@@ -760,7 +815,7 @@ public class JSLexer implements Supplier<Token> {
 			if (!chars.hasNext()) {
 				if (singleLine)
 					break;
-				throw new JSEOFException(chars.position());
+				throw new JSEOFException("Unexpected EOF while parsing comment", this.getPosition());
 			}
 			char c = chars.next();
 			
@@ -781,34 +836,28 @@ public class JSLexer implements Supplier<Token> {
 		return sb.toString();
 	}
 	
-	public Token nextToken() {
-		//Return lookahead if available
-		if (this.lookahead != null) {
-			Token result = this.lookahead;
-			//EOF token is sticky
-			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
-				skip(result);
+	protected Token readToken() {
+		//Skip whitespace until token
+		int flags = 0;
+		while (chars.hasNext() && Characters.isJsWhitespace(chars.peek())) {
+			if (chars.next() == '\n') {
+				flags |= Token.FLAG_PRECEDEING_NEWLINE;
+				//TODO: does this cause problems if we're backtracking?
+				this.lines.putNewline(chars.position());
+			}
+		}
+		
+		//Special EOF token
+		if (isEOF()) {
+			SourceRange range = new SourceRange(this.getPosition(), this.getPosition());
+			Token result = new Token(flags, range, TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
+			if (this.lookahead == null)
+				this.lookahead = result;
 			return result;
 		}
 		
-		
-		//Skip whitespace until token
-		while (chars.hasNext() && Characters.isJsWhitespace(chars.peek())) {
-			if (chars.next() == '\n')
-				this.lines.putNewline(chars.position());
-		}/*
-		chars.skipWhitespace(false);
-		while (!isEOF() && chars.isWhitespace()) {//TODO: can isEOL() == false, but isWhitespace() == true happen at this point?
-			
-			chars.skipWhitespace(false);
-		}*/
-//		System.out.println("Taking token");
-		
-		//Special EOF token
-		if (isEOF())
-			return this.lookahead = new Token(chars.position(), TokenKind.SPECIAL, null, JSSpecialGroup.EOF);
-		
 		final long start = Math.max(chars.position(), -1);
+		chars.mark();
 		char c = chars.peek();
 		Object value = null;
 		TokenKind kind = null;
@@ -825,15 +874,7 @@ public class JSLexer implements Supplier<Token> {
 		} else if (Characters.isDecimalDigit(c) || (c == '.' && chars.hasNext(2) && Characters.isDecimalDigit(chars.peek(2)))) {
 			value = nextNumericLiteral();
 			kind = TokenKind.NUMERIC_LITERAL;
-		//Check if it's a bracket
-		} else if (c == '[' || c == ']' || c == '{' || c == '}') {
-			if (c == '{')
-				templateStack.push(false);
-			else if (c == '}' && templateStack.getSize() > 0)
-				templateStack.pop();
-			value = c;
-			kind = TokenKind.BRACKET;
-			chars.next();
+
 		} else if (c == ';') {
 			kind = TokenKind.SPECIAL;
 			value = JSSpecialGroup.SEMICOLON;
@@ -845,12 +886,17 @@ public class JSLexer implements Supplier<Token> {
 			return nextToken();
 		} else if ((value = nextOperator()) != null) {
 			kind = TokenKind.OPERATOR;
+			//TODO: how resistant is templateStack to mark-reset stuff?
+			if (value == JSOperator.LEFT_BRACE)
+				templateStack.push(false);
+			else if (value == JSOperator.RIGHT_BRACE && templateStack.getSize() > 0)
+				templateStack.pop();
 		} else {
 			//It's probably an identifier
 			String identifierName = this.nextIdentifier();
 			if (identifierName == null) {
 				//Couldn't even parse an identifier
-				throw new JSSyntaxException("Illegal syntax", resolvePosition(start));
+				throw new JSSyntaxException("Illegal syntax", this.resolvePosition(start));
 			} else if (identifierName.equals("true") || identifierName.equals("false")) {
 				//Boolean literal
 				kind = TokenKind.BOOLEAN_LITERAL;
@@ -864,13 +910,6 @@ public class JSLexer implements Supplier<Token> {
 				//Check if it's a keyword
 				JSKeyword keyword = JSKeyword.lookup(identifierName);
 				if (keyword != null) {
-					//Because the '*' in function* and yield* is not normally considered part of an
-					//identifier sequence, we have to check for it here
-					if (chars.hasNext() && chars.peek() == '*' && keyword == JSKeyword.FUNCTION) {
-						chars.skip(1);
-						if (keyword == JSKeyword.FUNCTION)
-							keyword = JSKeyword.FUNCTION_GENERATOR;
-					}
 					value = keyword;
 					kind = TokenKind.KEYWORD;
 				} else {
@@ -879,7 +918,21 @@ public class JSLexer implements Supplier<Token> {
 				}
 			}
 		}
-		return new Token(start + 1, kind, chars.copy(start + 1, chars.position() - start), value);
+		
+		SourceRange range = new SourceRange(this.resolvePosition(start + 1), this.getPosition());
+		return new Token(flags, range, kind, chars.copyFromMark(), value);
+	}
+	
+	public Token nextToken() {
+		//Return lookahead if available
+		if (this.lookahead != null) {
+			Token result = this.lookahead;
+			//EOF token is sticky
+			if (!result.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
+				skip(result);
+			return result;
+		}
+		return this.readToken();
 	}
 	
 	/**
@@ -930,9 +983,29 @@ public class JSLexer implements Supplier<Token> {
 		if (this.lookahead != null)
 			return this.lookahead;
 		chars.mark();
-		this.lookahead = nextToken();
+		this.lookahead = this.readToken();
 		chars.resetToMark();
 		return this.lookahead;
+	}
+	
+	public Token peek(int ahead) {
+		if (ahead == 0)
+			return peek();
+		if (ahead < 0)
+			throw new IllegalArgumentException();
+		if (this.lookaheads.size() < ahead) {
+			// Get last-consumed offset
+			Token last = this.lookaheads.isEmpty() ? this.lookahead : this.lookaheads.getLast();
+			if (last.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))// EOF is sticky
+				return last;
+			
+			chars.mark();
+			chars.position(last.getEnd().getOffset());
+			while (this.lookaheads.size() < ahead)
+				this.lookaheads.add(this.readToken());
+			chars.resetToMark();
+		}
+		return this.lookaheads.get(ahead - 1);
 	}
 	
 	public Token skip(Token token) {
@@ -940,8 +1013,10 @@ public class JSLexer implements Supplier<Token> {
 			throw new IllegalArgumentException("Skipped token " + token + " is not lookahead");
 		if (token.matches(TokenKind.SPECIAL, JSSpecialGroup.EOF))
 			throw new IllegalStateException("Cannot skip EOF token " + token);
-		this.lookahead = null;
-		chars.position(token.getEnd() - 1);
+		
+		this.lookahead = this.lookaheads.isEmpty() ? null : this.lookaheads.removeFirst();
+		
+		chars.position(token.getEnd().getOffset());
 		return token;
 	}
 	
@@ -950,8 +1025,8 @@ public class JSLexer implements Supplier<Token> {
 	}
 	
 	public void reset() {
-		this.lookahead = null;
 		chars.resetToMark();
+		this.invalidateLookaheads(chars.position());
 	}
 	
 	public void unmark() {

@@ -13,15 +13,14 @@ public class JSKeywordTest {
 		assertEquals(JSKeyword.IF, JSKeyword.lookup("if"));
 		
 		assertEquals(JSKeyword.FUNCTION, JSKeyword.lookup("function"));
-		assertEquals(JSKeyword.FUNCTION_GENERATOR, JSKeyword.lookup("function*"));
 		
 		assertEquals(JSKeyword.YIELD, JSKeyword.lookup("yield"));
 	}
 	
 	@Test
 	public void testLookupMixedCase() {
-		assertEquals(null, JSKeyword.lookup("IF"));
-		assertEquals(null, JSKeyword.lookup("If"));
-		assertEquals(null, JSKeyword.lookup("If"));
+		assertNull(JSKeyword.lookup("IF"));
+		assertNull(JSKeyword.lookup("If"));
+		assertNull(JSKeyword.lookup("If"));
 	}
 }

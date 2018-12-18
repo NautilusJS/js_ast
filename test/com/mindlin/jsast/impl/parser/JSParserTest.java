@@ -3,11 +3,14 @@ package com.mindlin.jsast.impl.parser;
 import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.mindlin.jsast.exception.JSSyntaxException;
+import com.mindlin.jsast.fs.SourceFile.NominalSourceFile;
 import com.mindlin.jsast.impl.lexer.JSLexer;
 import com.mindlin.jsast.impl.parser.JSParser.Context;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -44,7 +47,7 @@ public class JSParserTest {
 		assertNumberEquals(actual, value);
 	}
 	
-	protected static final void assertIdentifier(String name, ExpressionTree expr) {
+	protected static final void assertIdentifier(String name, Tree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
 	}
@@ -57,6 +60,16 @@ public class JSParserTest {
 	protected static final void assertIdentifier(String name, IdentifierTree expr) {
 		assertEquals(Kind.IDENTIFIER, expr.getKind());
 		assertEquals(name, ((IdentifierTree)expr).getName());
+	}
+	
+	/**
+	 * Helper for the (pretty common) special case where we have a list that should contain a single element
+	 * of some kind.
+	 */
+	protected static final <T extends Tree> T assertSingleElementKind(Tree.Kind kind, List<? extends Tree> nodes) {
+		assertNotNull(nodes);
+		assertEquals(1, nodes.size());
+		return assertKind(kind, nodes.get(0));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -76,7 +89,7 @@ public class JSParserTest {
 	
 	protected static void assertExceptionalExpression(String expr, String errorMsg, boolean strict) {
 		try {
-			JSLexer lexer = new JSLexer(expr);
+			JSLexer lexer = createLexer(expr);
 			Context ctx = new Context();
 			if (strict)
 				ctx.enterStrict();
@@ -98,24 +111,24 @@ public class JSParserTest {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends StatementTree> T parseStatement(String stmt) {
-		return (T) new JSParser().parseStatement(new JSLexer(stmt), new Context());
+		return (T) new JSParser().parseStatement(createLexer(stmt), new Context());
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends StatementTree> T parseStatement(String stmt, Kind kind) {
-		T result = (T) new JSParser().parseStatement(new JSLexer(stmt), new Context());
+		T result = (T) new JSParser().parseStatement(createLexer(stmt), new Context());
 		assertEquals(kind, result.getKind());
 		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
 	protected static <T extends ExpressionTree> T parseExpressionIncomplete(String expr) {
-		return (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
+		return (T) new JSParser().parseNextExpression(createLexer(expr), new Context());
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends ExpressionTree> T parseExpression(String expr) {
-		JSLexer lexer = new JSLexer(expr);
+		JSLexer lexer = createLexer(expr);
 		T result = (T) new JSParser().parseNextExpression(lexer, new Context());
 		assertTrue("Not all of expression was consumed. Read until " + lexer.getPosition(), lexer.isEOF());
 		return result;
@@ -123,13 +136,40 @@ public class JSParserTest {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends ExpressionTree> T parseExpression(String expr, Kind kind) {
-		T result = (T) new JSParser().parseNextExpression(new JSLexer(expr), new Context());
+		T result = (T) new JSParser().parseNextExpression(createLexer(expr), new Context());
+		assertEquals(kind, result.getKind());
+		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T extends ExpressionTree> T parseExpressionWith(String expr, boolean in, boolean yield, boolean await, Kind kind) {
+		Context context = new Context();
+		if (yield)
+			context.pushGenerator();
+		if (in)
+			context.allowIn();
+		else
+			context.disallowIn();
+		context.allowAwait(await);
+		T result = (T) new JSParser().parseNextExpression(createLexer(expr), context);
 		assertEquals(kind, result.getKind());
 		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends TypeTree> T parseType(String type) {
-		return (T) new JSParser().parseType(new JSLexer(type), new Context());
+		return (T) new JSParser().parseType(createLexer(type), new Context());
+	}
+	
+	public static String getTestName() {
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		for (int i = 3; i < stack.length; i++)
+			if (stack[i].getMethodName().startsWith("test"))
+				return stack[i].getMethodName();
+		return "test???";
+	}
+	
+	static JSLexer createLexer(String code) {
+		return new JSLexer(new NominalSourceFile(getTestName(), code));
 	}
 }

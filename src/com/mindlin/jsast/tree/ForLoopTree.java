@@ -1,8 +1,10 @@
 package com.mindlin.jsast.tree;
 
-public interface ForLoopTree extends ConditionalLoopTree {
+public interface ForLoopTree extends LoopTree {
 	StatementTree getInitializer();
-
+	
+	ExpressionTree getCondition();
+	
 	ExpressionTree getUpdate();
 
 	default Tree.Kind getKind() {

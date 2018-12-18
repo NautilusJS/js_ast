@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import java.util.Objects;
 
-public interface IdentifierTree extends ExpressionTree, ObjectPropertyKeyTree, PatternTree {
+public interface IdentifierTree extends ExpressionTree, PropertyName, PatternTree {
 	String getName();
 	
 	/**
@@ -14,11 +14,6 @@ public interface IdentifierTree extends ExpressionTree, ObjectPropertyKeyTree, P
 	 */
 	default String getSourceName() {
 		return getName();
-	}
-	
-	@Override
-	default boolean isComputed() {
-		return false;
 	}
 	
 	@Override

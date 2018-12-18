@@ -1,10 +1,11 @@
 package com.mindlin.jsast.impl.parser;
 
 import com.mindlin.jsast.exception.JSUnsupportedException;
+import com.mindlin.jsast.fs.SourceRange;
 
 public interface JSDialect {
 	boolean supports(String feature);
-	default void require(String feature, long position) {
+	default void require(String feature, SourceRange position) {
 		if (!supports(feature))
 			throw new JSUnsupportedException(feature, position);
 	}
@@ -97,6 +98,7 @@ public interface JSDialect {
 					case "ts.visibility.public":
 					case "ts.visibility.private":
 					case "ts.types":
+					case "ts.types.enum":
 						return true;
 				}
 				if (JSStandardDialect.ES5.supports(feature))

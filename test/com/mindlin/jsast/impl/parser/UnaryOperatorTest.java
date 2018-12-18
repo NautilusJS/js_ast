@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.tree.SpreadElementTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.Tree.Kind;
@@ -61,13 +62,13 @@ public class UnaryOperatorTest {
 	
 	@Test
 	public void testYield() {
-		UnaryTree expr = parseExpression("yield a", Kind.YIELD);
+		UnaryTree expr = parseExpressionWith("yield a", true, true, false, Kind.YIELD);
 		assertIdentifier("a", expr.getExpression());
 	}
 	
 	@Test
 	public void testYieldToGenerator() {
-		UnaryTree expr = parseExpression("yield* a", Kind.YIELD_GENERATOR);
+		UnaryTree expr = parseExpressionWith("yield* a", true, true, false, Kind.YIELD_GENERATOR);
 		assertIdentifier("a", expr.getExpression());
 	}
 
@@ -96,12 +97,6 @@ public class UnaryOperatorTest {
 	}
 	
 	@Test
-	public void testVoidStatement() {
-		UnaryTree expr = parseStatement("void a", Kind.VOID);
-		assertIdentifier("a", expr.getExpression());
-	}
-	
-	@Test
 	public void testLonelyVoid() {
 		UnaryTree expr = parseExpression("void;", Kind.VOID);
 		assertNull(expr.getExpression());
@@ -109,7 +104,7 @@ public class UnaryOperatorTest {
 	
 	@Test
 	public void testSpread() {
-		UnaryTree expr = parseExpression("...a", Kind.SPREAD);
+		SpreadElementTree expr = parseExpression("...a", Kind.SPREAD);
 		assertIdentifier("a", expr.getExpression());
 	}
 	

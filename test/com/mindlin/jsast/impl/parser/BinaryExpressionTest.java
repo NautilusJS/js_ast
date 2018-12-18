@@ -1,13 +1,11 @@
 package com.mindlin.jsast.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.assertIdentifier;
-import static com.mindlin.jsast.impl.parser.JSParserTest.parseExpression;
-import static org.junit.Assert.assertEquals;
+import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.BinaryTree;
-import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
@@ -15,44 +13,41 @@ import com.mindlin.jsast.tree.Tree.Kind;
 public class BinaryExpressionTest {
 	@Test
 	public void testBinaryExpression() {
-		ExpressionTree expr = parseExpression("a>b", Kind.GREATER_THAN);
-		BinaryTree binary = (BinaryTree) expr;
-		assertIdentifier("a", binary.getLeftOperand());
-		assertIdentifier("b", binary.getRightOperand());
+		BinaryExpressionTree expr = parseExpression("a>b", Kind.GREATER_THAN);
+		assertIdentifier("a", expr.getLeftOperand());
+		assertIdentifier("b", expr.getRightOperand());
 	}
 
 	@Test
 	public void testNormalLTR() {
 		// Non-commutative ltr associativity
-		BinaryTree expr = parseExpression("a<<b<<c", Kind.LEFT_SHIFT);
+		BinaryExpressionTree expr = parseExpression("a<<b<<c", Kind.LEFT_SHIFT);
 		assertIdentifier("c", expr.getRightOperand());
-		assertEquals(Kind.LEFT_SHIFT, expr.getLeftOperand().getKind());
-		BinaryTree left = (BinaryTree) expr.getLeftOperand();
+		BinaryExpressionTree left = assertKind(Kind.LEFT_SHIFT, expr.getLeftOperand());
 		assertIdentifier("a", left.getLeftOperand());
 		assertIdentifier("b", left.getRightOperand());
 	}
 
 	@Test
 	public void testExponentiationRTL() {
-		BinaryTree expr = parseExpression("a**b**c", Kind.EXPONENTIATION);
-		assertEquals(Kind.EXPONENTIATION, expr.getKind());
+		BinaryExpressionTree expr = parseExpression("a**b**c", Kind.EXPONENTIATION);
 		assertIdentifier("a", expr.getLeftOperand());
-		assertEquals(Kind.EXPONENTIATION, expr.getRightOperand().getKind());
-		BinaryTree right = (BinaryTree) expr.getRightOperand();
+		
+		BinaryExpressionTree right = assertKind(Kind.EXPONENTIATION, expr.getRightOperand());
 		assertIdentifier("b", right.getLeftOperand());
 		assertIdentifier("c", right.getRightOperand());
 	}
 	
 	@Test
 	public void testArrayAccess() {
-		BinaryTree expr = parseExpression("a[b]", Kind.ARRAY_ACCESS);
+		BinaryExpressionTree expr = parseExpression("a[b]", Kind.ARRAY_ACCESS);
 		assertIdentifier("a", expr.getLeftOperand());
 		assertIdentifier("b", expr.getRightOperand());
 	}
 	
 	@Test
 	public void testMemberSelect() {
-		BinaryTree expr = parseExpression("a.b", Kind.MEMBER_SELECT);
+		BinaryExpressionTree expr = parseExpression("a.b", Kind.MEMBER_SELECT);
 		assertIdentifier("a", expr.getLeftOperand());
 		assertIdentifier("b", expr.getRightOperand());
 	}
@@ -60,25 +55,23 @@ public class BinaryExpressionTest {
 	@Test
 	public void testOrderOfOperationsSimple() {
 		//(a+(b*c))
-		BinaryTree expr = parseExpression("a+b*c");
+		BinaryExpressionTree expr = parseExpression("a+b*c", Kind.ADDITION);
 		
-		assertEquals(Tree.Kind.ADDITION, expr.getKind());
 		assertIdentifier("a", expr.getLeftOperand());
 		
-		BinaryTree right = (BinaryTree) expr.getRightOperand();
-		assertEquals(Tree.Kind.MULTIPLICATION, right.getKind());
+		BinaryExpressionTree right = assertKind(Kind.MULTIPLICATION, expr.getRightOperand());
 		assertIdentifier("b", right.getLeftOperand());
 		assertIdentifier("c", right.getRightOperand());
 	}
 	
 	@Test
 	public void testOrderOfOperationsParentheses() {
-		BinaryTree expr = parseExpression("(a+b)*c", Tree.Kind.MULTIPLICATION);
+		BinaryExpressionTree expr = parseExpression("(a+b)*c", Tree.Kind.MULTIPLICATION);
 		
 		assertIdentifier("c", expr.getRightOperand());
 		
-		assertEquals(Tree.Kind.PARENTHESIZED, expr.getLeftOperand().getKind());
-		BinaryTree left = (BinaryTree) ((ParenthesizedTree) expr.getLeftOperand()).getExpression();
+		ParenthesizedTree _left = assertKind(Kind.PARENTHESIZED, expr.getLeftOperand());
+		BinaryExpressionTree left = assertKind(Kind.ADDITION, _left.getExpression());
 		assertEquals(Tree.Kind.ADDITION, left.getKind());
 		assertIdentifier("a", left.getLeftOperand());
 		assertIdentifier("b", left.getRightOperand());

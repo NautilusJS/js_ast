@@ -360,7 +360,7 @@ public class JSLexerTest {
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.OPERATOR, next.getKind());
-		assertEquals(JSOperator.MULTIPLICATION, next.getValue());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 		
 		
 		next = lexer.nextToken();
@@ -369,7 +369,7 @@ public class JSLexerTest {
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.OPERATOR, next.getKind());
-		assertEquals(JSOperator.MULTIPLICATION, next.getValue());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 	}
 	
 	@Test
@@ -380,11 +380,19 @@ public class JSLexerTest {
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
-		assertEquals(JSKeyword.FUNCTION_GENERATOR, next.getValue());
+		assertEquals(JSKeyword.FUNCTION, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.OPERATOR, next.getKind());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 		
 		next = lexer.nextToken();
 		assertEquals(TokenKind.KEYWORD, next.getKind());
 		assertEquals(JSKeyword.FUNCTION, next.getValue());
+		
+		next = lexer.nextToken();
+		assertEquals(TokenKind.OPERATOR, next.getKind());
+		assertEquals(JSOperator.ASTERISK, next.getValue());
 	}
 	
 	@Test
@@ -401,5 +409,27 @@ public class JSLexerTest {
 		lexer.reset();
 		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
 		
+	}
+	
+	@Test
+	public void testLookaheadMultiple() {
+		JSLexer lexer = new JSLexer("1 2 3 4");
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.peek());
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.peek(0));
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek(1));
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek(2));
+		assertToken(TokenKind.NUMERIC_LITERAL, 4, lexer.peek(3));
+		
+		assertToken(TokenKind.NUMERIC_LITERAL, 1, lexer.nextToken());
+		
+		lexer.mark();
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek(1));
+		assertToken(TokenKind.NUMERIC_LITERAL, 4, lexer.peek(2));
+		
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.nextToken());
+		assertToken(TokenKind.NUMERIC_LITERAL, 3, lexer.peek());
+		lexer.reset();
+		assertToken(TokenKind.NUMERIC_LITERAL, 2, lexer.peek());
 	}
 }

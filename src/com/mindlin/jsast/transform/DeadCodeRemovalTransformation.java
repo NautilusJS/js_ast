@@ -3,10 +3,10 @@ package com.mindlin.jsast.transform;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import com.mindlin.jsast.impl.analysis.SideEffectValidator;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
 import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
-import com.mindlin.jsast.impl.validator.SideEffectValidator;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.IfTree;
 import com.mindlin.jsast.tree.StatementTree;
@@ -55,24 +55,27 @@ public class DeadCodeRemovalTransformation implements TreeTransformation<ASTTran
 			boolean modifiedDeclarations = false;
 			VariableDeclarationTree varTree = null, letTree = null, constTree = null;
 			for (VariableDeclarationTree declaration : declarations) {
-				if (!declaration.isScoped()) {
-					//is var
-					if (varTree == null) {
-						varTree = declaration;
-						continue;
-					}
-				} else if (declaration.isConst()) {
-					//is const
-					if (constTree == null) {
-						constTree = declaration;
-						continue;
-					}
-				} else {
-					//is let
-					if (letTree == null) {
-						letTree = declaration;
-						continue;
-					}
+				switch (declaration.getDeclarationStyle()) {
+					case CONST:
+						if (constTree == null) {
+							constTree = declaration;
+							continue;
+						}
+						break;
+					case LET:
+						if (letTree == null) {
+							letTree = declaration;
+							continue;
+						}
+						break;
+					case VAR:
+						if (varTree == null) {
+							varTree = declaration;
+							continue;
+						}
+						break;
+					default:
+						throw new IllegalArgumentException("Unknown style: " + declaration.getDeclarationStyle());
 				}
 			}
 			if (modifiedDeclarations) {

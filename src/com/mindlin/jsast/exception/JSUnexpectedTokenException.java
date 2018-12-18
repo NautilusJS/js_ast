@@ -1,5 +1,6 @@
 package com.mindlin.jsast.exception;
 
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.impl.lexer.TokenKind;
 
@@ -7,18 +8,22 @@ public class JSUnexpectedTokenException extends JSSyntaxException {
 	private static final long serialVersionUID = -5669873573919357134L;
 
 	public JSUnexpectedTokenException(Token token) {
-		super("Unexpected token " + token, token == null ? -1 : token.getStart(), token.getEnd());
+		this("Unexpected token " + token, token == null ? null : token.getRange());
 	}
 
 	public JSUnexpectedTokenException(Token token, TokenKind expectedKind) {
-		super("Unexpected token " + token + " (expected kind: " + expectedKind + ")", token.getStart(), token.getEnd());
+		this("Unexpected token " + token + " (expected kind: " + expectedKind + ")", token.getRange());
 	}
 
 	public JSUnexpectedTokenException(Token token, Object expectedValue) {
-		super("Unexpected token " + token + " (expected value: " + expectedValue + ")", token.getStart(), token.getEnd());
+		this("Unexpected token " + token + " (expected value: " + expectedValue + ")", token.getRange());
 	}
 	
 	public JSUnexpectedTokenException(Token token, String reason) {
-		super("" + token + reason, token.getStart(), token.getEnd());
+		this("" + token + reason, token.getRange());
+	}
+	
+	public JSUnexpectedTokenException(String message, SourceRange position) {
+		super(message, position);
 	}
 }

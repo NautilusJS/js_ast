@@ -2,12 +2,13 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.EmptyStatementTree;
 
 public class EmptyStatementTreeImpl extends AbstractTree implements EmptyStatementTree {
 
-	public EmptyStatementTreeImpl(long start, long end) {
+	public EmptyStatementTreeImpl(SourcePosition start, SourcePosition end) {
 		super(start, end);
 	}
 

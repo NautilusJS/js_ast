@@ -4,13 +4,13 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mindlin.jsast.tree.ImportDeclarationTree;
 import com.mindlin.jsast.tree.ImportSpecifierTree;
-import com.mindlin.jsast.tree.ImportTree;
 import static com.mindlin.jsast.impl.parser.JSParserTest.*;
 public class ImportStatementTest {
 
 	/**
-	 * Pretty exhaustive tests for <code>import</code> statement parsing.
+	 * Pretty exhaustive tests for {@code import} statement parsing.
 	 * I honestly can't think of any (non-trivial) test cases that could be added.
 	 */
 	@Test
@@ -43,7 +43,7 @@ public class ImportStatementTest {
 	//Examples taken from developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
 	@Test
 	public void testImportDefaultMember() {
-		ImportTree impt = (ImportTree)parseStatement("import defaultMember from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import defaultMember from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(1, impt.getSpecifiers().size());
 		
@@ -56,7 +56,7 @@ public class ImportStatementTest {
 	
 	@Test
 	public void testImportWildcard() {
-		ImportTree impt = (ImportTree)parseStatement("import * as name from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import * as name from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(1, impt.getSpecifiers().size());
 		
@@ -68,7 +68,7 @@ public class ImportStatementTest {
 	
 	@Test
 	public void testImportSingleNamed() {
-		ImportTree impt = (ImportTree)parseStatement("import { member } from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import { member } from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(1, impt.getSpecifiers().size());
 		
@@ -80,7 +80,7 @@ public class ImportStatementTest {
 	}
 	@Test
 	public void testImportSingleAliased() {
-		ImportTree impt = (ImportTree)parseStatement("import { member as alias } from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import { member as alias } from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(1, impt.getSpecifiers().size());
 		
@@ -91,7 +91,7 @@ public class ImportStatementTest {
 	}
 	@Test
 	public void testImportMultipleNamed() {
-		ImportTree impt = (ImportTree)parseStatement("import { member1 , member2 } from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import { member1 , member2 } from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(2, impt.getSpecifiers().size());
 		
@@ -109,7 +109,7 @@ public class ImportStatementTest {
 	}
 	@Test
 	public void testImportMultipleMixed() {
-		ImportTree impt = (ImportTree)parseStatement("import { member1 , member2 as alias2 } from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import { member1 , member2 as alias2 } from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(2, impt.getSpecifiers().size());
 		
@@ -126,7 +126,7 @@ public class ImportStatementTest {
 	}
 	@Test
 	public void testImportDefaultAndSingleNamed() {
-		ImportTree impt = (ImportTree)parseStatement("import defaultMember, { member } from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import defaultMember, { member } from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(2, impt.getSpecifiers().size());
 		
@@ -144,7 +144,7 @@ public class ImportStatementTest {
 	}
 	@Test
 	public void testImportDefaultAndWildcardAliased() {
-		ImportTree impt = (ImportTree)parseStatement("import defaultMember, * as name from 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import defaultMember, * as name from 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(2, impt.getSpecifiers().size());
 		ImportSpecifierTree specifier0 = impt.getSpecifiers().get(0);
@@ -160,7 +160,7 @@ public class ImportStatementTest {
 	}
 	@Test
 	public void testImportRaw() {
-		ImportTree impt = (ImportTree)parseStatement("import 'module-name';");
+		ImportDeclarationTree impt = (ImportDeclarationTree)parseStatement("import 'module-name';");
 		assertLiteral("module-name", impt.getSource());
 		assertEquals(0, impt.getSpecifiers().size());
 	}

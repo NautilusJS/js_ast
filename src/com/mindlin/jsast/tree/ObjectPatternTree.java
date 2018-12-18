@@ -3,7 +3,7 @@ package com.mindlin.jsast.tree;
 import java.util.List;
 
 public interface ObjectPatternTree extends PatternTree {
-	List<ObjectPatternPropertyTree> getProperties();
+	List<ObjectPatternElement> getProperties();
 	
 	@Override
 	default Tree.Kind getKind() {
@@ -13,5 +13,9 @@ public interface ObjectPatternTree extends PatternTree {
 	@Override
 	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
 		return visitor.visitObjectPattern(this, data);
+	}
+	
+	public interface ObjectPatternElement extends DeclarationTree {
+		
 	}
 }

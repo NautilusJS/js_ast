@@ -4,11 +4,6 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.TreeVisitor;
 
 public interface TypeTree extends Tree {
-	/**
-	 * Returns whether the current node refers to an implicit type.
-	 * @return if implicit type
-	 */
-	boolean isImplicit();
 	
 	<R, D> R accept(TypeTreeVisitor<R, D> visitor, D data);
 	

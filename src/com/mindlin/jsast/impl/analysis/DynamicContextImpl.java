@@ -6,11 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.mindlin.jsast.exception.JSUnsupportedException;
 import com.mindlin.jsast.exception.TSTypeException;
 import com.mindlin.jsast.impl.util.RecursiveMap;
 import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 import com.mindlin.jsast.type.GenericType;
 import com.mindlin.jsast.type.Type;
 import com.mindlin.jsast.type.TypeParameter;
@@ -131,7 +130,7 @@ public class DynamicContextImpl implements DynamicContext {
 	@Override
 	public ReadonlyContext snapshot() {
 		// TODO Auto-generated method stub
-		throw new JSUnsupportedException("DynamicContext#snapshot()", -1);
+		throw new UnsupportedOperationException("DynamicContext#snapshot()");
 	}
 
 	@Override
@@ -211,7 +210,7 @@ public class DynamicContextImpl implements DynamicContext {
 	}
 	
 	@Override
-	public void defineGeneric(GenericParameterTree generic) {
+	public void defineGeneric(TypeParameterDeclarationTree generic) {
 		// TODO Auto-generated method stub
 	}
 

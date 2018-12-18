@@ -1,28 +1,15 @@
 package com.mindlin.jsast.tree.type;
 
-import java.util.Collections;
-import java.util.List;
-
-import com.mindlin.jsast.tree.ParameterTree;
+import com.mindlin.jsast.tree.SignatureDeclarationTree;
 import com.mindlin.jsast.tree.Tree;
 
 /**
  * Represents a function type. May be written as
- * <code><...GENERICS>(...PARAMETERS) => RETURN_TYPE</code>.
+ * {@code <...GENERICS>(...PARAMETERS) => RETURN_TYPE}.
  * 
  * @author mailmindlin
  */
-public interface FunctionTypeTree extends TypeTree {
-	/**
-	 * @return the declared parameters. {@link Collections#emptyList()} should
-	 *         be returned if no parameters are present.
-	 */
-	List<ParameterTree> getParameters();
-	
-	List<GenericParameterTree> getGenerics();
-	
-	TypeTree getReturnType();
-	
+public interface FunctionTypeTree extends TypeTree, SignatureDeclarationTree {
 	@Override
 	default boolean equivalentTo(Tree other) {
 		if (this == other)
@@ -35,7 +22,7 @@ public interface FunctionTypeTree extends TypeTree {
 		FunctionTypeTree o = (FunctionTypeTree) other;
 		
 		return Tree.equivalentTo(this.getParameters(), o.getParameters())
-				&& Tree.equivalentTo(this.getGenerics(), o.getGenerics())
+				&& Tree.equivalentTo(this.getTypeParameters(), o.getTypeParameters())
 				&& Tree.equivalentTo(this.getReturnType(), o.getReturnType());
 	}
 	

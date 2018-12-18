@@ -1,8 +1,10 @@
 package com.mindlin.jsast.impl.parser;
 
+import java.util.List;
+
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.SequenceExpressionTree;
 
 /**
  * This is a helper class for {@link com.mindlin.jsast.impl.parser.JSParser JSParser} to throw errors
@@ -31,17 +33,23 @@ public class Validator {
 			case POSTFIX_INCREMENT:
 			case PREFIX_DECREMENT:
 			case POSTFIX_DECREMENT:
-				//Not even technically against the ECMA 262 spec,
-				//but I can't figure out why not, and this allows the
-				//'run to' operator ('x---->y') to evaluate
-				//See (stackoverflow.com/q/1642028/2759984#comment1511871_1642028)
+				/*
+				 * Not even technically against the ECMA 262 spec, but I can't
+				 * figure out why not, and this allows the 'run to' operator
+				 * (e.g., 'x---->y') to evaluate.
+				 * See (stackoverflow.com/q/1642028/2759984#comment1511871_1642028)
+				 */
 				return dialect.supports("extension.inferlval");
 			case SEQUENCE: {
-				SequenceTree seq = (SequenceTree) expr;
-				return dialect.supports("extension.inferlval") && canBeAssigned(seq.getExpressions().get(seq.getExpressions().size() - 1), dialect);
+				SequenceExpressionTree seq = (SequenceExpressionTree) expr;
+				if (!dialect.supports("extension.inferlval"))
+					return false;
+				List<ExpressionTree> elements = seq.getElements();
+				return canBeAssigned(elements.get(elements.size() - 1), dialect);
 			}
 			//TODO any others?
 			default:
+				break;
 		}
 		return false;
 	}

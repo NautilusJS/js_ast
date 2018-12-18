@@ -1,13 +1,21 @@
 package com.mindlin.jsast.impl.parser;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum JSKeyword {
+	ABSTRACT(true),
 	AS(true),
+	ASYNC(true),
+	AWAIT(true),
 	BREAK,
 	CASE,
 	CLASS,
 	CONST,
+	CONSTRUCTOR(true),
 	CONTINUE,
 	DEBUGGER,
+	DECLARE(true),
 	DEFAULT,
 	DELETE,
 	DO,
@@ -19,7 +27,6 @@ public enum JSKeyword {
 	FOR,
 	FROM(true),
 	FUNCTION,
-	FUNCTION_GENERATOR(false, "function*"),
 	IF,
 	IMPLEMENTS(true),
 	IMPORT,
@@ -33,6 +40,7 @@ public enum JSKeyword {
 	PRIVATE(true),
 	PROTECTED(true),
 	PUBLIC(true),
+	READONLY(true),
 	RETURN,
 	STATIC(true),
 	SUPER,
@@ -40,6 +48,7 @@ public enum JSKeyword {
 	THIS,
 	THROW,
 	TRY,
+	TYPE(true),
 	TYPEOF,
 	VAR,
 	VOID,
@@ -47,14 +56,14 @@ public enum JSKeyword {
 	WITH,
 	YIELD,
 	;
-	public static JSKeyword lookup(String identifier) {
-		//Check if identifier can even be an identifier (i.e., is all lower case)
-		if (!identifier.equals(identifier.toLowerCase()))
-			return null;
+	protected static final Map<String, JSKeyword> LUT = new HashMap<>();
+	static {
 		for (JSKeyword keyword : JSKeyword.values())
-			if (identifier.equals(keyword.toString()))
-				return keyword;
-		return null;
+			LUT.put(keyword.toString(), keyword);
+	}
+	
+	public static JSKeyword lookup(String identifier) {
+		return LUT.get(identifier);
 	}
 	
 	private final boolean requiresStrict;

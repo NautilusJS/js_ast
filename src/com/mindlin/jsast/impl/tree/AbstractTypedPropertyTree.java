@@ -2,40 +2,41 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
-import com.mindlin.jsast.tree.TypedPropertyTree;
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.jsast.tree.PropertyName;
+import com.mindlin.jsast.tree.PropertyTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
-public abstract class AbstractTypedPropertyTree extends AbstractTree implements TypedPropertyTree {
-	protected final boolean readonly;
-	protected final ObjectPropertyKeyTree key;
+public abstract class AbstractTypedPropertyTree extends AbstractTree implements PropertyTree {
+	protected final Modifiers modifiers;
+	protected final PropertyName name;
 	protected final TypeTree type;
 	
-	public AbstractTypedPropertyTree(long start, long end, boolean readonly, ObjectPropertyKeyTree key, TypeTree type) {
+	public AbstractTypedPropertyTree(SourcePosition start, SourcePosition end, Modifiers modifiers, PropertyName name, TypeTree type) {
 		super(start, end);
-		this.readonly = readonly;
-		this.key = key;
+		this.modifiers = modifiers;
+		this.name = name;
 		this.type = type;
 	}
 	
 	@Override
-	public ObjectPropertyKeyTree getKey() {
-		return key;
+	public Modifiers getModifiers() {
+		return this.modifiers;
 	}
 	
 	@Override
-	public boolean isReadonly() {
-		return readonly;
+	public PropertyName getName() {
+		return this.name;
 	}
 	
-	@Override
-	public TypeTree getType() {
+	protected TypeTree getType() {
 		return type;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), isReadonly(), getKey(), getType());
+		return Objects.hash(getKind(), getModifiers(), getName(), getType());
 	}
 	
 }

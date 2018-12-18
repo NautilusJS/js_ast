@@ -13,46 +13,15 @@ import java.util.List;
  * @see VariableDeclaratorTree
  * @author mailmindlin
  */
-public interface VariableDeclarationTree extends StatementTree, PatternTree {
+public interface VariableDeclarationTree extends DeclarationStatementTree, VariableDeclarationOrPatternTree {
+	
+	VariableDeclarationKind getDeclarationStyle();
+	
 	List<VariableDeclaratorTree> getDeclarations();
-	
-	/**
-	 * If variables declared under this tree are declared in the block scope.
-	 * In other terms, whether this was initialized with a <code>let</code>
-	 * or <code>const</code> keyword.
-	 * <p>
-	 * If this is true, the variables declared under this tree are limited to
-	 * the scope of the block, statement, or expression on which it is used.
-	 * </p>
-	 * 
-	 * @return if scoped
-	 * 
-	 * @see <a href=
-	 *      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let">MDN
-	 *      Article on let Keyword</a>
-	 */
-	boolean isScoped();
-	
-	/**
-	 * If variables declared under this tree are constants. More specifically,
-	 * whether this was initialized with a <code>const</code> keyword.
-	 * <p>
-	 * If this method returns <code>true</code>, all declarations MUST have an
-	 * initializer.
-	 * </p>
-	 * 
-	 * @return if const
-	 */
-	boolean isConst();
 	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.VARIABLE_DECLARATION;
-	}
-	
-	@Override
-	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		return visitor.visitVariableDeclaration(this, data);
 	}
 
 	@Override
@@ -60,8 +29,20 @@ public interface VariableDeclarationTree extends StatementTree, PatternTree {
 		return visitor.visitVariableDeclaration(this, data);
 	}
 	
-	@Override
-	default <R, D> R accept(PatternTreeVisitor<R, D> visitor, D data) {
-		return visitor.visitVariableDeclaration(this, data);
+	public static enum VariableDeclarationKind {
+		VAR(false),
+		LET(true),
+		CONST(true),
+		;
+		
+		private final boolean scoped;
+		
+		private VariableDeclarationKind(boolean scoped) {
+			this.scoped = scoped;
+		}
+		
+		public boolean isScoped() {
+			return this.scoped;
+		}
 	}
 }

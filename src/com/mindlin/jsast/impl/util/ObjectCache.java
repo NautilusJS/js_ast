@@ -3,6 +3,12 @@ package com.mindlin.jsast.impl.util;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 
+/**
+ * Supports caching immutable objects.
+ * @author mailmindlin
+ *
+ * @param <E>
+ */
 public class ObjectCache<E> {
 	public static final int MIN_CAPACITY = 16;
 	public static final int MAX_CAPACITY = 1 << 30;
@@ -22,8 +28,10 @@ public class ObjectCache<E> {
 		this(DEFAULT_LF);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public ObjectCache(float loadFactor) {
 		this.loadFactor = loadFactor;
+		this.table = new Entry[MIN_CAPACITY];
 	}
 	
 	protected synchronized void resize(int newCap) {
@@ -75,6 +83,9 @@ public class ObjectCache<E> {
 		}
 	}
 	
+	/**
+	 * Remove entries that have been enqueued
+	 */
 	protected void clearOldEntries() {
 		for(Object x; (x = queue.poll()) != null; ) {
 			synchronized (queue) {

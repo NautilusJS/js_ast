@@ -2,13 +2,14 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 
 public class ExpressionStatementTreeImpl extends AbstractTree implements ExpressionStatementTree {
 	protected final ExpressionTree expression;
 	
-	public ExpressionStatementTreeImpl(long start, long end, ExpressionTree expr) {
+	public ExpressionStatementTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expr) {
 		super(start, end);
 		this.expression = expr;
 	}

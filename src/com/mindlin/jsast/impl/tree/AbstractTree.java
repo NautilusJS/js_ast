@@ -7,7 +7,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.mindlin.jsast.exception.JSMutabilityException;
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.tree.Tree;
 
 public abstract class AbstractTree implements Tree {
@@ -37,40 +38,33 @@ public abstract class AbstractTree implements Tree {
 		return sb.toString();
 	}
 	
-	protected final long start, end;
-	protected boolean mutable = true;
+	protected final SourceRange range;
 	/**
 	 * Cache our hash here, so we don't cascade every time
 	 */
 	private transient int hash;
 	
-	public AbstractTree(long start, long end) {
-		this.start = start;
-		this.end = end;
+	public AbstractTree(SourceRange pos) {
+		this.range = pos;
+	}
+	
+	public AbstractTree(SourcePosition start, SourcePosition end) {
+		this(new SourceRange(start, end));
 	}
 	
 	@Override
-	public boolean isMutable() {
-		return this.mutable;
-	}
-	
-	public void setMutable(boolean mutable) {
-		this.mutable = mutable;
-	}
-	
-	protected void assertMutable() {
-		if (!this.mutable)
-			throw new JSMutabilityException();
+	public SourcePosition getStart() {
+		return this.range.getStart();
 	}
 	
 	@Override
-	public long getStart() {
-		return this.start;
+	public SourcePosition getEnd() {
+		return this.range.getEnd();
 	}
 	
 	@Override
-	public long getEnd() {
-		return this.end;
+	public SourceRange getRange() {
+		return range;
 	}
 	
 	@Override
@@ -125,7 +119,10 @@ public abstract class AbstractTree implements Tree {
 		sb.append("\"class\":\"").append(treeType).append("\",");
 		
 		Set<String> getterNames = new HashSet<>();
+		//Blacklist getClass(), getStart(), getEnd()
 		getterNames.add("getClass");
+		getterNames.add("getStart");
+		getterNames.add("getEnd");
 		Class<?> clazz = getClass();
 		do {
 			for (Method getter : clazz.getMethods()) {

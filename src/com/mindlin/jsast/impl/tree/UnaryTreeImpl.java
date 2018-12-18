@@ -1,14 +1,18 @@
 package com.mindlin.jsast.impl.tree;
 
-import com.mindlin.jsast.impl.lexer.Token;
+import java.util.Objects;
+
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.UnaryTree;
 
-public class UnaryTreeImpl extends AbstractExpressiveExpressionTree implements UnaryTree {
+public class UnaryTreeImpl extends AbstractTree implements UnaryTree {
+	protected final ExpressionTree expression;
 	protected final Kind kind;
 	
-	public UnaryTreeImpl(long start, long end, ExpressionTree expression, Kind kind) {
-		super(start, end, expression);
+	public UnaryTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression, Kind kind) {
+		super(start, end);
+		this.expression = expression;
 		this.kind = kind;
 	}
 	
@@ -16,18 +20,22 @@ public class UnaryTreeImpl extends AbstractExpressiveExpressionTree implements U
 	public Kind getKind() {
 		return this.kind;
 	}
+
+	@Override
+	public ExpressionTree getExpression() {
+		return this.expression;
+	}
 	
-	public static class VoidTreeImpl extends UnaryTreeImpl implements VoidTree {
-		public VoidTreeImpl(ExpressionTree expr) {
-			this(expr.getStart(), expr.getEnd(), expr);
+	@Override
+	protected int hash() {
+		return Objects.hash(getKind(), getExpression());
+	}
+	
+	public static class AwaitTreeImpl extends UnaryTreeImpl implements AwaitTree {
+
+		public AwaitTreeImpl(SourcePosition start, SourcePosition end, ExpressionTree expression) {
+			super(start, end, expression, Kind.AWAIT);
 		}
 		
-		public VoidTreeImpl(Token voidToken, ExpressionTree expr) {
-			this(voidToken.getStart(), expr.getEnd(), expr);
-		}
-		
-		public VoidTreeImpl(long start, long end, ExpressionTree expression) {
-			super(start, end, expression, Kind.VOID);
-		}
 	}
 }

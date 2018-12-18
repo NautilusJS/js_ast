@@ -3,33 +3,22 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 
 public class VariableDeclarationTreeImpl extends AbstractTree implements VariableDeclarationTree {
-	protected final boolean isScoped, isConst;
+	protected final VariableDeclarationKind style;
 	protected final List<VariableDeclaratorTree> declarations;
-	public VariableDeclarationTreeImpl(long start, long end, boolean isScoped, boolean isConst, List<VariableDeclaratorTree> declarations) {
+	public VariableDeclarationTreeImpl(SourcePosition start, SourcePosition end, VariableDeclarationKind style, List<VariableDeclaratorTree> declarations) {
 		super(start, end);
-		this.isScoped = isScoped;
-		this.isConst = isConst;
+		this.style = style;
 		this.declarations = declarations;
 	}
 
 	@Override
-	public Kind getKind() {
-		return Tree.Kind.VARIABLE_DECLARATION;
-	}
-	
-	@Override
-	public boolean isScoped() {
-		return isScoped;
-	}
-	
-	@Override
-	public boolean isConst() {
-		return isConst;
+	public VariableDeclarationKind getDeclarationStyle() {
+		return this.style;
 	}
 	
 	@Override
@@ -39,7 +28,7 @@ public class VariableDeclarationTreeImpl extends AbstractTree implements Variabl
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), isScoped(), isConst(), getDeclarations());
+		return Objects.hash(getKind(), getDeclarationStyle(), getDeclarations());
 	}
 	
 }

@@ -1,6 +1,9 @@
 package com.mindlin.jsast.tree;
 
-public interface ParenthesizedTree extends ExpressiveExpressionTree {
+public interface ParenthesizedTree extends ExpressionTree {
+	
+	ExpressionTree getExpression();
+	
 	@Override
 	default Tree.Kind getKind() {
 		return Tree.Kind.PARENTHESIZED;

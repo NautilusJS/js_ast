@@ -1,19 +1,11 @@
 package com.mindlin.jsast.tree;
 
-public interface ComputedPropertyKeyTree extends ExpressiveExpressionTree, ObjectPropertyKeyTree {
+public interface ComputedPropertyKeyTree extends PropertyName, UnvisitableTree {
 	
-	@Override
-	default boolean isComputed() {
-		return true;
-	}
+	ExpressionTree getExpression();
 	
 	@Override
 	default Kind getKind() {
-		return Kind.OBJECT_LITERAL_PROPERTY;
-	}
-	
-	@Override
-	default <R, D> R accept(ExpressionTreeVisitor<R, D> visitor, D data) {
-		throw new UnsupportedOperationException();
+		return Kind.COMPUTED_PROPERTY_KEY;
 	}
 }

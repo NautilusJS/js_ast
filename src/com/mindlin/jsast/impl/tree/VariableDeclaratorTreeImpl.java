@@ -2,6 +2,7 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.PatternTree;
@@ -17,7 +18,7 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 		this(t.getStart(), t.getEnd(), t.getValue(), null, null);
 	}
 	
-	public VariableDeclaratorTreeImpl(long start, long end, PatternTree identifier, TypeTree type,
+	public VariableDeclaratorTreeImpl(SourcePosition start, SourcePosition end, PatternTree identifier, TypeTree type,
 			ExpressionTree initializer) {
 		super(start, end);
 		this.identifier = identifier;
@@ -36,13 +37,13 @@ public class VariableDeclaratorTreeImpl extends AbstractTree implements Variable
 	}
 	
 	@Override
-	public PatternTree getIdentifier() {
+	public PatternTree getName() {
 		return identifier;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getIdentifier(), getType(), getInitializer());
+		return Objects.hash(getKind(), getName(), getType(), getInitializer());
 	}
 	
 }

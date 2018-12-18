@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mindlin.jsast.impl.tree.AbstractClassTree;
+import com.mindlin.jsast.impl.tree.AbstractFunctionTree.FunctionExpressionTreeImpl;
+import com.mindlin.jsast.impl.tree.AbstractFunctionTree.MethodDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
-import com.mindlin.jsast.impl.tree.CastTreeImpl;
-import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.CastExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.CompilationUnitTreeImpl;
 import com.mindlin.jsast.impl.tree.CompositeTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
@@ -18,15 +20,13 @@ import com.mindlin.jsast.impl.tree.DoWhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.ForLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.FunctionCallTreeImpl;
-import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IfTreeImpl;
 import com.mindlin.jsast.impl.tree.LabeledStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
-import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
-import com.mindlin.jsast.impl.tree.SequenceTreeImpl;
+import com.mindlin.jsast.impl.tree.SequenceExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ThrowTreeImpl;
 import com.mindlin.jsast.impl.tree.TupleTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
@@ -36,20 +36,19 @@ import com.mindlin.jsast.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.jsast.impl.tree.WithTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.ArrayPatternTree;
-import com.mindlin.jsast.tree.AssignmentPatternTree;
 import com.mindlin.jsast.tree.AssignmentTree;
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
 import com.mindlin.jsast.tree.BreakTree;
-import com.mindlin.jsast.tree.CastTree;
-import com.mindlin.jsast.tree.ClassDeclarationTree;
+import com.mindlin.jsast.tree.CastExpressionTree;
 import com.mindlin.jsast.tree.ClassPropertyTree;
-import com.mindlin.jsast.tree.CommentNode;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
 import com.mindlin.jsast.tree.CompilationUnitTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ContinueTree;
 import com.mindlin.jsast.tree.DebuggerTree;
+import com.mindlin.jsast.tree.DeclarationName;
 import com.mindlin.jsast.tree.DoWhileLoopTree;
 import com.mindlin.jsast.tree.EmptyStatementTree;
 import com.mindlin.jsast.tree.ExportTree;
@@ -61,8 +60,7 @@ import com.mindlin.jsast.tree.FunctionCallTree;
 import com.mindlin.jsast.tree.FunctionExpressionTree;
 import com.mindlin.jsast.tree.IdentifierTree;
 import com.mindlin.jsast.tree.IfTree;
-import com.mindlin.jsast.tree.ImportTree;
-import com.mindlin.jsast.tree.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.ImportDeclarationTree;
 import com.mindlin.jsast.tree.LabeledStatementTree;
 import com.mindlin.jsast.tree.MethodDefinitionTree;
 import com.mindlin.jsast.tree.NewTree;
@@ -73,9 +71,10 @@ import com.mindlin.jsast.tree.ObjectPatternTree;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
+import com.mindlin.jsast.tree.PropertyName;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.ReturnTree;
-import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.SequenceExpressionTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
@@ -86,23 +85,23 @@ import com.mindlin.jsast.tree.ThrowTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.TryTree;
-import com.mindlin.jsast.tree.TypeAliasTree;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.VariableDeclarationTree;
 import com.mindlin.jsast.tree.VariableDeclaratorTree;
 import com.mindlin.jsast.tree.WhileLoopTree;
 import com.mindlin.jsast.tree.WithTree;
-import com.mindlin.jsast.tree.type.AnyTypeTree;
+import com.mindlin.jsast.tree.comment.CommentNode;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
 import com.mindlin.jsast.tree.type.MemberTypeTree;
 import com.mindlin.jsast.tree.type.ObjectTypeTree;
 import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
+import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 public class ASTTransformer<D> implements TreeTransformation<D> {
@@ -121,11 +120,6 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 			modified |= transformed != element;
 		}
 		return modified;
-	}
-	
-	@Override
-	public TypeTree visitAnyType(AnyTypeTree node, D ctx) {
-		return transformation.visitAnyType(node, ctx);
 	}
 	
 	@Override
@@ -151,7 +145,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		TypeTree newBase = (TypeTree) node.accept(this, ctx);
 		
 		if (newBase != oldBase)
-			node = new ArrayTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), newBase);
+			node = new ArrayTypeTreeImpl(node.getStart(), node.getEnd(), newBase);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -171,14 +165,14 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public ExpressionTree visitBinary(BinaryTree node, D ctx) {
+	public ExpressionTree visitBinary(BinaryExpressionTree node, D ctx) {
 		ExpressionTree oldLHS = node.getLeftOperand();
 		ExpressionTree oldRHS = node.getRightOperand();
 		
 		ExpressionTree newLHS = (ExpressionTree) oldLHS.accept(this, ctx);
 		ExpressionTree newRHS = (ExpressionTree) oldRHS.accept(this, ctx);
 		
-		// TODO fix for subtypes of BinaryTree
+		// TODO fix for subtypes of BinaryExpressionTree
 		if (oldLHS != newLHS || oldRHS != newRHS)
 			node = new BinaryTreeImpl(node.getStart(), node.getEnd(), node.getKind(), newLHS, newRHS);
 		
@@ -210,7 +204,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public ExpressionTree visitCast(CastTree node, D ctx) {
+	public ExpressionTree visitCast(CastExpressionTree node, D ctx) {
 		ExpressionTree oldExpr = node.getExpression();
 		TypeTree oldType = node.getType();
 		
@@ -218,14 +212,14 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		TypeTree newType = (TypeTree) oldType.accept(this, ctx);
 		
 		if (oldExpr != newExpr || oldType != newType)
-			node = new CastTreeImpl(node.getStart(), node.getEnd(), newExpr, newType);
+			node = new CastExpressionTreeImpl(node.getStart(), node.getEnd(), newExpr, newType);
 		
 		return (ExpressionTree) node.accept(this.transformation, ctx);
 	}
 	
 	@Override
 	public Tree visitClassDeclaration(ClassDeclarationTree node, D ctx) {
-		IdentifierTree oldName = node.getIdentifier();
+		IdentifierTree oldName = node.getName();
 		TypeTree oldSuper = node.getSuperType();
 		
 		boolean modified = false;
@@ -249,10 +243,10 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 				if (methodDef.isAbstract()) {
 					//TODO Finish more
 				} else {
-					FunctionExpressionTree oldValue = methodDef.getValue();
+					FunctionExpressionTree oldValue = methodDef.getInitializer();
 					FunctionExpressionTree newValue = (FunctionExpressionTree) oldValue.accept(this, ctx);
 					if (oldValue != newValue)
-						newProperty = new MethodDefinitionTreeImpl(methodDef.getStart(), methodDef.getEnd(), methodDef.getAccess(), methodDef.isAbstract(), methodDef.isReadonly(), methodDef.isStatic(), methodDef.getDeclarationType(), methodDef.getKey(), methodDef.getType(), newValue);
+						newProperty = new MethodDeclarationTreeImpl(methodDef.getStart(), methodDef.getEnd(), methodDef.getModifiers(), methodDef.getDeclarationType(), methodDef.getKey(), methodDef.getType(), newValue);
 				}
 			} else {
 				//TODO finish
@@ -263,7 +257,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		}
 		
 		if (modified)
-			node = new ClassDeclarationTreeImpl(node.getStart(), node.getEnd(), node.isAbstract(), newName, node.getGenerics(), newSuper, newIfaces, properties);
+			node = new AbstractClassTree(node.getStart(), node.getEnd(), node.isAbstract(), newName, node.getGenerics(), newSuper, newIfaces, properties);
 		
 		return node.accept(this.transformation, ctx);
 	}
@@ -346,7 +340,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	public TypeTree visitIntersectionType(CompositeTypeTree node, D ctx) {
 		ArrayList<TypeTree> constituents = new ArrayList<>();
 		if (this.transformAll(node.getConstituents(), constituents, ctx))
-			node = new CompositeTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), node.getKind(), constituents);
+			node = new CompositeTypeTreeImpl(node.getStart(), node.getEnd(), node.getKind(), constituents);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -390,13 +384,13 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public ExpressionTree visitSequence(SequenceTree node, D ctx) {
+	public ExpressionTree visitSequence(SequenceExpressionTree node, D ctx) {
 		ArrayList<ExpressionTree> expressions = new ArrayList<>();
-		boolean modified = this.transformAll(node.getExpressions(), expressions, ctx);
+		boolean modified = this.transformAll(node.getElements(), expressions, ctx);
 		
 		if (modified) {
 			expressions.trimToSize();
-			node = new SequenceTreeImpl(node.getStart(), node.getEnd(), expressions);
+			node = new SequenceExpressionTreeImpl(node.getStart(), node.getEnd(), expressions);
 		}
 		
 		return (ExpressionTree) node.accept(this.transformation, ctx);
@@ -458,7 +452,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		boolean modified = this.transformAll(node.getSlotTypes(), slots, ctx);
 		
 		if (modified)
-			node = new TupleTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), slots);
+			node = new TupleTypeTreeImpl(node.getStart(), node.getEnd(), slots);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -478,7 +472,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	public TypeTree visitUnionType(CompositeTypeTree node, D ctx) {
 		ArrayList<TypeTree> constituents = new ArrayList<>();
 		if (this.transformAll(node.getConstituents(), constituents, ctx))
-			node = new CompositeTypeTreeImpl(node.getStart(), node.getEnd(), node.isImplicit(), node.getKind(), constituents);
+			node = new CompositeTypeTreeImpl(node.getStart(), node.getEnd(), node.getKind(), constituents);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -486,9 +480,9 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	@Override
 	public StatementTree visitVariableDeclaration(VariableDeclarationTree node, D ctx) {
 		boolean modified = false;
-		ArrayList<VariableDeclaratorTree> declarations = new ArrayList<>();
+		List<VariableDeclaratorTree> declarations = new ArrayList<>();
 		for (VariableDeclaratorTree declarator : node.getDeclarations()) {
-			PatternTree oldIdentifier = declarator.getIdentifier();
+			DeclarationName oldIdentifier = declarator.getName();
 			TypeTree oldType = declarator.getType();
 			ExpressionTree oldInitializer = declarator.getInitializer();
 			
@@ -507,8 +501,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		}
 		
 		if (modified)
-			node = new VariableDeclarationTreeImpl(node.getStart(), node.getEnd(), node.isScoped(), node.isConst(),
-					declarations);
+			node = new VariableDeclarationTreeImpl(node.getStart(), node.getEnd(), node.getDeclarationStyle(), declarations);
 		
 		return (StatementTree) node.accept(this.transformation, ctx);
 	}
@@ -525,12 +518,6 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 			node = new WhileLoopTreeImpl(node.getStart(), node.getEnd(), newCondition, newStatement);
 		
 		return (StatementTree) node.accept(this.transformation, ctx);
-	}
-	
-	@Override
-	public PatternTree visitAssignmentPattern(AssignmentPatternTree node, D ctx) {
-		// TODO Auto-generated method stub
-		return (PatternTree) node.accept(this.transformation, ctx);
 	}
 	
 	@Override
@@ -571,27 +558,31 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	public ExpressionTree visitFunctionCall(FunctionCallTree node, D ctx) {
 		ExpressionTree oldCallee = node.getCallee();
 		
+		List<TypeTree> typeArguments = new ArrayList<>();
+		boolean modified = this.transformAll(node.getTypeArguments(), typeArguments, ctx);
+		
 		List<ExpressionTree> arguments = new ArrayList<>();
-		boolean modified = this.transformAll(node.getArguments(), arguments, ctx);
+		modified |= this.transformAll(node.getArguments(), arguments, ctx);
+		
 		ExpressionTree newCallee = (ExpressionTree) oldCallee.accept(this, ctx);
 		modified |= newCallee != oldCallee;
 		
 		if (modified)
-			node = new FunctionCallTreeImpl(node.getStart(), node.getEnd(), newCallee, arguments);
+			node = new FunctionCallTreeImpl(node.getStart(), node.getEnd(), newCallee, typeArguments, arguments);
 		
 		return (ExpressionTree) node.accept(this.transformation, ctx);
 	}
 	
 	@Override
 	public ExpressionTree visitFunctionExpression(FunctionExpressionTree node, D ctx) {
-		IdentifierTree oldName = node.getName();
+		PropertyName oldName = node.getName();
 		TypeTree oldReturnType = node.getReturnType();
 		StatementTree oldBody = node.getBody();
 		
 		List<ParameterTree> parameters = node.getParameters();//TODO transform parameters
 		boolean modified = false;
 		
-		IdentifierTree newName = (IdentifierTree) (oldName == null ? null : oldName.accept(this, ctx));
+		PropertyName newName = (PropertyName) (oldName == null ? null : oldName.accept(this, ctx));
 		modified |= newName != oldName;
 		
 		TypeTree newReturnType = oldReturnType == null ? null : (TypeTree) oldReturnType.accept(this, ctx);
@@ -607,7 +598,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		
 		//TODO fix isStrict()? Others?
 		if (modified)
-			node = new FunctionExpressionTreeImpl(node.getStart(), node.getEnd(), node.isAsync(), newName, node.getGenericParameters(), parameters, newReturnType, node.isArrow(), newBody, node.isStrict(), node.isGenerator());
+			node = new FunctionExpressionTreeImpl(node.getStart(), node.getEnd(), node.getModifiers(), newName, node.getTypeParameters(), parameters, newReturnType, node.isArrow(), newBody);
 		
 		return (ExpressionTree) node.accept(this.transformation, ctx);
 	}
@@ -646,15 +637,9 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	}
 	
 	@Override
-	public StatementTree visitImport(ImportTree node, D ctx) {
+	public StatementTree visitImport(ImportDeclarationTree node, D ctx) {
 		// TODO Auto-generated method stub
 		return (StatementTree) node.accept(this.transformation, ctx);
-	}
-	
-	@Override
-	public TypeTree visitIndexType(IndexSignatureTree node, D ctx) {
-		// TODO Auto-generated method stub
-		return (TypeTree) node.accept(this.transformation, ctx);
 	}
 	
 	@Override
@@ -678,7 +663,7 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 		TypeTree newName = (TypeTree) oldName.accept(this, ctx);
 		
 		if (oldBase != newBase || oldName != newName)
-			node = new MemberTypeTreeImpl(node.getStart(), node.getEnd(), newBase, newName, node.isImplicit());
+			node = new MemberTypeTreeImpl(node.getStart(), node.getEnd(), newBase, newName);
 		
 		return (TypeTree) node.accept(this.transformation, ctx);
 	}
@@ -687,13 +672,16 @@ public class ASTTransformer<D> implements TreeTransformation<D> {
 	public ExpressionTree visitNew(NewTree node, D ctx) {
 		ExpressionTree oldCallee = node.getCallee();
 		ExpressionTree newCallee = (ExpressionTree) oldCallee.accept(this, ctx);
+		boolean modified = oldCallee != newCallee;
 		
-		ArrayList<ExpressionTree> arguments = new ArrayList<>();
-		boolean modified = oldCallee != newCallee | this.transformAll(node.getArguments(), arguments, ctx);
-		arguments.trimToSize();
+		List<TypeTree> typeArguments = new ArrayList<>();
+		modified |= this.transformAll(node.getTypeArguments(), typeArguments, ctx);
+		
+		List<ExpressionTree> arguments = new ArrayList<>();
+		modified |= this.transformAll(node.getArguments(), arguments, ctx);
 		
 		if (modified)
-			node = new NewTreeImpl(node.getStart(), node.getEnd(), newCallee, arguments);
+			node = new NewTreeImpl(node.getStart(), node.getEnd(), newCallee, typeArguments, arguments);
 		return (ExpressionTree) node.accept(this.transformation, ctx);
 	}
 	

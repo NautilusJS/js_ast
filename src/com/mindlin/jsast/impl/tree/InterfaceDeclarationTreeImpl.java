@@ -3,49 +3,50 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 import java.util.Objects;
 
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.HeritageClauseTree;
 import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.InterfaceDeclarationTree;
-import com.mindlin.jsast.tree.InterfacePropertyTree;
-import com.mindlin.jsast.tree.type.GenericParameterTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
+import com.mindlin.jsast.tree.type.TypeElementTree;
+import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
 
 public class InterfaceDeclarationTreeImpl extends AbstractTree implements InterfaceDeclarationTree {
 	protected final IdentifierTree name;
-	protected final List<GenericParameterTree> generics;
-	protected final List<TypeTree> supertypes;
-	protected final List<InterfacePropertyTree> properties;
+	protected final List<TypeParameterDeclarationTree> generics;
+	protected final List<HeritageClauseTree> heritage;
+	protected final List<TypeElementTree> properties;
 	
-	public InterfaceDeclarationTreeImpl(long start, long end, IdentifierTree name, List<GenericParameterTree> generics,
-			List<TypeTree> supertypes, List<InterfacePropertyTree> properties) {
+	public InterfaceDeclarationTreeImpl(SourcePosition start, SourcePosition end, IdentifierTree name, List<TypeParameterDeclarationTree> generics,
+			List<HeritageClauseTree> heritage, List<TypeElementTree> properties) {
 		super(start, end);
 		this.name = name;
 		this.generics = generics;
-		this.supertypes = supertypes;
+		this.heritage = heritage;
 		this.properties = properties;
 	}
 	
 	@Override
-	public IdentifierTree getIdentifier() {
+	public IdentifierTree getName() {
 		return this.name;
 	}
 
 	@Override
-	public List<GenericParameterTree> getGenerics() {
+	public List<TypeParameterDeclarationTree> getTypeParameters() {
 		return this.generics;
 	}
 	
 	@Override
-	public List<TypeTree> getSupertypes() {
-		return this.supertypes;
+	public List<HeritageClauseTree> getHeritage() {
+		return this.heritage;
 	}
 	
 	@Override
-	public List<? extends InterfacePropertyTree> getProperties() {
+	public List<TypeElementTree> getDeclaredMembers() {
 		return this.properties;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getIdentifier(), getSupertypes(), getProperties());
+		return Objects.hash(getKind(), getName(), getHeritage(), getDeclaredMembers());
 	}
 }

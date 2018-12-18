@@ -6,18 +6,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.mindlin.jsast.impl.tree.AbstractFunctionTree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BlockTreeImpl;
-import com.mindlin.jsast.impl.tree.ClassDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.AbstractClassTree;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
-import com.mindlin.jsast.impl.tree.FunctionExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
-import com.mindlin.jsast.impl.tree.MethodDefinitionTreeImpl;
+import com.mindlin.jsast.impl.tree.MethodDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ThisExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclarationTreeImpl;
 import com.mindlin.jsast.impl.tree.VariableDeclaratorTreeImpl;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.BlockTree;
 import com.mindlin.jsast.tree.CastTree;
 import com.mindlin.jsast.tree.ClassDeclarationTree;
@@ -74,7 +75,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		List<StatementTree> ctorBody = new ArrayList<>();
 		if (oldCtor != null) {
 			//Copy from old constructor
-			FunctionExpressionTree oldCtorFn = oldCtor.getValue();
+			FunctionExpressionTree oldCtorFn = oldCtor.getInitializer();
 			ctorParams.addAll(oldCtorFn.getParameters());
 			//TODO can we assume that the body is a block?
 			ctorBody.addAll(((BlockTree)oldCtorFn.getBody()).getStatements());
@@ -91,10 +92,10 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		for (ListIterator<ParameterTree> i = ctorParams.listIterator(); i.hasNext();) {
 			final ParameterTree oldParam = i.next();
 			ParameterTree param = oldParam;
-			if (param.getAccessModifier() != null) {
+			if (param.getModifiers() != null) {
 				boolean wasOptional = param.isOptional();
 				
-				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), null, param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
+				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
 				//Inject assignment into constructor
 				//TODO: support destructuring in parameters here
 				if (oldParam.getIdentifier().getKind() != Kind.IDENTIFIER)
@@ -126,10 +127,10 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 					continue;
 				case FIELD: {
 					i.remove();
-					if (property.getValue() != null) {
+					if (property.getInitializer() != null) {
 						//Inject initializer into constructor
 						PatternTree lhs = new MemberExpressionTreeImpl(property.getKey().getKind() == Kind.IDENTIFIER ? Kind.MEMBER_SELECT : Kind.ARRAY_ACCESS, new ThisExpressionTreeImpl(-1, -1), property.getKey());
-						StatementTree initializerStmt = new ExpressionStatementTreeImpl(new AssignmentTreeImpl(Tree.Kind.ASSIGNMENT, lhs, property.getValue()));
+						StatementTree initializerStmt = new ExpressionStatementTreeImpl(new AssignmentTreeImpl(Tree.Kind.ASSIGNMENT, lhs, property.getInitializer()));
 						ctorBody.add(ctorBodyInjectOffset++, initializerStmt);
 						ctorModified = true;
 					}
@@ -142,18 +143,20 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		if (ctorModified) {
 			//Copy positioning from old constructor, if possible
 			long oldStart = -1, oldEnd = -1, oldFnStart = -1, oldFnEnd = -1, oldBodyStart = -1, oldBodyEnd = -1;
+			Modifiers oldModifiers = Modifiers.NONE;
 			IdentifierTree name;
 			if (oldCtor != null) {
 				oldStart = oldCtor.getStart();
 				oldEnd = oldCtor.getEnd();
 				
-				FunctionExpressionTree oldCtorFn = oldCtor.getValue();
+				FunctionExpressionTree oldCtorFn = oldCtor.getInitializer();
 				oldFnStart = oldCtorFn.getStart();
 				oldFnEnd = oldCtorFn.getEnd();
 				
 				oldBodyStart = oldCtorFn.getBody().getStart();
 				oldBodyEnd = oldCtorFn.getBody().getEnd();
 				
+				oldModifiers = oldCtor.getModifiers();//TODO: check modifiers are good
 				name = oldCtorFn.getName();
 			} else {
 				name = new IdentifierTreeImpl(-1, -1, "constructor");
@@ -163,7 +166,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			BlockTree newCtorBody = new BlockTreeImpl(oldBodyStart, oldBodyEnd, ctorBody);
 			//TODO fix isStrict
 			FunctionExpressionTree ctorFn = new FunctionExpressionTreeImpl(oldFnStart, oldFnEnd, false, name, null, ctorParams, null, false, newCtorBody, false, false);
-			MethodDefinitionTree ctor = new MethodDefinitionTreeImpl(oldStart, oldEnd, null, false, false, false, PropertyDeclarationType.CONSTRUCTOR, name, null, ctorFn);
+			MethodDefinitionTree ctor = new MethodDeclarationTreeImpl(oldStart, oldEnd, oldModifiers, PropertyDeclarationType.CONSTRUCTOR, name, null, ctorFn);
 			if (oldCtor != null)
 				properties.set(properties.indexOf(oldCtor), ctor);
 			else
@@ -175,7 +178,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		//TODO check supertype
 		if (!modified)
 			return node;
-		return new ClassDeclarationTreeImpl(node.getStart(), node.getEnd(), node.isAbstract(), node.getIdentifier(),
+		return new AbstractClassTree(node.getStart(), node.getEnd(), node.isAbstract(), node.getIdentifier(),
 				Collections.emptyList(), node.getSuperType(), Collections.emptyList(), properties);
 	}
 

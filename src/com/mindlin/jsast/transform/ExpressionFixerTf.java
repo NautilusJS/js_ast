@@ -2,7 +2,7 @@ package com.mindlin.jsast.transform;
 
 import com.mindlin.jsast.impl.tree.AssignmentTreeImpl;
 import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.CastTreeImpl;
+import com.mindlin.jsast.impl.tree.CastExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ConditionalExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
@@ -10,10 +10,11 @@ import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.UnaryTreeImpl;
 import com.mindlin.jsast.tree.ArrayLiteralTree;
 import com.mindlin.jsast.tree.AssignmentTree;
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.BooleanLiteralTree;
-import com.mindlin.jsast.tree.CastTree;
-import com.mindlin.jsast.tree.ClassDeclarationTree;
+import com.mindlin.jsast.tree.CastExpressionTree;
+import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
 import com.mindlin.jsast.tree.ConditionalExpressionTree;
 import com.mindlin.jsast.tree.ExpressionStatementTree;
 import com.mindlin.jsast.tree.ExpressionTree;
@@ -28,7 +29,7 @@ import com.mindlin.jsast.tree.ObjectLiteralTree;
 import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.RegExpLiteralTree;
-import com.mindlin.jsast.tree.SequenceTree;
+import com.mindlin.jsast.tree.SequenceExpressionTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.StringLiteralTree;
 import com.mindlin.jsast.tree.SuperExpressionTree;
@@ -38,6 +39,7 @@ import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
 import com.mindlin.jsast.tree.UnaryTree;
 import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
+import com.mindlin.jsast.tree.type.TypeTree;
 
 /**
  * Expression trees (esp. binary expressions) may be in a form that violates
@@ -158,7 +160,7 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 	}
 	
 	@Override
-	public ExpressionTree visitBinary(BinaryTree node, Void d) {
+	public ExpressionTree visitBinary(BinaryExpressionTree node, Void d) {
 		Tree.Kind kind = node.getKind();
 		int precedence = precedence(kind);
 		ExpressionTree lhs = node.getLeftOperand(), rhs = node.getRightOperand(), oldLhs = lhs, oldRhs = rhs;
@@ -179,11 +181,12 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 	}
 	
 	@Override
-	public ExpressionTree visitCast(CastTree node, Void d) {
+	public ExpressionTree visitCast(CastExpressionTree node, Void d) {
 		ExpressionTree expr = node.getExpression();
 		if (precedence(node.getKind()) > precedence(expr.getKind())) {
 			expr = new ParenthesizedTreeImpl(expr.getStart(), expr.getEnd(), expr);
-			node = new CastTreeImpl(expr, node.getType());
+			TypeTree type = node.getType();
+			node = new CastExpressionTreeImpl(expr.getStart(), type.getEnd(), expr, type);
 		}
 		return node;
 	}
@@ -229,14 +232,12 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 	@Override
 	public ExpressionTree visitUnary(UnaryTree node, Void d) {
 		ExpressionTree expr = node.getExpression();
+		//TODO: handle expr == null (possible if node.getKind() == VOID)
 		
 		if (precedence(expr.getKind()) < precedence(node.getKind())) {
 			expr = new ParenthesizedTreeImpl(expr.getStart(), expr.getEnd(), expr);
 			
-			if (node.getKind() == Kind.VOID)
-				node = new UnaryTreeImpl.VoidTreeImpl(expr);
-			else
-				node = new UnaryTreeImpl(node.getStart(), node.getEnd(), expr, node.getKind());
+			node = new UnaryTreeImpl(node.getStart(), node.getEnd(), expr, node.getKind());
 		}
 		
 		return node;
@@ -267,7 +268,7 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 		}
 
 		@Override
-		public ExpressionTree visitBinary(BinaryTree node, Void d) {
+		public ExpressionTree visitBinary(BinaryExpressionTree node, Void d) {
 			return node.getLeftOperand().accept(this, d);
 		}
 
@@ -277,7 +278,7 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 		}
 
 		@Override
-		public ExpressionTree visitCast(CastTree node, Void d) {
+		public ExpressionTree visitCast(CastExpressionTree node, Void d) {
 			return node;
 		}
 
@@ -337,8 +338,8 @@ public class ExpressionFixerTf implements TreeTransformation<Void> {
 		}
 
 		@Override
-		public ExpressionTree visitSequence(SequenceTree node, Void d) {
-			return node.getExpressions().isEmpty() ? null : node.getExpressions().get(0);
+		public ExpressionTree visitSequence(SequenceExpressionTree node, Void d) {
+			return node.getElements().isEmpty() ? null : node.getElements().get(0);
 		}
 
 		@Override

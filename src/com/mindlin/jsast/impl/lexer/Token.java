@@ -1,31 +1,48 @@
 package com.mindlin.jsast.impl.lexer;
 
+import java.util.Objects;
+
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.fs.SourceRange;
 import com.mindlin.jsast.impl.parser.JSOperator;
 import com.mindlin.jsast.impl.parser.JSSpecialGroup;
 
 public class Token {
+	public static final int FLAG_PRECEDEING_NEWLINE = 1 << 0;
+	public static final int FLAG_PRECEDING_JSDOC = 1 << 1;
+	//TODO: use EnumSet-type wrapper in the future?
+	protected final int flags;
 	protected final TokenKind kind;
-	protected final long position;
+	protected final SourceRange range;
 	protected final String text;
 	protected final Object value;
 
-	public Token(long position, TokenKind kind, String text, Object value) {
-		this.position = position;
+	public Token(int flags, SourceRange range, TokenKind kind, String text, Object value) {
+		this.flags = flags;
+		this.range = range;
 		this.kind = kind;
 		this.text = text;
 		this.value = value;
 	}
-
-	public long getStart() {
-		return position;
+	
+	public boolean hasPrecedingNewline() {
+		return (this.flags & FLAG_PRECEDEING_NEWLINE) != 0;
+	}
+	
+	public boolean hasPrecedingJSDoc() {
+		return (this.flags & FLAG_PRECEDING_JSDOC) != 0;
+	}
+	
+	public SourceRange getRange() {
+		return this.range;
 	}
 
-	public long getLength() {
-		return text == null ? 0 : text.length();
+	public SourcePosition getStart() {
+		return this.range.getStart();
 	}
 
-	public long getEnd() {
-		return getStart() + getLength();
+	public SourcePosition getEnd() {
+		return this.range.getEnd();
 	}
 
 	public String getText() {
@@ -53,10 +70,6 @@ public class Token {
 		return getKind() == TokenKind.KEYWORD;
 	}
 
-	public boolean isBracket() {
-		return getKind() == TokenKind.BRACKET;
-	}
-
 	public boolean isIdentifier() {
 		return getKind() == TokenKind.IDENTIFIER;
 	}
@@ -81,9 +94,11 @@ public class Token {
 	public boolean matches(TokenKind kind, Object value) {
 		if (getKind() != kind)
 			return false;
-		if (getValue() == value)
-			return true;
-		return getValue() != null && getValue().equals(value);
+		return Objects.equals(getValue(), value);
+	}
+	
+	public boolean matchesOperator(JSOperator value) {
+		return getKind() == TokenKind.OPERATOR && getValue() == value;
 	}
 
 	public Token reinterpretAsIdentifier() {
@@ -110,12 +125,12 @@ public class Token {
 			case REGEX_LITERAL:
 			case STRING_LITERAL:
 			case TEMPLATE_LITERAL:
-			case BRACKET:
 			case COMMENT:
 			default:
 				throw new UnsupportedOperationException(this + " cannot be reinterpreted as an identifier");
 		}
-		return new Token(getStart(), TokenKind.IDENTIFIER, getText(), value);
+		
+		return new Token(this.flags, this.range, TokenKind.IDENTIFIER, getText(), value);
 	}
 
 	@Override
@@ -125,8 +140,7 @@ public class Token {
 				.append(this.getClass().getSimpleName())
 				.append("{kind=").append(getKind())
 				.append(",value=").append(value)
-				.append(",start=").append(getStart())
-				.append(",end=").append(getEnd());
+				.append(",range=").append(getRange());
 		//@formatter:on
 
 		if (getText() == null)

@@ -1,5 +1,6 @@
 package com.mindlin.jsast.impl.tree;
 
+import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.impl.lexer.Token;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 
@@ -8,7 +9,7 @@ public class ThisExpressionTreeImpl extends AbstractTree implements ThisExpressi
 		this(t.getStart(), t.getEnd());
 	}
 	
-	public ThisExpressionTreeImpl(long start, long end) {
+	public ThisExpressionTreeImpl(SourcePosition start, SourcePosition end) {
 		super(start, end);
 	}
 }

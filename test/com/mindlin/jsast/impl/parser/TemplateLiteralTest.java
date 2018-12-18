@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.TemplateElementTree;
 import com.mindlin.jsast.tree.TemplateLiteralTree;
@@ -38,7 +38,7 @@ public class TemplateLiteralTest {
 		
 		List<ExpressionTree> exprs = template.getExpressions();
 		assertEquals(1, exprs.size());
-		BinaryTree expr = assertKind(Kind.ADDITION, exprs.get(0));
+		BinaryExpressionTree expr = assertKind(Kind.ADDITION, exprs.get(0));
 		assertLiteral(1, expr.getLeftOperand());
 		assertLiteral(2, expr.getRightOperand());
 	}

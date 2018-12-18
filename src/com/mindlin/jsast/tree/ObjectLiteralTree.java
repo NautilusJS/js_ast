@@ -3,7 +3,7 @@ package com.mindlin.jsast.tree;
 import java.util.List;
 
 public interface ObjectLiteralTree extends ExpressionTree {
-	List<? extends ObjectLiteralPropertyTree> getProperties();
+	List<? extends ObjectLiteralElement> getProperties();
 
 	@Override
 	default Tree.Kind getKind() {

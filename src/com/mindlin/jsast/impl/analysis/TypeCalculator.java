@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.mindlin.jsast.tree.ClassPropertyTree.AccessModifier;
+import com.mindlin.jsast.tree.Modifiers.AccessModifier;
 import com.mindlin.jsast.type.CompositeType;
 import com.mindlin.jsast.type.IndexInfo;
 import com.mindlin.jsast.type.IntrinsicType;
@@ -225,13 +225,13 @@ public class TypeCalculator {
 	}
 	
 	/**
-	 * Get the numerical value of a type. Gives a little bit more oomph that saying <code>+x</code> is a Number.
+	 * Get the numerical value of a type. Gives a little bit more oomph that saying {@code +x} is a Number.
 	 * <p>
-	 * Uses the following rules in order to determine the type of <code>+x</code>:
+	 * Uses the following rules in order to determine the type of {@code +x}:
 	 * <ul>
 	 * <li>If x is a numeric literal or a enum value, +x === x</li>
 	 * <li>If x is a string literal, +x is the parsed value of the number of the string (else NaN if not parsable)</li>
-	 * <li>If x is a object type with an apparent property for the well-known Symbol.toPrimitive, <code>+x === x[Symbol.toPrimitive]('number')</code></li>
+	 * <li>If x is a object type with an apparent property for the well-known Symbol.toPrimitive, {@code +x === x[Symbol.toPrimitive]('number')}</li>
 	 * <li>+x is a number</li>
 	 * </ul>
 	 * </p>

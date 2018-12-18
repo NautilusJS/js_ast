@@ -2,15 +2,16 @@ package com.mindlin.jsast.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.BinaryTree;
+import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.BinaryExpressionTree;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 
-public class BinaryTreeImpl extends AbstractTree implements BinaryTree {
+public class BinaryTreeImpl extends AbstractTree implements BinaryExpressionTree {
 	protected final ExpressionTree left, right;
 	protected final Tree.Kind kind;
 	
-	public BinaryTreeImpl(long start, long end, Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
+	public BinaryTreeImpl(SourcePosition start, SourcePosition end, Tree.Kind kind, ExpressionTree left, ExpressionTree right) {
 		super(start, end);
 		this.kind = kind;
 		this.left = left;

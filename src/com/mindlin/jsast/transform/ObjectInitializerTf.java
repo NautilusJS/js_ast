@@ -19,7 +19,7 @@ public class ObjectInitializerTf implements TreeTransformation<Void> {
 		List<ObjectLiteralPropertyTree> props = new ArrayList<>();
 		for (ObjectLiteralPropertyTree property : node.getProperties()) {
 			ObjectPropertyKeyTree key = property.getKey();
-			ExpressionTree value = property.getValue();
+			ExpressionTree value = property.getInitializer();
 			if (key == value)
 				continue;
 			if (key.isComputed() && key.getKind() == Kind.OBJECT_LITERAL_PROPERTY) {

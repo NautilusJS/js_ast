@@ -92,7 +92,7 @@ public class JSRuntimeUtils {
 		return "" + value;
 	}
 	/**
-	 * Attempt to invoke <code>target</code>.
+	 * Attempt to invoke {@code target}.
 	 * 
 	 * @param target
 	 * @param thiz
