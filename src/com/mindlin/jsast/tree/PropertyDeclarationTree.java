@@ -20,4 +20,9 @@ public interface PropertyDeclarationTree extends PropertyTree, DecoratableTree, 
 	default Kind getKind() {
 		return Kind.PROPERTY_DECLARATION;
 	}
+	
+	@Override
+	default <R, D> R accept(ClassElementVisitor<R, D> visitor, D data) {
+		return visitor.visitPropertyDeclaration(this, data);
+	}
 }

@@ -6,5 +6,10 @@ package com.mindlin.jsast.tree;
  * @author mailmindlin
  */
 public interface ClassElementTree extends DeclarationTree {
+	<R, D> R accept(ClassElementVisitor<R, D> visitor, D data);
 	
+	@Override
+	default <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
+		return this.accept((ClassElementVisitor<R, D>) visitor, data);
+	}
 }

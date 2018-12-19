@@ -36,6 +36,7 @@ import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.CallSignatur
 import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.ConstructSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.ConstructorTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.FunctionTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.AbstractSignatureDeclarationTree.MethodSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayPatternTreeImpl;
 import com.mindlin.jsast.impl.tree.ArrayTypeTreeImpl;
@@ -75,7 +76,6 @@ import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MappedTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
-import com.mindlin.jsast.impl.tree.MethodSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;

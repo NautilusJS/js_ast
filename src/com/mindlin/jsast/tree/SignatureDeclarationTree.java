@@ -46,12 +46,22 @@ public interface SignatureDeclarationTree extends NamedDeclarationTree {
 		default Kind getKind() {
 			return Tree.Kind.CALL_SIGNATURE;
 		}
+		
+		@Override
+		default <R, D> R accept(TypeElementVisitor<R, D> visitor, D data) {
+			return visitor.visitCallSignature(this, data);
+		}
 	}
 	
 	public static interface ConstructSignatureTree extends SignatureDeclarationTree, TypeElementTree {
 		@Override
 		default Kind getKind() {
 			return Tree.Kind.CONSTRUCT_SIGNATURE;
+		}
+		
+		@Override
+		default <R, D> R accept(TypeElementVisitor<R, D> visitor, D data) {
+			return visitor.visitConstructSignature(this, data);
 		}
 	}
 }

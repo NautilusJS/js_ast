@@ -3,10 +3,12 @@ package com.mindlin.jsast.impl.tree;
 import java.util.List;
 
 import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.jsast.tree.DecoratorTree;
+import com.mindlin.jsast.tree.MethodSignatureTree;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.ParameterTree;
 import com.mindlin.jsast.tree.PropertyName;
 import com.mindlin.jsast.tree.SignatureDeclarationTree;
-import com.mindlin.jsast.tree.TreeVisitor;
 import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
@@ -29,12 +31,6 @@ public abstract class AbstractSignatureDeclarationTree extends AbstractTree impl
 	@Override
 	public PropertyName getName() {
 		return this.name;
-	}
-
-	@Override
-	public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	@Override
@@ -61,6 +57,26 @@ public abstract class AbstractSignatureDeclarationTree extends AbstractTree impl
 	public static class ConstructSignatureTreeImpl extends AbstractSignatureDeclarationTree implements ConstructSignatureTree {
 		public ConstructSignatureTreeImpl(SourcePosition start, SourcePosition end, PropertyName name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType) {
 			super(start, end, name, generics, parameters, returnType);
+		}
+	}
+	
+	public static class MethodSignatureTreeImpl extends AbstractSignatureDeclarationTree implements MethodSignatureTree {
+		protected final Modifiers modifiers;
+		
+		public MethodSignatureTreeImpl(SourcePosition start, SourcePosition end, Modifiers modifiers, PropertyName name, List<TypeParameterDeclarationTree> generics, List<ParameterTree> parameters, TypeTree returnType) {
+			super(start, end, name, generics, parameters, returnType);
+			this.modifiers = modifiers;
+		}
+
+		@Override
+		public List<DecoratorTree> getDecorators() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Modifiers getModifiers() {
+			return modifiers;
 		}
 	}
 	

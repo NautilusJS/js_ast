@@ -10,4 +10,9 @@ public interface MethodDeclarationTree extends DecoratableTree, PropertyTree, Fu
 	default Tree.Kind getKind() {
 		return Tree.Kind.METHOD_DECLARATION;
 	}
+	
+	@Override
+	default <R, D> R accept(ClassElementVisitor<R, D> visitor, D data) {
+		return visitor.visitMethodDeclaration(this, data);
+	}
 }

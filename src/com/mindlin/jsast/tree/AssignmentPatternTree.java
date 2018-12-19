@@ -2,7 +2,7 @@ package com.mindlin.jsast.tree;
 
 import com.mindlin.jsast.tree.ObjectPatternTree.ObjectPatternElement;
 
-public interface AssignmentPatternTree extends PropertyTree, ObjectPatternElement {
+public interface AssignmentPatternTree extends PropertyTree, ObjectPatternElement, UnvisitableTree {
 	PatternTree getValue();
 	
 	ExpressionTree getInitializer();
