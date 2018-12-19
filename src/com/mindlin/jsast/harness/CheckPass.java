@@ -302,7 +302,7 @@ public class CheckPass implements CompilerPass<CompilationUnitTree, CompilationU
 					ParameterTree tree = (ParameterTree) node;
 					//TODO: decorators
 					//TODO: jsdoc
-					check(current, tree.getIdentifier());
+					check(current, tree.getName());
 					check(current, tree.getType());
 					check(current, tree.getInitializer());
 					return;
@@ -364,7 +364,7 @@ public class CheckPass implements CompilerPass<CompilationUnitTree, CompilationU
 				}
 				case IDENTIFIER_TYPE: {
 					IdentifierTypeTree tree = (IdentifierTypeTree) node;
-					check(current, tree.getIdentifier());
+					check(current, tree.getName());
 					check(current, tree.getGenerics());
 					return;
 				}

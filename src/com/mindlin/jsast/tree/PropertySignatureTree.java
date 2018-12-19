@@ -11,4 +11,8 @@ public interface PropertySignatureTree extends PropertyTree, TypeElementTree {
 		return Kind.PROPERTY_SIGNATURE;
 	}
 	
+	@Override
+	default <R, D> R accept(TypeElementVisitor<R, D> visitor, D data) {
+		return visitor.visitPropertySignature(this, data);
+	}
 }
