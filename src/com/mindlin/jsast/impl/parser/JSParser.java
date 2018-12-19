@@ -75,6 +75,7 @@ import com.mindlin.jsast.impl.tree.LiteralTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MappedTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberExpressionTreeImpl;
 import com.mindlin.jsast.impl.tree.MemberTypeTreeImpl;
+import com.mindlin.jsast.impl.tree.MethodSignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.NewTreeImpl;
 import com.mindlin.jsast.impl.tree.NullLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
@@ -84,6 +85,7 @@ import com.mindlin.jsast.impl.tree.ObjectTypeTreeImpl;
 import com.mindlin.jsast.impl.tree.ParameterTreeImpl;
 import com.mindlin.jsast.impl.tree.ParenthesizedTreeImpl;
 import com.mindlin.jsast.impl.tree.PropertyDeclarationTreeImpl;
+import com.mindlin.jsast.impl.tree.PropertySignatureTreeImpl;
 import com.mindlin.jsast.impl.tree.RegExpLiteralTreeImpl;
 import com.mindlin.jsast.impl.tree.ReturnTreeImpl;
 import com.mindlin.jsast.impl.tree.SequenceExpressionTreeImpl;
@@ -149,6 +151,7 @@ import com.mindlin.jsast.tree.ParenthesizedTree;
 import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.PropertyDeclarationTree;
 import com.mindlin.jsast.tree.PropertyName;
+import com.mindlin.jsast.tree.PropertySignatureTree;
 import com.mindlin.jsast.tree.SequenceExpressionTree;
 import com.mindlin.jsast.tree.SignatureDeclarationTree;
 import com.mindlin.jsast.tree.SignatureDeclarationTree.CallSignatureTree;
@@ -1406,8 +1409,25 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected MethodSignatureTree parseMethodSignature(SourcePosition start, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
-		//TODO: finish
-		throw new JSUnsupportedException("Method signatures", src.getPosition());
+		List<TypeParameterDeclarationTree> typeParams = this.parseTypeParametersMaybe(src, context);
+		
+		expectOperator(JSOperator.LEFT_PARENTHESIS, src, context);
+		List<ParameterTree> params = this.parseParameters(null, src, context);
+		expectOperator(JSOperator.RIGHT_PARENTHESIS, src, context);
+		
+		TypeTree returnType = this.parseTypeMaybe(src, context, true);
+		
+		this.expectTypeMemberSemicolon(src, context);
+		
+		return new MethodSignatureTreeImpl(start, src.getPosition(), modifiers, name, typeParams, params, returnType);
+	}
+	
+	protected PropertySignatureTree parsePropertySignature(SourcePosition start, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
+		TypeTree type = this.parseTypeMaybe(src, context, true);
+		
+		this.expectTypeMemberSemicolon(src, context);
+		
+		return new PropertySignatureTreeImpl(start, src.getPosition(), modifiers, name, type);
 	}
 	
 	protected PropertyDeclarationTree parsePropertyDeclaration(SourcePosition start, List<DecoratorTree> decorators, Modifiers modifiers, PropertyName name, JSLexer src, Context context) {
@@ -1536,7 +1556,7 @@ public class JSParser {
 			// Method signature
 			return this.parseMethodSignature(start, modifiers, propName, src, context);
 		
-		return this.parsePropertyDeclaration(start, null, modifiers, propName, src, context);
+		return this.parsePropertySignature(start, modifiers, propName, src, context);
 	}
 	
 	/**
@@ -2234,7 +2254,7 @@ public class JSParser {
 	 * <pre>
 	 * IntersectionType:
 	 * 		PrefixType
-	 * 		IntersectionType | PrefixType
+	 * 		IntersectionType & PrefixType
 	 * </pre>
 	 */
 	protected TypeTree parseIntersectionType(JSLexer src, Context context) {

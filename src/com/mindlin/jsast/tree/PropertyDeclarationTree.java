@@ -1,13 +1,12 @@
 package com.mindlin.jsast.tree;
 
-import com.mindlin.jsast.tree.type.TypeElementTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 
 /**
  * 
  * @author mailmindlin
  */
-public interface PropertyDeclarationTree extends PropertyTree, DecoratableTree, NamedDeclarationTree, TypeElementTree, ClassElementTree {
+public interface PropertyDeclarationTree extends PropertyTree, DecoratableTree, NamedDeclarationTree, ClassElementTree {
 	/**
 	 * Get the declared type of this property.
 	 * 

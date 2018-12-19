@@ -5,10 +5,9 @@ package com.mindlin.jsast.tree;
  * 
  * @author mailmindlin
  */
-public interface PropertyTree extends NamedDeclarationTree, UnvisitableTree {
+public interface PropertyTree extends NamedDeclarationTree {
+	Modifiers getModifiers();
 	
 	@Override
 	PropertyName getName();
-	
-	Modifiers getModifiers();
 }
