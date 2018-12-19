@@ -152,6 +152,7 @@ import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.PropertyDeclarationTree;
 import com.mindlin.jsast.tree.PropertyName;
 import com.mindlin.jsast.tree.PropertySignatureTree;
+import com.mindlin.jsast.tree.RegExpLiteralTree;
 import com.mindlin.jsast.tree.SequenceExpressionTree;
 import com.mindlin.jsast.tree.SignatureDeclarationTree;
 import com.mindlin.jsast.tree.SignatureDeclarationTree.CallSignatureTree;
@@ -163,6 +164,7 @@ import com.mindlin.jsast.tree.SuperExpressionTree;
 import com.mindlin.jsast.tree.SwitchCaseTree;
 import com.mindlin.jsast.tree.SwitchTree;
 import com.mindlin.jsast.tree.TemplateElementTree;
+import com.mindlin.jsast.tree.TemplateLiteralTree;
 import com.mindlin.jsast.tree.ThisExpressionTree;
 import com.mindlin.jsast.tree.Tree;
 import com.mindlin.jsast.tree.Tree.Kind;
@@ -773,10 +775,11 @@ public class JSParser {
 			case STRING_LITERAL:
 			case BOOLEAN_LITERAL:
 			case NULL_LITERAL:
+				return this.parseLiteral(src, context);
 			case TEMPLATE_LITERAL:
-				return this.parseLiteral(null, src, context);
+				return this.parseTemplateLiteral(src, context);
 			case OPERATOR:
-				switch (src.peek().<JSOperator>getValue()) {
+				switch (lookahead.<JSOperator>getValue()) {
 					case LEFT_PARENTHESIS: {
 						context.isBindingElement(false);
 						context.isolateCoverGrammar();
@@ -785,14 +788,10 @@ public class JSParser {
 						return result;
 					}
 					case DIVISION:
-					case DIVISION_ASSIGNMENT: {
+					case DIVISION_ASSIGNMENT:
 						// Regular expression
-						context.isAssignmentTarget(false);
-						context.isBindingElement(false);
-						Token regex = src.finishRegExpLiteral(src.skip(lookahead));
-						return this.parseLiteral(regex, src, context);
-					}
-					case LEFT_BRACKET:{
+						return this.parseRegex(src, context);
+					case LEFT_BRACKET: {
 						context.isolateCoverGrammar();
 						ExpressionTree result = this.parseArrayInitializer(src, context);
 						context.inheritCoverGrammar();
@@ -910,7 +909,7 @@ public class JSParser {
 			importSpecifiers.add(new ImportSpecifierTreeImpl(defaultMemberIdentifier));
 			if (src.nextTokenIs(TokenKind.KEYWORD, JSKeyword.FROM)) {
 				//import defaultMember from "module-name";
-				StringLiteralTree source = (StringLiteralTree)this.parseLiteral(null, src, context);
+				StringLiteralTree source = (StringLiteralTree)this.parseLiteral(src, context);
 				expectEOL(src, context);
 				return new ImportDeclarationTreeImpl(importKeywordToken.getStart(), source.getEnd(), importSpecifiers, source);
 			} else {
@@ -945,7 +944,7 @@ public class JSParser {
 		if (!importSpecifiers.isEmpty())
 			expectKeyword(JSKeyword.FROM, src, context);
 		
-		StringLiteralTree source = (StringLiteralTree)this.parseLiteral(null, src, context);
+		StringLiteralTree source = (StringLiteralTree)this.parseLiteral(src, context);
 		
 		expectEOL(src, context);
 		
@@ -1989,7 +1988,7 @@ public class JSParser {
 	 * </pre>
 	 */
 	protected LiteralTypeTree<?> parseLiteralType(JSLexer src, Context context) {
-		LiteralTree<?> value = this.parseLiteral(null, src, context);
+		LiteralTree<?> value = this.parseLiteral(src, context);
 		return new LiteralTypeTreeImpl<>(value);
 	}
 	
@@ -2120,7 +2119,6 @@ public class JSParser {
 			case STRING_LITERAL:
 			case BOOLEAN_LITERAL:
 			case NUMERIC_LITERAL:
-			case REGEX_LITERAL://TODO: is this right?
 			case TEMPLATE_LITERAL://TODO: is this right?
 				return this.parseLiteralType(src, context);
 			case OPERATOR:
@@ -3489,7 +3487,8 @@ public class JSParser {
 				expr = new MemberExpressionTreeImpl(expr.getStart(), src.getPosition(), Kind.MEMBER_SELECT, expr, property);
 			} else if (lookahead.getKind() == TokenKind.TEMPLATE_LITERAL && lookahead.<TemplateTokenInfo>getValue().head) {
 				//TODO Tagged template literal
-				return this.parseLiteral(null, src, context);
+				// return this.parseLiteral(src, context);
+				throw new JSUnsupportedException("tagged template literal", src.getPosition());
 			} else {
 				break;
 			}
@@ -3710,9 +3709,43 @@ public class JSParser {
 	
 	//Literals
 	
-	protected LiteralTree<?> parseLiteral(Token literalToken, JSLexer src, Context context) {
-		if (literalToken == null)
-			literalToken = src.nextToken();
+	protected TemplateLiteralTree parseTemplateLiteral(JSLexer src, Context context) {
+		Token start = expect(TokenKind.TEMPLATE_LITERAL, src, context);
+		
+		ArrayList<TemplateElementTree> quasis = new ArrayList<>();
+		ArrayList<ExpressionTree> expressions = new ArrayList<>();
+		
+		TemplateTokenInfo quasi = start.getValue();
+		if (!quasi.head)
+			throw new IllegalStateException("Not head");
+		quasis.add(new TemplateElementTreeImpl(start.getStart(), start.getEnd(), start.getText(), quasi.cooked));
+		
+		while (!quasi.tail) {
+			expressions.add(this.parseNextExpression(src, context));
+			
+			Token t = src.nextToken();
+			quasi = t.getValue();
+			quasis.add(new TemplateElementTreeImpl(t.getStart(), t.getEnd(), t.getText(), quasi.cooked));
+		}
+		return new TemplateLiteralTreeImpl(start.getStart(), src.getPosition(), quasis, expressions);
+	}
+	
+	protected RegExpLiteralTree parseRegex(JSLexer src, Context context) {
+		Token regexToken = src.finishRegExpLiteral(src.nextToken());
+		expect(regexToken, TokenKind.REGEX_LITERAL, src);
+		
+		context.isAssignmentTarget(false);
+		context.isBindingElement(false);
+		
+		RegExpTokenInfo info = regexToken.getValue();
+		return new RegExpLiteralTreeImpl(regexToken.getStart(), regexToken.getEnd(), info.body, info.flags);
+	}
+	
+	protected LiteralTree<?> parseLiteral(JSLexer src, Context context) {
+		if (src.peek().getKind() == TokenKind.TEMPLATE_LITERAL)
+			return this.parseTemplateLiteral(src, context);
+		
+		Token literalToken = src.nextToken();
 		switch (literalToken.getKind()) {
 			case STRING_LITERAL:
 				context.isAssignmentTarget(false);
@@ -3727,33 +3760,9 @@ public class JSParser {
 				context.isBindingElement(false);
 				return new BooleanLiteralTreeImpl(literalToken);
 			case NULL_LITERAL:
-					context.isAssignmentTarget(false);
-					context.isBindingElement(false);
-				return new NullLiteralTreeImpl(literalToken);
-			case REGEX_LITERAL: {
 				context.isAssignmentTarget(false);
 				context.isBindingElement(false);
-				RegExpTokenInfo info = literalToken.getValue();
-				return new RegExpLiteralTreeImpl(literalToken.getStart(), literalToken.getEnd(), info.body, info.flags);
-			}
-			case TEMPLATE_LITERAL: {
-				ArrayList<TemplateElementTree> quasis = new ArrayList<>();
-				ArrayList<ExpressionTree> expressions = new ArrayList<>();
-				
-				TemplateTokenInfo quasi = literalToken.getValue();
-				if (!quasi.head)
-					throw new IllegalStateException("Not head");
-				quasis.add(new TemplateElementTreeImpl(literalToken.getStart(), literalToken.getEnd(), literalToken.getText(), quasi.cooked));
-				
-				while (!quasi.tail) {
-					expressions.add(this.parseNextExpression(src, context));
-					
-					Token t = src.nextToken();
-					quasi = t.getValue();
-					quasis.add(new TemplateElementTreeImpl(t.getStart(), t.getEnd(), t.getText(), quasi.cooked));
-				}
-				return new TemplateLiteralTreeImpl(literalToken.getStart(), src.getPosition(), quasis, expressions);
-			}
+				return new NullLiteralTreeImpl(literalToken);
 			default:
 				throw new JSUnexpectedTokenException(literalToken);
 		}
@@ -3827,7 +3836,7 @@ public class JSParser {
 		switch (lookahead.getKind()) {
 			case NUMERIC_LITERAL:
 			case STRING_LITERAL:
-				return (PropertyName) this.parseLiteral(null, src, context);
+				return (PropertyName) this.parseLiteral(src, context);
 			case BOOLEAN_LITERAL:
 			case NULL_LITERAL:
 				return new IdentifierTreeImpl(src.skip(lookahead).reinterpretAsIdentifier());
@@ -4039,7 +4048,7 @@ public class JSParser {
 		if (kind == null)
 			return this.parseUnaryPostfix(src, context);
 		
-		final SourcePosition start = src.skip(lookahead).getStart();
+		final SourcePosition start = src.getNextStart();
 		
 		ExpressionTree expression;
 		//TODO: better ASI check?
@@ -4140,22 +4149,23 @@ public class JSParser {
 		static final int FLAG_RETURN            = (1 <<  3);
 		static final int FLAG_BREAK             = (1 <<  4);
 		static final int FLAG_CONTINUE          = (1 <<  5);
-		// SS flags (propagate across)
-		static final int FLAG_ASSIGNMENT_TARGET = (1 <<  6);
-		static final int FLAG_NAMED_BLOCK       = (1 <<  7);
-		static final int FLAG_BINDING_ELEMENT   = (1 <<  8);
-		static final int FLAG_STRICT            = (1 <<  9);
-		static final int FLAG_DIRECTIVE_TARGET  = (1 << 10);
-		static final int FLAG_MAYBE_PARAMETER   = (1 << 11);
-		static final int FLAG_AMBIENT           = (1 << 12);
-		// Scope flags
-		static final int FLAG_FUNCTION          = (1 << 13);
-		static final int FLAG_GENERATOR         = (1 << 14);
-		static final int FLAG_SWITCH            = (1 << 15);
-		static final int FLAG_LOOP              = (1 << 16);
+		static final int FLAG_DECORATOR         = (1 <<  6);
 		// Type context flags
-		static final int FLAG_DEFINITE_TYPE     = (1 << 17);
-		static final int FLAG_OPTIONAL_TYPE     = (1 << 18);
+		static final int FLAG_DEFINITE_TYPE     = (1 <<  7);
+		static final int FLAG_OPTIONAL_TYPE     = (1 <<  8);
+		// SS flags (propagate across)
+		static final int FLAG_ASSIGNMENT_TARGET = (1 <<  9);
+		static final int FLAG_NAMED_BLOCK       = (1 << 10);
+		static final int FLAG_BINDING_ELEMENT   = (1 << 11);
+		static final int FLAG_STRICT            = (1 << 12);
+		static final int FLAG_DIRECTIVE_TARGET  = (1 << 13);
+		static final int FLAG_MAYBE_PARAMETER   = (1 << 14);
+		static final int FLAG_AMBIENT           = (1 << 15);
+		// Scope flags
+		static final int FLAG_FUNCTION          = (1 << 16);
+		static final int FLAG_GENERATOR         = (1 << 17);
+		static final int FLAG_SWITCH            = (1 << 18);
+		static final int FLAG_LOOP              = (1 << 19);
 		
 		ContextData data;
 		// Fields that are global
