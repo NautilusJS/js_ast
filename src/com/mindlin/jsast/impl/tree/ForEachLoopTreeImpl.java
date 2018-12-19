@@ -5,7 +5,6 @@ import java.util.Objects;
 import com.mindlin.jsast.fs.SourcePosition;
 import com.mindlin.jsast.tree.ExpressionTree;
 import com.mindlin.jsast.tree.ForEachLoopTree;
-import com.mindlin.jsast.tree.PatternTree;
 import com.mindlin.jsast.tree.StatementTree;
 import com.mindlin.jsast.tree.VariableDeclarationOrPatternTree;
 
