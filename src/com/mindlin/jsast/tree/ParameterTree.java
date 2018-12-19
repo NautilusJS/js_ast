@@ -12,7 +12,7 @@ import com.mindlin.jsast.tree.type.TypeTree;
  * 
  * @author mailmindlin
  */
-public interface ParameterTree extends DecoratableTree, Tree, UnvisitableTree {
+public interface ParameterTree extends DeclarationTree, DecoratableTree, Tree, UnvisitableTree {
 	
 	/**
 	 * Get the access modifier for this parameter.
