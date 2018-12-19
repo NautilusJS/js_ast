@@ -3,16 +3,13 @@ package com.mindlin.jsast.tree.type;
 import java.util.List;
 
 import com.mindlin.jsast.tree.DeclarationStatementTree;
+import com.mindlin.jsast.tree.Modifiers;
 import com.mindlin.jsast.tree.NamedDeclarationTree;
 import com.mindlin.jsast.tree.StatementTreeVisitor;
 import com.mindlin.jsast.tree.Tree;
 
 public interface EnumDeclarationTree extends NamedDeclarationTree, DeclarationStatementTree {
-	/**
-	 * If const enum.
-	 * @return
-	 */
-	boolean isConst();
+	Modifiers getModifiers();
 	
 	/**
 	 * List members in order
