@@ -95,14 +95,14 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			if (param.getModifiers() != null) {
 				boolean wasOptional = param.isOptional();
 				
-				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), param.getIdentifier(), param.isRest(), false, null, param.getInitializer());
+				param = new ParameterTreeImpl(param.getStart(), param.getEnd(), param.getName(), param.isRest(), false, null, param.getInitializer());
 				//Inject assignment into constructor
 				//TODO: support destructuring in parameters here
-				if (oldParam.getIdentifier().getKind() != Kind.IDENTIFIER)
+				if (oldParam.getName().getKind() != Kind.IDENTIFIER)
 					throw new UnsupportedOperationException("Cannot convert destructuring parameter to property (yet)");
 				
 				//this.[parameter name]
-				IdentifierTree identifier = (IdentifierTree) param.getIdentifier();
+				IdentifierTree identifier = (IdentifierTree) param.getName();
 				PatternTree lhs = new MemberExpressionTreeImpl(Kind.MEMBER_SELECT, new ThisExpressionTreeImpl(-1, -1), identifier);
 				
 				//TODO fix for optional (shouldn't overwrite default values)
@@ -178,7 +178,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 		//TODO check supertype
 		if (!modified)
 			return node;
-		return new AbstractClassTree(node.getStart(), node.getEnd(), node.isAbstract(), node.getIdentifier(),
+		return new AbstractClassTree(node.getStart(), node.getEnd(), node.isAbstract(), node.getName(),
 				Collections.emptyList(), node.getSuperType(), Collections.emptyList(), properties);
 	}
 
@@ -202,7 +202,7 @@ public class ES6Transpiler implements TreeTransformation<ASTTransformerContext> 
 			VariableDeclaratorTree declarator = i.next();
 			if (declarator.getType() == null)
 				continue;
-			i.set(new VariableDeclaratorTreeImpl(declarator.getStart(), declarator.getEnd(), declarator.getIdentifier(), null, declarator.getInitializer()));
+			i.set(new VariableDeclaratorTreeImpl(declarator.getStart(), declarator.getEnd(), declarator.getName(), null, declarator.getInitializer()));
 			modified = true;
 		}
 		

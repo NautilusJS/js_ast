@@ -1050,7 +1050,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 		
 		this.writePrefixModifiers(param.getModifiers(), out);
 	
-		param.getIdentifier().accept(this, out);
+		param.getName().accept(this, out);
 		
 		this.writeParameterPostfixModifiers(modifiers, out);
 		
@@ -1145,7 +1145,7 @@ public class JSWriterImpl implements JSWriter, TreeVisitor<Void, JSWriterImpl.Wr
 
 	@Override
 	public Void visitIdentifierType(IdentifierTypeTree node, WriterHelper out) {
-		node.getIdentifier().accept(this, out);
+		node.getName().accept(this, out);
 		if (node.getGenerics().isEmpty())
 			return null;
 		

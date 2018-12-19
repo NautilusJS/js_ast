@@ -34,7 +34,7 @@ public class ParameterDeclarationValidator implements StatelessValidator<Signatu
 		boolean prevOptional = false;
 		for (ParameterTree param : params) {
 			Modifiers modifiers = param.getModifiers();
-			PatternTree identifier = param.getIdentifier();
+			PatternTree identifier = param.getName();
 			
 			if (identifier.getKind() == Tree.Kind.IDENTIFIER && Objects.equals(((IdentifierTree) identifier).getName(), "this")) {
 				if (!dialect.supports("ts.parameters.this"))

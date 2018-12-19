@@ -40,7 +40,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		//TODO check body
 	}
@@ -56,7 +56,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -70,7 +70,7 @@ public class LambdaTest {
 		assertTrue(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -84,13 +84,13 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		ParameterTree param1 = params.get(1);
 		assertFalse(param1.isRest());
 		assertEquals(param1.getModifiers(), Modifiers.NONE);
 		assertNull(param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());
+		assertIdentifier("y", param1.getName());
 	}
 	
 	@Test
@@ -112,13 +112,13 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		ParameterTree param1 = params.get(1);
 		assertTrue(param1.isRest());
 		assertEquals(param1.getModifiers(), Modifiers.NONE);
 		assertNull(param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());
+		assertIdentifier("y", param1.getName());
 	}
 	
 	@Test
@@ -133,7 +133,7 @@ public class LambdaTest {
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
 		//TODO check type
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -147,13 +147,13 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		ParameterTree param1 = params.get(1);
 		assertFalse(param1.isRest());
 		assertEquals(param1.getModifiers(), Modifiers.NONE);
 		assertNull(param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());
+		assertIdentifier("y", param1.getName());
 	}
 	
 	@Test
@@ -167,7 +167,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertLiteral(5, param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -181,7 +181,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.OPTIONAL);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -195,7 +195,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertLiteral(5, param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -209,7 +209,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.OPTIONAL);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 	}
 	
 	@Test
@@ -223,13 +223,13 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.OPTIONAL);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		ParameterTree param1 = params.get(1);
 		assertFalse(param1.isRest());
 		assertEquals(param1.getModifiers(), Modifiers.OPTIONAL);
 		assertNull(param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());
+		assertIdentifier("y", param1.getName());
 		
 		
 		lambda = parseExpression("(x, y?)=>x", Kind.FUNCTION_EXPRESSION);
@@ -241,13 +241,13 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		param1 = params.get(1);
 		assertFalse(param1.isRest());
 		assertEquals(param1.getModifiers(), Modifiers.OPTIONAL);
 		assertNull(param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());
+		assertIdentifier("y", param1.getName());
 	}
 	
 	@Test
@@ -261,13 +261,13 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertLiteral(5, param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		ParameterTree param1 = params.get(1);
 		assertFalse(param1.isRest());
 		assertEquals(param1.getModifiers(), Modifiers.NONE);
 		assertLiteral(6, param1.getInitializer());
-		assertIdentifier("y", param1.getIdentifier());
+		assertIdentifier("y", param1.getName());
 	}
 	
 	@Test
@@ -281,7 +281,7 @@ public class LambdaTest {
 		assertFalse(param0.isRest());
 		assertEquals(param0.getModifiers(), Modifiers.NONE);
 		assertNull(param0.getInitializer());
-		assertIdentifier("x", param0.getIdentifier());
+		assertIdentifier("x", param0.getName());
 		
 		
 		//Check returned function
@@ -295,7 +295,7 @@ public class LambdaTest {
 		assertFalse(param1_1.isRest());
 		assertEquals(param1_1.getModifiers(), Modifiers.NONE);
 		assertNull(param1_1.getInitializer());
-		assertIdentifier("y", param1_1.getIdentifier());
+		assertIdentifier("y", param1_1.getName());
 		
 		ReturnTree result1 = assertKind(Kind.RETURN, lambda1.getBody());
 		assertIdentifier("x", result1.getExpression());

@@ -53,7 +53,7 @@ public class TypeTest {
 	
 	static void assertIdentifierType(String name, int numGenerics, TypeTree type) {
 		assertEquals(Kind.IDENTIFIER_TYPE, type.getKind());
-		assertIdentifier(name, ((IdentifierTypeTree)type).getIdentifier());
+		assertIdentifier(name, ((IdentifierTypeTree)type).getName());
 		if (numGenerics == 0)
 			assertNull(((IdentifierTypeTree)type).getGenerics());
 		else
@@ -388,11 +388,11 @@ public class TypeTest {
 		assertEquals(2, type.getParameters().size());
 		
 		ParameterTree param0 = type.getParameters().get(0);
-		assertIdentifier("a", param0.getIdentifier());
+		assertIdentifier("a", param0.getName());
 		assertSpecialType(SpecialType.NUMBER, param0.getType());
 		
 		ParameterTree param1 = type.getParameters().get(1);
-		assertIdentifier("b", param1.getIdentifier());
+		assertIdentifier("b", param1.getName());
 		assertSpecialType(SpecialType.NUMBER, param1.getType());
 		
 		assertSpecialType(SpecialType.NUMBER, type.getReturnType());
@@ -408,11 +408,11 @@ public class TypeTest {
 		assertIdentifier("T", tParam0.getName());
 		
 		ParameterTree param0 = type.getParameters().get(0);
-		assertIdentifier("a", param0.getIdentifier());
+		assertIdentifier("a", param0.getName());
 		assertIdentifierType("T", 0, param0.getType());
 		
 		ParameterTree param1 = type.getParameters().get(1);
-		assertIdentifier("b", param1.getIdentifier());
+		assertIdentifier("b", param1.getName());
 		assertIdentifierType("T", 0, param1.getType());
 		
 		assertIdentifierType("T", 0, type.getReturnType());
@@ -438,11 +438,11 @@ public class TypeTest {
 		assertIdentifierType("B", 0, k0b2.getBaseType());
 		
 		ParameterTree param0 = type.getParameters().get(0);
-		assertIdentifier("b", param0.getIdentifier());
+		assertIdentifier("b", param0.getName());
 		assertIdentifierType("B", 0, param0.getType());
 		
 		ParameterTree param1 = type.getParameters().get(1);
-		assertIdentifier("keys", param1.getIdentifier());
+		assertIdentifier("keys", param1.getName());
 		ArrayTypeTree param1Base = assertKind(Kind.ARRAY_TYPE, param1.getType());
 		assertIdentifierType("K", 0, param1Base.getBaseType());
 		
@@ -476,17 +476,17 @@ public class TypeTest {
 		assertEquals(3, type.getParameters().size());
 		
 		ParameterTree param0 = type.getParameters().get(0);
-		assertIdentifier("p0", param0.getIdentifier());
+		assertIdentifier("p0", param0.getName());
 		assertEquals(Modifiers.NONE, param0.getModifiers());
 		assertSpecialType(SpecialType.STRING, param0.getType());
 		
 		ParameterTree param1 = type.getParameters().get(1);
-		assertIdentifier("p1", param1.getIdentifier());
+		assertIdentifier("p1", param1.getName());
 		assertEquals(Modifiers.OPTIONAL, param1.getModifiers());
 		assertSpecialType(SpecialType.NUMBER, param1.getType());
 		
 		ParameterTree param2 = type.getParameters().get(2);
-		assertIdentifier("args", param2.getIdentifier());
+		assertIdentifier("args", param2.getName());
 		assertEquals(Modifiers.NONE, param2.getModifiers());
 		assertTrue(param2.isRest());
 		ArrayTypeTree p2Base = assertKind(Kind.ARRAY_TYPE, param2.getType());

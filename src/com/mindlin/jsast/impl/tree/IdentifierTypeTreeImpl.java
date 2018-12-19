@@ -19,7 +19,7 @@ public class IdentifierTypeTreeImpl extends AbstractTypeTree implements Identifi
 	}
 	
 	@Override
-	public IdentifierTree getIdentifier() {
+	public IdentifierTree getName() {
 		return this.name;
 	}
 	
@@ -30,7 +30,7 @@ public class IdentifierTypeTreeImpl extends AbstractTypeTree implements Identifi
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getIdentifier(), getGenerics());
+		return Objects.hash(getKind(), getName(), getGenerics());
 	}
 	
 }

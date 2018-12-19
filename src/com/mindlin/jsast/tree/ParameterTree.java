@@ -29,7 +29,7 @@ public interface ParameterTree extends DeclarationTree, DecoratableTree, Tree, U
 	 */
 	boolean isRest();
 	
-	PatternTree getIdentifier();
+	PatternTree getName();
 	
 	/**
 	 * Get declared type.

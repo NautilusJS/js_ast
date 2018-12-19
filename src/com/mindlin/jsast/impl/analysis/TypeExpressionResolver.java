@@ -106,7 +106,7 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 		
 		List<ParameterInfo> parameters = new ArrayList<>(node.getParameters().size());
 		for (ParameterTree param : node.getParameters())
-			parameters.add(new ParameterInfo(param.getModifiers(), param.getIdentifier(), param.isRest(), param.getType().accept(this, localCtx), param.getInitializer()));
+			parameters.add(new ParameterInfo(param.getModifiers(), param.getName(), param.isRest(), param.getType().accept(this, localCtx), param.getInitializer()));
 		
 		//TODO: null return type => implicit void?
 		Type returnType = node.getReturnType() == null ? null : node.getReturnType().accept(this, localCtx);
@@ -140,7 +140,7 @@ public class TypeExpressionResolver implements TypeTreeVisitor<Type, TypeContext
 		}
 		
 		//Delegate to TypeContext for resolution
-		return ctx.getType(node.getIdentifier().toString(), generics);
+		return ctx.getType(node.getName().toString(), generics);
 	}
 	
 	@Override

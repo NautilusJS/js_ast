@@ -404,7 +404,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 			RuntimeScope scope = d.pushFunction();
 			int i = 0;
 			for (ParameterTree param : node.getParameters()) {
-				PatternTree identifier = param.getIdentifier();
+				PatternTree identifier = param.getName();
 				//TODO fix patterns
 				String name = ((IdentifierTree) identifier).getName();
 				if (i >= args.length) {
@@ -671,7 +671,7 @@ public class JSScriptInvoker implements TreeVisitor<Object, RuntimeScope>{
 			if (initializer != null)
 				value = initializer.accept(this, d);
 			
-			PatternTree identifier = declarator.getIdentifier();
+			PatternTree identifier = declarator.getName();
 			if (identifier.getKind() == Kind.IDENTIFIER) {
 				String name = ((IdentifierTree)identifier).getName();
 				if (local && d.bindings.containsKey(name))

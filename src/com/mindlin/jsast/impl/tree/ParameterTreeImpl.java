@@ -86,12 +86,12 @@ public class ParameterTreeImpl extends AbstractTree implements ParameterTree {
 	}
 	
 	@Override
-	public PatternTree getIdentifier() {
+	public PatternTree getName() {
 		return identifier;
 	}
 	
 	@Override
 	protected int hash() {
-		return Objects.hash(getKind(), getDecorators(), getModifiers(), getIdentifier(), isRest(), getType(), getInitializer());
+		return Objects.hash(getKind(), getDecorators(), getModifiers(), getName(), isRest(), getType(), getInitializer());
 	}
 }

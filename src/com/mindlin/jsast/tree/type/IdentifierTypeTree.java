@@ -10,7 +10,7 @@ public interface IdentifierTypeTree extends TypeTree {
 	 * Get actual identifier
 	 * @return
 	 */
-	IdentifierTree getIdentifier();
+	IdentifierTree getName();
 	
 	/**
 	 * Get type parameters
