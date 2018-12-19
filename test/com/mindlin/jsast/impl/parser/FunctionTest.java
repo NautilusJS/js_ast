@@ -20,7 +20,7 @@ public class FunctionTest {
 		{
 			FunctionExpressionTree fn = parseExpression("function(a){}", Kind.FUNCTION_EXPRESSION);
 			assertEquals(1, fn.getParameters().size());
-			assertIdentifier("a", fn.getParameters().get(0).getIdentifier());
+			assertIdentifier("a", fn.getParameters().get(0).getName());
 		}
 		{
 			FunctionExpressionTree fn = parseExpression("function(a, b, c){}", Kind.FUNCTION_EXPRESSION);

@@ -12,4 +12,9 @@ public interface MethodSignatureTree extends DecoratableTree, FunctionTree, Type
 	default Kind getKind() {
 		return Kind.METHOD_SIGNATURE;
 	}
+	
+	@Override
+	default <R, D> R accept(TypeElementVisitor<R, D> visitor, D data) {
+		return visitor.visitMethodSignature(this, data);
+	}
 }
