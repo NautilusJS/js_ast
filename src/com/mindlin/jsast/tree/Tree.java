@@ -13,6 +13,7 @@ import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
 import com.mindlin.jsast.tree.comment.CommentNode;
 import com.mindlin.jsast.tree.type.ArrayTypeTree;
 import com.mindlin.jsast.tree.type.CompositeTypeTree;
+import com.mindlin.jsast.tree.type.ConditionalTypeTree;
 import com.mindlin.jsast.tree.type.ConstructorTypeTree;
 import com.mindlin.jsast.tree.type.EnumDeclarationTree;
 import com.mindlin.jsast.tree.type.FunctionTypeTree;
@@ -29,7 +30,6 @@ import com.mindlin.jsast.tree.type.SpecialTypeTree;
 import com.mindlin.jsast.tree.type.TupleTypeTree;
 import com.mindlin.jsast.tree.type.TypeAliasTree;
 import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.ConditionalTypeTree;
 import com.mindlin.jsast.tree.type.TypeTree;
 import com.mindlin.jsast.tree.type.UnaryTypeTree;
 
@@ -397,8 +397,7 @@ public interface Tree {
 	 * This method is less strict than {@link #equals(Object)}, as it does not require all
 	 * fields to be the same. Rather, it is to test a looser 'is pretty much the same' equivalence that ignores
 	 * certain attributes.
-	 * For example, the values of {@link #getStart()}, {@link #getEnd()}, and {@link #isMutable()} should
-	 * be ignored.
+	 * For example, the values of {@link #getStart()} and {@link #getEnd()} should be ignored.
 	 * </p>
 	 * <p>
 	 * Implementations of this method should satisfy the general contract provided by {@link #equals(Object)}. Specifically,
