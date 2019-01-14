@@ -18,7 +18,7 @@ public interface SourceFile {
 	
 	/**
 	 * Get stream of source
-	 * @return
+	 * @return New stream. Should be unique across calls.
 	 */
 	CharacterStream getSourceStream();
 	
@@ -30,7 +30,7 @@ public interface SourceFile {
 	
 	/**
 	 * Get LineMap for file
-	 * @return
+	 * @return line map (or null, if not present)
 	 */
 	default LineMap getLineMap() {return null;}
 	
