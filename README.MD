@@ -1,4 +1,4 @@
-# JS AST
+# NautilusJS Core
 
 This is a JavaScript/TypeScript parser written in Java.
 
@@ -8,8 +8,8 @@ I wrote this project to satisfy the problem of parsing JS/TS code in Java (even 
 This parser should be able to process valid JavaScript and TypeScript. It should fully support ES6 features.
 
 ### Things that this DOES do
- - [Tokenizing JavaScript/TypeScript](https://github.com/Divisors/js_ast/tree/master/src/com/mindlin/jsast/impl/lexer)
- - [Parsing JavaScript/TypeScript](https://github.com/Divisors/js_ast/tree/master/src/com/mindlin/jsast/impl/parser)
+ - [Tokenizing JavaScript/TypeScript](github.com/NautilusJS/js_ast/tree/master/src/main/java/com/mindlin/jsast/impl/lexer)
+ - [Parsing JavaScript/TypeScript](github.com/NautilusJS/js_ast/tree/master/src/main/java/com/mindlin/jsast/impl/parser)
 
 ### Things that this WILL DO (but not right now)
  - Desctructuring operations
@@ -24,8 +24,7 @@ This parser should be able to process valid JavaScript and TypeScript. It should
 ### Thisngs that this PROBABLY WON'T DO
 but could, if people express interest:
  - Automatic semicolon insertion
- - Identifiers named certain keywords (e.g., `of` is reserved by me for for-of loops. However, you can do window['of']
- to access it)
+ - Identifiers named certain keywords (e.g., `of` is reserved by me for for-of loops. However, you can do `window['of']` to access it)
 
 ### Things that this WILL NEVER do
 (before the next release):
