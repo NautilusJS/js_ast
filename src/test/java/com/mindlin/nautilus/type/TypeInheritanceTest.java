@@ -1,4 +1,4 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
 import static org.junit.Assert.*;
 
@@ -6,11 +6,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.analysis.TypeCalculator;
-import com.mindlin.jsast.impl.analysis.TypeContext;
-import com.mindlin.jsast.impl.analysis.TypeExpressionResolver;
-import com.mindlin.jsast.impl.parser.JSParserTest;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.impl.analysis.TypeCalculator;
+import com.mindlin.nautilus.impl.analysis.TypeContext;
+import com.mindlin.nautilus.impl.analysis.TypeExpressionResolver;
+import com.mindlin.nautilus.impl.parser.JSParserTest;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class TypeInheritanceTest {
 	static Type parseType(String typeStr) {

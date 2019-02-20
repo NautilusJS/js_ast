@@ -1,8 +1,8 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.Tree;
 
 /**
  * Tuple type. For all types in form of {@code [T1, T2, ..., Tn]}.

@@ -1,8 +1,8 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.type.Type;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
+import com.mindlin.nautilus.type.Type;
 
 public interface TypeContext {
 	TypeTree getTypeForName(String name);

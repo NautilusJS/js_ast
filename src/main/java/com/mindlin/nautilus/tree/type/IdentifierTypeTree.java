@@ -1,9 +1,9 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.Tree;
 
 public interface IdentifierTypeTree extends TypeTree {
 	/**

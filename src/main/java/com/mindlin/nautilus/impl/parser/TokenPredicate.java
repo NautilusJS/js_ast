@@ -1,9 +1,9 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
 import java.util.function.Predicate;
 
-import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.impl.lexer.TokenKind;
+import com.mindlin.nautilus.impl.lexer.Token;
+import com.mindlin.nautilus.impl.lexer.TokenKind;
 
 /**
  * Commonly used predicates for matching certain classes of tokens

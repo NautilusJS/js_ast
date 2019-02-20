@@ -1,9 +1,9 @@
-package com.mindlin.jsast.json.api;
+package com.mindlin.nautilus.json.api;
 
 import java.io.InvalidClassException;
 import java.util.Iterator;
 
-import com.mindlin.jsast.json.JSONObject;
+import com.mindlin.nautilus.json.JSONObject;
 
 public interface JSONArrayInput extends SafelyCloseable, Iterator<Object> {
 	<T> T read(Class<? extends T> clazz) throws InvalidClassException, JSONParseException;

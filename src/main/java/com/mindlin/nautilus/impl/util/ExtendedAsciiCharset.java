@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.util;
+package com.mindlin.nautilus.impl.util;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;

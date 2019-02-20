@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 public interface ForLoopTree extends LoopTree {
 	StatementTree getInitializer();

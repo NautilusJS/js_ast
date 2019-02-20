@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.util;
+package com.mindlin.nautilus.impl.util;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;

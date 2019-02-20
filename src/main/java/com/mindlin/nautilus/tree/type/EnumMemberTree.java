@@ -1,8 +1,8 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.NamedDeclarationTree;
-import com.mindlin.jsast.tree.UnvisitableTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.NamedDeclarationTree;
+import com.mindlin.nautilus.tree.UnvisitableTree;
 
 public interface EnumMemberTree extends NamedDeclarationTree, UnvisitableTree {
 	

@@ -1,4 +1,4 @@
-package com.mindlin.jsast.writer;
+package com.mindlin.nautilus.writer;
 
 public class JSWriterOptions implements Cloneable {
 	public boolean minify = true;

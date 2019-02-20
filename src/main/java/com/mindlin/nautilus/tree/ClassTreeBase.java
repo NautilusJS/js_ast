@@ -1,9 +1,9 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
 
 public interface ClassTreeBase extends Tree {
 	Modifiers getModifiers();

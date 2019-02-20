@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.util;
+package com.mindlin.nautilus.impl.util;
 
 public class Pair<A, B> {
 	protected final A a;

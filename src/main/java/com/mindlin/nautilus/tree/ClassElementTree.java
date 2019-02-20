@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 /**
  * Marker interface for valid elements of a {@link ClassTreeBase class declaration/expression}.

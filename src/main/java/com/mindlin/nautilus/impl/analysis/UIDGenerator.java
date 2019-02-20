@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 /**
  * Just generates a ID.

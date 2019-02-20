@@ -1,7 +1,7 @@
-package com.mindlin.jsast.exception;
+package com.mindlin.nautilus.exception;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.fs.SourceRange;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.fs.SourceRange;
 
 public class JSSyntaxException extends JSException {
 	private static final long serialVersionUID = 8236793790942441074L;

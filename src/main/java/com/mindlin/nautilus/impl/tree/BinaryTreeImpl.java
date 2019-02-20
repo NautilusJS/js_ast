@@ -1,11 +1,11 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.BinaryExpressionTree;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.BinaryExpressionTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.Tree;
 
 public class BinaryTreeImpl extends AbstractTree implements BinaryExpressionTree {
 	protected final ExpressionTree left, right;

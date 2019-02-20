@@ -1,6 +1,6 @@
-package com.mindlin.jsast.exception;
+package com.mindlin.nautilus.exception;
 
-import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.nautilus.fs.SourcePosition;
 
 public class JSEOFException extends JSSyntaxException {
 	private static final long serialVersionUID = -193254378704376443L;

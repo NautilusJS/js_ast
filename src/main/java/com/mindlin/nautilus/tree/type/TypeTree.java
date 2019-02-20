@@ -1,7 +1,7 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TreeVisitor;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.TreeVisitor;
 
 public interface TypeTree extends Tree {
 	

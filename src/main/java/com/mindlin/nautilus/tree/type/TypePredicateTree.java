@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
 
 public interface TypePredicateTree extends TypeTree {
 	ExpressionTree getParameterName();

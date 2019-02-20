@@ -1,8 +1,8 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.type.ConditionalTypeTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.type.ConditionalTypeTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class ConditionalTypeTreeImpl extends AbstractTree implements ConditionalTypeTree {
 	protected final TypeTree check;

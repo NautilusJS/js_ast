@@ -1,7 +1,7 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSParser.Context;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.parser.JSParser.Context;
 
 @FunctionalInterface
 public interface ParseFunction<R> {

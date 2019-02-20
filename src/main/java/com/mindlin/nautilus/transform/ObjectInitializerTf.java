@@ -1,15 +1,15 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mindlin.jsast.impl.tree.ObjectLiteralTreeImpl;
-import com.mindlin.jsast.tree.ComputedPropertyKeyTree;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ObjectLiteralPropertyTree;
-import com.mindlin.jsast.tree.ObjectLiteralTree;
-import com.mindlin.jsast.tree.ObjectPropertyKeyTree;
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.impl.tree.ObjectLiteralTreeImpl;
+import com.mindlin.nautilus.tree.ComputedPropertyKeyTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.ObjectLiteralPropertyTree;
+import com.mindlin.nautilus.tree.ObjectLiteralTree;
+import com.mindlin.nautilus.tree.ObjectPropertyKeyTree;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
 public class ObjectInitializerTf implements TreeTransformation<Void> {
 

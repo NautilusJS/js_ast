@@ -1,4 +1,4 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
 public enum IntrinsicType implements Type {
 	ANY,

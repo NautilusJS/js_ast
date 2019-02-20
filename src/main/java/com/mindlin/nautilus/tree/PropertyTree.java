@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 /**
  * A property on an object literal or something.

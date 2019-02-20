@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 /**
  * A tree for the debugger statement.

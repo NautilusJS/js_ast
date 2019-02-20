@@ -1,9 +1,9 @@
-package com.mindlin.jsast.fs;
+package com.mindlin.nautilus.fs;
 
 import java.nio.file.Path;
 
-import com.mindlin.jsast.impl.util.CharacterArrayStream;
-import com.mindlin.jsast.impl.util.CharacterStream;
+import com.mindlin.nautilus.impl.util.CharacterArrayStream;
+import com.mindlin.nautilus.impl.util.CharacterStream;
 
 public class MemorySourceFile implements SourceFile {
 	protected char[] data;

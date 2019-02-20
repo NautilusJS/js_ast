@@ -1,14 +1,14 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.DecoratorTree;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.PropertyDeclarationTree;
-import com.mindlin.jsast.tree.PropertyName;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.DecoratorTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.PropertyDeclarationTree;
+import com.mindlin.nautilus.tree.PropertyName;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class PropertyDeclarationTreeImpl extends AbstractTypedPropertyTree implements PropertyDeclarationTree {
 	protected final ExpressionTree initializer;

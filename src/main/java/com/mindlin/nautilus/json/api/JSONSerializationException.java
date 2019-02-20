@@ -1,4 +1,4 @@
-package com.mindlin.jsast.json.api;
+package com.mindlin.nautilus.json.api;
 
 public class JSONSerializationException extends RuntimeException {
 	public JSONSerializationException(Exception e) {

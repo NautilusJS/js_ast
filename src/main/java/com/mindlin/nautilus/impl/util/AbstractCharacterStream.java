@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.util;
+package com.mindlin.nautilus.impl.util;
 
 public abstract class AbstractCharacterStream implements CharacterStream {
 	protected final LongStack marks = new LongStack();

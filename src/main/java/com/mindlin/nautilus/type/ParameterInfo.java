@@ -1,8 +1,8 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.PatternTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.PatternTree;
 
 public class ParameterInfo {
 	protected Modifiers modifiers;

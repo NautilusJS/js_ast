@@ -1,14 +1,14 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.assertLiteral;
-import static com.mindlin.jsast.impl.parser.JSParserTest.parseExpression;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.assertLiteral;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.parseExpression;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.ArrayLiteralTree;
-import com.mindlin.jsast.tree.ObjectLiteralTree;
+import com.mindlin.nautilus.tree.ArrayLiteralTree;
+import com.mindlin.nautilus.tree.ObjectLiteralTree;
 
 public class ArrayLiteralTest {
 	@Test

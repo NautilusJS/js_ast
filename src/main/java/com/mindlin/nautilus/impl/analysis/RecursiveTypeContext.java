@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mindlin.jsast.type.Type;
+import com.mindlin.nautilus.type.Type;
 
 /**
  * Lightweight (memory) inheriting TypeContext.

@@ -1,4 +1,4 @@
-package com.mindlin.jsast.harness;
+package com.mindlin.nautilus.harness;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -8,12 +8,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-import com.mindlin.jsast.fs.SourceFile;
-import com.mindlin.jsast.fs.SourceFile.NominalSourceFile;
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSDialect;
-import com.mindlin.jsast.impl.parser.JSParser;
-import com.mindlin.jsast.tree.CompilationUnitTree;
+import com.mindlin.nautilus.fs.SourceFile;
+import com.mindlin.nautilus.fs.SourceFile.NominalSourceFile;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.parser.JSDialect;
+import com.mindlin.nautilus.impl.parser.JSParser;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
 
 public class ReadPass implements CompilerPass<Path, CompilationUnitTree> {
 	List<CompilerStage> stages;

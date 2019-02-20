@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.type.IndexSignatureTree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.type.IndexSignatureTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class IndexSignatureTreeImpl extends AbstractTree implements IndexSignatureTree {
 	protected final Modifiers modifiers;

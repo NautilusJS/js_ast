@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl;
+package com.mindlin.nautilus.impl;
 
 public class TestUtils {
 	public static final void assertNumberEquals(Number expected, Number actual, String message) {

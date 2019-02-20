@@ -1,8 +1,8 @@
-package com.mindlin.jsast.harness;
+package com.mindlin.nautilus.harness;
 
 import java.util.stream.Stream;
 
-import com.mindlin.jsast.tree.CompilationUnitTree;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
 
 public class TransformPass implements CompilerPass<CompilationUnitTree, CompilationUnitTree> {
 	

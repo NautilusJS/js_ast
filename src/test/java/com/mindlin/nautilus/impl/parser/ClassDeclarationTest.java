@@ -1,16 +1,16 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
-import com.mindlin.jsast.tree.HeritageClauseTree;
-import com.mindlin.jsast.tree.HeritageExpressionTree;
-import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.ClassTreeBase.ClassDeclarationTree;
+import com.mindlin.nautilus.tree.HeritageClauseTree;
+import com.mindlin.nautilus.tree.HeritageExpressionTree;
+import com.mindlin.nautilus.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
 
 public class ClassDeclarationTest {
 	

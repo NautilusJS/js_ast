@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.validator;
+package com.mindlin.nautilus.impl.validator;
 
-import com.mindlin.jsast.impl.validator.ErrorReporter.ErrorLevel;
-import com.mindlin.jsast.tree.SignatureDeclarationTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.util.TreePath;
+import com.mindlin.nautilus.impl.validator.ErrorReporter.ErrorLevel;
+import com.mindlin.nautilus.tree.SignatureDeclarationTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.util.TreePath;
 
 public class StrictWithValidator implements StatelessValidator<SignatureDeclarationTree> {
 	

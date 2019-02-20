@@ -1,4 +1,4 @@
-package com.mindlin.jsast.json;
+package com.mindlin.nautilus.json;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -6,10 +6,10 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.json.api.JSONExternalizable;
-import com.mindlin.jsast.json.api.JSONInput;
-import com.mindlin.jsast.json.api.JSONObjectOutput;
-import com.mindlin.jsast.json.api.JSONOutput;
+import com.mindlin.nautilus.json.api.JSONExternalizable;
+import com.mindlin.nautilus.json.api.JSONInput;
+import com.mindlin.nautilus.json.api.JSONObjectOutput;
+import com.mindlin.nautilus.json.api.JSONOutput;
 
 public class JSONSerializationTest {
 

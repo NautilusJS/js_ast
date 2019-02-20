@@ -1,13 +1,13 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.type.TypeAliasTree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.type.TypeAliasTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class TypeAliasTreeImpl extends AbstractTree implements TypeAliasTree {
 	protected final IdentifierTree name;

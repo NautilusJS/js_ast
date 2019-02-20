@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.TemplateElementTree;
-import com.mindlin.jsast.tree.TemplateLiteralTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.TemplateElementTree;
+import com.mindlin.nautilus.tree.TemplateLiteralTree;
 
 public class TemplateLiteralTreeImpl extends AbstractTree implements TemplateLiteralTree {
 	protected final List<TemplateElementTree> quasis;

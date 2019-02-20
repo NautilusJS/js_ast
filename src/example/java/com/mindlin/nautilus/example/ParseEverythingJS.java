@@ -1,4 +1,4 @@
-package com.mindlin.jsast.example;
+package com.mindlin.nautilus.example;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -8,12 +8,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSParser;
-import com.mindlin.jsast.impl.writer.JSWriterImpl;
-import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.writer.JSWriter;
-import com.mindlin.jsast.writer.JSWriterOptions;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.parser.JSParser;
+import com.mindlin.nautilus.impl.writer.JSWriterImpl;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
+import com.mindlin.nautilus.writer.JSWriter;
+import com.mindlin.nautilus.writer.JSWriterOptions;
 
 public class ParseEverythingJS {
 	protected static final String EVERYTHINGJS_URL = "https://rawgit.com/michaelficarra/everything.js/master/es2015-script.js";

@@ -1,4 +1,4 @@
-package com.mindlin.jsast.harness;
+package com.mindlin.nautilus.harness;
 
 public abstract class CompilerStage<S, R> {
 	public abstract String getName();

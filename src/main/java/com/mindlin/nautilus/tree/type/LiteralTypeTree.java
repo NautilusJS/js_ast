@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.LiteralTree;
+import com.mindlin.nautilus.tree.LiteralTree;
 
 public interface LiteralTypeTree<T> extends TypeTree {
 	LiteralTree<T> getValue();

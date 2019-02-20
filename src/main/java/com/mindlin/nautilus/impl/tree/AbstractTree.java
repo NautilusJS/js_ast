@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -7,9 +7,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.fs.SourceRange;
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.fs.SourceRange;
+import com.mindlin.nautilus.tree.Tree;
 
 public abstract class AbstractTree implements Tree {
 	public static String writeJSON(Object value) {

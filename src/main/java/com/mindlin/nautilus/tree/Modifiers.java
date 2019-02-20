@@ -1,9 +1,9 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mindlin.jsast.impl.util.ObjectCache;
+import com.mindlin.nautilus.impl.util.ObjectCache;
 
 public class Modifiers implements Comparable<Modifiers> {
 	protected static final ObjectCache<Modifiers> CACHE = new ObjectCache<>();

@@ -1,18 +1,18 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.DecoratorTree;
-import com.mindlin.jsast.tree.MethodSignatureTree;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.PropertyName;
-import com.mindlin.jsast.tree.SignatureDeclarationTree;
-import com.mindlin.jsast.tree.type.ConstructorTypeTree;
-import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.DecoratorTree;
+import com.mindlin.nautilus.tree.MethodSignatureTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.ParameterTree;
+import com.mindlin.nautilus.tree.PropertyName;
+import com.mindlin.nautilus.tree.SignatureDeclarationTree;
+import com.mindlin.nautilus.tree.type.ConstructorTypeTree;
+import com.mindlin.nautilus.tree.type.FunctionTypeTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public abstract class AbstractSignatureDeclarationTree extends AbstractTree implements SignatureDeclarationTree {
 	protected final PropertyName name;

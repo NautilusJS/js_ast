@@ -1,9 +1,9 @@
-package com.mindlin.jsast.tree.util;
+package com.mindlin.nautilus.tree.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.Tree;
 
 public class TreePath<T extends Tree> {
 	protected final TreePath<?> parent;

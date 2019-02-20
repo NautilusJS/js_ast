@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public interface VariableDeclaratorTree extends NamedDeclarationTree, UnvisitableTree {
 	

@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.BlockTree;
-import com.mindlin.jsast.tree.CatchTree;
-import com.mindlin.jsast.tree.TryTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.BlockTree;
+import com.mindlin.nautilus.tree.CatchTree;
+import com.mindlin.nautilus.tree.TryTree;
 
 public class TryTreeImpl extends AbstractTree implements TryTree {
 	protected final BlockTree tryBlock;

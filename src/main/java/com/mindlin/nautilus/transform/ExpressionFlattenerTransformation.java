@@ -1,22 +1,22 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.mindlin.jsast.impl.analysis.SideEffectValidator;
-import com.mindlin.jsast.impl.tree.BinaryTreeImpl;
-import com.mindlin.jsast.impl.tree.NumericLiteralTreeImpl;
-import com.mindlin.jsast.impl.tree.SequenceExpressionTreeImpl;
-import com.mindlin.jsast.tree.BinaryExpressionTree;
-import com.mindlin.jsast.tree.BooleanLiteralTree;
-import com.mindlin.jsast.tree.ConditionalExpressionTree;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.SequenceExpressionTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.UnaryTree;
+import com.mindlin.nautilus.impl.analysis.SideEffectValidator;
+import com.mindlin.nautilus.impl.tree.BinaryTreeImpl;
+import com.mindlin.nautilus.impl.tree.NumericLiteralTreeImpl;
+import com.mindlin.nautilus.impl.tree.SequenceExpressionTreeImpl;
+import com.mindlin.nautilus.tree.BinaryExpressionTree;
+import com.mindlin.nautilus.tree.BooleanLiteralTree;
+import com.mindlin.nautilus.tree.ConditionalExpressionTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.ParenthesizedTree;
+import com.mindlin.nautilus.tree.SequenceExpressionTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.UnaryTree;
 
 public class ExpressionFlattenerTransformation implements TreeTransformation<ASTTransformerContext> {
 

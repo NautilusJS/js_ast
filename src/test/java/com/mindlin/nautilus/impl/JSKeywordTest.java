@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl;
+package com.mindlin.nautilus.impl;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.parser.JSKeyword;
+import com.mindlin.nautilus.impl.parser.JSKeyword;
 
 public class JSKeywordTest {
 	

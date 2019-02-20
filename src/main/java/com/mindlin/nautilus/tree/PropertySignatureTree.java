@@ -1,7 +1,7 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.type.TypeElementTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.tree.type.TypeElementTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public interface PropertySignatureTree extends PropertyTree, TypeElementTree {
 	TypeTree getType();

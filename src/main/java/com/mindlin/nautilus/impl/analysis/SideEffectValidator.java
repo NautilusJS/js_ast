@@ -1,19 +1,19 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.Optional;
 
-import com.mindlin.jsast.transform.ASTTransformerContext;
-import com.mindlin.jsast.tree.ArrayLiteralTree;
-import com.mindlin.jsast.tree.BinaryExpressionTree;
-import com.mindlin.jsast.tree.BooleanLiteralTree;
-import com.mindlin.jsast.tree.ConditionalExpressionTree;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.NumericLiteralTree;
-import com.mindlin.jsast.tree.ObjectLiteralTree;
-import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.StringLiteralTree;
-import com.mindlin.jsast.tree.TemplateLiteralTree;
+import com.mindlin.nautilus.transform.ASTTransformerContext;
+import com.mindlin.nautilus.tree.ArrayLiteralTree;
+import com.mindlin.nautilus.tree.BinaryExpressionTree;
+import com.mindlin.nautilus.tree.BooleanLiteralTree;
+import com.mindlin.nautilus.tree.ConditionalExpressionTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.NumericLiteralTree;
+import com.mindlin.nautilus.tree.ObjectLiteralTree;
+import com.mindlin.nautilus.tree.ParenthesizedTree;
+import com.mindlin.nautilus.tree.StringLiteralTree;
+import com.mindlin.nautilus.tree.TemplateLiteralTree;
 
 public class SideEffectValidator {
 	public static Optional<Boolean> coerceToBoolean(ASTTransformerContext ctx, ExpressionTree tree) {

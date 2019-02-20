@@ -1,20 +1,20 @@
-package com.mindlin.jsast.impl;
+package com.mindlin.nautilus.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
+import static com.mindlin.nautilus.impl.TestUtils.assertNumberEquals;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.exception.JSSyntaxException;
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.impl.lexer.TokenKind;
-import com.mindlin.jsast.impl.parser.JSKeyword;
-import com.mindlin.jsast.impl.parser.JSOperator;
-import com.mindlin.jsast.impl.parser.JSSpecialGroup;
-import com.mindlin.jsast.impl.util.Characters;
+import com.mindlin.nautilus.exception.JSSyntaxException;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.lexer.Token;
+import com.mindlin.nautilus.impl.lexer.TokenKind;
+import com.mindlin.nautilus.impl.parser.JSKeyword;
+import com.mindlin.nautilus.impl.parser.JSOperator;
+import com.mindlin.nautilus.impl.parser.JSSpecialGroup;
+import com.mindlin.nautilus.impl.util.Characters;
 
 public class JSLexerTest {
 	

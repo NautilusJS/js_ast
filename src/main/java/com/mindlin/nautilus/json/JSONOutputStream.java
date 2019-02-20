@@ -1,4 +1,4 @@
-package com.mindlin.jsast.json;
+package com.mindlin.nautilus.json;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -6,11 +6,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
 
-import com.mindlin.jsast.json.api.JSONArrayOutput;
-import com.mindlin.jsast.json.api.JSONObjectOutput;
-import com.mindlin.jsast.json.api.JSONOutput;
-import com.mindlin.jsast.json.api.JSONSerializationException;
-import com.mindlin.jsast.json.api.SafelyCloseable;
+import com.mindlin.nautilus.json.api.JSONArrayOutput;
+import com.mindlin.nautilus.json.api.JSONObjectOutput;
+import com.mindlin.nautilus.json.api.JSONOutput;
+import com.mindlin.nautilus.json.api.JSONSerializationException;
+import com.mindlin.nautilus.json.api.SafelyCloseable;
 
 public class JSONOutputStream implements JSONOutput {
 	protected final JSONSerializationConfig config = new JSONSerializationConfig();

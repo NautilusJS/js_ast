@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.LiteralTree;
-import com.mindlin.jsast.tree.type.LiteralTypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.LiteralTree;
+import com.mindlin.nautilus.tree.type.LiteralTypeTree;
 
 public class LiteralTypeTreeImpl<T> extends AbstractTypeTree implements LiteralTypeTree<T> {
 	protected final LiteralTree<T> value;

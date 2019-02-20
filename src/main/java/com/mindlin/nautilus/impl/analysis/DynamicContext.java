@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.List;
 import java.util.Set;
 
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.type.Type;
-import com.mindlin.jsast.type.TypeParameter;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.type.Type;
+import com.mindlin.nautilus.type.TypeParameter;
 
 /**
  * A context that can be changed over time.

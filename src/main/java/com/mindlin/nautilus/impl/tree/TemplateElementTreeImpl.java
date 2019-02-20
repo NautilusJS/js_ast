@@ -1,7 +1,7 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.TemplateElementTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.TemplateElementTree;
 
 public class TemplateElementTreeImpl extends AbstractTree implements TemplateElementTree {
 	protected final String raw;

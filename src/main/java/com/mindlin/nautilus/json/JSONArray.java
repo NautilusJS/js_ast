@@ -1,4 +1,4 @@
-package com.mindlin.jsast.json;
+package com.mindlin.nautilus.json;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,11 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.mindlin.jsast.json.api.JSONArrayInput;
-import com.mindlin.jsast.json.api.JSONArrayOutput;
-import com.mindlin.jsast.json.api.JSONExternalizable;
-import com.mindlin.jsast.json.api.JSONInput;
-import com.mindlin.jsast.json.api.JSONOutput;
+import com.mindlin.nautilus.json.api.JSONArrayInput;
+import com.mindlin.nautilus.json.api.JSONArrayOutput;
+import com.mindlin.nautilus.json.api.JSONExternalizable;
+import com.mindlin.nautilus.json.api.JSONInput;
+import com.mindlin.nautilus.json.api.JSONOutput;
 
 public class JSONArray implements List<Object>, JSONExternalizable {
 	protected final List<Object> backingList;

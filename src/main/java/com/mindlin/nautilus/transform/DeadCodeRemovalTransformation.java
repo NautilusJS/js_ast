@@ -1,17 +1,17 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
-import com.mindlin.jsast.impl.analysis.SideEffectValidator;
-import com.mindlin.jsast.impl.tree.BlockTreeImpl;
-import com.mindlin.jsast.impl.tree.EmptyStatementTreeImpl;
-import com.mindlin.jsast.impl.tree.ExpressionStatementTreeImpl;
-import com.mindlin.jsast.tree.BlockTree;
-import com.mindlin.jsast.tree.IfTree;
-import com.mindlin.jsast.tree.StatementTree;
-import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.VariableDeclarationTree;
+import com.mindlin.nautilus.impl.analysis.SideEffectValidator;
+import com.mindlin.nautilus.impl.tree.BlockTreeImpl;
+import com.mindlin.nautilus.impl.tree.EmptyStatementTreeImpl;
+import com.mindlin.nautilus.impl.tree.ExpressionStatementTreeImpl;
+import com.mindlin.nautilus.tree.BlockTree;
+import com.mindlin.nautilus.tree.IfTree;
+import com.mindlin.nautilus.tree.StatementTree;
+import com.mindlin.nautilus.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.VariableDeclarationTree;
 
 public class DeadCodeRemovalTransformation implements TreeTransformation<ASTTransformerContext> {
 

@@ -1,9 +1,9 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.ClassTreeBase.ClassDeclarationTree;
-import com.mindlin.jsast.tree.type.EnumDeclarationTree;
-import com.mindlin.jsast.tree.type.InterfaceDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeAliasTree;
+import com.mindlin.nautilus.tree.ClassTreeBase.ClassDeclarationTree;
+import com.mindlin.nautilus.tree.type.EnumDeclarationTree;
+import com.mindlin.nautilus.tree.type.InterfaceDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeAliasTree;
 
 public interface StatementTreeVisitor<R, D> {
 	R visitBlock(BlockTree node, D d);

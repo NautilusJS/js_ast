@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.Tree;
 
 public interface MemberTypeTree extends TypeTree {
 	TypeTree getName();

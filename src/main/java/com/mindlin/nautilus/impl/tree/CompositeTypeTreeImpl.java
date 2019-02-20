@@ -1,13 +1,13 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.type.CompositeTypeTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.type.CompositeTypeTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 /**
  * Class to implement union and intersection types.

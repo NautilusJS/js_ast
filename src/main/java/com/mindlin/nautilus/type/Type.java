@@ -1,4 +1,4 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
 /**
  * Base class for types

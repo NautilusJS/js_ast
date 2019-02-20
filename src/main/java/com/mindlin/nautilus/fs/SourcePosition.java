@@ -1,4 +1,4 @@
-package com.mindlin.jsast.fs;
+package com.mindlin.nautilus.fs;
 
 import java.io.Serializable;
 import java.util.Objects;

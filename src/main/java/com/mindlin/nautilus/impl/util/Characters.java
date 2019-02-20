@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.util;
+package com.mindlin.nautilus.impl.util;
 
 public final class Characters {
 	public static final char NULL = '\0',

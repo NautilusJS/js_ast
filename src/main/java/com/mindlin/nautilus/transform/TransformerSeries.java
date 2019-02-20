@@ -1,11 +1,11 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.mindlin.jsast.tree.CompilationUnitTree;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
 
 public class TransformerSeries implements Function<CompilationUnitTree, CompilationUnitTree> {
 	protected final List<ASTTransformer<?>> transformers;

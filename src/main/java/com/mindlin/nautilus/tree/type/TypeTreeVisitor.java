@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.TreeVisitor;
+import com.mindlin.nautilus.tree.TreeVisitor;
 
 /**
  * Visitor for type trees

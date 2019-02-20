@@ -1,10 +1,10 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.type.TypeElementTree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.tree.type.TypeElementTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public interface SignatureDeclarationTree extends NamedDeclarationTree {
 	@Override

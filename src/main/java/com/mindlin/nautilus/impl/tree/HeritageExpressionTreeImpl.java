@@ -1,11 +1,11 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.HeritageExpressionTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.HeritageExpressionTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class HeritageExpressionTreeImpl extends AbstractTree implements HeritageExpressionTree {
 	protected final ExpressionTree expression;

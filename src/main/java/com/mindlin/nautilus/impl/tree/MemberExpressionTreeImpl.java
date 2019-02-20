@@ -1,8 +1,8 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.MemberExpressionTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.MemberExpressionTree;
 
 public class MemberExpressionTreeImpl extends BinaryTreeImpl implements MemberExpressionTree {
 

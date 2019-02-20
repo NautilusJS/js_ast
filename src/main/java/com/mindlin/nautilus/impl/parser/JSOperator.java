@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
 public enum JSOperator {
 	// Reference:

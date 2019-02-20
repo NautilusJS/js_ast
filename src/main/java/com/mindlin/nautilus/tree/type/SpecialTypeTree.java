@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.Tree;
 
 /**
  * Type tree representing built-in primitive types

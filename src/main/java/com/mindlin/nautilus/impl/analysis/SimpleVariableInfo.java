@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.mindlin.jsast.type.LiteralType;
-import com.mindlin.jsast.type.Type;
-import com.mindlin.jsast.type.TypeMember;
+import com.mindlin.nautilus.type.LiteralType;
+import com.mindlin.nautilus.type.Type;
+import com.mindlin.nautilus.type.TypeMember;
 
 public class SimpleVariableInfo extends AbstractVariableInfo {
 	protected final VariableInfo parent;

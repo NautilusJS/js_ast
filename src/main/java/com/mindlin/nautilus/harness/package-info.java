@@ -5,4 +5,4 @@
  * CLI harness helpers
  * @author mailmindlin
  */
-package com.mindlin.jsast.harness;
+package com.mindlin.nautilus.harness;

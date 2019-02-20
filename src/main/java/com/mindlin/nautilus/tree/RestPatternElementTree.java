@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.ObjectPatternTree.ObjectPatternElement;
+import com.mindlin.nautilus.tree.ObjectPatternTree.ObjectPatternElement;
 
 public interface RestPatternElementTree extends PatternTree, ObjectPatternElement {
 	PatternTree getValue();

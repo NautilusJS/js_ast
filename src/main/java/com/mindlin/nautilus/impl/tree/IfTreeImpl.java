@@ -1,11 +1,11 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.IfTree;
-import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.IfTree;
+import com.mindlin.nautilus.tree.StatementTree;
 
 public class IfTreeImpl extends AbstractTree implements IfTree {
 	protected final ExpressionTree expression;

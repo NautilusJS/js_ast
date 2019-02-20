@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 //TODO change value from String[2] to some better type (e.g., RegExpTokenInfo)
 public interface RegExpLiteralTree extends LiteralTree<String[]> {

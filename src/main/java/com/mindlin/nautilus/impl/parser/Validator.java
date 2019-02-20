@@ -1,13 +1,13 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.SequenceExpressionTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.ParenthesizedTree;
+import com.mindlin.nautilus.tree.SequenceExpressionTree;
 
 /**
- * This is a helper class for {@link com.mindlin.jsast.impl.parser.JSParser JSParser} to throw errors
+ * This is a helper class for {@link com.mindlin.nautilus.impl.parser.JSParser JSParser} to throw errors
  * while parsing code. The methods of this class don't ensure that the code can be run without errors
  * (more static error detection is needed), but does serve to save debugging time for blatant errors.
  * @author mailmindlin

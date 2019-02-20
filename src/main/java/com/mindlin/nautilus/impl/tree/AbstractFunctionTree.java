@@ -1,21 +1,21 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.DecoratorTree;
-import com.mindlin.jsast.tree.FunctionDeclarationTree;
-import com.mindlin.jsast.tree.FunctionExpressionTree;
-import com.mindlin.jsast.tree.FunctionTree;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.MethodDeclarationTree;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.PropertyName;
-import com.mindlin.jsast.tree.StatementTree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.DecoratorTree;
+import com.mindlin.nautilus.tree.FunctionDeclarationTree;
+import com.mindlin.nautilus.tree.FunctionExpressionTree;
+import com.mindlin.nautilus.tree.FunctionTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.MethodDeclarationTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.ParameterTree;
+import com.mindlin.nautilus.tree.PropertyName;
+import com.mindlin.nautilus.tree.StatementTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public abstract class AbstractFunctionTree extends AbstractTree implements FunctionTree {
 	protected final Modifiers modifiers;

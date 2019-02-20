@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 public interface StatementTree extends Tree {
 	<R, D> R accept(StatementTreeVisitor<R, D> visitor, D data);

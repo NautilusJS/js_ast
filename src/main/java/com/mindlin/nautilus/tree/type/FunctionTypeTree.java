@@ -1,7 +1,7 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.SignatureDeclarationTree;
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.SignatureDeclarationTree;
+import com.mindlin.nautilus.tree.Tree;
 
 /**
  * Represents a function type. May be written as

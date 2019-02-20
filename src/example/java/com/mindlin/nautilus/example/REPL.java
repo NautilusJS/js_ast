@@ -1,19 +1,19 @@
-package com.mindlin.jsast.example;
+package com.mindlin.nautilus.example;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Scanner;
 
-import com.mindlin.jsast.impl.parser.JSParser;
-import com.mindlin.jsast.impl.runtime.JSScriptEngine;
-import com.mindlin.jsast.impl.writer.JSWriterImpl;
-import com.mindlin.jsast.transform.DeadCodeRemovalTransformation;
-import com.mindlin.jsast.transform.ES6Transpiler;
-import com.mindlin.jsast.transform.ExpressionFixerTf;
-import com.mindlin.jsast.transform.ExpressionFlattenerTransformation;
-import com.mindlin.jsast.transform.TransformerSeries;
-import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.writer.JSWriterOptions;
+import com.mindlin.nautilus.impl.parser.JSParser;
+import com.mindlin.nautilus.impl.runtime.JSScriptEngine;
+import com.mindlin.nautilus.impl.writer.JSWriterImpl;
+import com.mindlin.nautilus.transform.DeadCodeRemovalTransformation;
+import com.mindlin.nautilus.transform.ES6Transpiler;
+import com.mindlin.nautilus.transform.ExpressionFixerTf;
+import com.mindlin.nautilus.transform.ExpressionFlattenerTransformation;
+import com.mindlin.nautilus.transform.TransformerSeries;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
+import com.mindlin.nautilus.writer.JSWriterOptions;
 
 public class REPL {
 	public static void main(String[] args) throws IOException {

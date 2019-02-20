@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.PropertyName;
-import com.mindlin.jsast.tree.PropertyTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.PropertyName;
+import com.mindlin.nautilus.tree.PropertyTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public abstract class AbstractTypedPropertyTree extends AbstractTree implements PropertyTree {
 	protected final Modifiers modifiers;

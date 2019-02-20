@@ -1,4 +1,4 @@
-package com.mindlin.jsast.fs;
+package com.mindlin.nautilus.fs;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.mindlin.jsast.impl.util.CharacterStream;
+import com.mindlin.nautilus.impl.util.CharacterStream;
 
 public class ZipEntrySourceFile implements SourceFile {
 	public static List<ZipEntrySourceFile> read(Path zipPath, Charset charset) throws IOException {

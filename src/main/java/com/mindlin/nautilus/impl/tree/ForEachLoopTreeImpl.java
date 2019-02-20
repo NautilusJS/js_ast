@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.ForEachLoopTree;
-import com.mindlin.jsast.tree.StatementTree;
-import com.mindlin.jsast.tree.VariableDeclarationOrPatternTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.ForEachLoopTree;
+import com.mindlin.nautilus.tree.StatementTree;
+import com.mindlin.nautilus.tree.VariableDeclarationOrPatternTree;
 
 public class ForEachLoopTreeImpl extends AbstractLoopTree implements ForEachLoopTree {
 	protected final VariableDeclarationOrPatternTree variable;

@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.BreakTree;
-import com.mindlin.jsast.tree.ContinueTree;
-import com.mindlin.jsast.tree.GotoTree;
-import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.BreakTree;
+import com.mindlin.nautilus.tree.ContinueTree;
+import com.mindlin.nautilus.tree.GotoTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
 
 public abstract class AbstractGotoTree extends AbstractTree implements GotoTree {
 	protected final IdentifierTree label;

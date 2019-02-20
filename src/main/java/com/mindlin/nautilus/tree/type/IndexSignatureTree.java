@@ -1,11 +1,11 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.ClassElementTree;
-import com.mindlin.jsast.tree.ClassElementVisitor;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeElementVisitor;
+import com.mindlin.nautilus.tree.ClassElementTree;
+import com.mindlin.nautilus.tree.ClassElementVisitor;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.TreeVisitor;
+import com.mindlin.nautilus.tree.TypeElementVisitor;
 
 /**
  * Index signature: properties in form of {@code [key: T]: R}.

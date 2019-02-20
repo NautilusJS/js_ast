@@ -1,15 +1,15 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
 import org.junit.Assert;
 

@@ -1,4 +1,4 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
 public class UnaryType implements Type {
 	protected final Type.Kind kind;

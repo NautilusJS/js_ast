@@ -1,12 +1,12 @@
-package com.mindlin.jsast.harness;
+package com.mindlin.nautilus.harness;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.mindlin.jsast.impl.parser.JSDialect;
-import com.mindlin.jsast.impl.parser.JSDialect.JSStandardDialect;
+import com.mindlin.nautilus.impl.parser.JSDialect;
+import com.mindlin.nautilus.impl.parser.JSDialect.JSStandardDialect;
 
 public class CompilerOptions {
 	public static final CompilerOption<String> PRINT_HELP = new CompilerOption<>("print_help");

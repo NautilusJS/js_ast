@@ -1,11 +1,11 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 import java.util.List;
 
-import com.mindlin.jsast.impl.util.Pair;
-import com.mindlin.jsast.impl.util.Scope;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.impl.util.Pair;
+import com.mindlin.nautilus.impl.util.Scope;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public interface VariableContext {
 	public static interface VariableInfo {

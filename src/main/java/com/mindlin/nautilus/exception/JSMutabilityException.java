@@ -1,4 +1,4 @@
-package com.mindlin.jsast.exception;
+package com.mindlin.nautilus.exception;
 
 public class JSMutabilityException extends RuntimeException {
 

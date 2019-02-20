@@ -1,13 +1,13 @@
-package com.mindlin.jsast.impl;
+package com.mindlin.nautilus.impl;
 
 import static org.junit.Assert.*;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.util.CharacterArrayStream;
-import com.mindlin.jsast.impl.util.CharacterStream;
-import com.mindlin.jsast.impl.util.Characters;
+import com.mindlin.nautilus.impl.util.CharacterArrayStream;
+import com.mindlin.nautilus.impl.util.CharacterStream;
+import com.mindlin.nautilus.impl.util.Characters;
 
 public class CharacterStreamTest {
 	@Test

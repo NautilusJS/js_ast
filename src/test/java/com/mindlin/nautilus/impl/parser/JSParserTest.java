@@ -1,6 +1,6 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.TestUtils.assertNumberEquals;
+import static com.mindlin.nautilus.impl.TestUtils.assertNumberEquals;
 import static org.junit.Assert.*;
 
 import java.util.List;
@@ -9,22 +9,22 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import com.mindlin.jsast.exception.JSSyntaxException;
-import com.mindlin.jsast.fs.SourceFile.NominalSourceFile;
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.NumericLiteralTree;
-import com.mindlin.jsast.tree.PatternTree;
-import com.mindlin.jsast.tree.StatementTree;
-import com.mindlin.jsast.tree.StringLiteralTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.exception.JSSyntaxException;
+import com.mindlin.nautilus.fs.SourceFile.NominalSourceFile;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.parser.JSParser.Context;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.NumericLiteralTree;
+import com.mindlin.nautilus.tree.PatternTree;
+import com.mindlin.nautilus.tree.StatementTree;
+import com.mindlin.nautilus.tree.StringLiteralTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
-import com.mindlin.jsast.tree.type.SpecialTypeTree;
-import com.mindlin.jsast.tree.type.TypeTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
+import com.mindlin.nautilus.tree.type.SpecialTypeTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
+import com.mindlin.nautilus.tree.type.SpecialTypeTree.SpecialType;
 
 @RunWith(Suite.class)
 @SuiteClasses({ArrayLiteralTest.class, AssignmentTest.class, BinaryExpressionTest.class, ClassDeclarationTest.class, DoLoopTest.class, ForLoopTest.class, IdentifierTest.class, ImportStatementTest.class, InterfaceDeclarationTest.class, LambdaTest.class, OperatorTest.class, RegExpLiteralTest.class, StatementTest.class, TemplateLiteralTest.class, TypeTest.class, UnaryOperatorTest.class, VariableDeclarationTest.class })

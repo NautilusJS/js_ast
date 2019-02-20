@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourceFile;
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.StatementTree;
+import com.mindlin.nautilus.fs.SourceFile;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
+import com.mindlin.nautilus.tree.StatementTree;
 
 public class CompilationUnitTreeImpl extends AbstractTree implements CompilationUnitTree {
 	protected final SourceFile source;

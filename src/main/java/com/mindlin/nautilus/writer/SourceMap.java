@@ -1,9 +1,9 @@
-package com.mindlin.jsast.writer;
+package com.mindlin.nautilus.writer;
 
 import java.util.Map;
 
-import com.mindlin.jsast.fs.FilePosition;
-import com.mindlin.jsast.fs.SourceFile;
+import com.mindlin.nautilus.fs.FilePosition;
+import com.mindlin.nautilus.fs.SourceFile;
 
 public class SourceMap {
 	Map<String, SourceFile> sources;

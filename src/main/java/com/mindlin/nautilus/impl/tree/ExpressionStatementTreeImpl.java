@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ExpressionStatementTree;
-import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ExpressionStatementTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
 
 public class ExpressionStatementTreeImpl extends AbstractTree implements ExpressionStatementTree {
 	protected final ExpressionTree expression;

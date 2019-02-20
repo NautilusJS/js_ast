@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
 import java.util.HashMap;
 import java.util.Map;

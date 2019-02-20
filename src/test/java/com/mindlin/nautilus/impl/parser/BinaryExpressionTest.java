@@ -1,14 +1,14 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.BinaryExpressionTree;
-import com.mindlin.jsast.tree.ParenthesizedTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.BinaryExpressionTree;
+import com.mindlin.nautilus.tree.ParenthesizedTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
 public class BinaryExpressionTest {
 	@Test

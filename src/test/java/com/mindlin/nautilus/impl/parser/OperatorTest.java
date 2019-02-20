@@ -1,15 +1,15 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.BinaryExpressionTree;
-import com.mindlin.jsast.tree.ConditionalExpressionTree;
-import com.mindlin.jsast.tree.FunctionCallTree;
-import com.mindlin.jsast.tree.NewTree;
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.BinaryExpressionTree;
+import com.mindlin.nautilus.tree.ConditionalExpressionTree;
+import com.mindlin.nautilus.tree.FunctionCallTree;
+import com.mindlin.nautilus.tree.NewTree;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
 public class OperatorTest {
 	

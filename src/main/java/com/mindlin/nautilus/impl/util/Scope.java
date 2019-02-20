@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.util;
+package com.mindlin.nautilus.impl.util;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -7,8 +7,8 @@ import java.util.Set;
 
 import javax.script.Bindings;
 
-import com.mindlin.jsast.tree.CompilationUnitTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.tree.CompilationUnitTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class Scope {
 	protected final CompilationUnitTree root;

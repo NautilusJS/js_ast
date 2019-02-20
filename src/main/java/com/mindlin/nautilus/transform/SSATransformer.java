@@ -1,4 +1,4 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 public class SSATransformer implements TreeTransformation<ASTTransformerContext> {
 	

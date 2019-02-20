@@ -1,35 +1,35 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.exception.JSSyntaxException;
-import com.mindlin.jsast.fs.SourceFile.NominalSourceFile;
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.tree.CastExpressionTree;
-import com.mindlin.jsast.tree.MemberExpressionTree;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.PropertyDeclarationTree;
-import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.CompositeTypeTree;
-import com.mindlin.jsast.tree.type.ConditionalTypeTree;
-import com.mindlin.jsast.tree.type.ConstructorTypeTree;
-import com.mindlin.jsast.tree.type.FunctionTypeTree;
-import com.mindlin.jsast.tree.type.IdentifierTypeTree;
-import com.mindlin.jsast.tree.type.IndexSignatureTree;
-import com.mindlin.jsast.tree.type.UnaryTypeTree;
-import com.mindlin.jsast.tree.type.MappedTypeTree;
-import com.mindlin.jsast.tree.type.MemberTypeTree;
-import com.mindlin.jsast.tree.type.ObjectTypeTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
-import com.mindlin.jsast.tree.type.TupleTypeTree;
-import com.mindlin.jsast.tree.type.TypeParameterDeclarationTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.exception.JSSyntaxException;
+import com.mindlin.nautilus.fs.SourceFile.NominalSourceFile;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.parser.JSParser.Context;
+import com.mindlin.nautilus.tree.CastExpressionTree;
+import com.mindlin.nautilus.tree.MemberExpressionTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.ParameterTree;
+import com.mindlin.nautilus.tree.PropertyDeclarationTree;
+import com.mindlin.nautilus.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.type.ArrayTypeTree;
+import com.mindlin.nautilus.tree.type.CompositeTypeTree;
+import com.mindlin.nautilus.tree.type.ConditionalTypeTree;
+import com.mindlin.nautilus.tree.type.ConstructorTypeTree;
+import com.mindlin.nautilus.tree.type.FunctionTypeTree;
+import com.mindlin.nautilus.tree.type.IdentifierTypeTree;
+import com.mindlin.nautilus.tree.type.IndexSignatureTree;
+import com.mindlin.nautilus.tree.type.UnaryTypeTree;
+import com.mindlin.nautilus.tree.type.MappedTypeTree;
+import com.mindlin.nautilus.tree.type.MemberTypeTree;
+import com.mindlin.nautilus.tree.type.ObjectTypeTree;
+import com.mindlin.nautilus.tree.type.SpecialTypeTree.SpecialType;
+import com.mindlin.nautilus.tree.type.TupleTypeTree;
+import com.mindlin.nautilus.tree.type.TypeParameterDeclarationTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class TypeTest {
 	

@@ -1,4 +1,4 @@
-package com.mindlin.jsast.harness;
+package com.mindlin.nautilus.harness;
 
 public class CompilerOption<T> {
 	private final String name;

@@ -1,8 +1,8 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
 /**
  * Extends/implements clause

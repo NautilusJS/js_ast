@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.nautilus.tree.type.IndexSignatureTree;
 
 public interface ClassElementVisitor<R, D> {
 	R visitConstructorDeclaration(ConstructorDeclarationTree node, D context);

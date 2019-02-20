@@ -1,4 +1,4 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
 import static org.junit.Assert.*;
 
@@ -9,8 +9,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.analysis.TypeCalculator;
-import com.mindlin.jsast.impl.tree.IdentifierTreeImpl;
+import com.mindlin.nautilus.impl.analysis.TypeCalculator;
+import com.mindlin.nautilus.impl.tree.IdentifierTreeImpl;
 
 public class FunctionOverloadTest {
 	

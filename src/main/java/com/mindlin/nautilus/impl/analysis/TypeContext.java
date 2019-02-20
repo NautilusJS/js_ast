@@ -1,9 +1,9 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.Collections;
 import java.util.List;
 
-import com.mindlin.jsast.type.Type;
+import com.mindlin.nautilus.type.Type;
 
 /**
  * A readonly context that resolves types

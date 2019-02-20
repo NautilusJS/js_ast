@@ -1,11 +1,11 @@
-package com.mindlin.jsast.fs;
+package com.mindlin.nautilus.fs;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 
-import com.mindlin.jsast.impl.tree.LineMap;
-import com.mindlin.jsast.impl.util.CharacterArrayStream;
-import com.mindlin.jsast.impl.util.CharacterStream;
+import com.mindlin.nautilus.impl.tree.LineMap;
+import com.mindlin.nautilus.impl.util.CharacterArrayStream;
+import com.mindlin.nautilus.impl.util.CharacterStream;
 
 /**
  * Abstract away a JS source

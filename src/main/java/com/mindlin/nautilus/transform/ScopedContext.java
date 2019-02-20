@@ -1,8 +1,8 @@
-package com.mindlin.jsast.transform;
+package com.mindlin.nautilus.transform;
 
 import java.util.List;
 
-import com.mindlin.jsast.tree.ParameterTree;
+import com.mindlin.nautilus.tree.ParameterTree;
 
 /**
  * A context which is aware of the scope

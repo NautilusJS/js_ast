@@ -1,17 +1,17 @@
-package com.mindlin.jsast.impl.validator;
+package com.mindlin.nautilus.impl.validator;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.impl.parser.JSDialect;
-import com.mindlin.jsast.impl.validator.ErrorReporter.ErrorLevel;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.ParameterTree;
-import com.mindlin.jsast.tree.PatternTree;
-import com.mindlin.jsast.tree.SignatureDeclarationTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.util.TreePath;
+import com.mindlin.nautilus.impl.parser.JSDialect;
+import com.mindlin.nautilus.impl.validator.ErrorReporter.ErrorLevel;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.ParameterTree;
+import com.mindlin.nautilus.tree.PatternTree;
+import com.mindlin.nautilus.tree.SignatureDeclarationTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.util.TreePath;
 
 public class ParameterDeclarationValidator implements StatelessValidator<SignatureDeclarationTree> {
 	public JSDialect dialect;

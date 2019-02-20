@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 /**
  * Represents a TypeScript cast operation. Cast operations are written in the

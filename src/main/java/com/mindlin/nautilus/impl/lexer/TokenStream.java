@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.lexer;
+package com.mindlin.nautilus.impl.lexer;
 
 import java.util.LinkedList;
 import java.util.List;

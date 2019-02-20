@@ -1,4 +1,4 @@
-package com.mindlin.jsast.json;
+package com.mindlin.nautilus.json;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
-import com.mindlin.jsast.json.api.JSONExternalizable;
-import com.mindlin.jsast.json.api.JSONInput;
-import com.mindlin.jsast.json.api.JSONObjectInput;
-import com.mindlin.jsast.json.api.JSONObjectOutput;
-import com.mindlin.jsast.json.api.JSONOutput;
+import com.mindlin.nautilus.json.api.JSONExternalizable;
+import com.mindlin.nautilus.json.api.JSONInput;
+import com.mindlin.nautilus.json.api.JSONObjectInput;
+import com.mindlin.nautilus.json.api.JSONObjectOutput;
+import com.mindlin.nautilus.json.api.JSONOutput;
 
 public class JSONObject implements ConcurrentMap<String, Object>, JSONExternalizable {
 	protected final Map<String, Object> backingMap;

@@ -5,4 +5,4 @@
  * @author mailmindlin
  *
  */
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;

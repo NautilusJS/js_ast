@@ -5,4 +5,4 @@
  * @author mailmindlin
  *
  */
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;

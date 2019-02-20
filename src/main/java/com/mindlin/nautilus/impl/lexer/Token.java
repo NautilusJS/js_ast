@@ -1,11 +1,11 @@
-package com.mindlin.jsast.impl.lexer;
+package com.mindlin.nautilus.impl.lexer;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.fs.SourceRange;
-import com.mindlin.jsast.impl.parser.JSOperator;
-import com.mindlin.jsast.impl.parser.JSSpecialGroup;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.fs.SourceRange;
+import com.mindlin.nautilus.impl.parser.JSOperator;
+import com.mindlin.nautilus.impl.parser.JSSpecialGroup;
 
 public class Token {
 	public static final int FLAG_PRECEDEING_NEWLINE = 1 << 0;

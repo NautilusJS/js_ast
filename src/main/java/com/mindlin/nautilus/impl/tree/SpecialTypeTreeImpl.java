@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.impl.lexer.TokenKind;
-import com.mindlin.jsast.impl.parser.JSKeyword;
-import com.mindlin.jsast.tree.type.SpecialTypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.impl.lexer.Token;
+import com.mindlin.nautilus.impl.lexer.TokenKind;
+import com.mindlin.nautilus.impl.parser.JSKeyword;
+import com.mindlin.nautilus.tree.type.SpecialTypeTree;
 
 public class SpecialTypeTreeImpl extends AbstractTypeTree implements SpecialTypeTree {
 	public static SpecialType mapType(Token t) {

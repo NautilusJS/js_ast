@@ -1,18 +1,18 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.parser.JSParser.Context;
-import com.mindlin.jsast.tree.BreakTree;
-import com.mindlin.jsast.tree.ContinueTree;
-import com.mindlin.jsast.tree.LabeledStatementTree;
-import com.mindlin.jsast.tree.SwitchTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.WithTree;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.parser.JSParser.Context;
+import com.mindlin.nautilus.tree.BreakTree;
+import com.mindlin.nautilus.tree.ContinueTree;
+import com.mindlin.nautilus.tree.LabeledStatementTree;
+import com.mindlin.nautilus.tree.SwitchTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.WithTree;
 
 public class StatementTest {
 	

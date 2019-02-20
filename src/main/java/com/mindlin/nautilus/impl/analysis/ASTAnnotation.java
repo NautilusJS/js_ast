@@ -1,8 +1,8 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.io.Serializable;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.Tree;
 
 /**
  * Annotation attached to tree.

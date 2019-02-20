@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.comment;
+package com.mindlin.nautilus.tree.comment;
 
-import com.mindlin.jsast.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
 
 public interface JSDocTag {
 	IdentifierTree getName();

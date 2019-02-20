@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.type.ArrayTypeTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.type.ArrayTypeTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class ArrayTypeTreeImpl extends AbstractTypeTree implements ArrayTypeTree {
 	protected final TypeTree baseType;

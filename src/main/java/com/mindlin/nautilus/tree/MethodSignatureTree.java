@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.type.TypeElementTree;
+import com.mindlin.nautilus.tree.type.TypeElementTree;
 
 public interface MethodSignatureTree extends DecoratableTree, SignatureDeclarationTree, PropertyTree, TypeElementTree {
 	@Override

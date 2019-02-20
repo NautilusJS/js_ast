@@ -1,7 +1,7 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.DebuggerTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.DebuggerTree;
 
 public class DebuggerTreeImpl extends AbstractTree implements DebuggerTree {
 	public DebuggerTreeImpl(SourcePosition start, SourcePosition end) {

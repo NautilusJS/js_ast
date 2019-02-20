@@ -1,7 +1,7 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import com.mindlin.jsast.exception.JSUnsupportedException;
-import com.mindlin.jsast.fs.SourceRange;
+import com.mindlin.nautilus.exception.JSUnsupportedException;
+import com.mindlin.nautilus.fs.SourceRange;
 
 public interface JSDialect {
 	boolean supports(String feature);

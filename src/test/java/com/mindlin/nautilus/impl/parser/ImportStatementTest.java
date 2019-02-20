@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.ImportDeclarationTree;
-import com.mindlin.jsast.tree.ImportSpecifierTree;
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import com.mindlin.nautilus.tree.ImportDeclarationTree;
+import com.mindlin.nautilus.tree.ImportSpecifierTree;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 public class ImportStatementTest {
 
 	/**

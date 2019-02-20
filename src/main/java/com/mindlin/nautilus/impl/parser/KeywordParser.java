@@ -1,8 +1,8 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import com.mindlin.jsast.impl.lexer.JSLexer;
-import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.impl.lexer.JSLexer;
+import com.mindlin.nautilus.impl.lexer.Token;
+import com.mindlin.nautilus.tree.Tree;
 
 @FunctionalInterface
 public interface KeywordParser<T extends Tree> {

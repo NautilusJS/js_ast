@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
 /**
  * Type representing a type expression in the form of {@code keyof X} or {@code unique X}

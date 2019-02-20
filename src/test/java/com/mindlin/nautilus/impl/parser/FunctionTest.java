@@ -1,11 +1,11 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.FunctionExpressionTree;
-import com.mindlin.jsast.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.FunctionExpressionTree;
+import com.mindlin.nautilus.tree.Tree.Kind;
 
 public class FunctionTest {
 	

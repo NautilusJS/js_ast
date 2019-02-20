@@ -1,8 +1,8 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.tree.ThisExpressionTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.impl.lexer.Token;
+import com.mindlin.nautilus.tree.ThisExpressionTree;
 
 public class ThisExpressionTreeImpl extends AbstractTree implements ThisExpressionTree {
 	public ThisExpressionTreeImpl(Token t) {

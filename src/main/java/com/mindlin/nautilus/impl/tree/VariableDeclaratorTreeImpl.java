@@ -1,13 +1,13 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.impl.lexer.Token;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.PatternTree;
-import com.mindlin.jsast.tree.VariableDeclaratorTree;
-import com.mindlin.jsast.tree.type.TypeTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.impl.lexer.Token;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.PatternTree;
+import com.mindlin.nautilus.tree.VariableDeclaratorTree;
+import com.mindlin.nautilus.tree.type.TypeTree;
 
 public class VariableDeclaratorTreeImpl extends AbstractTree implements VariableDeclaratorTree {
 	protected final PatternTree identifier;

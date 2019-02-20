@@ -1,16 +1,16 @@
-package com.mindlin.jsast.impl.parser;
+package com.mindlin.nautilus.impl.parser;
 
 import static org.junit.Assert.*;
-import static com.mindlin.jsast.impl.parser.JSParserTest.*;
+import static com.mindlin.nautilus.impl.parser.JSParserTest.*;
 
 import org.junit.Test;
 
-import com.mindlin.jsast.tree.BinaryExpressionTree;
-import com.mindlin.jsast.tree.VariableDeclarationTree;
-import com.mindlin.jsast.tree.VariableDeclaratorTree;
-import com.mindlin.jsast.tree.type.SpecialTypeTree.SpecialType;
-import com.mindlin.jsast.tree.Tree.Kind;
-import com.mindlin.jsast.tree.VariableDeclarationTree.VariableDeclarationKind;
+import com.mindlin.nautilus.tree.BinaryExpressionTree;
+import com.mindlin.nautilus.tree.VariableDeclarationTree;
+import com.mindlin.nautilus.tree.VariableDeclaratorTree;
+import com.mindlin.nautilus.tree.type.SpecialTypeTree.SpecialType;
+import com.mindlin.nautilus.tree.Tree.Kind;
+import com.mindlin.nautilus.tree.VariableDeclarationTree.VariableDeclarationKind;
 
 public class VariableDeclarationTest {
 	

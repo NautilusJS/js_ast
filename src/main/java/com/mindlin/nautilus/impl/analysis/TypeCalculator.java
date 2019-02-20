@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,21 +15,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.mindlin.jsast.tree.Modifiers.AccessModifier;
-import com.mindlin.jsast.type.CompositeType;
-import com.mindlin.jsast.type.IndexInfo;
-import com.mindlin.jsast.type.IntrinsicType;
-import com.mindlin.jsast.type.LiteralType;
-import com.mindlin.jsast.type.ObjectType;
-import com.mindlin.jsast.type.ParameterInfo;
-import com.mindlin.jsast.type.Signature;
-import com.mindlin.jsast.type.TupleType;
-import com.mindlin.jsast.type.Type;
-import com.mindlin.jsast.type.Type.Kind;
-import com.mindlin.jsast.type.TypeMember;
-import com.mindlin.jsast.type.TypeParameter;
-import com.mindlin.jsast.type.TypeVariable;
-import com.mindlin.jsast.type.UnaryType;
+import com.mindlin.nautilus.tree.Modifiers.AccessModifier;
+import com.mindlin.nautilus.type.CompositeType;
+import com.mindlin.nautilus.type.IndexInfo;
+import com.mindlin.nautilus.type.IntrinsicType;
+import com.mindlin.nautilus.type.LiteralType;
+import com.mindlin.nautilus.type.ObjectType;
+import com.mindlin.nautilus.type.ParameterInfo;
+import com.mindlin.nautilus.type.Signature;
+import com.mindlin.nautilus.type.TupleType;
+import com.mindlin.nautilus.type.Type;
+import com.mindlin.nautilus.type.Type.Kind;
+import com.mindlin.nautilus.type.TypeMember;
+import com.mindlin.nautilus.type.TypeParameter;
+import com.mindlin.nautilus.type.TypeVariable;
+import com.mindlin.nautilus.type.UnaryType;
 
 public class TypeCalculator {
 	public static boolean STRICT_NULL_CHECKS = false;

@@ -1,8 +1,8 @@
-package com.mindlin.jsast.impl.analysis;
+package com.mindlin.nautilus.impl.analysis;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.type.Type;
+import com.mindlin.nautilus.type.Type;
 
 public abstract class AbstractVariableInfo implements VariableInfo {
 	protected final long id;

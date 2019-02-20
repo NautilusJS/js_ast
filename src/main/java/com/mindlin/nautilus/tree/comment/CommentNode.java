@@ -1,7 +1,7 @@
-package com.mindlin.jsast.tree.comment;
+package com.mindlin.nautilus.tree.comment;
 
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.TreeVisitor;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.TreeVisitor;
 
 public interface CommentNode extends Tree {
 	String getComment();

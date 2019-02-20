@@ -1,10 +1,10 @@
-package com.mindlin.jsast.tree.util;
+package com.mindlin.nautilus.tree.util;
 
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.function.Predicate;
 
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.tree.Tree;
 
 @FunctionalInterface
 public interface TreePredicate extends Predicate<TreePath<? extends Tree>> {

@@ -1,7 +1,7 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.ClassTreeBase.ClassExpressionTree;
-import com.mindlin.jsast.tree.UnaryTree.AwaitTree;
+import com.mindlin.nautilus.tree.ClassTreeBase.ClassExpressionTree;
+import com.mindlin.nautilus.tree.UnaryTree.AwaitTree;
 
 public interface ExpressionTreeVisitor<R, D> {
 	R visitArrayLiteral(ArrayLiteralTree node, D d);

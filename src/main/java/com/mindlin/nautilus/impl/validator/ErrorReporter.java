@@ -1,7 +1,7 @@
-package com.mindlin.jsast.impl.validator;
+package com.mindlin.nautilus.impl.validator;
 
-import com.mindlin.jsast.fs.SourceRange;
-import com.mindlin.jsast.tree.Tree;
+import com.mindlin.nautilus.fs.SourceRange;
+import com.mindlin.nautilus.tree.Tree;
 
 public interface ErrorReporter {
 	void report(ErrorLevel level, Tree target, String format, Object... args);

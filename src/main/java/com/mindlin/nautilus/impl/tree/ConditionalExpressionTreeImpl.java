@@ -1,10 +1,10 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.ConditionalExpressionTree;
-import com.mindlin.jsast.tree.ExpressionTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.ConditionalExpressionTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
 
 public class ConditionalExpressionTreeImpl extends AbstractTree implements ConditionalExpressionTree {
 	protected final ExpressionTree condition, trueExpr, falseExpr;

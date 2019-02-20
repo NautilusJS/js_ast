@@ -1,4 +1,4 @@
-package com.mindlin.jsast.json.api;
+package com.mindlin.nautilus.json.api;
 
 import java.util.Map;
 

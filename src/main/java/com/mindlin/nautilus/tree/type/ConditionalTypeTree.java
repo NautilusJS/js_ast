@@ -1,4 +1,4 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
 public interface ConditionalTypeTree extends TypeTree {
 	TypeTree getCheckType();

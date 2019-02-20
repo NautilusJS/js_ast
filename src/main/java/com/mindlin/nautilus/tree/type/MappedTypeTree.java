@@ -1,6 +1,6 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.Modifiers;
+import com.mindlin.nautilus.tree.Modifiers;
 
 public interface MappedTypeTree extends TypeTree {
 	Modifiers getModifiers();

@@ -1,11 +1,11 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.jsast.fs.SourceFile;
-import com.mindlin.jsast.impl.tree.LineMap;
+import com.mindlin.nautilus.fs.SourceFile;
+import com.mindlin.nautilus.impl.tree.LineMap;
 
 public interface CompilationUnitTree extends Tree {
 	LineMap getLineMap();

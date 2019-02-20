@@ -1,8 +1,8 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.DeclarationTree;
-import com.mindlin.jsast.tree.TreeVisitor;
-import com.mindlin.jsast.tree.TypeElementVisitor;
+import com.mindlin.nautilus.tree.DeclarationTree;
+import com.mindlin.nautilus.tree.TreeVisitor;
+import com.mindlin.nautilus.tree.TypeElementVisitor;
 
 public interface TypeElementTree extends DeclarationTree {
 	<R, D> R accept(TypeElementVisitor<R, D> visitor, D data);

@@ -1,6 +1,6 @@
-package com.mindlin.jsast.exception;
+package com.mindlin.nautilus.exception;
 
-import com.mindlin.jsast.fs.SourceRange;
+import com.mindlin.nautilus.fs.SourceRange;
 
 public class TSTypeException extends JSException {
 	private static final long serialVersionUID = 33413686264186057L;

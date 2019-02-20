@@ -1,4 +1,4 @@
-package com.mindlin.jsast.impl.lexer;
+package com.mindlin.nautilus.impl.lexer;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -9,21 +9,21 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import com.mindlin.jsast.exception.JSEOFException;
-import com.mindlin.jsast.exception.JSSyntaxException;
-import com.mindlin.jsast.exception.JSUnexpectedTokenException;
-import com.mindlin.jsast.fs.SourceFile;
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.fs.SourceRange;
-import com.mindlin.jsast.impl.parser.JSKeyword;
-import com.mindlin.jsast.impl.parser.JSOperator;
-import com.mindlin.jsast.impl.parser.JSSpecialGroup;
-import com.mindlin.jsast.impl.tree.LineMap;
-import com.mindlin.jsast.impl.tree.LineMap.LineMapBuilder;
-import com.mindlin.jsast.impl.util.BooleanStack;
-import com.mindlin.jsast.impl.util.CharacterArrayStream;
-import com.mindlin.jsast.impl.util.CharacterStream;
-import com.mindlin.jsast.impl.util.Characters;
+import com.mindlin.nautilus.exception.JSEOFException;
+import com.mindlin.nautilus.exception.JSSyntaxException;
+import com.mindlin.nautilus.exception.JSUnexpectedTokenException;
+import com.mindlin.nautilus.fs.SourceFile;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.fs.SourceRange;
+import com.mindlin.nautilus.impl.parser.JSKeyword;
+import com.mindlin.nautilus.impl.parser.JSOperator;
+import com.mindlin.nautilus.impl.parser.JSSpecialGroup;
+import com.mindlin.nautilus.impl.tree.LineMap;
+import com.mindlin.nautilus.impl.tree.LineMap.LineMapBuilder;
+import com.mindlin.nautilus.impl.util.BooleanStack;
+import com.mindlin.nautilus.impl.util.CharacterArrayStream;
+import com.mindlin.nautilus.impl.util.CharacterStream;
+import com.mindlin.nautilus.impl.util.Characters;
 
 public class JSLexer implements Supplier<Token> {
 	
@@ -185,7 +185,7 @@ public class JSLexer implements Supplier<Token> {
 	 * 
 	 * @return character read
 	 * @see <a href="https://tc39.github.io/ecma262/#prod-UnicodeEscapeSequence">ECMAScript 262 &sect; 11.8.4</a>
-	 * @see <a href="https://mathiasbynens.be/notes/javascript-escapes">JavaScript character escape sequences · Mathias Bynens</a>
+	 * @see <a href="https://mathiasbynens.be/notes/javascript-escapes">JavaScript character escape sequences ï¿½ Mathias Bynens</a>
 	 */
 	protected String readUnicodeEscapeSequence() {
 		int value = 0;

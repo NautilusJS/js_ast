@@ -1,7 +1,7 @@
-package com.mindlin.jsast.type;
+package com.mindlin.nautilus.type;
 
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.Modifiers.AccessModifier;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.Modifiers.AccessModifier;
 
 public class TypeMember {
 	Modifiers modifiers;

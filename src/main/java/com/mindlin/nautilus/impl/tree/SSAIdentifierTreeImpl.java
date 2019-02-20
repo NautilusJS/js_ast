@@ -1,6 +1,6 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
+import com.mindlin.nautilus.fs.SourcePosition;
 
 public class SSAIdentifierTreeImpl extends RenamedIdentifierTreeImpl {
 	protected final int id;

@@ -1,8 +1,8 @@
-package com.mindlin.jsast.tree.type;
+package com.mindlin.nautilus.tree.type;
 
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.Tree;
-import com.mindlin.jsast.tree.UnvisitableTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.Tree;
+import com.mindlin.nautilus.tree.UnvisitableTree;
 
 /**
  * Generic type parameter (not argument).

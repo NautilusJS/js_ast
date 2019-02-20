@@ -1,12 +1,12 @@
-package com.mindlin.jsast.impl.tree;
+package com.mindlin.nautilus.impl.tree;
 
-import com.mindlin.jsast.fs.SourcePosition;
-import com.mindlin.jsast.tree.AssignmentPropertyTree;
-import com.mindlin.jsast.tree.ExpressionTree;
-import com.mindlin.jsast.tree.IdentifierTree;
-import com.mindlin.jsast.tree.Modifiers;
-import com.mindlin.jsast.tree.PropertyName;
-import com.mindlin.jsast.tree.ShorthandAssignmentPropertyTree;
+import com.mindlin.nautilus.fs.SourcePosition;
+import com.mindlin.nautilus.tree.AssignmentPropertyTree;
+import com.mindlin.nautilus.tree.ExpressionTree;
+import com.mindlin.nautilus.tree.IdentifierTree;
+import com.mindlin.nautilus.tree.Modifiers;
+import com.mindlin.nautilus.tree.PropertyName;
+import com.mindlin.nautilus.tree.ShorthandAssignmentPropertyTree;
 
 public class AssignmentPropertyTreeImpl extends AbstractTree implements AssignmentPropertyTree {
 	protected final Modifiers modifiers;

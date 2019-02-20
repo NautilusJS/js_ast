@@ -1,8 +1,8 @@
-package com.mindlin.jsast.tree;
+package com.mindlin.nautilus.tree;
 
-import com.mindlin.jsast.tree.SignatureDeclarationTree.CallSignatureTree;
-import com.mindlin.jsast.tree.SignatureDeclarationTree.ConstructSignatureTree;
-import com.mindlin.jsast.tree.type.IndexSignatureTree;
+import com.mindlin.nautilus.tree.SignatureDeclarationTree.CallSignatureTree;
+import com.mindlin.nautilus.tree.SignatureDeclarationTree.ConstructSignatureTree;
+import com.mindlin.nautilus.tree.type.IndexSignatureTree;
 
 public interface TypeElementVisitor<R, D> {
 	R visitCallSignature(CallSignatureTree node, D context);
