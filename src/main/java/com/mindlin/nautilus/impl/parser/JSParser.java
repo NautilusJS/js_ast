@@ -111,6 +111,7 @@ import com.mindlin.nautilus.impl.tree.VariableDeclaratorTreeImpl;
 import com.mindlin.nautilus.impl.tree.WhileLoopTreeImpl;
 import com.mindlin.nautilus.impl.tree.WithTreeImpl;
 import com.mindlin.nautilus.impl.util.Pair;
+import com.mindlin.nautilus.parser.JSDialect;
 import com.mindlin.nautilus.tree.ArrayLiteralTree;
 import com.mindlin.nautilus.tree.AssignmentTree;
 import com.mindlin.nautilus.tree.BlockTree;

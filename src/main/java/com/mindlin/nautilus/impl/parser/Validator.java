@@ -2,6 +2,7 @@ package com.mindlin.nautilus.impl.parser;
 
 import java.util.List;
 
+import com.mindlin.nautilus.parser.JSDialect;
 import com.mindlin.nautilus.tree.ExpressionTree;
 import com.mindlin.nautilus.tree.ParenthesizedTree;
 import com.mindlin.nautilus.tree.SequenceExpressionTree;

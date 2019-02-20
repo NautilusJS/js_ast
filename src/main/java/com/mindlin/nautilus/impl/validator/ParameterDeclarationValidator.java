@@ -3,8 +3,8 @@ package com.mindlin.nautilus.impl.validator;
 import java.util.List;
 import java.util.Objects;
 
-import com.mindlin.nautilus.impl.parser.JSDialect;
 import com.mindlin.nautilus.impl.validator.ErrorReporter.ErrorLevel;
+import com.mindlin.nautilus.parser.JSDialect;
 import com.mindlin.nautilus.tree.IdentifierTree;
 import com.mindlin.nautilus.tree.Modifiers;
 import com.mindlin.nautilus.tree.ParameterTree;

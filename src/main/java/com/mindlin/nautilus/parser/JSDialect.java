@@ -1,4 +1,4 @@
-package com.mindlin.nautilus.impl.parser;
+package com.mindlin.nautilus.parser;
 
 import com.mindlin.nautilus.exception.JSUnsupportedException;
 import com.mindlin.nautilus.fs.SourceRange;
