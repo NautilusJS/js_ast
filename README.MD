@@ -8,8 +8,8 @@ I wrote this project to satisfy the problem of parsing JS/TS code in Java (even 
 This parser should be able to process valid JavaScript and TypeScript. It should fully support ES6 features.
 
 ### Things that this DOES do
- - [Tokenizing JavaScript/TypeScript](github.com/NautilusJS/js_ast/tree/master/src/main/java/com/mindlin/jsast/impl/lexer)
- - [Parsing JavaScript/TypeScript](github.com/NautilusJS/js_ast/tree/master/src/main/java/com/mindlin/jsast/impl/parser)
+ - [Tokenizing JavaScript/TypeScript](github.com/NautilusJS/js_ast/tree/master/src/main/java/com/mindlin/nautilus/impl/lexer)
+ - [Parsing JavaScript/TypeScript](github.com/NautilusJS/js_ast/tree/master/src/main/java/com/mindlin/nautilus/impl/parser)
 
 ### Things that this WILL DO (but not right now)
  - Desctructuring operations
