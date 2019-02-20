@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.mindlin.nautilus.impl.parser.JSDialect;
-import com.mindlin.nautilus.impl.parser.JSDialect.JSStandardDialect;
+import com.mindlin.nautilus.parser.JSDialect;
+import com.mindlin.nautilus.parser.JSDialect.JSStandardDialect;
 
 public class CompilerOptions {
 	public static final CompilerOption<String> PRINT_HELP = new CompilerOption<>("print_help");
